@@ -36,6 +36,65 @@ app/Features/<Feature>/<Action>/
 - Modelos do domínio usam `HasUuids` como chave primária — nunca IDs incrementais
 - `@property-read` obrigatório em todos os Eloquent Models (tipagem completa das colunas para PHPStan e IA)
 
+---
+
+## CONVENÇÕES DE NOMENCLATURA
+
+### Língua
+
+- **Português de Portugal** em todo o código de domínio — classes, métodos, variáveis, enums, propriedades, constantes
+- **Inglês** apenas quando o framework/linguagem impõe o nome (critério: *"o framework vai chamar isto pelo nome?"*)
+
+| Fica em inglês (framework impõe) | Exemplo |
+|----------------------------------|---------|
+| Métodos de ciclo de vida | `handle()`, `boot()`, `register()`, `store()`, `update()`, `destroy()` |
+| Sufixos de padrão estrutural | `Builder`, `Interface`, `Controller`, `Factory`, `Provider`, `Job` |
+| Métodos Eloquent / Query Builder | `->where()`, `->create()`, `->find()`, `->get()` |
+| Atributos PHP nativos | `#[Override]`, `#[Fillable]`, `#[Hidden]` |
+
+### Métodos — VERBO + Intenção/Contexto
+
+```php
+// correcto
+public function criarCategoria(CriarCategoriaDto $dados): Categoria {}
+public function validarMovimento(TipoMovimento $tipo): bool {}
+public function processarDocumento(string $idDocumento): void {}
+
+// incorrecto
+public function create(array $data): Categoria {}
+public function validate(): bool {}
+```
+
+### Variáveis e propriedades — NOME + Intenção [+ Escala]
+
+- Entidade singular: `$categoriaDocumento`, `$idCategoria`
+- Colecção: plural simples (`$categorias`, `$documentos`) — sem prefixo `lista`
+- Agregados: prefixo de escala (`$totalFaturas`, `$contadorErros`, $mediaValorDocumentos`)
+
+```php
+$categoriaDocumento = $this->repositorioCategorias->obterPorId($idCategoria);
+$categorias         = $this->repositorioCategorias->listarActivas();
+$totalDocumentos    = $categorias->sum('contadorDocumentos');
+```
+
+### Chaves primárias e estrangeiras
+
+- **Sempre UUID** via `HasUuids` — nunca IDs incrementais (ver padrões obrigatórios)
+- Colunas FK seguem o padrão: `id_<entidade>` (ex: `id_categoria`, `id_documento`)
+
+### Enums — TitleCase PT nos cases
+
+```php
+enum TipoMovimento: string
+{
+    case Debito  = 'debito';
+    case Credito = 'credito';
+    case Neutro  = 'neutro';   // sem movimento (ex: aviso)
+}
+```
+
+---
+
 ### O que NÃO fazer
 
 - Não colocar lógica nos Controllers
