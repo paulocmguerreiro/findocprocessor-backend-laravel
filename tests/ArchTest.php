@@ -3,7 +3,7 @@
 declare(strict_types=1);
 use App\Http\Controllers\Controller;
 
-arch()->preset()->laravel();
+arch()->preset()->laravel()->ignoring('App\Shared\Enums');
 arch()->preset()->security();
 
 arch('strict types')
