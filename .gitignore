@@ -1,0 +1,53 @@
+## Laravel gitignore
+
+/vendor/
+/node_modules/
+
+# Environment
+.env
+.env.backup
+.env.production
+
+# Runtime
+/storage/app/public/
+/storage/logs/*.log
+/bootstrap/cache/
+
+# Data folders
+inbox/*
+!inbox/.gitkeep
+processed/*
+!processed/.gitkeep
+temp/*
+!temp/.gitkeep
+storage/app/inbox/*
+!storage/app/inbox/.gitkeep
+storage/app/processed/*
+!storage/app/processed/.gitkeep
+storage/app/temp/*
+!storage/app/temp/.gitkeep
+
+# SQLite dev DB
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+database/database.sqlite
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.phpunit.result.cache
+coverage/
+
+# Claude Code
+.claude/
+
+# MCP config (pode conter tokens)
+.mcp.json
