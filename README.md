@@ -53,6 +53,16 @@ php artisan test
 | POST   | `/documents/manual` | Registo manual             |
 | GET    | `/config`         | Configuração pública         |
 
+### Categorias de documento
+
+| Método | Path                                        | Descrição                  |
+| ------ | ------------------------------------------- | -------------------------- |
+| GET    | `/api/categorias-documento`                 | Listar todas               |
+| POST   | `/api/categorias-documento`                 | Criar                      |
+| GET    | `/api/categorias-documento/{id}`            | Ver detalhe                |
+| PUT    | `/api/categorias-documento/{id}`            | Actualizar (parcial)       |
+| DELETE | `/api/categorias-documento/{id}`            | Eliminar                   |
+
 ## Qualidade
 
 - PHPStan nível máximo + Larastan

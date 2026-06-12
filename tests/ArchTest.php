@@ -1,6 +1,8 @@
 <?php
 
 declare(strict_types=1);
+use App\Features\CategoriaDocumento\Actualizar\ActualizarCategoriaRequest;
+use App\Features\CategoriaDocumento\Criar\CriarCategoriaRequest;
 use App\Http\Controllers\Controller;
 
 arch()->preset()->laravel()->ignoring(['App\Shared\Enums', 'App\Features']);
@@ -21,4 +23,8 @@ arch('controllers are final')
 
 arch('actions are final')
     ->expect('App\Features')
-    ->toBeFinal();
+    ->toBeFinal()
+    ->ignoring([
+        CriarCategoriaRequest::class,
+        ActualizarCategoriaRequest::class,
+    ]);

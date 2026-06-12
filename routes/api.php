@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Features\CategoriaDocumento\CategoriaDocumentoController;
 use Illuminate\Support\Facades\Route;
 
-// Endpoints registados aqui à medida que forem implementados por issue
-// ex: Route::get('/state', [DocumentController::class, 'index']);
+Route::apiResource('categorias-documento', CategoriaDocumentoController::class);
