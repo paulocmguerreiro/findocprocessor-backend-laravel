@@ -7,6 +7,11 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
+- **Issue #6** — Envelope universal de resposta JSON: `ApiResponse` + Problem Details RFC 7807
+  - `ApiResponse` em `App\Shared\Http` — factory estática com `devolverSucesso`, `devolverCriado`, `devolverVazio`, `devolverColeccao`
+  - Exception handler centralizado em `bootstrap/app.php` — mapeia 5 classes de excepção para Problem Details (422/404/403/401/500)
+  - Stack traces nunca expostos; mensagens de `detail` em português de Portugal
+  - 9 testes de feature: `ApiResponseTest` (4) + `ExceptionHandlerTest` (5)
 - **Issue #3** — `CategoriaDocumento`: camada de API (Resource + FormRequests)
   - `CategoriaDocumentoResource` em `App\Features\CategoriaDocumento` — expõe `id`, `nome`, `slug`, `tipo_movimento` (string)
   - `CriarCategoriaRequest` com validação completa (`required`, `Rule::unique`, `Rule::in`) e mensagens em português
