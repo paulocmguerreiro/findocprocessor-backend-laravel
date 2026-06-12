@@ -16,12 +16,23 @@ final readonly class ActualizarCategoriaDto
 
     public static function fromRequest(ActualizarCategoriaRequest $request): self
     {
+        $validated = $request->validated();
+        $nome = $validated['nome'] ?? null;
+        $slug = $validated['slug'] ?? null;
+        $tipoMovimento = $validated['tipo_movimento'] ?? null;
+
+        if (
+            ($nome !== null && ! is_string($nome)) ||
+            ($slug !== null && ! is_string($slug)) ||
+            ($tipoMovimento !== null && ! is_string($tipoMovimento))
+        ) {
+            throw new \UnexpectedValueException('Dados inválidos após validação.');
+        }
+
         return new self(
-            nome: $request->has('nome') ? $request->string('nome')->toString() : null,
-            slug: $request->has('slug') ? $request->string('slug')->toString() : null,
-            tipo_movimento: $request->has('tipo_movimento')
-                ? TipoMovimento::from($request->string('tipo_movimento')->toString())
-                : null,
+            nome: $nome,
+            slug: $slug,
+            tipo_movimento: is_string($tipoMovimento) ? TipoMovimento::from($tipoMovimento) : null,
         );
     }
 }

@@ -8,7 +8,7 @@ use App\Shared\Enums\TipoMovimento;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-final class ActualizarCategoriaRequest extends FormRequest
+class ActualizarCategoriaRequest extends FormRequest
 {
     public function authorize(): bool
     {
