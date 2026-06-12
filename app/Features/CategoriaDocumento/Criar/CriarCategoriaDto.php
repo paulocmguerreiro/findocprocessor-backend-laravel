@@ -17,9 +17,9 @@ final readonly class CriarCategoriaDto
     public static function fromRequest(CriarCategoriaRequest $request): self
     {
         return new self(
-            nome: $request->validated('nome'),
-            slug: $request->validated('slug'),
-            tipo_movimento: TipoMovimento::from($request->validated('tipo_movimento')),
+            nome: $request->string('nome')->toString(),
+            slug: $request->string('slug')->toString(),
+            tipo_movimento: TipoMovimento::from($request->string('tipo_movimento')->toString()),
         );
     }
 }

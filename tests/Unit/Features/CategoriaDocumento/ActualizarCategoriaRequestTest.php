@@ -16,7 +16,7 @@ function requestComCategoria(string $uuid): ActualizarCategoriaRequest
 
         public function parameter(string $name, mixed $default = null): mixed
         {
-            return $name === 'categoria' ? $this->uuid : $default;
+            return $name === 'categorias_documento' ? $this->uuid : $default;
         }
     });
 

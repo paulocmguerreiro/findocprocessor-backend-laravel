@@ -17,10 +17,10 @@ final readonly class ActualizarCategoriaDto
     public static function fromRequest(ActualizarCategoriaRequest $request): self
     {
         return new self(
-            nome: $request->validated('nome'),
-            slug: $request->validated('slug'),
+            nome: $request->has('nome') ? $request->string('nome')->toString() : null,
+            slug: $request->has('slug') ? $request->string('slug')->toString() : null,
             tipo_movimento: $request->has('tipo_movimento')
-                ? TipoMovimento::from($request->validated('tipo_movimento'))
+                ? TipoMovimento::from($request->string('tipo_movimento')->toString())
                 : null,
         );
     }
