@@ -3,14 +3,15 @@
 declare(strict_types=1);
 
 use App\Shared\Http\ApiResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Route;
 
 beforeEach(function (): void {
-    Route::get('/test-sucesso', fn () => ApiResponse::devolverSucesso(new JsonResource(['id' => '1', 'nome' => 'Teste'])));
-    Route::post('/test-criado', fn () => ApiResponse::devolverCriado(new JsonResource(['id' => '1', 'nome' => 'Teste'])));
-    Route::delete('/test-vazio', fn () => ApiResponse::devolverVazio());
-    Route::get('/test-coleccao', fn () => ApiResponse::devolverColeccao(
+    Route::get('/test-sucesso', fn (): JsonResponse => ApiResponse::devolverSucesso(new JsonResource(['id' => '1', 'nome' => 'Teste'])));
+    Route::post('/test-criado', fn (): JsonResponse => ApiResponse::devolverCriado(new JsonResource(['id' => '1', 'nome' => 'Teste'])));
+    Route::delete('/test-vazio', fn (): JsonResponse => ApiResponse::devolverVazio());
+    Route::get('/test-coleccao', fn (): JsonResponse => ApiResponse::devolverColeccao(
         JsonResource::collection(collect([['id' => '1'], ['id' => '2']])),
         ['total' => 2]
     ));

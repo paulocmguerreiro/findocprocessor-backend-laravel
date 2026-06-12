@@ -14,15 +14,15 @@ beforeEach(function (): void {
     });
 
     Route::get('/test-not-found', function (): never {
-        throw new ModelNotFoundException();
+        throw new ModelNotFoundException;
     });
 
     Route::get('/test-forbidden', function (): never {
-        throw new AuthorizationException();
+        throw new AuthorizationException;
     });
 
     Route::get('/test-unauthenticated', function (): never {
-        throw new AuthenticationException();
+        throw new AuthenticationException;
     });
 
     Route::get('/test-server-error', function (): never {

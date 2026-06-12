@@ -31,7 +31,7 @@ final class ApiResponse
     public static function devolverColeccao(ResourceCollection $coleccao, array $meta = []): JsonResponse
     {
         return response()->json([
-            'data' => $coleccao->collection ?? new Collection(),
+            'data' => $coleccao->collection ?? new Collection,
             'meta' => $meta,
         ], Response::HTTP_OK);
     }
