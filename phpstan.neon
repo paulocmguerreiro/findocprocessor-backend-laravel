@@ -6,3 +6,5 @@ parameters:
     paths:
         - app
         - database/factories
+    parallel:
+        maximumNumberOfProcesses: 1
