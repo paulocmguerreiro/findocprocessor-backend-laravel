@@ -120,11 +120,13 @@ Cinco closures `render()` por ordem de especificidade (mais específico primeiro
 
 ```
 ValidationException        → 422 + campo errors
-ModelNotFoundException     → 404
-AuthorizationException     → 403
+NotFoundHttpException      → 404  (Laravel converte ModelNotFoundException → NotFoundHttpException antes dos callbacks)
+AccessDeniedHttpException  → 403  (Laravel converte AuthorizationException → AccessDeniedHttpException antes dos callbacks)
 AuthenticationException    → 401
 Throwable                  → 500 (sem stack trace em produção)
 ```
+
+> **Nota:** O Laravel executa `prepareException()` antes de invocar os render callbacks. `ModelNotFoundException` e `AuthorizationException` (sem status) são convertidas para tipos Symfony HTTP antes de os callbacks serem chamados — usar os tipos convertidos nos closures.
 
 **Helper interno** `problemDetails(int $status, string $detail, array $extra = [])`:
 - Constrói o array base: `['status' => $status, 'detail' => $detail]`

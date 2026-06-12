@@ -2,15 +2,16 @@
 
 declare(strict_types=1);
 
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -32,23 +33,23 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
-            return $problemDetails(422, 'Os dados fornecidos são inválidos.', ['errors' => $e->errors()]);
+            return $problemDetails(Response::HTTP_UNPROCESSABLE_ENTITY, 'Os dados fornecidos são inválidos.', ['errors' => $e->errors()]);
         });
 
-        $exceptions->render(function (ModelNotFoundException $_e, Request $request) use ($problemDetails): ?JsonResponse {
+        $exceptions->render(function (NotFoundHttpException $_e, Request $request) use ($problemDetails): ?JsonResponse {
             if (! $request->expectsJson()) {
                 return null;
             }
 
-            return $problemDetails(404, 'Recurso não encontrado.');
+            return $problemDetails(Response::HTTP_NOT_FOUND, 'Recurso não encontrado.');
         });
 
-        $exceptions->render(function (AuthorizationException $_e, Request $request) use ($problemDetails): ?JsonResponse {
+        $exceptions->render(function (AccessDeniedHttpException $_e, Request $request) use ($problemDetails): ?JsonResponse {
             if (! $request->expectsJson()) {
                 return null;
             }
 
-            return $problemDetails(403, 'Sem permissão para aceder a este recurso.');
+            return $problemDetails(Response::HTTP_FORBIDDEN, 'Sem permissão para aceder a este recurso.');
         });
 
         $exceptions->render(function (AuthenticationException $_e, Request $request) use ($problemDetails): ?JsonResponse {
@@ -56,7 +57,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
-            return $problemDetails(401, 'Não autenticado.');
+            return $problemDetails(Response::HTTP_UNAUTHORIZED, 'Não autenticado.');
         });
 
         $exceptions->render(function (Throwable $_e, Request $request) use ($problemDetails): ?JsonResponse {
@@ -64,6 +65,6 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
-            return $problemDetails(500, 'Ocorreu um erro interno. Tente novamente mais tarde.');
+            return $problemDetails(Response::HTTP_INTERNAL_SERVER_ERROR, 'Ocorreu um erro interno. Tente novamente mais tarde.');
         });
     })->create();
