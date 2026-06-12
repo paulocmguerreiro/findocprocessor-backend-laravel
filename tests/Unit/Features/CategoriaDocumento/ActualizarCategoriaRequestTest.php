@@ -10,15 +10,14 @@ use Illuminate\Support\Facades\Validator;
 function requestComCategoria(string $uuid): ActualizarCategoriaRequest
 {
     $request = new ActualizarCategoriaRequest;
-    $request->setRouteResolver(function () use ($uuid) {
-        return new class ($uuid) {
-            public function __construct(private readonly string $uuid) {}
+    $request->setRouteResolver(fn (): object => new readonly class($uuid)
+    {
+        public function __construct(private string $uuid) {}
 
-            public function parameter(string $name, mixed $default = null): mixed
-            {
-                return $name === 'categoria' ? $this->uuid : $default;
-            }
-        };
+        public function parameter(string $name, mixed $default = null): mixed
+        {
+            return $name === 'categoria' ? $this->uuid : $default;
+        }
     });
 
     return $request;
