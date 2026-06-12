@@ -10,6 +10,16 @@ metadata:
 
 Best practices for Laravel, prioritized by impact. Each rule teaches what to do and why. For exact API syntax, verify with `search-docs`.
 
+## Pré-condição obrigatória — MCP laravel-boost
+
+Antes de gerar ou alterar qualquer código, executar obrigatoriamente:
+
+1. `search-docs` — uma ou mais queries temáticas relevantes para o contexto da tarefa (ex: `"form request validation"`, `"eloquent relationships"`)
+2. `database-schema` — **sempre** que a tarefa envolva Models, migrations, ou queries Eloquent
+3. `database-query` — **sempre** que a tarefa envolva repositórios ou queries complexas (verificar dados reais)
+
+Não saltar este passo. O código gerado sem consultar `search-docs` pode usar APIs incorrectas para a versão instalada.
+
 ## Consistency First
 
 Before applying any rule, check what the application already does. Laravel offers multiple valid approaches — the best choice is the one the codebase already uses, even if another pattern would be theoretically better. Inconsistency is worse than a suboptimal pattern.
@@ -185,6 +195,7 @@ Check sibling files, related controllers, models, or tests for established patte
 
 Always use a sub-agent to read rule files and explore this skill's content.
 
-1. Identify the file type and select relevant sections (e.g., migration → §16, controller → §1, §3, §5, §6, §10)
-2. Check sibling files for existing patterns — follow those first per Consistency First
-3. Verify API syntax with `search-docs` for the installed Laravel version
+1. **MCP pré-condição** — executar `search-docs` + `database-schema`/`database-query` conforme aplicável (ver secção "Pré-condição obrigatória")
+2. Identify the file type and select relevant sections (e.g., migration → §16, controller → §1, §3, §5, §6, §10)
+3. Check sibling files for existing patterns — follow those first per Consistency First
+4. Verify API syntax with `search-docs` for the installed Laravel version

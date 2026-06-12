@@ -8,6 +8,15 @@ metadata:
 
 # Pest Testing 4
 
+## Pré-condição obrigatória — MCP laravel-boost
+
+Antes de escrever ou alterar qualquer teste, executar obrigatoriamente:
+
+1. `search-docs` — queries temáticas relevantes para o contexto (ex: `"pest datasets"`, `"pest mocking"`, `"pest arch"`)
+2. `database-schema` — **sempre** que os testes usem modelos ou factories que interajam com a BD
+
+Não saltar este passo. A sintaxe do Pest 4 difere de versões anteriores — `search-docs` garante exemplos correctos para a versão instalada.
+
 ## Documentation
 
 Use `search-docs` for detailed Pest 4 patterns and documentation.
