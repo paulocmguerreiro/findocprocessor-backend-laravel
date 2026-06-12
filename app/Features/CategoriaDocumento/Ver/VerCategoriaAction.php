@@ -8,8 +8,10 @@ use App\Models\CategoriaDocumento;
 
 final class VerCategoriaAction
 {
-    public function handle(string $idCategoria): CategoriaDocumento
+    public function handle(CategoriaDocumento|string $idCategoria): CategoriaDocumento
     {
-        return CategoriaDocumento::findOrFail($idCategoria);
+        return is_string($idCategoria)
+            ? CategoriaDocumento::findOrFail($idCategoria)
+            : $idCategoria;
     }
 }

@@ -8,9 +8,12 @@ use App\Models\CategoriaDocumento;
 
 final class EliminarCategoriaAction
 {
-    public function handle(string $idCategoria): void
+    public function handle(CategoriaDocumento|string $idCategoria): void
     {
-        $categoria = CategoriaDocumento::findOrFail($idCategoria);
+        $categoria = is_string($idCategoria)
+            ? CategoriaDocumento::findOrFail($idCategoria)
+            : $idCategoria;
+
         $categoria->delete();
     }
 }

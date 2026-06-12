@@ -8,9 +8,11 @@ use App\Models\CategoriaDocumento;
 
 final class ActualizarCategoriaAction
 {
-    public function handle(string $idCategoria, ActualizarCategoriaDto $dados): CategoriaDocumento
+    public function handle(CategoriaDocumento|string $idCategoria, ActualizarCategoriaDto $dados): CategoriaDocumento
     {
-        $categoria = CategoriaDocumento::findOrFail($idCategoria);
+        $categoria = is_string($idCategoria)
+            ? CategoriaDocumento::findOrFail($idCategoria)
+            : $idCategoria;
 
         $campos = array_filter([
             'nome' => $dados->nome,
