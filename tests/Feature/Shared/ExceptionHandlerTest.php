@@ -62,7 +62,7 @@ it('AuthenticationException mapeia para 401', function (): void {
 
 it('Throwable genérico mapeia para 500 sem expor detalhes internos', function (): void {
     $this->getJson('/test-server-error')
-        ->assertStatus(500)
+        ->assertStatus(Response::HTTP_INTERNAL_SERVER_ERROR)
         ->assertJsonPath('status', Response::HTTP_INTERNAL_SERVER_ERROR)
         ->assertJsonMissingPath('trace')
         ->assertJsonMissingPath('message');
