@@ -87,7 +87,7 @@ FormRequests vivem dentro da slice, co-localizados com a acção correspondente.
 | `slug` | `sometimes`, `string`, `max:255`, `Rule::unique(...)->ignore($uuid)` |
 | `tipo_movimento` | `sometimes`, `string`, `Rule::in(TipoMovimento::cases())` |
 
-- `$uuid` via `$this->route('categoria')` — exclui o registo actual da validação de unicidade
+- `$uuid` via `$this->route('categorias_documento')` — exclui o registo actual da validação de unicidade (parâmetro gerado pelo `apiResource`)
 - Mensagens em português de Portugal via `messages()`; sem entradas `*.required` (campos são `sometimes`)
 
 ---
