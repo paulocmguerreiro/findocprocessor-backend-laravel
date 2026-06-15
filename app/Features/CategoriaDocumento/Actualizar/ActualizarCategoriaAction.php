@@ -5,11 +5,16 @@ declare(strict_types=1);
 namespace App\Features\CategoriaDocumento\Actualizar;
 
 use App\Models\CategoriaDocumento;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 final class ActualizarCategoriaAction
 {
+    /**
+     * @throws ModelNotFoundException
+     */
     public function handle(CategoriaDocumento|string $idCategoria, ActualizarCategoriaDto $dados): CategoriaDocumento
     {
+        /** @var CategoriaDocumento $categoria */
         $categoria = is_string($idCategoria)
             ? CategoriaDocumento::findOrFail($idCategoria)
             : $idCategoria;
@@ -22,6 +27,8 @@ final class ActualizarCategoriaAction
 
         $categoria->fill($campos)->save();
 
-        return $categoria->fresh() ?? $categoria;
+        $categoria->refresh();
+
+        return $categoria;
     }
 }
