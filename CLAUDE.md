@@ -32,7 +32,7 @@ app/Features/<Feature>/<Action>/
 - `DocumentStatus` é PHP 8.1 backed enum (string)
 - `strict_types=1` em todos os ficheiros PHP
 - Jobs e Schedule são Laravel nativos — não reinventar
-- Repositório entre Action e Eloquent Model
+- Repositório entre Action e Eloquent Model — **obrigatório** quando há lógica de query complexa (joins, aggregates, raw SQL, queries partilhadas entre ≥ 2 Actions); **dispensável** em CRUD simples (≤ 1 query Eloquent por `handle()`, sem lógica partilhada); desvio sempre documentado no Brief da feature
 - Modelos do domínio usam `HasUuids` como chave primária — nunca IDs incrementais
 - `@property-read` obrigatório em todos os Eloquent Models (tipagem completa das colunas para PHPStan e IA)
 
@@ -98,7 +98,7 @@ enum TipoMovimento: string
 ### O que NÃO fazer
 
 - Não colocar lógica nos Controllers
-- Não aceder directamente ao Eloquent Model nas Actions (usar Repository)
+- Não aceder directamente ao Eloquent Model nas Actions sem Repository, excepto em CRUD simples (ver critérios em "Padrões obrigatórios")
 - Não duplicar lógica entre Actions
 - Não omitir `strict_types=1`
 - Não usar `if($doc->status == ...)` nas Actions
