@@ -195,9 +195,12 @@ PENDING → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → DONE
 ### Sessão nova
 
 ```
-Verificar: docs/process-warnings.md (se existir)
-Verificar: docs/workflow-state.md (se existir → avisar sessão em curso)
-Ou usar: /mostra-workflow
+1. Reparar vendor (SEMPRE — partir do princípio que pode estar inválido):
+   composer vendor:repair
+
+2. Verificar: docs/process-warnings.md (se existir)
+3. Verificar: docs/workflow-state.md (se existir → avisar sessão em curso)
+   Ou usar: /mostra-workflow
 ```
 
 ### Commands disponíveis
@@ -243,6 +246,9 @@ Este projecto serve para aprender Vertical Slice Architecture em Laravel. A sec�
 ## FERRAMENTAS DE QUALIDADE
 
 ```bash
+composer vendor:repair       # Detecta e repara vendor/ corrompido (bin/repair-vendor.sh)
+composer vendor:repair:force # Força reinstalação completa do vendor/
+
 composer lint                # Pint (aplica formatação) — usar antes de commitar
 composer refactor            # Rector process (aplica modernizações) — usar antes de commitar
 composer test:lint           # Rector --dry-run + Pint --test — verifica sem alterar

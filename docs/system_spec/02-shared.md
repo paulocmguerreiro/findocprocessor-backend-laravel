@@ -21,6 +21,66 @@ _Vazio até à primeira issue implementada._
 
 _Vazio até à primeira issue implementada._
 
+## DTOs (app/Features/CategoriaDocumento/)
+
+DTOs vivem dentro da slice, co-localizados com a acção correspondente. Todos `final readonly`.
+
+### `CriarCategoriaDto` — `App\Features\CategoriaDocumento\Criar\CriarCategoriaDto`
+
+```php
+final readonly class CriarCategoriaDto
+{
+    public function __construct(
+        public string $nome,
+        public string $slug,
+        public TipoMovimento $tipo_movimento,
+    ) {}
+
+    /**
+     * @throws \UnexpectedValueException
+     */
+    public static function fromRequest(CriarCategoriaRequest $request): self
+    {
+        /** @var array{nome: string, slug: string, tipo_movimento: string} $validated */
+        $validated = $request->validated();
+        // ...guards is_string() + throw + return new self(...)
+    }
+}
+```
+
+- Array shape sem `?` — todos os campos são `required` no FormRequest
+- Guard `if (! is_string($nome) || ...)` + `throw new \UnexpectedValueException` — contrato runtime
+- `@throws` declara a excepção para callers sem inspeccionarem a implementação
+
+### `ActualizarCategoriaDto` — `App\Features\CategoriaDocumento\Actualizar\ActualizarCategoriaDto`
+
+```php
+final readonly class ActualizarCategoriaDto
+{
+    public function __construct(
+        public ?string $nome,
+        public ?string $slug,
+        public ?TipoMovimento $tipo_movimento,
+    ) {}
+
+    /**
+     * @throws \UnexpectedValueException
+     */
+    public static function fromRequest(ActualizarCategoriaRequest $request): self
+    {
+        /** @var array{nome?: string, slug?: string, tipo_movimento?: string} $validated */
+        $validated = $request->validated();
+        // ...guards condicionais ($campo !== null && ! is_string($campo)) + throw
+    }
+}
+```
+
+- Array shape com `?` em cada chave — campos `sometimes`, chave pode estar ausente do array
+- `?string`/`?TipoMovimento` no construtor — aceita `null` para campos omitidos no PATCH
+- Guard condicional: `($nome !== null && ! is_string($nome))` — só valida se a chave existir
+
+**Nota phpstan.neon:** `treatPhpDocTypesAsCertain: false` — necessário para que o Larastan nível 9 não marque os guards `is_string()` como "always true/false" ao ver o `@var array shape`.
+
 ## Enums (app/Shared/Enums/)
 
 ### `TipoMovimento` — `App\Shared\Enums\TipoMovimento`

@@ -14,8 +14,12 @@ final readonly class ActualizarCategoriaDto
         public ?TipoMovimento $tipo_movimento,
     ) {}
 
+    /**
+     * @throws \UnexpectedValueException
+     */
     public static function fromRequest(ActualizarCategoriaRequest $request): self
     {
+        /** @var array{nome?: string, slug?: string, tipo_movimento?: string} $validated */
         $validated = $request->validated();
         $nome = $validated['nome'] ?? null;
         $slug = $validated['slug'] ?? null;
