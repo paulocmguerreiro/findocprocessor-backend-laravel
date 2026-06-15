@@ -14,6 +14,7 @@ final class EliminarCategoriaAction
      */
     public function handle(CategoriaDocumento|string $idCategoria): void
     {
+        /** @var CategoriaDocumento $categoria */
         $categoria = is_string($idCategoria)
             ? CategoriaDocumento::findOrFail($idCategoria)
             : $idCategoria;
