@@ -22,7 +22,7 @@ HTTP Request → FormRequest (valida) → Controller (constrói DTO) → Action 
 | `ListarCategoriasAction` | `App\Features\CategoriaDocumento\Listar` | `handle(): Collection<int, CategoriaDocumento>` | Devolve todas as categorias (`CategoriaDocumento::all()`) |
 | `CriarCategoriaAction` | `App\Features\CategoriaDocumento\Criar` | `handle(CriarCategoriaDto): CategoriaDocumento` | Cria e devolve nova categoria |
 | `VerCategoriaAction` | `App\Features\CategoriaDocumento\Ver` | `handle(CategoriaDocumento\|string): CategoriaDocumento` | Devolve categoria; resolve UUID com `findOrFail` se string |
-| `ActualizarCategoriaAction` | `App\Features\CategoriaDocumento\Actualizar` | `handle(CategoriaDocumento\|string, ActualizarCategoriaDto): CategoriaDocumento` | Actualização parcial via `array_filter !== null`; devolve `fresh()` |
+| `ActualizarCategoriaAction` | `App\Features\CategoriaDocumento\Actualizar` | `handle(CategoriaDocumento\|string, ActualizarCategoriaDto): CategoriaDocumento` | Actualização parcial via `array_filter !== null`; devolve `refresh()` (actualiza instância existente) |
 | `EliminarCategoriaAction` | `App\Features\CategoriaDocumento\Eliminar` | `handle(CategoriaDocumento\|string): void` | Hard delete |
 
 #### DTOs
