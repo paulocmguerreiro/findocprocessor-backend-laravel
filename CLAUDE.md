@@ -95,6 +95,62 @@ enum TipoMovimento: string
 
 ---
 
+## CONVENÇÕES DE TIPAGEM
+
+### Regra A — Eliminar `mixed`: `@var` array shape em `validated()`
+
+`$request->validated()` retorna `array<string, mixed>`. Antes de desestruturar, anotar sempre com array shape PHPDoc para que o Larastan conheça os tipos exactos das chaves:
+
+```php
+/** @var array{nome: string, slug: string, tipo_movimento: string} $validated */
+$validated = $request->validated();
+// chaves opcionais (rules com 'sometimes'): array{nome?: string, slug?: string}
+```
+
+### Regra B — `@throws` obrigatório em métodos que lançam excepções
+
+Sempre que um método contenha `throw`, declarar `@throws` no PHPDoc. Callers ficam informados estaticamente (IDE + Larastan) sem inspeccionarem a implementação:
+
+```php
+/**
+ * @throws \UnexpectedValueException
+ */
+public static function fromRequest(XxxRequest $request): self { ... }
+```
+
+**Padrão obrigatório nos DTOs** — três camadas com responsabilidade própria:
+
+```php
+/**
+ * @throws \UnexpectedValueException
+ */
+public static function fromRequest(ActualizarCategoriaRequest $request): self
+{
+    /** @var array{nome?: string, slug?: string, tipo_movimento?: string} $validated */
+    $validated = $request->validated();
+
+    $nome          = $validated['nome'] ?? null;
+    $slug          = $validated['slug'] ?? null;
+    $tipoMovimento = $validated['tipo_movimento'] ?? null;
+
+    if (
+        ($nome !== null && ! is_string($nome)) ||
+        ($slug !== null && ! is_string($slug)) ||
+        ($tipoMovimento !== null && ! is_string($tipoMovimento))
+    ) {
+        throw new \UnexpectedValueException('Dados inválidos após validação.');
+    }
+
+    return new self(/* ... */);
+}
+```
+
+- `@var` array shape → Larastan conhece a forma do array (sem `mixed` nas variáveis derivadas)
+- `if/throw` → contrato runtime sempre activo (ao contrário de `assert()`, não é desactivável em produção)
+- `@throws` → callers informados sem inspeccionarem a implementação
+
+---
+
 ### O que NÃO fazer
 
 - Não colocar lógica nos Controllers
