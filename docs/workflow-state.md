@@ -1,10 +1,9 @@
-issue_number: 5
-issue_title: "feat(laravel): CategoriaDocumento — feature slice (Actions + Controller)"
-slug: categoria-documento-actions
-branch: feat/categoria-documento-actions
-fase: publica
-proximo_passo: /publica-implementacao #5
-debrief: docs/debriefs/2026-06-12-categoria-documento-actions.md
-brief: docs/briefs/2026-06-12-categoria-documento-actions.md
-spec: docs/specs/2026-06-12-categoria-documento-actions.md
-plan: docs/plans/2026-06-12-categoria-documento-actions.md
+issue_number: 10
+issue_title: "docs(claude): documentar quando o Repository é dispensável em Vertical Slice"
+slug: repository-opcional-vertical-slice
+branch: docs/repository-opcional-vertical-slice
+fase: implementa
+proximo_passo: /implementa-plano #10
+brief: docs/briefs/2026-06-15-repository-opcional-vertical-slice.md
+spec: docs/specs/2026-06-15-repository-opcional-vertical-slice.md
+plan: docs/plans/2026-06-15-repository-opcional-vertical-slice.md
