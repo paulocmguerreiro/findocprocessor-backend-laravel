@@ -11,22 +11,31 @@ use App\Features\CategoriaDocumento\Criar\CriarCategoriaAction;
 use App\Features\CategoriaDocumento\Criar\CriarCategoriaDto;
 use App\Features\CategoriaDocumento\Criar\CriarCategoriaRequest;
 use App\Features\CategoriaDocumento\Eliminar\EliminarCategoriaAction;
+use App\Features\CategoriaDocumento\Listar\CampoOrdenacaoCategorias;
 use App\Features\CategoriaDocumento\Listar\ListarCategoriasAction;
+use App\Features\CategoriaDocumento\Listar\ListarCategoriasRequest;
 use App\Features\CategoriaDocumento\Ver\VerCategoriaAction;
 use App\Http\Controllers\Controller;
 use App\Models\CategoriaDocumento;
+use App\Shared\Enums\DirecaoOrdenacao;
 use App\Shared\Http\ApiResponse;
 use Illuminate\Http\JsonResponse;
 
 final class CategoriaDocumentoController extends Controller
 {
-    public function index(ListarCategoriasAction $accao): JsonResponse
+    public function index(ListarCategoriasRequest $pedido, ListarCategoriasAction $accao): JsonResponse
     {
-        $categorias = $accao->handle();
+        /** @var array{per_page?: string, sort?: string, direction?: string} $validated */
+        $validated = $pedido->validated();
 
-        return ApiResponse::devolverColeccao(
+        $porPagina = isset($validated['per_page']) ? (int) $validated['per_page'] : 15;
+        $campoOrdenacao = CampoOrdenacaoCategorias::from($validated['sort'] ?? CampoOrdenacaoCategorias::Nome->value);
+        $direcaoOrdenacao = DirecaoOrdenacao::from($validated['direction'] ?? DirecaoOrdenacao::Asc->value);
+
+        $categorias = $accao->handle($porPagina, $campoOrdenacao, $direcaoOrdenacao);
+
+        return ApiResponse::devolverPaginado(
             CategoriaDocumentoResource::collection($categorias),
-            ['total' => $categorias->count()],
         );
     }
 
