@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace App\Features\CategoriaDocumento\Listar;
 
+use App\Shared\Enums\DirecaoOrdenacao;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class ListarCategoriasRequest extends FormRequest
+final class ListarCategoriasRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -22,6 +23,7 @@ class ListarCategoriasRequest extends FormRequest
         return [
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
             'sort' => ['sometimes', 'string', Rule::in(array_column(CampoOrdenacaoCategorias::cases(), 'value'))],
+            'direction' => ['sometimes', 'string', Rule::in(array_column(DirecaoOrdenacao::cases(), 'value'))],
             'cursor' => ['sometimes', 'string'],
         ];
     }
@@ -38,6 +40,8 @@ class ListarCategoriasRequest extends FormRequest
             'per_page.max' => 'O número de registos por página não pode ser superior a 100.',
             'sort.string' => 'O campo de ordenação deve ser texto.',
             'sort.in' => 'O campo de ordenação indicado não é válido.',
+            'direction.string' => 'A direcção de ordenação deve ser texto.',
+            'direction.in' => 'A direcção de ordenação indicada não é válida.',
             'cursor.string' => 'O cursor de paginação deve ser texto.',
         ];
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Shared\Http;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Http\Response;
@@ -25,6 +26,11 @@ final class ApiResponse
     public static function devolverVazio(): JsonResponse
     {
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+    }
+
+    public static function devolverPaginado(AnonymousResourceCollection $coleccao): JsonResponse
+    {
+        return $coleccao->response();
     }
 
     /** @param array<string, string|int> $meta */
