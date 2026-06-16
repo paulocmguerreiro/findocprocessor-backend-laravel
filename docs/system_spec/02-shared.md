@@ -100,6 +100,22 @@ enum TipoMovimento: string
 - Cases em TitleCase PT per convenção CLAUDE.md
 - Usado em: `CategoriaDocumento::$tipo_movimento` (cast Eloquent)
 
+### `DirecaoOrdenacao` — `App\Shared\Enums\DirecaoOrdenacao`
+
+PHP 8.1 backed enum (string). Direcção de ordenação genérica — reutilizável em todas as listagens do sistema.
+
+```php
+enum DirecaoOrdenacao: string
+{
+    case Asc  = 'asc';
+    case Desc = 'desc';
+}
+```
+
+- Valores na query string: `'asc'`, `'desc'`
+- Cases em TitleCase PT per convenção CLAUDE.md
+- Usado em: `ListarCategoriasAction::handle()`, `ListarCategoriasRequest` (param `direction`)
+
 ---
 
 `DocumentStatus` — PHP 8.1 backed enum (string). _Pendente._
@@ -163,9 +179,11 @@ Factory estática `final` para respostas de sucesso. Único ponto de saída de r
 | `devolverSucesso(JsonResource $recurso): JsonResponse` | 200 | `{ "data": { ... } }` |
 | `devolverCriado(JsonResource $recurso): JsonResponse` | 201 | `{ "data": { ... } }` |
 | `devolverVazio(): JsonResponse` | 204 | body vazio |
+| `devolverPaginado(AnonymousResourceCollection $coleccao): JsonResponse` | 200 | `{ "data": [...], "links": {...}, "meta": {...} }` — cursor pagination |
 | `devolverColeccao(ResourceCollection $coleccao, array $meta = []): JsonResponse` | 200 | `{ "data": [...], "meta": { ... } }` |
 
-- `$meta` é fornecido explicitamente pelo caller (`['total' => N]`, ou com campos de paginação)
+- `devolverPaginado` delega em `$coleccao->response()` — o Laravel resolve automaticamente `links` e `meta` do `CursorPaginator`
+- `$meta` de `devolverColeccao` é fornecido explicitamente pelo caller (uso para colecções não paginadas)
 - Não injectable — formatação pura sem lógica de negócio
 - Classe `final` — não extensível
 
