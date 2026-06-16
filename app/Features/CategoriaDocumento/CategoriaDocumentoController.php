@@ -25,10 +25,10 @@ final class CategoriaDocumentoController extends Controller
 {
     public function index(ListarCategoriasRequest $pedido, ListarCategoriasAction $accao): JsonResponse
     {
-        /** @var array{per_page?: int, sort?: string, direction?: string} $validated */
+        /** @var array{per_page?: string, sort?: string, direction?: string} $validated */
         $validated = $pedido->validated();
 
-        $porPagina = $validated['per_page'] ?? 15;
+        $porPagina = isset($validated['per_page']) ? (int) $validated['per_page'] : 15;
         $campoOrdenacao = CampoOrdenacaoCategorias::from($validated['sort'] ?? CampoOrdenacaoCategorias::Nome->value);
         $direcaoOrdenacao = DirecaoOrdenacao::from($validated['direction'] ?? DirecaoOrdenacao::Asc->value);
 
