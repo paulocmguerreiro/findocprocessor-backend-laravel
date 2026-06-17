@@ -6,12 +6,15 @@ namespace App\Features\CategoriaDocumento\Actualizar;
 
 use App\Shared\Enums\TipoMovimento;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 class ActualizarCategoriaRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        Gate::authorize('update', $this->route('categorias_documento'));
+
         return true;
     }
 

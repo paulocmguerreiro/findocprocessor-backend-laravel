@@ -60,3 +60,10 @@ it('permite actualizar o slug da própria categoria sem erro de unicidade', func
     $this->putJson("/api/categorias-documento/{$categoria->id}", ['slug' => 'slug-proprio'])
         ->assertOk();
 });
+
+it('guest pode actualizar categoria', function (): void {
+    $categoria = CategoriaDocumento::factory()->create();
+
+    $this->putJson("/api/categorias-documento/{$categoria->id}", ['nome' => 'Nome Actualizado por Guest'])
+        ->assertOk();
+});

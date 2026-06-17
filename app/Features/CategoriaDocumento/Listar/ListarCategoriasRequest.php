@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace App\Features\CategoriaDocumento\Listar;
 
+use App\Models\CategoriaDocumento;
 use App\Shared\Enums\DirecaoOrdenacao;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 final class ListarCategoriasRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        Gate::authorize('viewAny', CategoriaDocumento::class);
+
         return true;
     }
 

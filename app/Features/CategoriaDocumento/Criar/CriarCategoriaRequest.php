@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace App\Features\CategoriaDocumento\Criar;
 
+use App\Models\CategoriaDocumento;
 use App\Shared\Enums\TipoMovimento;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 class CriarCategoriaRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        Gate::authorize('create', CategoriaDocumento::class);
+
         return true;
     }
 

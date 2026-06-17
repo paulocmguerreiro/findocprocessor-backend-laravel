@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace App\Features\CategoriaDocumento\Actualizar;
 
 use App\Models\CategoriaDocumento;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Gate;
 
 final class ActualizarCategoriaAction
 {
     /**
      * @throws ModelNotFoundException
+     * @throws AuthorizationException
      */
     public function handle(CategoriaDocumento|string $idCategoria, ActualizarCategoriaDto $dados): CategoriaDocumento
     {
@@ -18,6 +21,8 @@ final class ActualizarCategoriaAction
         $categoria = is_string($idCategoria)
             ? CategoriaDocumento::findOrFail($idCategoria)
             : $idCategoria;
+
+        Gate::authorize('update', $categoria);
 
         $camposParaActualizar = array_filter([
             'nome' => $dados->nome,
