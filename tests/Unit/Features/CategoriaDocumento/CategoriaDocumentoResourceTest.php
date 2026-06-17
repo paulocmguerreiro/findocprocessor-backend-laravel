@@ -13,7 +13,7 @@ describe('CategoriaDocumentoResource', function (): void {
             'nome' => 'Fatura de Fornecedor',
             'slug' => 'fatura-de-fornecedor',
         ]);
-        $resultado = (new CategoriaDocumentoResource($categoria))->toArray(new Request);
+        $resultado = new CategoriaDocumentoResource($categoria)->toArray(new Request);
 
         expect($resultado)
             ->toHaveKey('id', $categoria->id)
@@ -24,7 +24,7 @@ describe('CategoriaDocumentoResource', function (): void {
 
     it('não inclui timestamps', function (): void {
         $categoria = CategoriaDocumento::factory()->make();
-        $resultado = (new CategoriaDocumentoResource($categoria))->toArray(new Request);
+        $resultado = new CategoriaDocumentoResource($categoria)->toArray(new Request);
 
         expect($resultado)
             ->not->toHaveKey('created_at')
@@ -33,7 +33,7 @@ describe('CategoriaDocumentoResource', function (): void {
 
     it('tipo_movimento é o valor string do enum', function (): void {
         $categoria = CategoriaDocumento::factory()->comMovimentoDebito()->make();
-        $resultado = (new CategoriaDocumentoResource($categoria))->toArray(new Request);
+        $resultado = new CategoriaDocumentoResource($categoria)->toArray(new Request);
 
         expect($resultado['tipo_movimento'])
             ->toBeString()

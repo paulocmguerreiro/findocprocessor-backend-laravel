@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
  */
 class CategoriaDocumentoFactory extends Factory
 {
+    #[\Override]
     protected $model = CategoriaDocumento::class;
 
     public function definition(): array
