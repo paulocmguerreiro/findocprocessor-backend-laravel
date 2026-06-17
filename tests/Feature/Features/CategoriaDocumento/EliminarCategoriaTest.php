@@ -23,3 +23,10 @@ it('devolve 404 quando a categoria não existe', function (): void {
         ->assertJsonPath('status', Response::HTTP_NOT_FOUND)
         ->assertJsonPath('detail', 'Recurso não encontrado.');
 });
+
+it('guest pode eliminar categoria', function (): void {
+    $categoria = CategoriaDocumento::factory()->create();
+
+    $this->deleteJson("/api/categorias-documento/{$categoria->id}")
+        ->assertNoContent();
+});

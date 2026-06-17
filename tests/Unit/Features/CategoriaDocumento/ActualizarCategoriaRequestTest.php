@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Features\CategoriaDocumento\Actualizar\ActualizarCategoriaRequest;
 use App\Models\CategoriaDocumento;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 
 function requestComCategoria(string $uuid): ActualizarCategoriaRequest
@@ -24,7 +25,11 @@ function requestComCategoria(string $uuid): ActualizarCategoriaRequest
 }
 
 describe('ActualizarCategoriaRequest — autorização e regras sem BD', function (): void {
-    it('authorize retorna true', function (): void {
+    it('authorize delega em Gate::authorize com update', function (): void {
+        Gate::shouldReceive('authorize')
+            ->once()
+            ->with('update', null);
+
         expect((new ActualizarCategoriaRequest)->authorize())->toBeTrue();
     });
 

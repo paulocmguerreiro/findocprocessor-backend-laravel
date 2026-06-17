@@ -60,3 +60,12 @@ it('devolve 422 quando campos obrigatórios estão em falta', function (): void 
         ->assertUnprocessable()
         ->assertJsonStructure(['status', 'detail', 'errors' => ['nome', 'slug', 'tipo_movimento']]);
 });
+
+it('guest pode criar categoria', function (): void {
+    $this->postJson('/api/categorias-documento', [
+        'nome' => 'Categoria Guest',
+        'slug' => 'categoria-guest',
+        'tipo_movimento' => TipoMovimento::Neutro->value,
+    ])
+        ->assertCreated();
+});

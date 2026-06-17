@@ -110,3 +110,8 @@ it('cursor além do fim devolve lista vazia', function (): void {
             'meta' => ['per_page', 'next_cursor', 'prev_cursor', 'path'],
         ]);
 });
+
+it('guest pode listar categorias', function (): void {
+    $this->getJson('/api/categorias-documento')
+        ->assertOk();
+});
