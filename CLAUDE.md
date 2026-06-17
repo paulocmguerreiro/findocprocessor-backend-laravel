@@ -28,6 +28,7 @@ app/Features/<Feature>/<Action>/
 
 - Controllers sem lógica — só fazem dispatch para Actions
 - Actions injectam interfaces, nunca implementações concretas
+- **Autorização dupla camada (obrigatório):** `Gate::authorize()` no FormRequest (camada HTTP — Laravel trata automaticamente o 403) **e** na Action (camada de lógica — garante que a Policy se aplica quando a Action é invocada fora de HTTP: Jobs, Artisan, testes de integração). Não é redundância — são dois contextos de invocação distintos.
 - `$doc->state()->correct($data)` — sem `if($doc->status ==)`
 - `DocumentStatus` é PHP 8.1 backed enum (string)
 - `strict_types=1` em todos os ficheiros PHP

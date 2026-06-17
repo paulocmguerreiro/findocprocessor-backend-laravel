@@ -43,15 +43,9 @@ API disponível em `http://localhost:8000`.
 php artisan test
 ```
 
-## Endpoints principais
+## Estado actual
 
-| Método | Path              | Descrição                    |
-| ------ | ----------------- | ---------------------------- |
-| GET    | `/state`          | Lista de documentos          |
-| GET    | `/events`         | SSE stream                   |
-| POST   | `/upload`         | Upload de ficheiro           |
-| POST   | `/documents/manual` | Registo manual             |
-| GET    | `/config`         | Configuração pública         |
+Projecto em construção. Feature implementada até ao momento:
 
 ### Categorias de documento
 
