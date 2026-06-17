@@ -11,10 +11,12 @@ use App\Features\CategoriaDocumento\Criar\CriarCategoriaAction;
 use App\Features\CategoriaDocumento\Criar\CriarCategoriaDto;
 use App\Features\CategoriaDocumento\Criar\CriarCategoriaRequest;
 use App\Features\CategoriaDocumento\Eliminar\EliminarCategoriaAction;
+use App\Features\CategoriaDocumento\Eliminar\EliminarCategoriaRequest;
 use App\Features\CategoriaDocumento\Listar\CampoOrdenacaoCategorias;
 use App\Features\CategoriaDocumento\Listar\ListarCategoriasAction;
 use App\Features\CategoriaDocumento\Listar\ListarCategoriasRequest;
 use App\Features\CategoriaDocumento\Ver\VerCategoriaAction;
+use App\Features\CategoriaDocumento\Ver\VerCategoriaRequest;
 use App\Http\Controllers\Controller;
 use App\Models\CategoriaDocumento;
 use App\Shared\Enums\DirecaoOrdenacao;
@@ -46,7 +48,7 @@ final class CategoriaDocumentoController extends Controller
         return ApiResponse::devolverCriado(new CategoriaDocumentoResource($categoria));
     }
 
-    public function show(CategoriaDocumento $categorias_documento, VerCategoriaAction $accao): JsonResponse
+    public function show(VerCategoriaRequest $pedido, CategoriaDocumento $categorias_documento, VerCategoriaAction $accao): JsonResponse
     {
         return ApiResponse::devolverSucesso(
             new CategoriaDocumentoResource($accao->handle($categorias_documento)),
@@ -60,7 +62,7 @@ final class CategoriaDocumentoController extends Controller
         return ApiResponse::devolverSucesso(new CategoriaDocumentoResource($categoria));
     }
 
-    public function destroy(CategoriaDocumento $categorias_documento, EliminarCategoriaAction $accao): JsonResponse
+    public function destroy(EliminarCategoriaRequest $pedido, CategoriaDocumento $categorias_documento, EliminarCategoriaAction $accao): JsonResponse
     {
         $accao->handle($categorias_documento);
 
