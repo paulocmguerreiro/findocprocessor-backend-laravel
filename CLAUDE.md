@@ -249,6 +249,7 @@ Este projecto serve para aprender Vertical Slice Architecture em Laravel. A sec�
 ```bash
 composer vendor:repair       # Detecta e repara vendor/ corrompido (bin/repair-vendor.sh)
 composer vendor:repair:force # Força reinstalação completa do vendor/
+composer vendor:update       # Actualiza constraints no composer.json (composer outdated) + composer update
 
 composer lint                # Pint (aplica formatação) — usar antes de commitar
 composer refactor            # Rector process (aplica modernizações) — usar antes de commitar
