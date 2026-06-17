@@ -13,7 +13,7 @@ final class CriarCategoriaAction
         return CategoriaDocumento::create([
             'nome' => $dados->nome,
             'slug' => $dados->slug,
-            'tipo_movimento' => $dados->tipo_movimento,
+            'tipo_movimento' => $dados->tipoMovimento,
         ]);
     }
 }

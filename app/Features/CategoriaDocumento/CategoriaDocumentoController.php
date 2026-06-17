@@ -25,12 +25,12 @@ final class CategoriaDocumentoController extends Controller
 {
     public function index(ListarCategoriasRequest $pedido, ListarCategoriasAction $accao): JsonResponse
     {
-        /** @var array{per_page?: string, sort?: string, direction?: string} $validated */
-        $validated = $pedido->validated();
+        /** @var array{per_page?: string, sort?: string, direction?: string} $parametrosValidados */
+        $parametrosValidados = $pedido->validated();
 
-        $porPagina = isset($validated['per_page']) ? (int) $validated['per_page'] : 15;
-        $campoOrdenacao = CampoOrdenacaoCategorias::from($validated['sort'] ?? CampoOrdenacaoCategorias::Nome->value);
-        $direcaoOrdenacao = DirecaoOrdenacao::from($validated['direction'] ?? DirecaoOrdenacao::Asc->value);
+        $porPagina = isset($parametrosValidados['per_page']) ? (int) $parametrosValidados['per_page'] : 15;
+        $campoOrdenacao = CampoOrdenacaoCategorias::from($parametrosValidados['sort'] ?? CampoOrdenacaoCategorias::Nome->value);
+        $direcaoOrdenacao = DirecaoOrdenacao::from($parametrosValidados['direction'] ?? DirecaoOrdenacao::Asc->value);
 
         $categorias = $accao->handle($porPagina, $campoOrdenacao, $direcaoOrdenacao);
 
@@ -39,9 +39,9 @@ final class CategoriaDocumentoController extends Controller
         );
     }
 
-    public function store(CriarCategoriaRequest $request, CriarCategoriaAction $accao): JsonResponse
+    public function store(CriarCategoriaRequest $pedido, CriarCategoriaAction $accao): JsonResponse
     {
-        $categoria = $accao->handle(CriarCategoriaDto::fromRequest($request));
+        $categoria = $accao->handle(CriarCategoriaDto::fromRequest($pedido));
 
         return ApiResponse::devolverCriado(new CategoriaDocumentoResource($categoria));
     }
@@ -53,9 +53,9 @@ final class CategoriaDocumentoController extends Controller
         );
     }
 
-    public function update(ActualizarCategoriaRequest $request, CategoriaDocumento $categorias_documento, ActualizarCategoriaAction $accao): JsonResponse
+    public function update(ActualizarCategoriaRequest $pedido, CategoriaDocumento $categorias_documento, ActualizarCategoriaAction $accao): JsonResponse
     {
-        $categoria = $accao->handle($categorias_documento, ActualizarCategoriaDto::fromRequest($request));
+        $categoria = $accao->handle($categorias_documento, ActualizarCategoriaDto::fromRequest($pedido));
 
         return ApiResponse::devolverSucesso(new CategoriaDocumentoResource($categoria));
     }
