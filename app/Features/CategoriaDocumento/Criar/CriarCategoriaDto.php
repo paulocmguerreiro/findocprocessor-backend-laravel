@@ -11,7 +11,7 @@ final readonly class CriarCategoriaDto
     public function __construct(
         public string $nome,
         public string $slug,
-        public TipoMovimento $tipo_movimento,
+        public TipoMovimento $tipoMovimento,
     ) {}
 
     /**
@@ -19,11 +19,11 @@ final readonly class CriarCategoriaDto
      */
     public static function fromRequest(CriarCategoriaRequest $request): self
     {
-        /** @var array{nome: string, slug: string, tipo_movimento: string} $validated */
-        $validated = $request->validated();
-        $nome = $validated['nome'] ?? null;
-        $slug = $validated['slug'] ?? null;
-        $tipoMovimento = $validated['tipo_movimento'] ?? null;
+        /** @var array{nome: string, slug: string, tipo_movimento: string} $dadosValidados */
+        $dadosValidados = $request->validated();
+        $nome = $dadosValidados['nome'] ?? null;
+        $slug = $dadosValidados['slug'] ?? null;
+        $tipoMovimento = $dadosValidados['tipo_movimento'] ?? null;
 
         if (! is_string($nome) || ! is_string($slug) || ! is_string($tipoMovimento)) {
             throw new \UnexpectedValueException('Dados inválidos após validação.');
@@ -32,7 +32,7 @@ final readonly class CriarCategoriaDto
         return new self(
             nome: $nome,
             slug: $slug,
-            tipo_movimento: TipoMovimento::from($tipoMovimento),
+            tipoMovimento: TipoMovimento::from($tipoMovimento),
         );
     }
 }

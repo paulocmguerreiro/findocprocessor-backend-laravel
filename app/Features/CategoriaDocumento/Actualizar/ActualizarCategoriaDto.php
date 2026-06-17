@@ -11,7 +11,7 @@ final readonly class ActualizarCategoriaDto
     public function __construct(
         public ?string $nome,
         public ?string $slug,
-        public ?TipoMovimento $tipo_movimento,
+        public ?TipoMovimento $tipoMovimento,
     ) {}
 
     /**
@@ -19,11 +19,11 @@ final readonly class ActualizarCategoriaDto
      */
     public static function fromRequest(ActualizarCategoriaRequest $request): self
     {
-        /** @var array{nome?: string, slug?: string, tipo_movimento?: string} $validated */
-        $validated = $request->validated();
-        $nome = $validated['nome'] ?? null;
-        $slug = $validated['slug'] ?? null;
-        $tipoMovimento = $validated['tipo_movimento'] ?? null;
+        /** @var array{nome?: string, slug?: string, tipo_movimento?: string} $dadosValidados */
+        $dadosValidados = $request->validated();
+        $nome = $dadosValidados['nome'] ?? null;
+        $slug = $dadosValidados['slug'] ?? null;
+        $tipoMovimento = $dadosValidados['tipo_movimento'] ?? null;
 
         if (
             ($nome !== null && ! is_string($nome)) ||
@@ -36,7 +36,7 @@ final readonly class ActualizarCategoriaDto
         return new self(
             nome: $nome,
             slug: $slug,
-            tipo_movimento: is_string($tipoMovimento) ? TipoMovimento::from($tipoMovimento) : null,
+            tipoMovimento: is_string($tipoMovimento) ? TipoMovimento::from($tipoMovimento) : null,
         );
     }
 }

@@ -19,13 +19,13 @@ final class ActualizarCategoriaAction
             ? CategoriaDocumento::findOrFail($idCategoria)
             : $idCategoria;
 
-        $campos = array_filter([
+        $camposParaActualizar = array_filter([
             'nome' => $dados->nome,
             'slug' => $dados->slug,
-            'tipo_movimento' => $dados->tipo_movimento,
+            'tipo_movimento' => $dados->tipoMovimento,
         ], fn (mixed $valor): bool => $valor !== null);
 
-        $categoria->fill($campos)->save();
+        $categoria->fill($camposParaActualizar)->save();
 
         $categoria->refresh();
 
