@@ -49,13 +49,13 @@ Projecto em construção. Feature implementada até ao momento:
 
 ### Categorias de documento
 
-| Método | Path                                        | Descrição                  |
-| ------ | ------------------------------------------- | -------------------------- |
-| GET    | `/api/categorias-documento`                 | Listar todas               |
-| POST   | `/api/categorias-documento`                 | Criar                      |
-| GET    | `/api/categorias-documento/{id}`            | Ver detalhe                |
-| PUT    | `/api/categorias-documento/{id}`            | Actualizar (parcial)       |
-| DELETE | `/api/categorias-documento/{id}`            | Eliminar                   |
+| Método | Path                             | Descrição            |
+| ------ | -------------------------------- | -------------------- |
+| GET    | `/api/categorias-documento`      | Listar todas         |
+| POST   | `/api/categorias-documento`      | Criar                |
+| GET    | `/api/categorias-documento/{id}` | Ver detalhe          |
+| PUT    | `/api/categorias-documento/{id}` | Actualizar (parcial) |
+| DELETE | `/api/categorias-documento/{id}` | Eliminar             |
 
 ## Qualidade
 
@@ -65,7 +65,7 @@ Projecto em construção. Feature implementada até ao momento:
 - `strict_types=1` em todos os ficheiros
 - CI obrigatório: pint ✓ phpstan ✓ testes ✓
 
-## Relacionado
+## Relacionado (roadmap)
 
 - [`findocprocessor-frontend`](../findocprocessor-frontend) — Dashboard Angular
 - [`findocprocessor-backend-dotnet`](../findocprocessor-backend-dotnet) — Implementação alternativa em .NET
