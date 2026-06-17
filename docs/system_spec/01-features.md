@@ -10,10 +10,12 @@ CRUD completo de categorias de documento. Slice auto-contida: Actions, DTOs, Con
 
 **Fluxo de dados:**
 ```
-HTTP Request → FormRequest (valida) → Controller (constrói DTO) → Action (acede Model) → Controller (formata com Resource) → ApiResponse
+HTTP Request → FormRequest (autoriza + valida) → Controller (constrói DTO) → Action (autoriza + acede Model) → Controller (formata com Resource) → ApiResponse
 ```
 
 **Decisão arquitectural:** Actions aceitam `CategoriaDocumento|string` — compatíveis com Route Model Binding (HTTP) e testes unitários (UUID directo). Sem Repository — Eloquent abstrai suficientemente a persistência para este CRUD simples (desvio explícito CLAUDE.md, aprovado na Issue #5). A listagem usa cursor pagination (keyset) em vez de OFFSET — padrão do sistema para todas as listagens futuras (Issue #9).
+
+**Autorização:** dupla verificação intencional — FormRequest (`Gate::authorize()`) na camada HTTP + Action (`Gate::authorize()`) na camada de lógica. Garante que a Policy se aplica mesmo em invocações fora do contexto HTTP (Jobs, Artisan). Policy auto-descoberta por convenção de nome (`CategoriaDocumentoPolicy` ↔ `CategoriaDocumento`). Nesta fase, todos os métodos retornam `true` (acesso aberto, incluindo guests).
 
 #### Actions
 
@@ -40,17 +42,43 @@ Ambos `final readonly`. `fromRequest()` usa `validated()` + guards `is_string()`
 |---|---|---|---|
 | `CampoOrdenacaoCategorias` | `App\Features\CategoriaDocumento\Listar` | `Nome = 'nome'` | Campo de ordenação da listagem de categorias; extensível com `Slug`, `TipoMovimento`, etc. |
 
+#### Policy
+
+`CategoriaDocumentoPolicy` (`App\Policies`) — `final class`, `strict_types=1`. Auto-descoberta por convenção de nome. Todos os métodos aceitam `?User $utilizador` (nullable — permite guests). Nesta fase, todos retornam `true`.
+
+| Método | Assinatura |
+|---|---|
+| `viewAny` | `viewAny(?User $utilizador): bool` |
+| `view` | `view(?User $utilizador, CategoriaDocumento $categoriaDocumento): bool` |
+| `create` | `create(?User $utilizador): bool` |
+| `update` | `update(?User $utilizador, CategoriaDocumento $categoriaDocumento): bool` |
+| `delete` | `delete(?User $utilizador, CategoriaDocumento $categoriaDocumento): bool` |
+
+**Nota `rector.php`:** `RemoveUnusedPublicMethodParameterRector` excluído para `app/Policies/` — parâmetros `?User` e `CategoriaDocumento` são contrato do framework (o Laravel usa reflexão para decidir se guests passam), não dead code.
+
+#### FormRequests
+
+| Classe | Namespace | `authorize()` chama | `rules()` |
+|---|---|---|---|
+| `ListarCategoriasRequest` | `Listar` | `Gate::authorize('viewAny', CategoriaDocumento::class)` | `per_page`, `sort`, `direction`, `cursor` |
+| `CriarCategoriaRequest` | `Criar` | `Gate::authorize('create', CategoriaDocumento::class)` | `nome`, `slug`, `tipo_movimento` (required) |
+| `VerCategoriaRequest` | `Ver` | `Gate::authorize('view', $this->route('categorias_documento'))` | `[]` |
+| `ActualizarCategoriaRequest` | `Actualizar` | `Gate::authorize('update', $this->route('categorias_documento'))` | `nome`, `slug`, `tipo_movimento` (sometimes) |
+| `EliminarCategoriaRequest` | `Eliminar` | `Gate::authorize('delete', $this->route('categorias_documento'))` | `[]` |
+
+`VerCategoriaRequest` e `EliminarCategoriaRequest` são FormRequests mínimos — sem `rules()`, apenas autorização. `CriarCategoriaRequest` e `ActualizarCategoriaRequest` não são `final` (são mockadas em testes unitários de DTO).
+
 #### Controller
 
 `CategoriaDocumentoController` (`App\Features\CategoriaDocumento`) — `final`, sem lógica. Usa Route Model Binding (`CategoriaDocumento $categorias_documento`) + injecção de Actions via parâmetros de método.
 
-| Método | Action invocada |
-|---|---|
-| `index` | `ListarCategoriasAction::handle()` — extrai `per_page` (cast `int`), `sort` e `direction` do `ListarCategoriasRequest`; devolve via `ApiResponse::devolverPaginado()` |
-| `store` | `CriarCategoriaAction::handle()` |
-| `show` | `VerCategoriaAction::handle()` |
-| `update` | `ActualizarCategoriaAction::handle()` |
-| `destroy` | `EliminarCategoriaAction::handle()` |
+| Método | FormRequest | Action invocada |
+|---|---|---|
+| `index` | `ListarCategoriasRequest` | `ListarCategoriasAction::handle()` — extrai `per_page` (cast `int`), `sort` e `direction`; devolve via `ApiResponse::devolverPaginado()` |
+| `store` | `CriarCategoriaRequest` | `CriarCategoriaAction::handle()` |
+| `show` | `VerCategoriaRequest` | `VerCategoriaAction::handle()` |
+| `update` | `ActualizarCategoriaRequest` | `ActualizarCategoriaAction::handle()` |
+| `destroy` | `EliminarCategoriaRequest` | `EliminarCategoriaAction::handle()` |
 
 ---
 
