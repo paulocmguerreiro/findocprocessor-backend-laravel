@@ -1,0 +1,1 @@
+../../../findocprocessor-workflow/.claude/skills/executa-testes.md

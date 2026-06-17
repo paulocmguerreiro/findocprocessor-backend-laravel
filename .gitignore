@@ -46,8 +46,10 @@ Thumbs.db
 .phpunit.result.cache
 coverage/
 
-# Claude Code
-.claude/
+# Claude Code — ignorar dados locais, commitar commands e skills
+.claude/settings.local.json
+.claude/worktrees/
+.claude/**/.DS_Store
 
 # MCP config (pode conter tokens)
 .mcp.json

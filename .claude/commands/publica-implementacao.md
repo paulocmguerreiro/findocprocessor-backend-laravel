@@ -1,0 +1,1 @@
+../../../findocprocessor-workflow/.claude/commands/publica-implementacao.md

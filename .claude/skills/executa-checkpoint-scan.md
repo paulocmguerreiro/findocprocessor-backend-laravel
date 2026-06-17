@@ -1,0 +1,1 @@
+../../../findocprocessor-workflow/.claude/skills/executa-checkpoint-scan.md
