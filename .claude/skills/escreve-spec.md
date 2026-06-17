@@ -1,1 +1,121 @@
-../../../findocprocessor-workflow/.claude/skills/escreve-spec.md
+# Skill: escreve-spec
+
+Traduz o Brief em requisitos técnicos verificáveis, alinhados com a arquitectura do stack activo.
+
+> **Categoria:** escreve  
+> **Usado em:** `/planeia-issue` (passo 7)  
+> **Produz:** `docs/specs/YYYY-MM-DD-<slug>.md`
+
+## Contrato
+
+**Input:**
+- `docs/briefs/YYYY-MM-DD-<slug>.md` — incluindo `## Questões em aberto` e `## Riscos identificados`
+- Issue body (via `gh issue view $N`) — para herdar CAs e Dependências
+- `docs/system_spec/*.md` relevantes
+- Secção `## ARQUITECTURA` do `CLAUDE.md` do repo activo
+- Resposta do utilizador ao Checkpoint A (deve incluir resolução das questões em aberto)
+
+**Output:** `docs/specs/YYYY-MM-DD-<slug>.md`
+
+**Usado em:** `/planeia-issue` (passo 7)
+
+---
+
+## Formato da Spec
+
+```markdown
+# Spec: <título>
+
+**Issue:** #N
+**Brief:** docs/briefs/YYYY-MM-DD-<slug>.md
+**Data:** YYYY-MM-DD
+
+## Requisitos funcionais
+- RF-01: ...
+- RF-02: ...
+
+## Requisitos não funcionais
+- RNF-01: ...
+
+## Contratos de API (se aplicável)
+
+| Método | Path | Request | Response |
+| ------ | ---- | ------- | -------- |
+| ...    | ...  | ...     | ...      |
+
+## Modelo de dados (se aplicável)
+
+| Campo | Tipo | Obrigatório | Notas |
+| ----- | ---- | ----------- | ----- |
+| ...   | ...  | ...         | ...   |
+
+## Regras de negócio
+- RN-01: ...
+
+## Dependências
+- Issues bloqueantes: [#N — título | "nenhuma"]
+
+## Questões resolvidas
+| Questão (do Brief) | Decisão |
+| ------------------ | ------- |
+| ...                | ...     |
+
+## Critérios de aceitação
+> Herdados da issue — nunca remover ou reformular os CAs originais sem justificação.
+- [ ] CA-01: ... *(issue)*
+- [ ] CA-02: ... *(spec)*
+
+## SYSTEM_SPEC a actualizar
+- `docs/system_spec/<ficheiro>.md` — secção X
+
+## Verificação RGPD/NIS2
+- Dados pessoais: [detalhe]
+- Superfície de ataque: [detalhe]
+```
+
+---
+
+## Verificação de arquitectura por stack
+
+Antes de gerar a Spec, verificar invariantes da secção `ARQUITECTURA` do `CLAUDE.md` e confirmar com `search-docs` qualquer API ou comportamento que não seja trivial — em particular quando o Brief identificou questões em aberto ou riscos técnicos com base em documentação.
+
+**dotnet (Clean Architecture)**
+- Lógica de negócio em `Core`? (nunca em Endpoint ou Worker)
+- Novos `DocumentState` implementam a interface base?
+- Endpoints usam Minimal API? (nunca `ControllerBase`)
+- DTOs mapeados manualmente? (nunca AutoMapper)
+- Campos sensíveis excluídos de logs e DTOs?
+
+**laravel (Vertical Slice)**
+- Nova feature cabe numa existente em `app/Features/`?
+- Cada operação tem a sua `<Name>Action.php`?
+- Controller tem zero lógica — apenas dispatch?
+- Actions injectam interfaces? (nunca Eloquent directo)
+- Todos os ficheiros com `declare(strict_types=1)`?
+
+**laravel — Convenções de nomenclatura (verificar em Spec e Plan)**
+- Métodos de domínio em VERBO+Intenção PT? (`criarCategoria`, `validarMovimento`) — excepção: métodos impostos pelo framework (`handle`, `store`, `index`, `update`, `destroy`, `boot`, `register`, `rules`, `messages`, `toArray`, `authorize`, `definition`)
+- Variáveis e propriedades em camelCase PT com NOME+Intenção[+Escala]? (`$dadosValidados`, `$camposParaActualizar`, `$totalFaturas`) — nomes genéricos como `$data`, `$result`, `$validated`, `$campos`, `$response` são violação
+- Propriedades de DTOs em camelCase PHP (`$tipoMovimento`), mesmo que o campo BD seja snake_case (`'tipo_movimento'` na chave do `fill()`)
+- snake_case apenas nas colunas de base de dados (convenção Laravel/Eloquent) e nos parâmetros de route model binding (impostos pela rota)
+- Parâmetros de controller que coincidem com route model binding são excepção — não renomear
+
+**angular (Standalone)**
+- Todos os componentes com `standalone: true` e `OnPush`?
+- Estado com Signals nativos? (nunca NgRx ou BehaviorSubject)
+- SSE consumido apenas via `SseStore`?
+- Nenhum tipo `any` no TypeScript?
+
+**OpenAPI (qualquer stack se afectar API)**
+- Novo endpoint → adicionar ao `findocprocessor-workflow/docs/openapi.yaml`
+- Alteração de schema → actualizar no `openapi.yaml`
+- Breaking change → documentar e criar issues linked nos outros repos
+
+---
+
+## Regras
+- Cada requisito tem ID (`RF-NN`, `RNF-NN`, `RN-NN`, `CA-NN`)
+- CAs da issue são herdados e marcados *(issue)*; CAs adicionados na Spec marcados *(spec)*
+- `## Questões resolvidas` cobre todas as entradas de `## Questões em aberto` do Brief
+- Critérios de aceitação são verificáveis por testes
+- Não incluir detalhes de implementação — isso fica no Plan
