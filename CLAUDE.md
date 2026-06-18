@@ -36,6 +36,7 @@ app/Features/<Feature>/<Action>/
 - Repositório entre Action e Eloquent Model — **obrigatório** quando há lógica de query complexa (joins, aggregates, raw SQL, queries partilhadas entre ≥ 2 Actions); **dispensável** em CRUD simples (≤ 1 query Eloquent por `handle()`, sem lógica partilhada); desvio sempre documentado no Brief da feature
 - Modelos do domínio usam `HasUuids` como chave primária — nunca IDs incrementais
 - `@property-read` obrigatório em todos os Eloquent Models (tipagem completa das colunas para PHPStan e IA)
+- **`DB::transaction()` obrigatório em todas as Actions de escrita** (criar, actualizar, eliminar) — `Gate::authorize()` fica **fora** da transação (autorização não é operação de BD); a persistência fica **dentro**. `DB::transaction()` faz rollback e re-lança automaticamente qualquer `\Throwable`. Adicionar `@throws \Throwable` ao PHPDoc do `handle()`. Nota: Jobs disparados dentro de transações devem usar `after_commit: true` na configuração da queue ou implementar `ShouldDispatchAfterCommit`.
 
 ---
 
