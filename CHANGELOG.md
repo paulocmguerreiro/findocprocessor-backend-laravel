@@ -6,6 +6,13 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Changed
+- **Issue #30** — `CategoriaDocumento`: forçar update completo (PUT semântico) — remover actualizações parciais
+  - `ActualizarCategoriaRequest`: `sometimes` → `required` nos 3 campos; mensagens `.required` adicionadas (`nome`, `slug`, `tipo_movimento`)
+  - `ActualizarCategoriaDto`: propriedades `?string`/`?TipoMovimento` → não-nullable; null guards condicionais removidos do construtor; array shape `{nome?: ...}` → `{nome: ...}`; estrutura agora idêntica ao `CriarCategoriaDto`
+  - `ActualizarCategoriaAction`: `array_filter(..., fn => $valor !== null)` removido — `fill()` directo com os 3 campos
+  - Testes actualizados: helpers `payloadCompleto()`/`payloadActualizar()`; testes de actualização parcial substituídos por testes de `required` por campo; `ActionTest` valida os 3 campos no resultado
+
 ### Added
 - **Issue #27** — `Entidade`: camada de modelo completa
   - Migration `entidades` com UUID PK, booleanos indexados (`e_cliente`, `e_fornecedor`, `e_empresa_aplicacao`) e índice parcial único MySQL (`unica_empresa_mae_idx WHERE e_empresa_aplicacao = 1`) protegido por guard de driver
