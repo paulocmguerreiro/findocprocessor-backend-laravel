@@ -13,19 +13,29 @@ uses(RefreshDatabase::class);
 it('actualiza quando recebe CategoriaDocumento directamente', function (): void {
     $categoria = CategoriaDocumento::factory()->comMovimentoDebito()->create(['nome' => 'Original']);
 
-    $dto = new ActualizarCategoriaDto(nome: 'Actualizado', slug: null, tipoMovimento: null);
+    $dto = new ActualizarCategoriaDto(
+        nome: 'Actualizado',
+        slug: 'actualizado',
+        tipoMovimento: TipoMovimento::Credito,
+    );
     $resultado = (new ActualizarCategoriaAction)->handle($categoria, $dto);
 
     expect($resultado->nome)->toBe('Actualizado')
-        ->and($resultado->tipo_movimento)->toBe(TipoMovimento::Debito);
+        ->and($resultado->slug)->toBe('actualizado')
+        ->and($resultado->tipo_movimento)->toBe(TipoMovimento::Credito);
 });
 
 it('actualiza quando recebe string UUID', function (): void {
     $categoria = CategoriaDocumento::factory()->comMovimentoCredito()->create(['nome' => 'Original']);
 
-    $dto = new ActualizarCategoriaDto(nome: 'Actualizado', slug: null, tipoMovimento: null);
+    $dto = new ActualizarCategoriaDto(
+        nome: 'Actualizado',
+        slug: 'actualizado',
+        tipoMovimento: TipoMovimento::Debito,
+    );
     $resultado = (new ActualizarCategoriaAction)->handle($categoria->id, $dto);
 
     expect($resultado->nome)->toBe('Actualizado')
-        ->and($resultado->tipo_movimento)->toBe(TipoMovimento::Credito);
+        ->and($resultado->slug)->toBe('actualizado')
+        ->and($resultado->tipo_movimento)->toBe(TipoMovimento::Debito);
 });

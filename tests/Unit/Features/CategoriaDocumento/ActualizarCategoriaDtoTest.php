@@ -10,49 +10,53 @@ describe('Construtor', function (): void {
     it('lança InvalidArgumentException se nome for string vazia', function (): void {
         expect(fn (): ActualizarCategoriaDto => new ActualizarCategoriaDto(
             nome: '',
-            slug: null,
-            tipoMovimento: null,
-        ))->toThrow(InvalidArgumentException::class);
+            slug: 'slug-valido',
+            tipoMovimento: TipoMovimento::Neutro,
+        ))->toThrow(InvalidArgumentException::class, 'nome não pode ser vazio.');
     });
 
     it('lança InvalidArgumentException se slug for string vazia', function (): void {
         expect(fn (): ActualizarCategoriaDto => new ActualizarCategoriaDto(
-            nome: null,
+            nome: 'Nome Válido',
             slug: '',
-            tipoMovimento: null,
-        ))->toThrow(InvalidArgumentException::class);
-    });
-
-    it('aceita todos os campos nulos (actualização parcial sem campos)', function (): void {
-        $dto = new ActualizarCategoriaDto(nome: null, slug: null, tipoMovimento: null);
-
-        expect($dto->nome)->toBeNull()
-            ->and($dto->slug)->toBeNull()
-            ->and($dto->tipoMovimento)->toBeNull();
-    });
-
-    it('cria DTO com dados parciais válidos', function (): void {
-        $dto = new ActualizarCategoriaDto(
-            nome: 'Novo Nome',
-            slug: null,
             tipoMovimento: TipoMovimento::Neutro,
+        ))->toThrow(InvalidArgumentException::class, 'slug não pode ser vazio.');
+    });
+
+    it('lança InvalidArgumentException se nome for só whitespace', function (): void {
+        expect(fn (): ActualizarCategoriaDto => new ActualizarCategoriaDto(
+            nome: '   ',
+            slug: 'slug-valido',
+            tipoMovimento: TipoMovimento::Neutro,
+        ))->toThrow(InvalidArgumentException::class, 'nome não pode ser vazio.');
+    });
+
+    it('cria DTO com todos os campos válidos', function (): void {
+        $dto = new ActualizarCategoriaDto(
+            nome: 'Nome Actualizado',
+            slug: 'nome-actualizado',
+            tipoMovimento: TipoMovimento::Credito,
         );
 
-        expect($dto->nome)->toBe('Novo Nome')
-            ->and($dto->slug)->toBeNull()
-            ->and($dto->tipoMovimento)->toBe(TipoMovimento::Neutro);
+        expect($dto->nome)->toBe('Nome Actualizado')
+            ->and($dto->slug)->toBe('nome-actualizado')
+            ->and($dto->tipoMovimento)->toBe(TipoMovimento::Credito);
     });
 });
 
 describe('fromRequest()', function (): void {
-    it('cria DTO a partir de request com campos parciais', function (): void {
+    it('cria DTO a partir de request com todos os campos', function (): void {
         $request = Mockery::mock(ActualizarCategoriaRequest::class);
-        $request->shouldReceive('validated')->andReturn(['nome' => 'Nome Actualizado']);
+        $request->shouldReceive('validated')->andReturn([
+            'nome' => 'Nome Actualizado',
+            'slug' => 'nome-actualizado',
+            'tipo_movimento' => TipoMovimento::Debito->value,
+        ]);
 
         $dto = ActualizarCategoriaDto::fromRequest($request);
 
         expect($dto->nome)->toBe('Nome Actualizado')
-            ->and($dto->slug)->toBeNull()
-            ->and($dto->tipoMovimento)->toBeNull();
+            ->and($dto->slug)->toBe('nome-actualizado')
+            ->and($dto->tipoMovimento)->toBe(TipoMovimento::Debito);
     });
 });
