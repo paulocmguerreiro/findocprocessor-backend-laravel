@@ -1,5 +1,5 @@
 ---
-description: "Cria issue para a camada de lógica (Actions + Controller + Events + Listeners + testes)"
+description: "Cria issue para a camada de lógica (Actions + Controller + FormRequests + Jobs + Events + Listeners + Observers + testes)"
 allowed-tools: [Bash, Read]
 ---
 
@@ -24,20 +24,23 @@ Se existir uma `<Entidade>Policy` (criada em /cria-issue-modelo), confirmar que 
 
 ### 2 — Selecção de componentes
 
-Apresentar checklist:
+Apresentar checklist **e aguardar resposta antes de avançar**:
 
 ```
 Selecciona os componentes a incluir nesta issue:
 
-[ ] Actions          — uma por operação (Create, Update, Delete, List, …)
+[ ] Actions          — uma por operação (Criar, Actualizar, Eliminar, Listar, …)
 [ ] Controller       — dispatch para Actions; zero lógica
-[ ] Form Requests    — validação de input + authorize() via Policy por operação
-[ ] API Resources    — formatação do output (se necessário)
-[ ] Events           — disparados dentro das Actions
+[ ] FormRequests     — validação de input + authorize() via Policy por operação;
+                       inclui fromRequest() nos DTOs (se DTOs existirem)
+[ ] Jobs             — tarefas assíncronas/agendadas disparadas por Actions ou Listeners
+[ ] Events           — eventos de domínio disparados dentro das Actions
 [ ] Listeners        — reagem a Events (pode ser issue futura)
-[ ] Observers        — reagem a eventos Eloquent (pode ser issue futura)
-[ ] Testes de feature — Actions + Controller + Events + autorização (endpoints HTTP)
+[ ] Observers        — reagem a eventos Eloquent do Model (created, updated, deleted…)
+[ ] Testes de feature — endpoints HTTP (happy path + 403 + 404) + Jobs + Observers
 ```
+
+Só avançar para o Passo 3 depois de o utilizador confirmar os componentes.
 
 ### 3 — Recolha de informação (adaptar ao seleccionado)
 
@@ -51,7 +54,7 @@ Selecciona os componentes a incluir nesta issue:
 > - Output (response format, status HTTP)
 > - Regras de negócio específicas desta operação
 
-**Se Form Requests seleccionados — perguntar:**
+**Se FormRequests seleccionados — perguntar:**
 > "Existe já uma `<Entidade>Policy` para esta entidade (criada em /cria-issue-modelo)?"
 >
 > Se sim: o `authorize()` de cada FormRequest chama a Policy:
@@ -64,6 +67,18 @@ Selecciona os componentes a incluir nesta issue:
 > Se não existe Policy: indicar que `authorize()` retorna `true` temporariamente e criar issue separada para a Policy.
 >
 > "Há operações públicas (sem autenticação)? Quais?" — esses FormRequests retornam `true` de forma explícita e documentada.
+>
+> "Existem DTOs criados em /cria-issue-modelo ou /cria-issue-persistencia para esta entidade?"
+> Se sim: os FormRequests incluem o método `fromRequest()` nos DTOs correspondentes
+> (ex: `CriarEntidadeDto::fromRequest(CriarEntidadeRequest $request): self`).
+
+**Se Jobs seleccionados — perguntar:**
+> "O que faz o Job? (ex: processar documento, enviar email, sincronizar dados)"
+> "É disparado por quê? (Action, Listener, Schedule, Artisan command)"
+> "É síncrono (`dispatchSync`) ou assíncrono (queue)? Qual a queue?"
+> "Tem retries? Timeout? `$tries` e `$timeout` definidos?"
+> "O Job injiecta dependências (repositório, service) ou recebe tudo pelo construtor?"
+> "Há cenários de falha a tratar? (ex: `failed()` callback)"
 
 **Se Events seleccionados — perguntar:**
 > "Para que operações são disparados eventos?"
@@ -71,23 +86,38 @@ Selecciona os componentes a incluir nesta issue:
 > "Há Listeners/Observers nesta issue ou ficam para uma issue futura?"
 
 **Se Listeners seleccionados — perguntar:**
-> "O que faz o Listener quando recebe o evento? (ex: notificação, log, job)"
-> "É síncrono ou assíncrono (queue)?"
+> "O que faz o Listener quando recebe o evento? (ex: notificação, log, dispatch de Job)"
+> "É síncrono ou assíncrono (queue)? Qual a queue?"
+> "O Listener está registado em `EventServiceProvider` ou usa `#[ListensTo]`?"
+
+**Se Observers seleccionados — perguntar:**
+> "A que eventos Eloquent reage? (`created`, `updated`, `deleted`, `restored`, …)"
+> "O que faz o Observer para cada evento? (ex: invalidar cache, disparar Job, log)"
+> "O Observer está registado no Model via `#[ObservedBy]` ou no `AppServiceProvider`?"
+> "O Observer tem acesso a dependências externas (repositório, service)? Injiectar via construtor."
 
 **Se Testes seleccionados — perguntar:**
 > "Há endpoints que requerem autenticação?"
 > "Há cenários de autorização a testar? (ex: utilizador sem permissão recebe 403)"
 > "Há cenários de erro específicos a testar (ex: entidade não encontrada, permissão negada)?"
+> "Se Jobs: testar dispatch (assertDispatched) e execução isolada do Job?"
+> "Se Observers: testar que o Observer reage correctamente a cada evento Eloquent?"
 
 ### 4 — Verificação de invariantes
 
 Antes de gerar o body, verificar:
 - Controller tem zero lógica — apenas dispatch?
 - Cada operação tem a sua própria Action (não uma Action multi-propósito)?
-- Actions injectam `*RepositoryInterface`, nunca o Model directamente?
+- Actions injectam interface do repositório (se existe) ou Eloquent directo apenas
+  em CRUD simples (≤ 1 query, sem lógica partilhada) — ver CLAUDE.md?
 - Events são disparados na Action (nunca no Controller nem no Model)?
 - `FormRequest::authorize()` chama a Policy via `$this->authorize()` — nunca `return true` hardcoded sem justificação?
-- Se não existe Policy ainda, `return true` é aceitável temporariamente mas deve ser documentado como dívida técnica?
+- Se não existe Policy ainda, `return true` é aceitável temporariamente mas documentado como dívida técnica?
+- Se FormRequests + DTOs existem: `fromRequest()` é implementado no DTO desta issue?
+- Se Jobs: `final class implements ShouldQueue` (se assíncrono); `$tries` e `$timeout` declarados?
+- Se Jobs assíncronos: qual a queue? Está declarada em `.env`?
+- Se Observers: registado via `#[ObservedBy(XxxObserver::class)]` no Model ou em `AppServiceProvider::boot()`?
+- Se Observers com dependências externas: injectadas via construtor (nunca `app()` ou `resolve()`)?
 
 ### 5 — Gerar e propor issue
 
@@ -110,48 +140,83 @@ Gerar body no formato padrão do `/cria-issue`:
 | Actualizar | ActualizarXxxAction     | PATCH       | /api/xxs/{id} | XxxActualizado | update()         |
 | Eliminar  | EliminarXxxAction        | DELETE      | /api/xxs/{id} | XxxEliminado  | delete()          |
 
-## Autorização (FormRequests → Policy)
+## FormRequests (se aplicável)
 
-| FormRequest              | authorize() chama         | Autenticação obrigatória |
-|--------------------------|--------------------------|--------------------------|
-| CriarXxxRequest          | create(Xxx::class)        | sim                      |
-| ListarXxsRequest         | viewAny(Xxx::class)       | sim                      |
-| VerXxxRequest            | view($this->route('xxx')) | sim                      |
-| ActualizarXxxRequest     | update($this->route('xxx')) | sim                    |
-| EliminarXxxRequest       | delete($this->route('xxx')) | sim                    |
+| FormRequest            | authorize() chama                   | Auth. obrigatória | DTO::fromRequest()              |
+|------------------------|-------------------------------------|-------------------|---------------------------------|
+| CriarXxxRequest        | create(Xxx::class)                  | sim               | CriarXxxDto::fromRequest()      |
+| ListarXxxsRequest      | viewAny(Xxx::class)                 | sim               | —                               |
+| VerXxxRequest          | view($this->route('xxx'))           | sim               | —                               |
+| ActualizarXxxRequest   | update($this->route('xxx'))         | sim               | ActualizarXxxDto::fromRequest() |
+| EliminarXxxRequest     | delete($this->route('xxx'))         | sim               | —                               |
 
-[Omitir ou adaptar se não há Policy ou se há operações públicas]
+Omitir coluna `DTO::fromRequest()` se não existem DTOs.
+Omitir secção completa se FormRequests não seleccionados.
 
-## Events (se aplicável)
+## Jobs (se aplicável)
 
-| Evento | Disparado em | Payload | Listener |
-|--------|--------------|---------|----------|
-| ...    | ...          | ...     | ...      |
+| Job | Disparado por | Queue | Tries | Timeout | Notas |
+|-----|---------------|-------|-------|---------|-------|
+| ... | ...           | ...   | ...   | ...     | ...   |
+
+[Omitir se Jobs não seleccionados]
+
+## Events e Listeners (se aplicável)
+
+| Evento | Disparado em | Payload | Listener | Síncrono? |
+|--------|--------------|---------|----------|-----------|
+| ...    | ...          | ...     | ...      | ...       |
+
+[Omitir se Events não seleccionados]
+
+## Observers (se aplicável)
+
+| Observer | Evento Eloquent | Acção | Registo |
+|----------|----------------|-------|---------|
+| ...      | created / updated / deleted | ... | #[ObservedBy] / AppServiceProvider |
+
+[Omitir se Observers não seleccionados]
 
 ## Critérios de aceitação
 - [ ] CA-01: Cada operação tem a sua Action com método `handle()` único
 - [ ] CA-02: Controller não contém lógica de negócio — apenas dispatch
-- [ ] CA-03: Actions injectam a interface do repositório (nunca Eloquent directo)
-- [ ] CA-04: Events são disparados dentro das Actions
-- [ ] CA-05: `FormRequest::authorize()` chama a Policy correcta — nunca `return true` sem justificação
-- [ ] CA-06: Testes de feature cobrem todos os endpoints (happy path + 403 + 404)
-- [ ] CA-07: 100% code coverage e 100% type coverage (composer test)
+- [ ] CA-03: Actions injectam interface do repositório (se existe) ou Eloquent
+             directo apenas em CRUD simples (≤ 1 query, sem lógica partilhada)
+- [ ] CA-04: `FormRequest::authorize()` chama a Policy correcta — nunca
+             `return true` sem justificação
+- [ ] CA-05: `fromRequest()` implementado nos DTOs correspondentes (se DTOs existem)
+- [ ] CA-06: Events são disparados dentro das Actions (nunca no Controller)
+- [ ] CA-07: Jobs têm `$tries` e `$timeout` declarados (se assíncronos)
+- [ ] CA-08: Observers injectam dependências via construtor (nunca `app()`)
+- [ ] CA-09: Testes de feature cobrem todos os endpoints (happy path + 403 + 404)
+- [ ] CA-10: Testes cobrem dispatch de Jobs (`assertDispatched`) e execução isolada
+- [ ] CA-11: Testes cobrem Observer para cada evento Eloquent configurado
+- [ ] CA-12: 100% code coverage e 100% type coverage (`composer test`)
 [adicionar CAs específicos com base nas operações recolhidas]
+[omitir CA-04/CA-05 se FormRequests não seleccionados]
+[omitir CA-06 se Events não seleccionados]
+[omitir CA-07/CA-10 se Jobs não seleccionados]
+[omitir CA-08/CA-11 se Observers não seleccionados]
 
 ## Rotas a adicionar
 [Lista de rotas ou "a definir no planeia-issue"]
 
 ## Impacto técnico
 - Afecta: features layer + routes
-- SYSTEM_SPEC a actualizar: docs/system_spec/01-features.md, docs/system_spec/05-routes.md
+- SYSTEM_SPEC a actualizar: `docs/system_spec/01-features.md`,
+  `docs/system_spec/05-routes.md`
+  [+ `docs/system_spec/04-infra.md` se Jobs ou Observers incluídos]
 - Dependências: [#N — model layer | #M — persistence layer]
 - Policy: [#P — model layer com XxxPolicy | "Policy a criar — dívida técnica"]
 
 ## Invariantes em risco
 - Controller sem lógica (nunca `if`, nunca query directa)
 - Actions: uma por operação, método `handle()` único
-- Events: disparados na Action, nunca no Controller
+- Events: disparados na Action, nunca no Controller nem no Model
 - `FormRequest::authorize()`: chama `$this->authorize()` com Policy — nunca `return true` hardcoded
+- `fromRequest()` nos DTOs: implementado aqui, quando os FormRequests existem
+- Jobs assíncronos: `final class implements ShouldQueue`; queue, `$tries` e `$timeout` declarados
+- Observers: registado via `#[ObservedBy]` no Model ou em `AppServiceProvider::boot()`
 
 ## Contrato OpenAPI
 - openapi.yaml afectado: sim — adicionar endpoints
@@ -163,9 +228,10 @@ Gerar body no formato padrão do `/cria-issue`:
 
 ## Fora de âmbito
 - Model e Migration: issue /cria-issue-modelo
-- Repositório: issue /cria-issue-persistencia
+- Repositório e interface: issue /cria-issue-persistencia
+- DTOs e Resource (se ainda não existem): issue /cria-issue-modelo ou /cria-issue-persistencia
 - Policy (se ainda não existe): issue separada /cria-issue-modelo com componente Policy
-[outros itens fora de âmbito — ex: Listeners se adiados]
+[outros itens fora de âmbito — ex: Listeners ou Observers se adiados para issue futura]
 ```
 
 Apresentar ao utilizador:
