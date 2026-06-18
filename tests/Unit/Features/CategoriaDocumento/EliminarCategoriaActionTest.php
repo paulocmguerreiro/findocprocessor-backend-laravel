@@ -23,3 +23,16 @@ it('elimina quando recebe string UUID', function (): void {
 
     $this->assertDatabaseMissing('categorias_documento', ['id' => $categoria->id]);
 });
+
+it('faz rollback quando ocorre excepção durante eliminação', function (): void {
+    $categoria = CategoriaDocumento::factory()->create();
+
+    CategoriaDocumento::deleting(function (): void {
+        throw new RuntimeException('falha simulada durante eliminação');
+    });
+
+    expect(fn () => (new EliminarCategoriaAction)->handle($categoria))
+        ->toThrow(RuntimeException::class, 'falha simulada durante eliminação');
+
+    $this->assertDatabaseHas('categorias_documento', ['id' => $categoria->id]);
+});

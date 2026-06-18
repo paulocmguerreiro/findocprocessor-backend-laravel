@@ -39,3 +39,22 @@ it('actualiza quando recebe string UUID', function (): void {
         ->and($resultado->slug)->toBe('actualizado')
         ->and($resultado->tipo_movimento)->toBe(TipoMovimento::Debito);
 });
+
+it('faz rollback quando ocorre excepção durante update', function (): void {
+    $categoria = CategoriaDocumento::factory()->comMovimentoDebito()->create(['nome' => 'Original', 'slug' => 'original']);
+
+    CategoriaDocumento::saved(function (): void {
+        throw new RuntimeException('falha simulada durante update');
+    });
+
+    $dto = new ActualizarCategoriaDto(
+        nome: 'Alterado',
+        slug: 'alterado',
+        tipoMovimento: TipoMovimento::Credito,
+    );
+
+    expect(fn (): CategoriaDocumento => (new ActualizarCategoriaAction)->handle($categoria, $dto))
+        ->toThrow(RuntimeException::class, 'falha simulada durante update');
+
+    $this->assertDatabaseHas('categorias_documento', ['id' => $categoria->id, 'nome' => 'Original', 'slug' => 'original']);
+});

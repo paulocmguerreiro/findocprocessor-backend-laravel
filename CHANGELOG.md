@@ -6,6 +6,12 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Changed
+- **Issue #34** — Transações de BD nas Actions de escrita (`CategoriaDocumento`)
+  - `CriarCategoriaAction`, `ActualizarCategoriaAction`, `EliminarCategoriaAction` envolvem a persistência em `DB::transaction()` — `Gate::authorize()` fica fora, rollback e re-lançamento de `\Throwable` são automáticos
+  - Padrão documentado em `CLAUDE.md` (secção "Padrões obrigatórios") e `docs/system_spec/04-infra.md`
+  - Novos testes de rollback: `CriarCategoriaActionTest` (novo ficheiro), `ActualizarCategoriaActionTest` e `EliminarCategoriaActionTest` (adições) — usam model events (`created`/`saved`/`deleting`) para verificar rollback em falha a meio
+
 ### Added
 - **Issue #32** — `Entidade`: persistence layer (DTOs + Resource)
   - `CriarEntidadeDto` (`final readonly`) — construtor valida `nome`/`nif` não-vazios; booleans sem validação; sem `fromRequest()` (adicionado na issue de lógica)

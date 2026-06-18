@@ -7,6 +7,7 @@ namespace App\Features\CategoriaDocumento\Eliminar;
 use App\Models\CategoriaDocumento;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 final class EliminarCategoriaAction
@@ -14,6 +15,7 @@ final class EliminarCategoriaAction
     /**
      * @throws ModelNotFoundException<CategoriaDocumento>
      * @throws AuthorizationException
+     * @throws \Throwable
      */
     public function handle(CategoriaDocumento|string $idCategoria): void
     {
@@ -24,6 +26,6 @@ final class EliminarCategoriaAction
 
         Gate::authorize('delete', $categoria);
 
-        $categoria->delete();
+        DB::transaction(fn (): ?bool => $categoria->delete());
     }
 }
