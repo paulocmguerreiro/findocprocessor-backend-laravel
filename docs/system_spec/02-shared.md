@@ -68,26 +68,27 @@ final readonly class ActualizarCategoriaDto
 {
     /** @throws \InvalidArgumentException */
     public function __construct(
-        public ?string $nome,
-        public ?string $slug,
-        public ?TipoMovimento $tipoMovimento,
+        public string $nome,
+        public string $slug,
+        public TipoMovimento $tipoMovimento,
     ) {
-        if ($this->nome !== null && trim($this->nome) === '') { throw new \InvalidArgumentException('nome não pode ser vazio.'); }
-        if ($this->slug !== null && trim($this->slug) === '') { throw new \InvalidArgumentException('slug não pode ser vazio.'); }
+        if (trim($this->nome) === '') { throw new \InvalidArgumentException('nome não pode ser vazio.'); }
+        if (trim($this->slug) === '') { throw new \InvalidArgumentException('slug não pode ser vazio.'); }
     }
 
     /** @throws \InvalidArgumentException */
     public static function fromRequest(ActualizarCategoriaRequest $request): self
     {
-        /** @var array{nome?: string, slug?: string, tipo_movimento?: string} $dadosValidados */
+        /** @var array{nome: string, slug: string, tipo_movimento: string} $dadosValidados */
         $dadosValidados = $request->validated();
-        return new self(nome: $dadosValidados['nome'] ?? null, slug: $dadosValidados['slug'] ?? null, tipoMovimento: isset($dadosValidados['tipo_movimento']) ? TipoMovimento::from($dadosValidados['tipo_movimento']) : null);
+        return new self(nome: $dadosValidados['nome'], slug: $dadosValidados['slug'], tipoMovimento: TipoMovimento::from($dadosValidados['tipo_movimento']));
     }
 }
 ```
 
-- Campos nullable — actualização parcial (PATCH); construtor só valida quando não-null
-- Array shape com `?` nas chaves opcionais (`sometimes`)
+- Campos não-nullable — update completo (PUT); construtor valida invariantes incondicionalmente
+- Estrutura idêntica ao `CriarCategoriaDto` (Issue #30)
+- Array shape sem `?` — todos os campos são `required` no FormRequest
 
 ## Enums (app/Shared/Enums/)
 
@@ -167,12 +168,12 @@ FormRequests vivem dentro da slice, co-localizados com a acção correspondente.
 
 | Campo | Regras |
 |---|---|
-| `nome` | `sometimes`, `string`, `max:255` |
-| `slug` | `sometimes`, `string`, `max:255`, `Rule::unique(...)->ignore($uuid)` |
-| `tipo_movimento` | `sometimes`, `string`, `Rule::in(TipoMovimento::cases())` |
+| `nome` | `required`, `string`, `max:255` |
+| `slug` | `required`, `string`, `max:255`, `Rule::unique(...)->ignore($uuid)` |
+| `tipo_movimento` | `required`, `string`, `Rule::in(TipoMovimento::cases())` |
 
 - `$uuid` via `$this->route('categorias_documento')` — exclui o registo actual da validação de unicidade (parâmetro gerado pelo `apiResource`)
-- Mensagens em português de Portugal via `messages()`; sem entradas `*.required` (campos são `sometimes`)
+- Mensagens em português de Portugal via `messages()`; inclui entradas `*.required` para os 3 campos (Issue #30 — semântica PUT)
 
 ---
 

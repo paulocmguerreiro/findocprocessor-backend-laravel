@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Features\CategoriaDocumento\Actualizar\ActualizarCategoriaRequest;
 use App\Models\CategoriaDocumento;
+use App\Shared\Enums\TipoMovimento;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
@@ -24,6 +25,15 @@ function requestComCategoria(string $uuid): ActualizarCategoriaRequest
     return $request;
 }
 
+function payloadCompleto(array $sobrepor = []): array
+{
+    return array_merge([
+        'nome' => 'Nome Válido',
+        'slug' => 'nome-valido',
+        'tipo_movimento' => TipoMovimento::Neutro->value,
+    ], $sobrepor);
+}
+
 describe('ActualizarCategoriaRequest — autorização e regras sem BD', function (): void {
     it('authorize delega em Gate::authorize com update', function (): void {
         Gate::shouldReceive('authorize')
@@ -33,10 +43,10 @@ describe('ActualizarCategoriaRequest — autorização e regras sem BD', functio
         expect((new ActualizarCategoriaRequest)->authorize())->toBeTrue();
     });
 
-    it('aceita payload só com nome', function (): void {
+    it('aceita payload com todos os campos válidos', function (): void {
         $request = requestComCategoria('qualquer-uuid');
         $validator = Validator::make(
-            ['nome' => 'Novo Nome'],
+            payloadCompleto(),
             $request->rules(),
             $request->messages(),
         );
@@ -44,21 +54,46 @@ describe('ActualizarCategoriaRequest — autorização e regras sem BD', functio
         expect($validator->fails())->toBeFalse();
     });
 
-    it('aceita payload vazio', function (): void {
+    it('rejeita payload sem nome', function (): void {
         $request = requestComCategoria('qualquer-uuid');
         $validator = Validator::make(
-            [],
+            payloadCompleto(['nome' => null]),
             $request->rules(),
             $request->messages(),
         );
 
-        expect($validator->fails())->toBeFalse();
+        expect($validator->errors()->first('nome'))
+            ->toBe('O nome da Categoria é obrigatório.');
+    });
+
+    it('rejeita payload sem slug', function (): void {
+        $request = requestComCategoria('qualquer-uuid');
+        $validator = Validator::make(
+            payloadCompleto(['slug' => null]),
+            $request->rules(),
+            $request->messages(),
+        );
+
+        expect($validator->errors()->first('slug'))
+            ->toBe('O identificador da URL da Categoria é obrigatório.');
+    });
+
+    it('rejeita payload sem tipo_movimento', function (): void {
+        $request = requestComCategoria('qualquer-uuid');
+        $validator = Validator::make(
+            payloadCompleto(['tipo_movimento' => null]),
+            $request->rules(),
+            $request->messages(),
+        );
+
+        expect($validator->errors()->first('tipo_movimento'))
+            ->toBe('O tipo de movimento é obrigatório.');
     });
 
     it('rejeita tipo_movimento inválido', function (): void {
         $request = requestComCategoria('qualquer-uuid');
         $validator = Validator::make(
-            ['tipo_movimento' => 'invalido'],
+            payloadCompleto(['tipo_movimento' => 'invalido']),
             $request->rules(),
             $request->messages(),
         );
@@ -76,7 +111,7 @@ describe('ActualizarCategoriaRequest — unicidade (BD)', function (): void {
 
         $request = requestComCategoria($categoria->id);
         $validator = Validator::make(
-            ['slug' => 'fatura'],
+            payloadCompleto(['slug' => 'fatura']),
             $request->rules(),
             $request->messages(),
         );
@@ -90,7 +125,7 @@ describe('ActualizarCategoriaRequest — unicidade (BD)', function (): void {
 
         $request = requestComCategoria($outra->id);
         $validator = Validator::make(
-            ['slug' => 'fatura'],
+            payloadCompleto(['slug' => 'fatura']),
             $request->rules(),
             $request->messages(),
         );

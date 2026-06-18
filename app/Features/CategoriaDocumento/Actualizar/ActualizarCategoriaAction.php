@@ -24,13 +24,11 @@ final class ActualizarCategoriaAction
 
         Gate::authorize('update', $categoria);
 
-        $camposParaActualizar = array_filter([
+        $categoria->fill([
             'nome' => $dados->nome,
             'slug' => $dados->slug,
             'tipo_movimento' => $dados->tipoMovimento,
-        ], fn (mixed $valor): bool => $valor !== null);
-
-        $categoria->fill($camposParaActualizar)->save();
+        ])->save();
 
         $categoria->refresh();
 
