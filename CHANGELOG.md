@@ -6,6 +6,13 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Added
+- **Issue #32** — `Entidade`: persistence layer (DTOs + Resource)
+  - `CriarEntidadeDto` (`final readonly`) — construtor valida `nome`/`nif` não-vazios; booleans sem validação; sem `fromRequest()` (adicionado na issue de lógica)
+  - `ActualizarEntidadeDto` (`final readonly`) — estrutura idêntica; update completo (PUT semântico), todos os campos obrigatórios
+  - `EntidadeResource` — serializa 6 campos (`id`, `nome`, `nif`, `e_cliente`, `e_fornecedor`, `e_empresa_aplicacao`); booleans como `bool`; timestamps omitidos
+  - 13 testes unitários: 5 por DTO (4 invariantes + happy path) + 3 no Resource (campos, sem timestamps, tipos bool)
+
 ### Changed
 - **Issue #30** — `CategoriaDocumento`: forçar update completo (PUT semântico) — remover actualizações parciais
   - `ActualizarCategoriaRequest`: `sometimes` → `required` nos 3 campos; mensagens `.required` adicionadas (`nome`, `slug`, `tipo_movimento`)
