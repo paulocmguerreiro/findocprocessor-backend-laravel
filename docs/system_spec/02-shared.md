@@ -129,6 +129,59 @@ enum DirecaoOrdenacao: string
 
 `DocumentStatus` — PHP 8.1 backed enum (string). _Pendente._
 
+## DTOs (app/Features/Entidade/)
+
+DTOs vivem dentro da slice, co-localizados com a acção correspondente. Todos `final readonly`.
+
+`fromRequest()` **não incluído** — adicionado na issue de lógica quando os FormRequests forem criados.
+
+### `CriarEntidadeDto` — `App\Features\Entidade\Criar\CriarEntidadeDto`
+
+```php
+final readonly class CriarEntidadeDto
+{
+    /** @throws \InvalidArgumentException */
+    public function __construct(
+        public string $nome,
+        public string $nif,
+        public bool $eCliente,
+        public bool $eFornecedor,
+        public bool $eEmpresaAplicacao,
+    ) {
+        if (trim($this->nome) === '') { throw new \InvalidArgumentException('nome não pode ser vazio.'); }
+        if (trim($this->nif) === '') { throw new \InvalidArgumentException('nif não pode ser vazio.'); }
+    }
+}
+```
+
+- Booleans sem validação — `bool` não tem estado "vazio"
+- Invariante `eEmpresaAplicacao → eCliente/eFornecedor` pertence à Action (regra de negócio)
+
+### `ActualizarEntidadeDto` — `App\Features\Entidade\Actualizar\ActualizarEntidadeDto`
+
+Estrutura idêntica a `CriarEntidadeDto` — update completo (sem campos opcionais).
+
+```php
+final readonly class ActualizarEntidadeDto
+{
+    /** @throws \InvalidArgumentException */
+    public function __construct(
+        public string $nome,
+        public string $nif,
+        public bool $eCliente,
+        public bool $eFornecedor,
+        public bool $eEmpresaAplicacao,
+    ) {
+        if (trim($this->nome) === '') { throw new \InvalidArgumentException('nome não pode ser vazio.'); }
+        if (trim($this->nif) === '') { throw new \InvalidArgumentException('nif não pode ser vazio.'); }
+    }
+}
+```
+
+- Campos não-nullable — update completo (PUT); construtor valida invariantes incondicionalmente
+
+---
+
 ## Resources (app/Features/<Feature>/
 
 JsonResources vivem dentro da slice, não em `app/Http/Resources/`.
@@ -149,6 +202,26 @@ Formata a resposta JSON de todos os endpoints que retornem uma `CategoriaDocumen
 - `tipo_movimento` exposto como string via `->value` (nunca o enum em bruto)
 - Timestamps omitidos intencionalmente
 - PHPDoc `array{id: string, nome: string, slug: string, tipo_movimento: string}` em `toArray()`
+
+### `EntidadeResource` — `App\Features\Entidade\EntidadeResource`
+
+Formata a resposta JSON de todos os endpoints que retornem uma `Entidade`.
+
+```json
+{
+  "id": "019741b2-...",
+  "nome": "Empresa Teste",
+  "nif": "123456789",
+  "e_cliente": true,
+  "e_fornecedor": true,
+  "e_empresa_aplicacao": false
+}
+```
+
+- Booleans devolvidos como `bool` (cast Eloquent `'boolean'` garante o tipo)
+- Timestamps omitidos intencionalmente
+- PHPDoc `array{id: string, nome: string, nif: string, e_cliente: bool, e_fornecedor: bool, e_empresa_aplicacao: bool}` em `toArray()`
+- `@mixin Entidade` necessário para Larastan inferir as propriedades do model
 
 ---
 
