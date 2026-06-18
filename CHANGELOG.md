@@ -7,6 +7,20 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
+- **Issue #27** — `Entidade`: camada de modelo completa
+  - Migration `entidades` com UUID PK, booleanos indexados (`e_cliente`, `e_fornecedor`, `e_empresa_aplicacao`) e índice parcial único MySQL (`unica_empresa_mae_idx WHERE e_empresa_aplicacao = 1`) protegido por guard de driver
+  - Model `Entidade` com `HasUuids`, `#[Fillable]`, `#[Table]`, `#[UsePolicy]`, casts `'boolean'` nas 3 flags e 3 scopes (`whereCliente`, `whereFornecedor`, `whereEmpresaAplicacao`) com `Builder<Entidade>` nos PHPDocs (Larastan nível 9)
+  - Factory com 4 states: `cliente()`, `fornecedor()`, `clienteEFornecedor()`, `empresaAplicacao()` — empresa mãe é obrigatoriamente cliente e fornecedor
+  - `EntidadePolicy` placeholder: `?User $utilizador`, todos os métodos retornam `true` (autorização real em issue futura de lógica)
+  - 17 testes: model (uuid, fillable, timestamps, casts, scopes, factory states) + policy (utilizador autenticado e guest — ambos autorizados nesta fase)
+
+### Changed
+- **Issue #28** — DTOs `CriarCategoriaDto` e `ActualizarCategoriaDto`: adoptar padrão Value Object
+  - Construtor valida invariantes estruturais (`nome !== ''`, `slug !== ''`) com `@throws \InvalidArgumentException`
+  - `fromRequest()` simplificado — só mapeia dados; sem guards `is_string()` redundantes com o array shape PHPDoc
+  - CLAUDE.md actualizado com o novo padrão obrigatório (tabela de responsabilidades por camada)
+
+### Added
 - **Issue #25** — `CategoriaDocumento`: Policy de autorização CRUD
   - `CategoriaDocumentoPolicy` em `app/Policies/` — 5 métodos (`viewAny`, `view`, `create`, `update`, `delete`), todos `return true` com `?User $utilizador` nullable (guest support); auto-descoberta por convenção de nome
   - `VerCategoriaRequest` e `EliminarCategoriaRequest` — novos FormRequests mínimos (só `authorize()`, sem `rules()`); injectados no Controller em `show` e `destroy`

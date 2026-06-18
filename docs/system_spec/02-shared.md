@@ -25,61 +25,69 @@ _Vazio até à primeira issue implementada._
 
 DTOs vivem dentro da slice, co-localizados com a acção correspondente. Todos `final readonly`.
 
+**Padrão Value Object (obrigatório desde issue #28):** o construtor valida invariantes estruturais; `fromRequest()` só mapeia. Ver CLAUDE.md — secção "Padrão obrigatório nos DTOs".
+
+| Camada | Responsabilidade |
+|---|---|
+| `FormRequest` | required, formato, unicidade BD, regras HTTP |
+| DTO (construtor) | invariantes estruturais — não-vazio, formato mínimo |
+| Action | regras de negócio — unicidade entre entidades, consistência |
+
 ### `CriarCategoriaDto` — `App\Features\CategoriaDocumento\Criar\CriarCategoriaDto`
 
 ```php
 final readonly class CriarCategoriaDto
 {
+    /** @throws \InvalidArgumentException */
     public function __construct(
         public string $nome,
         public string $slug,
-        public TipoMovimento $tipo_movimento,
-    ) {}
+        public TipoMovimento $tipoMovimento,
+    ) {
+        if (trim($this->nome) === '') { throw new \InvalidArgumentException('nome não pode ser vazio.'); }
+        if (trim($this->slug) === '') { throw new \InvalidArgumentException('slug não pode ser vazio.'); }
+    }
 
-    /**
-     * @throws \UnexpectedValueException
-     */
+    /** @throws \InvalidArgumentException */
     public static function fromRequest(CriarCategoriaRequest $request): self
     {
-        /** @var array{nome: string, slug: string, tipo_movimento: string} $validated */
-        $validated = $request->validated();
-        // ...guards is_string() + throw + return new self(...)
+        /** @var array{nome: string, slug: string, tipo_movimento: string} $dadosValidados */
+        $dadosValidados = $request->validated();
+        return new self(nome: $dadosValidados['nome'], slug: $dadosValidados['slug'], tipoMovimento: TipoMovimento::from($dadosValidados['tipo_movimento']));
     }
 }
 ```
 
-- Array shape sem `?` — todos os campos são `required` no FormRequest
-- Guard `if (! is_string($nome) || ...)` + `throw new \UnexpectedValueException` — contrato runtime
-- `@throws` declara a excepção para callers sem inspeccionarem a implementação
+- `fromRequest()` só mapeia — sem guards `is_string()` redundantes
+- Construtor lança `\InvalidArgumentException` para invariantes estruturais
 
 ### `ActualizarCategoriaDto` — `App\Features\CategoriaDocumento\Actualizar\ActualizarCategoriaDto`
 
 ```php
 final readonly class ActualizarCategoriaDto
 {
+    /** @throws \InvalidArgumentException */
     public function __construct(
         public ?string $nome,
         public ?string $slug,
-        public ?TipoMovimento $tipo_movimento,
-    ) {}
+        public ?TipoMovimento $tipoMovimento,
+    ) {
+        if ($this->nome !== null && trim($this->nome) === '') { throw new \InvalidArgumentException('nome não pode ser vazio.'); }
+        if ($this->slug !== null && trim($this->slug) === '') { throw new \InvalidArgumentException('slug não pode ser vazio.'); }
+    }
 
-    /**
-     * @throws \UnexpectedValueException
-     */
+    /** @throws \InvalidArgumentException */
     public static function fromRequest(ActualizarCategoriaRequest $request): self
     {
-        /** @var array{nome?: string, slug?: string, tipo_movimento?: string} $validated */
-        $validated = $request->validated();
-        // ...guards condicionais ($campo !== null && ! is_string($campo)) + throw
+        /** @var array{nome?: string, slug?: string, tipo_movimento?: string} $dadosValidados */
+        $dadosValidados = $request->validated();
+        return new self(nome: $dadosValidados['nome'] ?? null, slug: $dadosValidados['slug'] ?? null, tipoMovimento: isset($dadosValidados['tipo_movimento']) ? TipoMovimento::from($dadosValidados['tipo_movimento']) : null);
     }
 }
 ```
 
-- Array shape com `?` em cada chave — campos `sometimes`, chave pode estar ausente do array
-- `?string`/`?TipoMovimento` no construtor — aceita `null` para campos omitidos no PATCH
-- Guard condicional: `($nome !== null && ! is_string($nome))` — só valida se a chave existir
-
-**Nota phpstan.neon:** `treatPhpDocTypesAsCertain: false` — necessário para que o Larastan nível 9 não marque os guards `is_string()` como "always true/false" ao ver o `@var array shape`.
+- Campos nullable — actualização parcial (PATCH); construtor só valida quando não-null
+- Array shape com `?` nas chaves opcionais (`sometimes`)
 
 ## Enums (app/Shared/Enums/)
 

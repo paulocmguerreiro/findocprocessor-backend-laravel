@@ -8,31 +8,35 @@ use App\Shared\Enums\TipoMovimento;
 
 final readonly class CriarCategoriaDto
 {
+    /**
+     * @throws \InvalidArgumentException
+     */
     public function __construct(
         public string $nome,
         public string $slug,
         public TipoMovimento $tipoMovimento,
-    ) {}
+    ) {
+        if (trim($this->nome) === '') {
+            throw new \InvalidArgumentException('nome não pode ser vazio.');
+        }
+
+        if (trim($this->slug) === '') {
+            throw new \InvalidArgumentException('slug não pode ser vazio.');
+        }
+    }
 
     /**
-     * @throws \UnexpectedValueException
+     * @throws \InvalidArgumentException
      */
     public static function fromRequest(CriarCategoriaRequest $request): self
     {
         /** @var array{nome: string, slug: string, tipo_movimento: string} $dadosValidados */
         $dadosValidados = $request->validated();
-        $nome = $dadosValidados['nome'] ?? null;
-        $slug = $dadosValidados['slug'] ?? null;
-        $tipoMovimento = $dadosValidados['tipo_movimento'] ?? null;
-
-        if (! is_string($nome) || ! is_string($slug) || ! is_string($tipoMovimento)) {
-            throw new \UnexpectedValueException('Dados inválidos após validação.');
-        }
 
         return new self(
-            nome: $nome,
-            slug: $slug,
-            tipoMovimento: TipoMovimento::from($tipoMovimento),
+            nome: $dadosValidados['nome'],
+            slug: $dadosValidados['slug'],
+            tipoMovimento: TipoMovimento::from($dadosValidados['tipo_movimento']),
         );
     }
 }
