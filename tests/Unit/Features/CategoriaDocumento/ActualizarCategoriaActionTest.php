@@ -44,7 +44,7 @@ it('faz rollback quando ocorre excepção durante update', function (): void {
     $categoria = CategoriaDocumento::factory()->comMovimentoDebito()->create(['nome' => 'Original', 'slug' => 'original']);
 
     CategoriaDocumento::saved(function (): void {
-        throw new \RuntimeException('falha simulada durante update');
+        throw new RuntimeException('falha simulada durante update');
     });
 
     $dto = new ActualizarCategoriaDto(
@@ -53,8 +53,8 @@ it('faz rollback quando ocorre excepção durante update', function (): void {
         tipoMovimento: TipoMovimento::Credito,
     );
 
-    expect(fn () => (new ActualizarCategoriaAction)->handle($categoria, $dto))
-        ->toThrow(\RuntimeException::class, 'falha simulada durante update');
+    expect(fn (): CategoriaDocumento => (new ActualizarCategoriaAction)->handle($categoria, $dto))
+        ->toThrow(RuntimeException::class, 'falha simulada durante update');
 
     $this->assertDatabaseHas('categorias_documento', ['id' => $categoria->id, 'nome' => 'Original', 'slug' => 'original']);
 });

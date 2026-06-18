@@ -28,7 +28,7 @@ it('cria categoria com dados válidos', function (): void {
 
 it('faz rollback quando ocorre excepção após insert', function (): void {
     CategoriaDocumento::created(function (): void {
-        throw new \RuntimeException('falha simulada após insert');
+        throw new RuntimeException('falha simulada após insert');
     });
 
     $dto = new CriarCategoriaDto(
@@ -37,8 +37,8 @@ it('faz rollback quando ocorre excepção após insert', function (): void {
         tipoMovimento: TipoMovimento::Debito,
     );
 
-    expect(fn () => (new CriarCategoriaAction)->handle($dto))
-        ->toThrow(\RuntimeException::class, 'falha simulada após insert');
+    expect(fn (): CategoriaDocumento => (new CriarCategoriaAction)->handle($dto))
+        ->toThrow(RuntimeException::class, 'falha simulada após insert');
 
     $this->assertDatabaseCount('categorias_documento', 0);
 });

@@ -28,11 +28,11 @@ it('faz rollback quando ocorre excepção durante eliminação', function (): vo
     $categoria = CategoriaDocumento::factory()->create();
 
     CategoriaDocumento::deleting(function (): void {
-        throw new \RuntimeException('falha simulada durante eliminação');
+        throw new RuntimeException('falha simulada durante eliminação');
     });
 
     expect(fn () => (new EliminarCategoriaAction)->handle($categoria))
-        ->toThrow(\RuntimeException::class, 'falha simulada durante eliminação');
+        ->toThrow(RuntimeException::class, 'falha simulada durante eliminação');
 
     $this->assertDatabaseHas('categorias_documento', ['id' => $categoria->id]);
 });
