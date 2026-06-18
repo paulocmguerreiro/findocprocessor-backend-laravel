@@ -46,16 +46,25 @@ class Entidade extends Model
         ];
     }
 
+    /**
+     * @param  Builder<Entidade>  $query
+     */
     public function scopeWhereCliente(Builder $query): void
     {
         $query->where('e_cliente', true);
     }
 
+    /**
+     * @param  Builder<Entidade>  $query
+     */
     public function scopeWhereFornecedor(Builder $query): void
     {
         $query->where('e_fornecedor', true);
     }
 
+    /**
+     * @param  Builder<Entidade>  $query
+     */
     public function scopeWhereEmpresaAplicacao(Builder $query): void
     {
         $query->where('e_empresa_aplicacao', true);
