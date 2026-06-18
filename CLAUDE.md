@@ -119,35 +119,56 @@ Sempre que um método contenha `throw`, declarar `@throws` no PHPDoc. Callers fi
 public static function fromRequest(XxxRequest $request): self { ... }
 ```
 
-**Padrão obrigatório nos DTOs** — três camadas com responsabilidade própria:
+**Padrão obrigatório nos DTOs — Value Object**
+
+Os DTOs adoptam o padrão Value Object: nunca podem existir num estado inválido, independentemente do contexto de criação (HTTP, Job, Artisan, teste).
+
+Divisão de responsabilidades:
+
+| Camada | Responsabilidade |
+|---|---|
+| `FormRequest` | required, formato, unicidade BD, regras HTTP |
+| DTO (construtor) | invariantes estruturais — não-vazio, formato mínimo |
+| Action | regras de negócio — unicidade entre entidades, consistência |
 
 ```php
-/**
- * @throws \UnexpectedValueException
- */
-public static function fromRequest(ActualizarCategoriaRequest $request): self
+final readonly class CriarXxxDto
 {
-    /** @var array{nome?: string, slug?: string, tipo_movimento?: string} $validated */
-    $validated = $request->validated();
-
-    $nome          = $validated['nome'] ?? null;
-    $slug          = $validated['slug'] ?? null;
-    $tipoMovimento = $validated['tipo_movimento'] ?? null;
-
-    if (
-        ($nome !== null && ! is_string($nome)) ||
-        ($slug !== null && ! is_string($slug)) ||
-        ($tipoMovimento !== null && ! is_string($tipoMovimento))
+    /**
+     * @throws \InvalidArgumentException
+     */
+    public function __construct(
+        public string $nome,
+        public ?string $descricao,
     ) {
-        throw new \UnexpectedValueException('Dados inválidos após validação.');
+        if (trim($this->nome) === '') {
+            throw new \InvalidArgumentException('nome não pode ser vazio.');
+        }
+        // campos nullable: só valida se não for null
+        if ($this->descricao !== null && trim($this->descricao) === '') {
+            throw new \InvalidArgumentException('descricao não pode ser vazio.');
+        }
     }
 
-    return new self(/* ... */);
+    /**
+     * @throws \InvalidArgumentException
+     */
+    public static function fromRequest(CriarXxxRequest $request): self
+    {
+        /** @var array{nome: string, descricao?: string} $dadosValidados */
+        $dadosValidados = $request->validated();
+
+        return new self(
+            nome: $dadosValidados['nome'],
+            descricao: $dadosValidados['descricao'] ?? null,
+        );
+    }
 }
 ```
 
 - `@var` array shape → Larastan conhece a forma do array (sem `mixed` nas variáveis derivadas)
-- `if/throw` → contrato runtime sempre activo (ao contrário de `assert()`, não é desactivável em produção)
+- Construtor com `throw` → contrato runtime em qualquer contexto de invocação
+- `fromRequest()` só mapeia — sem `if/throw` de tipos redundantes
 - `@throws` → callers informados sem inspeccionarem a implementação
 
 ---
