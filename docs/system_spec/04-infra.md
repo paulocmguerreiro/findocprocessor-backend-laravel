@@ -2,6 +2,42 @@
 
 > Actualizado automaticamente após cada Issue pela Fase 3 (documenta-issue).
 
+## Transações de BD — Padrão obrigatório (Issue #34)
+
+Todas as Actions de escrita envolvem a persistência em `DB::transaction()`. Autorização (`Gate::authorize()`) fica fora da transação.
+
+**Padrão canónico:**
+```php
+Gate::authorize('create', Xxx::class);                        // fora — autorização
+
+return DB::transaction(fn (): Xxx => Xxx::create([...]));     // dentro — persistência
+```
+
+Para Actions com múltiplas operações:
+```php
+Gate::authorize('update', $xxx);
+
+return DB::transaction(function () use ($xxx, $dados): Xxx {
+    $xxx->fill([...])->save();
+    $xxx->refresh();
+    return $xxx;
+});
+```
+
+**Actions que implementam este padrão:**
+
+| Action | Feature |
+|---|---|
+| `CriarCategoriaAction` | `CategoriaDocumento/Criar` |
+| `ActualizarCategoriaAction` | `CategoriaDocumento/Actualizar` |
+| `EliminarCategoriaAction` | `CategoriaDocumento/Eliminar` |
+
+Todas as Actions de escrita futuras seguem este padrão obrigatoriamente (ver `CLAUDE.md` — Padrões obrigatórios).
+
+**Nota Jobs:** Jobs disparados dentro de transações devem usar `after_commit: true` na config da queue ou implementar `ShouldDispatchAfterCommit` para evitar processamento antes do commit.
+
+---
+
 ## Repositories (app/Infrastructure/Repositories/)
 
 _Vazio até à primeira issue implementada._
