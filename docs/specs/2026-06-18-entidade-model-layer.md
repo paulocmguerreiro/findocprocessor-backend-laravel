@@ -135,7 +135,8 @@ class EntidadeFactory extends Factory
 
     public function empresaAplicacao(): static
     {
-        return $this->state(['e_cliente' => false, 'e_fornecedor' => false, 'e_empresa_aplicacao' => true]);
+        // empresa mãe é obrigatoriamente cliente e fornecedor: emite documentos (fornecedor) e recebe-os (cliente)
+        return $this->state(['e_cliente' => true, 'e_fornecedor' => true, 'e_empresa_aplicacao' => true]);
     }
 }
 ```
