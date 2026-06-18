@@ -7,6 +7,7 @@ namespace App\Features\CategoriaDocumento\Actualizar;
 use App\Models\CategoriaDocumento;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 final class ActualizarCategoriaAction
@@ -14,6 +15,7 @@ final class ActualizarCategoriaAction
     /**
      * @throws ModelNotFoundException
      * @throws AuthorizationException
+     * @throws \Throwable
      */
     public function handle(CategoriaDocumento|string $idCategoria, ActualizarCategoriaDto $dados): CategoriaDocumento
     {
@@ -24,14 +26,16 @@ final class ActualizarCategoriaAction
 
         Gate::authorize('update', $categoria);
 
-        $categoria->fill([
-            'nome' => $dados->nome,
-            'slug' => $dados->slug,
-            'tipo_movimento' => $dados->tipoMovimento,
-        ])->save();
+        return DB::transaction(function () use ($categoria, $dados): CategoriaDocumento {
+            $categoria->fill([
+                'nome' => $dados->nome,
+                'slug' => $dados->slug,
+                'tipo_movimento' => $dados->tipoMovimento,
+            ])->save();
 
-        $categoria->refresh();
+            $categoria->refresh();
 
-        return $categoria;
+            return $categoria;
+        });
     }
 }
