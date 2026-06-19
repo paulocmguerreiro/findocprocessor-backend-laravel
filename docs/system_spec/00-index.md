@@ -7,6 +7,7 @@
 
 | Feature | Ficheiro | Actions | Rotas |
 |---|---|---|---|
+| Auth | `01-features/auth.md` | 3 (Login, Logout, CriarToken) | 3 REST |
 | CategoriaDocumento | `01-features/categoria-documento.md` | 5 CRUD | 5 REST |
 | Entidade | `01-features/entidade.md` | 7 (5 CRUD + ConverterEmEmpresaMae + Remover) | 5 REST + 1 especial |
 
@@ -47,6 +48,7 @@
 | Model | Ficheiro |
 |---|---|
 | Convenções canónicas de Models | `03-models/00-convencoes-models.md` |
+| `User` | `03-models/user.md` |
 | `CategoriaDocumento` | `03-models/categoria-documento.md` |
 | `Entidade` | `03-models/entidade.md` |
 | `Document` _(pendente)_ | `03-models/documento.md` |
@@ -65,6 +67,7 @@
 
 | Área | Ficheiro |
 |---|---|
+| Rotas Auth | `05-routes/auth.md` |
 | Rotas CategoriaDocumento | `05-routes/categorias-documento.md` |
 | Rotas Entidade | `05-routes/entidades.md` |
 | Rotas planeadas | `05-routes/planeadas.md` |
