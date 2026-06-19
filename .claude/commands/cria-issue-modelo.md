@@ -180,9 +180,9 @@ Gerar body no formato padrão do `/cria-issue`:
 
 ## Impacto técnico
 - Afecta: domain layer
-- SYSTEM_SPEC a actualizar: docs/system_spec/03-models.md
-  [+ docs/system_spec/02-shared.md se DTOs incluídos]
-  [+ docs/system_spec/05-routes.md se Resource incluído]
+- SYSTEM_SPEC a actualizar: `docs/system_spec/03-models/<slug>.md`
+  [+ `docs/system_spec/02-shared/enums.md` se novos enums shared]
+  [+ `docs/system_spec/05-routes/<slug>.md` se Resource incluído]
 - Dependências: [#N | "nenhuma"]
 
 ## Invariantes em risco

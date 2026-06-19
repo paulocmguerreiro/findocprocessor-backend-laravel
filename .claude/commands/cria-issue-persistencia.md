@@ -140,7 +140,7 @@ Gerar body no formato padrão do `/cria-issue`:
 
 ## Impacto técnico
 - Afecta: infra layer (repositório + services) + AppServiceProvider
-- SYSTEM_SPEC a actualizar: `docs/system_spec/04-infra.md`
+- SYSTEM_SPEC a actualizar: `docs/system_spec/04-infra/repositories.md`
 - Dependências: [#N — model layer | "model deve existir"]
 - Policy base: [#N — criada em /cria-issue-modelo | "criada nesta issue"]
 

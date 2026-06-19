@@ -202,14 +202,22 @@ PENDING → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → DONE
 
 ## SYSTEM_SPEC_MAP
 
-| Tipo de alteração                     | Ficheiro system_spec a actualizar |
-| ------------------------------------- | --------------------------------- |
-| Nova Action ou Feature                | `01-features.md`                  |
-| Novo estado, contrato, DTO ou enum    | `02-shared.md`                    |
-| Novo Model ou relação Eloquent        | `03-models.md`                    |
-| Novo Repository, Provider, Job, Cache | `04-infra.md`                     |
-| Nova rota API                         | `05-routes.md`                    |
-| Nova configuração ou .env var         | `06-config.md`                    |
+> Entrada: ler sempre `docs/system_spec/00-index.md` para descoberta. Depois abrir apenas o ficheiro indicado.
+
+| Tipo de alteração                              | Ficheiro system_spec a actualizar                             |
+| ---------------------------------------------- | ------------------------------------------------------------- |
+| Nova Action ou Feature (feature existente)     | `01-features/<slug>.md`                                       |
+| Nova Feature (slice nova)                      | criar `01-features/<slug>.md` + actualizar `00-index.md`      |
+| Novo enum partilhado                           | `02-shared/enums.md`                                          |
+| Novo componente HTTP ou handler de erro        | `02-shared/http.md`                                           |
+| Novo estado ou contrato                        | `02-shared/estados.md`                                        |
+| Novo Model ou relação Eloquent                 | `03-models/<slug>.md`                                         |
+| Novo Repository                                | `04-infra/repositories.md`                                    |
+| Novo Job ou configuração de Queue              | `04-infra/queue-jobs.md`                                      |
+| Cache ou Redis                                 | `04-infra/cache.md`                                           |
+| API externa (IA ou outro serviço)              | `04-infra/external-apis.md`                                   |
+| Nova rota API                                  | `05-routes/<slug>.md`                                         |
+| Nova configuração ou .env var                  | `06-config.md`                                                |
 
 ---
 

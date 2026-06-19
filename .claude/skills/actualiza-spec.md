@@ -30,14 +30,29 @@ Actualiza os ficheiros `docs/system_spec/` com base no Debrief e no `SYSTEM_SPEC
 | Alterações de configuração | `docs/system_spec/06-config.md` |
 
 ### laravel
+
+**Descoberta:** ler `docs/system_spec/00-index.md` primeiro — lista todas as features, modelos e ficheiros de infra existentes. Depois abrir apenas o ficheiro relevante.
+
 | Tipo de alteração | Ficheiro a actualizar |
 |-------------------|-----------------------|
-| Novas Actions ou Features | `docs/system_spec/01-features.md` |
-| Novos enums, DTOs, estados | `docs/system_spec/02-shared.md` |
-| Novos Modelos Eloquent | `docs/system_spec/03-models.md` |
-| Alterações a infra | `docs/system_spec/04-infra.md` |
-| Novas rotas | `docs/system_spec/05-routes.md` |
-| Alterações de configuração | `docs/system_spec/06-config.md` |
+| Nova Action ou Feature (feature existente) | `docs/system_spec/01-features/<slug>.md` |
+| Nova Feature (slice nova) | criar `docs/system_spec/01-features/<slug>.md` + actualizar `00-index.md` |
+| Novo enum partilhado | `docs/system_spec/02-shared/enums.md` |
+| Novo componente HTTP ou handler de erro | `docs/system_spec/02-shared/http.md` |
+| Novo estado ou contrato | `docs/system_spec/02-shared/estados.md` |
+| Novo Model ou relação Eloquent | `docs/system_spec/03-models/<slug>.md` |
+| Novo Repository | `docs/system_spec/04-infra/repositories.md` |
+| Novo Job ou Queue config | `docs/system_spec/04-infra/queue-jobs.md` |
+| Cache ou Redis | `docs/system_spec/04-infra/cache.md` |
+| API externa (IA ou outro) | `docs/system_spec/04-infra/external-apis.md` |
+| Nova rota API | `docs/system_spec/05-routes/<slug>.md` |
+| Nova configuração ou .env var | `docs/system_spec/06-config.md` |
+
+**Regras de sustentabilidade:**
+- Nova feature slice → criar `01-features/<slug>.md` (nunca acrescentar ao ficheiro de outra feature)
+- `02-shared/` → apenas componentes em `app/Shared/` (nunca feature-specific)
+- `04-infra/` → um ficheiro por subsistema (Redis ≠ Jobs ≠ Repositories)
+- `00-index.md` → actualizar sempre que um ficheiro novo é criado
 
 ### angular
 | Tipo de alteração | Ficheiro a actualizar |

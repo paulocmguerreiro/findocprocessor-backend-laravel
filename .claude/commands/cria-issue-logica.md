@@ -203,9 +203,10 @@ Omitir secção completa se FormRequests não seleccionados.
 
 ## Impacto técnico
 - Afecta: features layer + routes
-- SYSTEM_SPEC a actualizar: `docs/system_spec/01-features.md`,
-  `docs/system_spec/05-routes.md`
-  [+ `docs/system_spec/04-infra.md` se Jobs ou Observers incluídos]
+- SYSTEM_SPEC a actualizar: `docs/system_spec/01-features/<slug>.md`,
+  `docs/system_spec/05-routes/<slug>.md`
+  [+ `docs/system_spec/04-infra/queue-jobs.md` se Jobs incluídos]
+  [+ `docs/system_spec/00-index.md` se feature nova]
 - Dependências: [#N — model layer | #M — persistence layer]
 - Policy: [#P — model layer com XxxPolicy | "Policy a criar — dívida técnica"]
 
