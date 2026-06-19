@@ -1,18 +1,16 @@
 # FinDocProcessor — Backend Laravel
 
-Implementação alternativa do pipeline de processamento de documentos financeiros, em Laravel / PHP. Expõe a mesma API que o backend .NET — o frontend Angular funciona com ambos.
-
-> **Projecto em construção, desenvolvido como amostra de competências.** O foco é demonstrar Vertical Slice Architecture, disciplina de testes e qualidade de código em Laravel 13 / PHP 8.5. Ver [Estado actual](#estado-actual) e [Roadmap](#roadmap) para o que está implementado vs. planeado.
+Implementação de pipeline de processamento de documentos financeiros, em Laravel / PHP. 
 
 ## Stack
 
 - **Laravel 13** / PHP 8.5 — Vertical Slice Architecture
 - **Laravel Sanctum** — autenticação API via Bearer tokens
 - **Eloquent ORM** — SQLite (dev) / MySQL (prod via Docker)
-- **Pest 4 + Mockery** (retrocompatível com PHPUnit) — padrão de testes dual (unit + HTTP)
+- **Pest 4 + Mockery** — padrão de testes dual (unit + HTTP)
 - **Larastan nível 9 + Rector + Laravel Pint** — qualidade e tipagem estática
 
-Planeado (ver [Roadmap](#roadmap)): cache Redis (predis), Laravel Queue + Schedule para processamento assíncrono.
+Planeado (ver [Roadmap](#roadmap)): cache Redis (predis), Laravel Queue + Schedule para processamento assíncrono e recurso a sistemas de IA para extração de dados.
 
 ## Arquitectura
 
@@ -107,7 +105,7 @@ Próximos passos, geridos como issues no repositório:
 - **Documento** — model layer (migration + model + factory + policy + DTOs + resource)
 - **Processamento assíncrono** — Jobs + Schedule sobre a pasta de inbox
 
-## Relacionado
+## Relacionado (roadmap)
 
 - `findocprocessor-frontend` — Dashboard Angular (repositório separado)
 - `findocprocessor-backend-dotnet` — Implementação alternativa em .NET
