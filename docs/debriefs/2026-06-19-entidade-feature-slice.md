@@ -86,7 +86,8 @@ A operação não recebe body: só o UUID via RMB. O Controller passa directamen
 
 Ao implementar os testes da Issue #40, o padrão dual (Unit programático + Feature HTTP) tornou-se
 suficientemente estável para merecer um ficheiro de convenções próprio. Criado
-`docs/conventions/tests-dual-pattern.md` e actualizado `CLAUDE.md` com as regras detalhadas.
+`docs/conventions/tests-dual-pattern.md` (referência detalhada com exemplos de rollback, estrutura
+de ficheiros e ArchTest) e resumo em `CLAUDE.md` → secção "CONVENÇÕES DE TESTES".
 
 ---
 

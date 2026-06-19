@@ -17,7 +17,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
   - `CampoOrdenacaoEntidades` enum para ordenação da listagem; cursor pagination (`cursorPaginate`)
   - 6 FormRequests (um por operação); `EntidadeController` final sem lógica
   - Testes: padrão dual obrigatório — 11 ficheiros `tests/Unit/Features/Entidade/` (invocação directa de Actions) + 6 ficheiros `tests/Feature/Features/Entidade/` (HTTP); 170 testes, 100% cobertura
-  - `docs/conventions/tests-dual-pattern.md` criado; `CLAUDE.md` actualizado com regras do padrão dual
+  - `docs/conventions/tests-dual-pattern.md` criado (referência detalhada com exemplos de rollback, estrutura de ficheiros e ArchTest); `CLAUDE.md` actualizado com regras resumidas do padrão dual
 
 ### Changed
 - **Issue #34** — Transações de BD nas Actions de escrita (`CategoriaDocumento`)
