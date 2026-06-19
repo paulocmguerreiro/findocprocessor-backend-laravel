@@ -40,6 +40,7 @@
 | Padrões de tipagem (array shape, `@throws`) | `02-shared/padroes-tipagem.md` |
 | Convenções de nomenclatura (PT/EN) | `02-shared/convencoes-nomenclatura.md` |
 | Contratos por camada (checklist arquitectural) | `02-shared/contratos-por-camada.md` |
+| Regras de negócio (`Regra*`) — catálogo e padrão | `02-shared/regras-negocio.md` |
 
 ## Modelos Eloquent
 

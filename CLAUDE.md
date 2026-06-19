@@ -106,6 +106,7 @@ PENDING → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → DONE
 | API externa (IA ou outro serviço)              | `04-infra/external-apis.md`                                   |
 | Nova rota API                                  | `05-routes/<slug>.md`                                         |
 | Nova configuração ou .env var                  | `06-config.md`                                                |
+| Nova classe `Regra*` (invariante de domínio)   | `02-shared/regras-negocio.md`                                 |
 
 ---
 
