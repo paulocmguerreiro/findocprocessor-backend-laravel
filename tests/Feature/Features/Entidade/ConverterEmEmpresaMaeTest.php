@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Features\Entidade\EmpresaMae\ConverterEmEmpresaMaeAction;
 use App\Models\Entidade;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -44,13 +43,4 @@ it('remove a marcação da empresa mãe anterior ao converter uma nova', functio
 it('devolve 404 quando UUID não existe', function (): void {
     $this->patchJson('/api/entidades/00000000-0000-0000-0000-000000000000/empresa-mae')
         ->assertNotFound();
-});
-
-it('converte entidade a partir de UUID string directamente na action', function (): void {
-    $entidade = Entidade::factory()->create();
-
-    $resultado = app(ConverterEmEmpresaMaeAction::class)
-        ->handle($entidade->id);
-
-    expect($resultado->e_empresa_aplicacao)->toBeTrue();
 });

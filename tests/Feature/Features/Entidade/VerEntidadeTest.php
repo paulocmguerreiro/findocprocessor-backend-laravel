@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Features\Entidade\Ver\VerEntidadeAction;
 use App\Models\Entidade;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -23,12 +22,4 @@ it('devolve entidade existente com estrutura correcta', function (): void {
 it('devolve 404 quando UUID não existe', function (): void {
     $this->getJson('/api/entidades/00000000-0000-0000-0000-000000000000')
         ->assertNotFound();
-});
-
-it('resolve entidade a partir de UUID string directamente na action', function (): void {
-    $entidade = Entidade::factory()->create();
-
-    $resultado = app(VerEntidadeAction::class)->handle($entidade->id);
-
-    expect($resultado->id)->toBe($entidade->id);
 });

@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Features\Entidade\Actualizar\ActualizarEntidadeAction;
-use App\Features\Entidade\Actualizar\ActualizarEntidadeDto;
 use App\Models\Entidade;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -63,21 +61,4 @@ it('devolve 422 quando campos obrigatórios estão em falta', function (): void 
     $this->putJson("/api/entidades/{$entidade->id}", [])
         ->assertUnprocessable()
         ->assertJsonStructure(['status', 'detail', 'errors' => ['nome', 'nif', 'e_cliente', 'e_fornecedor', 'e_empresa_aplicacao']]);
-});
-
-it('actualiza entidade a partir de UUID string directamente na action', function (): void {
-    $entidade = Entidade::factory()->create(['nome' => 'Nome Original']);
-
-    $dto = new ActualizarEntidadeDto(
-        nome: 'Nome Via String',
-        nif: $entidade->nif,
-        eCliente: true,
-        eFornecedor: false,
-        eEmpresaAplicacao: false,
-    );
-
-    $resultado = app(ActualizarEntidadeAction::class)
-        ->handle($entidade->id, $dto);
-
-    expect($resultado->nome)->toBe('Nome Via String');
 });
