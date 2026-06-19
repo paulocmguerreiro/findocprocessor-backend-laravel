@@ -8,7 +8,7 @@ Implementação alternativa do pipeline de processamento de documentos financeir
 - **Eloquent ORM** — SQLite (dev) / MySQL (prod)
 - **predis/predis** — cache Redis
 - **Laravel Queue + Schedule** — processamento assíncrono
-- **PHPUnit + Mockery**
+- **Pest 4 + Mockery** (retrocompatível com PHPUnit)
 - **PHPStan (nível máximo) + Rector + Laravel Pint**
 
 ## Arquitectura
@@ -40,12 +40,14 @@ API disponível em `http://localhost:8000`.
 ## Testes
 
 ```bash
-php artisan test
+composer test          # pipeline completa (lint + types + testes)
+composer test:types    # Larastan nível 9
+composer test:coverage # cobertura 100%
 ```
 
 ## Estado actual
 
-Projecto em construção. Feature implementada até ao momento:
+Projecto em construção. Features implementadas até ao momento:
 
 ### Categorias de documento
 
@@ -57,9 +59,20 @@ Projecto em construção. Feature implementada até ao momento:
 | PUT    | `/api/categorias-documento/{id}` | Actualizar (parcial) |
 | DELETE | `/api/categorias-documento/{id}` | Eliminar             |
 
+### Entidades
+
+| Método | Path                                    | Descrição                    |
+| ------ | --------------------------------------- | ---------------------------- |
+| GET    | `/api/entidades`                        | Listar todas (cursor)        |
+| POST   | `/api/entidades`                        | Criar                        |
+| GET    | `/api/entidades/{id}`                   | Ver detalhe                  |
+| PUT    | `/api/entidades/{id}`                   | Actualizar (parcial)         |
+| DELETE | `/api/entidades/{id}`                   | Eliminar                     |
+| PATCH  | `/api/entidades/{id}/empresa-mae`       | Associar empresa-mãe         |
+
 ## Qualidade
 
-- PHPStan nível máximo + Larastan
+- Larastan nível 9 (PHPStan com regras Laravel)
 - Laravel Pint (linter)
 - Rector (actualizações automáticas)
 - `strict_types=1` em todos os ficheiros

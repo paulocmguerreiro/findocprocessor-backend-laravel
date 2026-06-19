@@ -21,7 +21,7 @@ Produz apenas artefactos locais. Para criar o PR, usar `/publica-implementacao`.
 2. Skill `pausa-checkpoint` tipo=D — mostrar secção "Decisões tomadas" e aguardar confirmação
 3. Skill `actualiza-spec` — actualizar `docs/system_spec/*.md` conforme `SYSTEM_SPEC_MAP` do `CLAUDE.md`
 4. Skill `actualiza-changelog` — adicionar entrada em `CHANGELOG.md`
-5. Actualizar `README.md` se afectado — apenas secções alteradas, não reescrever completo
+5. Skill `actualiza-readme` — actualizar `README.md` se afectado (novas rotas, stack, instruções)
 6. Commitar todos os artefactos de documentação:
    ```bash
    git add docs/debriefs/ docs/system_spec/ CHANGELOG.md README.md
@@ -39,6 +39,7 @@ Produz apenas artefactos locais. Para criar o PR, usar `/publica-implementacao`.
    Debrief:    docs/debriefs/YYYY-MM-DD-<slug>.md
    SYSTEM_SPEC: actualizado
    Changelog:  actualizado
+   README:     actualizado (ou sem alterações)
    Próximo:    /publica-implementacao #N
    ```
 
