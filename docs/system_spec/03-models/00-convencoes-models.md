@@ -70,7 +70,6 @@ final class CategoriaDocumento extends Model
 ## Dimensões e constraints
 
 - Dimensões de strings declaradas na migration (`string(255)`).
-- SQLite (testes) **não** suporta CHECK constraints nem índices parciais condicionais — validação correspondente fica no PHP (DTO/Action) e índices parciais são criados condicionalmente apenas em MySQL.
 
 ---
 

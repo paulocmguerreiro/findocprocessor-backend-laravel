@@ -2,7 +2,7 @@
 
 > `app/Models/Entidade.php`
 
-Representa os intervenientes do domínio financeiro: Clientes, Fornecedores e a Empresa Mãe. Uma entidade pode ser simultaneamente cliente e fornecedor. Só pode existir uma `Entidade` com `e_empresa_aplicacao = true` — invariante garantida pela Action e reforçada em produção MySQL por índice parcial único.
+Representa os intervenientes do domínio financeiro: Clientes, Fornecedores e a Empresa Mãe. Uma entidade pode ser simultaneamente cliente e fornecedor. Só pode existir uma `Entidade` com `e_empresa_aplicacao = true` — invariante garantida exclusivamente pela Action (`RegraUnicidadeEmpresaMae`).
 
 **Tabela:** `entidades`
 
@@ -20,12 +20,6 @@ Representa os intervenientes do domínio financeiro: Clientes, Fornecedores e a 
 | `e_empresa_aplicacao` | `boolean` | `bool` | Default `false`; cast `'boolean'` |
 | `created_at` | `timestamp` | `Carbon` | Auto via `timestamps()` |
 | `updated_at` | `timestamp` | `Carbon` | Auto via `timestamps()` |
-
----
-
-## Índice parcial MySQL
-
-`unica_empresa_mae_idx` — `CREATE UNIQUE INDEX ... WHERE (e_empresa_aplicacao = 1)`. Criado condicionalmente (`DB::getDriverName() === 'mysql'`); SQLite (testes) não suporta índices parciais condicionais.
 
 ---
 
