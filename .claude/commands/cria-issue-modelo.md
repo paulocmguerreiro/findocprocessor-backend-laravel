@@ -87,21 +87,7 @@ Só avançar para o Passo 3 depois de o utilizador confirmar os componentes.
 
 ### 4 — Verificação de invariantes
 
-Antes de gerar o body, verificar:
-- `HasUuids` como PK? (obrigatório — ver CLAUDE.md)
-- `declare(strict_types=1)` mencionado nos ACs?
-- `#[Fillable]` e `#[Hidden]` em vez de arrays?
-- Enums como PHP 8.5 BackedEnum (string)?
-- Se Policy: nome segue convenção `<Entidade>Policy` → Laravel descobre automaticamente; alternativa: anotar o Model com `#[UsePolicy(EntidadePolicy::class)]`
-- Policy em `app/Policies/` (fora dos feature slices — é partilhada entre operações)
-- Se DTOs: `final readonly class`; construtor valida invariantes e lança
-  `\InvalidArgumentException`; `fromRequest()` **não incluído** nesta issue
-  (pertence à issue de lógica quando os FormRequests forem criados)
-- Se DTOs: campos que precisam de promoção condicional (ex: flag A força flag B)
-  **não podem usar constructor promotion** — atribuição manual no corpo do construtor
-- Se Resource: `final class extends JsonResource`; `@mixin Model` no PHPDoc;
-  `toArray()` com `@return` array shape completo; localização em
-  `app/Features/<Entidade>/`
+Antes de finalizar a issue, verificar conformidade com `docs/system_spec/02-shared/contratos-por-camada.md` — secção "Camada de modelo" e `docs/system_spec/03-models/00-convencoes-models.md`.
 
 ### 5 — Gerar e propor issue
 
@@ -180,9 +166,9 @@ Gerar body no formato padrão do `/cria-issue`:
 
 ## Impacto técnico
 - Afecta: domain layer
-- SYSTEM_SPEC a actualizar: docs/system_spec/03-models.md
-  [+ docs/system_spec/02-shared.md se DTOs incluídos]
-  [+ docs/system_spec/05-routes.md se Resource incluído]
+- SYSTEM_SPEC a actualizar: `docs/system_spec/03-models/<slug>.md`
+  [+ `docs/system_spec/02-shared/enums.md` se novos enums shared]
+  [+ `docs/system_spec/05-routes/<slug>.md` se Resource incluído]
 - Dependências: [#N | "nenhuma"]
 
 ## Invariantes em risco

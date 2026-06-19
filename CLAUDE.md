@@ -28,149 +28,35 @@ app/Features/<Feature>/<Action>/
 
 - Controllers sem lógica — só fazem dispatch para Actions
 - Actions injectam interfaces, nunca implementações concretas
-- **Autorização dupla camada (obrigatório):** `Gate::authorize()` no FormRequest (camada HTTP — Laravel trata automaticamente o 403) **e** na Action (camada de lógica — garante que a Policy se aplica quando a Action é invocada fora de HTTP: Jobs, Artisan, testes de integração). Não é redundância — são dois contextos de invocação distintos.
+- **Autorização dupla camada:** `Gate::authorize()` no FormRequest **e** na Action — cobre os dois contextos de invocação (HTTP e fora de HTTP: Jobs, Artisan, testes).
+  > Detalhe: `docs/system_spec/02-shared/padroes-acoes.md`
 - `$doc->state()->correct($data)` — sem `if($doc->status ==)`
 - `DocumentStatus` é PHP 8.1 backed enum (string)
 - `strict_types=1` em todos os ficheiros PHP
 - Jobs e Schedule são Laravel nativos — não reinventar
-- Repositório entre Action e Eloquent Model — **obrigatório** quando há lógica de query complexa (joins, aggregates, raw SQL, queries partilhadas entre ≥ 2 Actions); **dispensável** em CRUD simples (≤ 1 query Eloquent por `handle()`, sem lógica partilhada); desvio sempre documentado no Brief da feature
+- **Repositório entre Action e Eloquent Model:** obrigatório quando há lógica de query complexa, dispensável em CRUD simples — o critério completo (obrigatório/dispensável) e o desvio documentado no Brief.
+  > Detalhe: `docs/system_spec/04-infra/repositories.md`
 - Modelos do domínio usam `HasUuids` como chave primária — nunca IDs incrementais
 - `@property-read` obrigatório em todos os Eloquent Models (tipagem completa das colunas para PHPStan e IA)
-- **`DB::transaction()` obrigatório em todas as Actions de escrita** (criar, actualizar, eliminar) — `Gate::authorize()` fica **fora** da transação (autorização não é operação de BD); a persistência fica **dentro**. `DB::transaction()` faz rollback e re-lança automaticamente qualquer `\Throwable`. Adicionar `@throws \Throwable` ao PHPDoc do `handle()`. Nota: Jobs disparados dentro de transações devem usar `after_commit: true` na configuração da queue ou implementar `ShouldDispatchAfterCommit`.
+- **`DB::transaction()` obrigatório em todas as Actions de escrita** — `Gate::authorize()` fica fora da transação, a persistência fica dentro; padrão completo (rollback, `@throws \Throwable`, Jobs `after_commit`).
+  > Detalhe: `docs/system_spec/04-infra/transactions.md`
 
 ---
 
 ## CONVENÇÕES DE NOMENCLATURA
 
-### Língua
+Código de domínio em **Português de Portugal** (classes, métodos, variáveis, enums); inglês apenas quando o framework impõe o nome (`handle()`, `Controller`, `->where()`, etc.). Métodos em VERBO+Intenção, variáveis em NOME+Intenção[+Escala], FKs em `id_<entidade>`, enums em TitleCase PT.
 
-- **Português de Portugal** em todo o código de domínio — classes, métodos, variáveis, enums, propriedades, constantes
-- **Inglês** apenas quando o framework/linguagem impõe o nome (critério: *"o framework vai chamar isto pelo nome?"*)
-
-| Fica em inglês (framework impõe) | Exemplo |
-|----------------------------------|---------|
-| Métodos de ciclo de vida | `handle()`, `boot()`, `register()`, `store()`, `update()`, `destroy()` |
-| Sufixos de padrão estrutural | `Builder`, `Interface`, `Controller`, `Factory`, `Provider`, `Job` |
-| Métodos Eloquent / Query Builder | `->where()`, `->create()`, `->find()`, `->get()` |
-| Atributos PHP nativos | `#[Override]`, `#[Fillable]`, `#[Hidden]` |
-
-### Métodos — VERBO + Intenção/Contexto
-
-```php
-// correcto
-public function criarCategoria(CriarCategoriaDto $dados): Categoria {}
-public function validarMovimento(TipoMovimento $tipo): bool {}
-public function processarDocumento(string $idDocumento): void {}
-
-// incorrecto
-public function create(array $data): Categoria {}
-public function validate(): bool {}
-```
-
-### Variáveis e propriedades — NOME + Intenção [+ Escala]
-
-- Entidade singular: `$categoriaDocumento`, `$idCategoria`
-- Colecção: plural simples (`$categorias`, `$documentos`) — sem prefixo `lista`
-- Agregados: prefixo de escala (`$totalFaturas`, `$contadorErros`, $mediaValorDocumentos`)
-
-```php
-$categoriaDocumento = $this->repositorioCategorias->obterPorId($idCategoria);
-$categorias         = $this->repositorioCategorias->listarActivas();
-$totalDocumentos    = $categorias->sum('contadorDocumentos');
-```
-
-### Chaves primárias e estrangeiras
-
-- **Sempre UUID** via `HasUuids` — nunca IDs incrementais (ver padrões obrigatórios)
-- Colunas FK seguem o padrão: `id_<entidade>` (ex: `id_categoria`, `id_documento`)
-
-### Enums — TitleCase PT nos cases
-
-```php
-enum TipoMovimento: string
-{
-    case Debito  = 'debito';
-    case Credito = 'credito';
-    case Neutro  = 'neutro';   // sem movimento (ex: aviso)
-}
-```
+> Detalhe (tabela PT/EN, exemplos de métodos, variáveis, FKs e enums): `docs/system_spec/02-shared/convencoes-nomenclatura.md`
 
 ---
 
 ## CONVENÇÕES DE TIPAGEM
 
-### Regra A — Eliminar `mixed`: `@var` array shape em `validated()`
+Eliminar `mixed` anotando `@var` array shape em `validated()`; declarar `@throws` em todo o método que lança excepção. DTOs seguem o padrão Value Object — nunca existem num estado inválido (construtor valida invariantes em qualquer contexto de invocação).
 
-`$request->validated()` retorna `array<string, mixed>`. Antes de desestruturar, anotar sempre com array shape PHPDoc para que o Larastan conheça os tipos exactos das chaves:
-
-```php
-/** @var array{nome: string, slug: string, tipo_movimento: string} $validated */
-$validated = $request->validated();
-// chaves opcionais (rules com 'sometimes'): array{nome?: string, slug?: string}
-```
-
-### Regra B — `@throws` obrigatório em métodos que lançam excepções
-
-Sempre que um método contenha `throw`, declarar `@throws` no PHPDoc. Callers ficam informados estaticamente (IDE + Larastan) sem inspeccionarem a implementação:
-
-```php
-/**
- * @throws \UnexpectedValueException
- */
-public static function fromRequest(XxxRequest $request): self { ... }
-```
-
-**Padrão obrigatório nos DTOs — Value Object**
-
-Os DTOs adoptam o padrão Value Object: nunca podem existir num estado inválido, independentemente do contexto de criação (HTTP, Job, Artisan, teste).
-
-Divisão de responsabilidades:
-
-| Camada | Responsabilidade |
-|---|---|
-| `FormRequest` | required, formato, unicidade BD, regras HTTP |
-| DTO (construtor) | invariantes estruturais — não-vazio, formato mínimo |
-| Action | regras de negócio — unicidade entre entidades, consistência |
-
-```php
-final readonly class CriarXxxDto
-{
-    /**
-     * @throws \InvalidArgumentException
-     */
-    public function __construct(
-        public string $nome,
-        public ?string $descricao,
-    ) {
-        if (trim($this->nome) === '') {
-            throw new \InvalidArgumentException('nome não pode ser vazio.');
-        }
-        // campos nullable: só valida se não for null
-        if ($this->descricao !== null && trim($this->descricao) === '') {
-            throw new \InvalidArgumentException('descricao não pode ser vazio.');
-        }
-    }
-
-    /**
-     * @throws \InvalidArgumentException
-     */
-    public static function fromRequest(CriarXxxRequest $request): self
-    {
-        /** @var array{nome: string, descricao?: string} $dadosValidados */
-        $dadosValidados = $request->validated();
-
-        return new self(
-            nome: $dadosValidados['nome'],
-            descricao: $dadosValidados['descricao'] ?? null,
-        );
-    }
-}
-```
-
-- `@var` array shape → Larastan conhece a forma do array (sem `mixed` nas variáveis derivadas)
-- Construtor com `throw` → contrato runtime em qualquer contexto de invocação
-- `fromRequest()` só mapeia — sem `if/throw` de tipos redundantes
-- `@throws` → callers informados sem inspeccionarem a implementação
+> Detalhe (Regra A array shape, Regra B `@throws`): `docs/system_spec/02-shared/padroes-tipagem.md`
+> Detalhe (padrão Value Object dos DTOs, `fromRequest()`, divisão de responsabilidades): `docs/system_spec/02-shared/padroes-dtos.md`
 
 ---
 
@@ -202,14 +88,25 @@ PENDING → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → DONE
 
 ## SYSTEM_SPEC_MAP
 
-| Tipo de alteração                     | Ficheiro system_spec a actualizar |
-| ------------------------------------- | --------------------------------- |
-| Nova Action ou Feature                | `01-features.md`                  |
-| Novo estado, contrato, DTO ou enum    | `02-shared.md`                    |
-| Novo Model ou relação Eloquent        | `03-models.md`                    |
-| Novo Repository, Provider, Job, Cache | `04-infra.md`                     |
-| Nova rota API                         | `05-routes.md`                    |
-| Nova configuração ou .env var         | `06-config.md`                    |
+> Entrada: ler sempre `docs/system_spec/00-index.md` para descoberta. Depois abrir apenas o ficheiro indicado.
+>
+> **Ficheiro novo → actualizar sempre `00-index.md`.** Sempre que se cria um ficheiro novo em `docs/system_spec/` (nova feature slice, novo Model, novo Repository, novo enum num ficheiro próprio, etc. — não apenas features), o `00-index.md` é obrigatoriamente actualizado com uma linha na tabela correcta. A "porta de entrada" lista sempre tudo o que existe.
+
+| Tipo de alteração                              | Ficheiro system_spec a actualizar                             |
+| ---------------------------------------------- | ------------------------------------------------------------- |
+| Nova Action ou Feature (feature existente)     | `01-features/<slug>.md`                                       |
+| Nova Feature (slice nova)                      | criar `01-features/<slug>.md` + actualizar `00-index.md`      |
+| Novo enum partilhado                           | `02-shared/enums.md`                                          |
+| Novo componente HTTP ou handler de erro        | `02-shared/http.md`                                           |
+| Novo estado ou contrato                        | `02-shared/estados.md`                                        |
+| Novo Model ou relação Eloquent                 | `03-models/<slug>.md`                                         |
+| Novo Repository                                | `04-infra/repositories.md`                                    |
+| Novo Job ou configuração de Queue              | `04-infra/queue-jobs.md`                                      |
+| Cache ou Redis                                 | `04-infra/cache.md`                                           |
+| API externa (IA ou outro serviço)              | `04-infra/external-apis.md`                                   |
+| Nova rota API                                  | `05-routes/<slug>.md`                                         |
+| Nova configuração ou .env var                  | `06-config.md`                                                |
+| Nova classe `Regra*` (invariante de domínio)   | `02-shared/regras-negocio.md`                                 |
 
 ---
 
@@ -291,53 +188,9 @@ composer test                # Pipeline completa — usar localmente e no CI
 
 ## CONVENÇÕES DE TESTES
 
-### Padrão dual obrigatório por feature slice
+Padrão dual obrigatório por feature slice: cada Action tem testes em dois locais — `tests/Unit/Features/` (invocação directa, programática) e `tests/Feature/Features/` (via HTTP). O ArchTest exclui enums, FormRequests não-final e traits da regra `actions are final`.
 
-Cada Action deve ter testes em **dois locais distintos** com responsabilidades separadas:
-
-```
-tests/Unit/Features/<Feature>/<Nome>ActionTest.php   ← programático/interno
-tests/Feature/Features/<Feature>/<Operação>Test.php  ← HTTP/externo
-```
-
-**`tests/Unit/Features/<Feature>/`** — invocação directa da Action (sem HTTP):
-- Testa comportamento programático — compatível com Jobs, Events, Artisan, testes de integração
-- Instancia a Action directamente: `app(CriarEntidadeAction::class)->handle($dto)` ou `(new VerEntidadeAction)->handle($entidade)`
-- Testa ambos os overloads quando a Action aceita `Model|string` (objecto E UUID string)
-- Inclui teste de rollback com model event para validar `DB::transaction()`
-- Inclui testes de regras de negócio (ex: unicidade de Empresa Mãe)
-
-**`tests/Feature/Features/<Feature>/`** — chamada via HTTP (sem acesso directo à Action):
-- Testa o endpoint de fora — happy path 2xx, 4xx, 422 com validação
-- Prepara para quando a autenticação/autorização for implementada (os testes HTTP já cobrem a superfície pública)
-- **Nunca** chama Actions directamente nestes ficheiros
-
-### Ficheiros de teste por feature slice completa
-
-```
-tests/
-  Unit/Features/<Feature>/
-    CriarXxxActionTest.php
-    VerXxxActionTest.php
-    ActualizarXxxActionTest.php
-    EliminarXxxActionTest.php
-    ListarXxxActionTest.php
-    [OutrasActionTest.php — uma por Action interna relevante]
-  Feature/Features/<Feature>/
-    CriarXxxTest.php         ← POST /api/...
-    ListarXxxTest.php        ← GET /api/...
-    VerXxxTest.php           ← GET /api/.../{id}
-    ActualizarXxxTest.php    ← PUT/PATCH /api/.../{id}
-    EliminarXxxTest.php      ← DELETE /api/.../{id}
-    [EndpointEspecialTest.php — um por endpoint extra]
-```
-
-### ArchTest — classes não-final a excluir
-
-Adicionar ao `ignoring` do `arch('actions are final')` em `tests/ArchTest.php`:
-- Enums (PHP não aceita `final enum`)
-- FormRequests não-final (mockáveis em testes unitários de DTO)
-- Traits (PHP não aceita `final trait`)
+> Detalhe (padrão dual completo, estrutura de ficheiros, ArchTest): `docs/system_spec/07-testing.md`
 
 ---
 

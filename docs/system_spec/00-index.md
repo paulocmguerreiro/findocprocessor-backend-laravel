@@ -1,0 +1,77 @@
+# System Spec — Índice
+
+> Porta de entrada. Ler antes de qualquer actualização de spec.
+> Para detalhe: abrir apenas o ficheiro indicado — nunca ler todos.
+
+## Features implementadas
+
+| Feature | Ficheiro | Actions | Rotas |
+|---|---|---|---|
+| CategoriaDocumento | `01-features/categoria-documento.md` | 5 CRUD | 5 REST |
+| Entidade | `01-features/entidade.md` | 7 (5 CRUD + ConverterEmEmpresaMae + Remover) | 5 REST + 1 especial |
+
+## Features planeadas
+
+| Feature | Actions planeadas |
+|---|---|
+| Documents/List | `ListDocumentsAction` |
+| Documents/Correct | `CorrectDocumentAction` |
+| Documents/Delete | `DeleteDoneAction`, `DeleteErrorAction` |
+| Documents/Reprocess | `ReprocessDocumentAction` |
+| Upload | `HandleUploadAction` |
+| Batch | `ForceBatchCycleAction` |
+| Files | `ListDirectoryAction`, `OpenFileAction` |
+| Sse | `SseStreamAction` |
+
+## Shared
+
+| Componente | Ficheiro |
+|---|---|
+| Enums partilhados (`TipoMovimento`, `DirecaoOrdenacao`, `DocumentStatus`) | `02-shared/enums.md` |
+| HTTP (`ApiResponse`, Exception Handler, cursor pagination) | `02-shared/http.md` |
+| Estados de documento + Contratos | `02-shared/estados.md` |
+
+## Padrões e convenções (Shared)
+
+| Tema | Ficheiro |
+|---|---|
+| Padrões de Actions (autorização dupla camada) | `02-shared/padroes-acoes.md` |
+| Padrões de DTOs (Value Object) | `02-shared/padroes-dtos.md` |
+| Padrões de tipagem (array shape, `@throws`) | `02-shared/padroes-tipagem.md` |
+| Convenções de nomenclatura (PT/EN) | `02-shared/convencoes-nomenclatura.md` |
+| Contratos por camada (checklist arquitectural) | `02-shared/contratos-por-camada.md` |
+| Regras de negócio (`Regra*`) — catálogo e padrão | `02-shared/regras-negocio.md` |
+
+## Modelos Eloquent
+
+| Model | Ficheiro |
+|---|---|
+| Convenções canónicas de Models | `03-models/00-convencoes-models.md` |
+| `CategoriaDocumento` | `03-models/categoria-documento.md` |
+| `Entidade` | `03-models/entidade.md` |
+| `Document` _(pendente)_ | `03-models/documento.md` |
+
+## Infra
+
+| Subsistema | Ficheiro | Estado |
+|---|---|---|
+| Transações de BD | `04-infra/transactions.md` | implementado |
+| Repositories | `04-infra/repositories.md` | pendente |
+| Cache / Redis | `04-infra/cache.md` | pendente |
+| Jobs / Queue | `04-infra/queue-jobs.md` | pendente |
+| APIs externas (IA) | `04-infra/external-apis.md` | pendente |
+
+## Rotas e Configuração
+
+| Área | Ficheiro |
+|---|---|
+| Rotas CategoriaDocumento | `05-routes/categorias-documento.md` |
+| Rotas Entidade | `05-routes/entidades.md` |
+| Rotas planeadas | `05-routes/planeadas.md` |
+| Configuração e .env | `06-config.md` |
+
+## Testes
+
+| Área | Ficheiro |
+|---|---|
+| Padrão dual de testes (Unit + Feature) + ArchTest | `07-testing.md` |
