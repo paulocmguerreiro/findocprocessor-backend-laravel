@@ -289,6 +289,58 @@ composer test                # Pipeline completa — usar localmente e no CI
 
 ---
 
+## CONVENÇÕES DE TESTES
+
+### Padrão dual obrigatório por feature slice
+
+Cada Action deve ter testes em **dois locais distintos** com responsabilidades separadas:
+
+```
+tests/Unit/Features/<Feature>/<Nome>ActionTest.php   ← programático/interno
+tests/Feature/Features/<Feature>/<Operação>Test.php  ← HTTP/externo
+```
+
+**`tests/Unit/Features/<Feature>/`** — invocação directa da Action (sem HTTP):
+- Testa comportamento programático — compatível com Jobs, Events, Artisan, testes de integração
+- Instancia a Action directamente: `app(CriarEntidadeAction::class)->handle($dto)` ou `(new VerEntidadeAction)->handle($entidade)`
+- Testa ambos os overloads quando a Action aceita `Model|string` (objecto E UUID string)
+- Inclui teste de rollback com model event para validar `DB::transaction()`
+- Inclui testes de regras de negócio (ex: unicidade de Empresa Mãe)
+
+**`tests/Feature/Features/<Feature>/`** — chamada via HTTP (sem acesso directo à Action):
+- Testa o endpoint de fora — happy path 2xx, 4xx, 422 com validação
+- Prepara para quando a autenticação/autorização for implementada (os testes HTTP já cobrem a superfície pública)
+- **Nunca** chama Actions directamente nestes ficheiros
+
+### Ficheiros de teste por feature slice completa
+
+```
+tests/
+  Unit/Features/<Feature>/
+    CriarXxxActionTest.php
+    VerXxxActionTest.php
+    ActualizarXxxActionTest.php
+    EliminarXxxActionTest.php
+    ListarXxxActionTest.php
+    [OutrasActionTest.php — uma por Action interna relevante]
+  Feature/Features/<Feature>/
+    CriarXxxTest.php         ← POST /api/...
+    ListarXxxTest.php        ← GET /api/...
+    VerXxxTest.php           ← GET /api/.../{id}
+    ActualizarXxxTest.php    ← PUT/PATCH /api/.../{id}
+    EliminarXxxTest.php      ← DELETE /api/.../{id}
+    [EndpointEspecialTest.php — um por endpoint extra]
+```
+
+### ArchTest — classes não-final a excluir
+
+Adicionar ao `ignoring` do `arch('actions are final')` em `tests/ArchTest.php`:
+- Enums (PHP não aceita `final enum`)
+- FormRequests não-final (mockáveis em testes unitários de DTO)
+- Traits (PHP não aceita `final trait`)
+
+---
+
 ## MCP LARAVEL-BOOST — USO OBRIGATÓRIO
 
 > **OBRIGATÓRIO:** Antes de gerar ou alterar qualquer código Laravel, executar as ferramentas MCP `laravel-boost` indicadas abaixo. Não saltar este passo.

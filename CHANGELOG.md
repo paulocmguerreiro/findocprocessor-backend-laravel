@@ -6,6 +6,19 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Added
+- **Issue #40** — `Entidade`: feature slice completo (Actions + Controller + FormRequests + Testes)
+  - CRUD completo via API REST: `GET/POST /api/entidades`, `GET/PUT/DELETE /api/entidades/{id}`, `PATCH /api/entidades/{id}/empresa-mae`
+  - `CriarEntidadeAction`, `VerEntidadeAction`, `ActualizarEntidadeAction`, `EliminarEntidadeAction`, `ListarEntidadesAction` — com autorização dupla (FormRequest + Action) e `DB::transaction()` nas actions de escrita
+  - `ConverterEmEmpresaMaeAction` — converte entidade em Empresa Mãe, forçando os 3 flags (`e_empresa_aplicacao`, `e_cliente`, `e_fornecedor`); endpoint dedicado `PATCH /empresa-mae`
+  - `RemoverMarcacaoEmpresaMaeAction` (action interna) + `RegraUnicidadeEmpresaMae` (classe de domínio) — encapsulam a regra de unicidade da Empresa Mãe; invocados dentro da transação do caller, sem autorização própria
+  - Trait `ComFlagsEfectivosEmpresaMae` nos DTOs — `eClienteEfectivo()` / `eFornecedorEfectivo()` garantem a invariante "Empresa Mãe implica cliente + fornecedor"
+  - `fromRequest()` adicionado a `CriarEntidadeDto` e `ActualizarEntidadeDto` com array shape para Larastan nível 9
+  - `CampoOrdenacaoEntidades` enum para ordenação da listagem; cursor pagination (`cursorPaginate`)
+  - 6 FormRequests (um por operação); `EntidadeController` final sem lógica
+  - Testes: padrão dual obrigatório — 11 ficheiros `tests/Unit/Features/Entidade/` (invocação directa de Actions) + 6 ficheiros `tests/Feature/Features/Entidade/` (HTTP); 170 testes, 100% cobertura
+  - `docs/conventions/tests-dual-pattern.md` criado (referência detalhada com exemplos de rollback, estrutura de ficheiros e ArchTest); `CLAUDE.md` actualizado com regras resumidas do padrão dual
+
 ### Changed
 - **Issue #34** — Transações de BD nas Actions de escrita (`CategoriaDocumento`)
   - `CriarCategoriaAction`, `ActualizarCategoriaAction`, `EliminarCategoriaAction` envolvem a persistência em `DB::transaction()` — `Gate::authorize()` fica fora, rollback e re-lançamento de `\Throwable` são automáticos

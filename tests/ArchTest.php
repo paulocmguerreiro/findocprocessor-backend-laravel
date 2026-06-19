@@ -4,6 +4,10 @@ declare(strict_types=1);
 use App\Features\CategoriaDocumento\Actualizar\ActualizarCategoriaRequest;
 use App\Features\CategoriaDocumento\Criar\CriarCategoriaRequest;
 use App\Features\CategoriaDocumento\Listar\CampoOrdenacaoCategorias;
+use App\Features\Entidade\Actualizar\ActualizarEntidadeRequest;
+use App\Features\Entidade\ComFlagsEfectivosEmpresaMae;
+use App\Features\Entidade\Criar\CriarEntidadeRequest;
+use App\Features\Entidade\Listar\CampoOrdenacaoEntidades;
 use App\Http\Controllers\Controller;
 
 arch()->preset()->laravel()->ignoring(['App\Shared\Enums', 'App\Features']);
@@ -30,4 +34,8 @@ arch('actions are final')
         CriarCategoriaRequest::class,
         ActualizarCategoriaRequest::class,
         CampoOrdenacaoCategorias::class,
+        CriarEntidadeRequest::class,
+        ActualizarEntidadeRequest::class,
+        CampoOrdenacaoEntidades::class,
+        ComFlagsEfectivosEmpresaMae::class,
     ]);
