@@ -9,27 +9,27 @@ use App\Models\User;
 
 final class CategoriaDocumentoPolicy
 {
-    public function viewAny(?User $utilizador): bool
+    public function viewAny(User $utilizador): bool
     {
         return true;
     }
 
-    public function view(?User $utilizador, CategoriaDocumento $categoriaDocumento): bool
+    public function view(User $utilizador, CategoriaDocumento $categoriaDocumento): bool
     {
         return true;
     }
 
-    public function create(?User $utilizador): bool
+    public function create(User $utilizador): bool
     {
         return true;
     }
 
-    public function update(?User $utilizador, CategoriaDocumento $categoriaDocumento): bool
+    public function update(User $utilizador, CategoriaDocumento $categoriaDocumento): bool
     {
         return true;
     }
 
-    public function delete(?User $utilizador, CategoriaDocumento $categoriaDocumento): bool
+    public function delete(User $utilizador, CategoriaDocumento $categoriaDocumento): bool
     {
         return true;
     }

@@ -1,0 +1,534 @@
+openapi: 3.1.0
+
+info:
+  title: FinDocProcessor API
+  version: 1.0.0
+  description: API de processamento de documentos financeiros.
+
+servers:
+  - url: http://localhost:8000/api
+    description: Desenvolvimento local
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorValidacao:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 422
+        detail:
+          type: string
+          example: Os dados fornecidos são inválidos.
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+    ErrorNaoAutenticado:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 401
+        detail:
+          type: string
+          example: Não autenticado.
+
+    ErrorNaoEncontrado:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 404
+        detail:
+          type: string
+          example: Recurso não encontrado.
+
+    ErrorSemPermissao:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 403
+        detail:
+          type: string
+          example: Sem permissão para aceder a este recurso.
+
+    Token:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            token:
+              type: string
+              example: "1|abc123..."
+
+    CategoriaDocumento:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nome:
+          type: string
+        slug:
+          type: string
+        tipo_movimento:
+          type: string
+          enum: [debito, credito, neutro]
+
+    Entidade:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nome:
+          type: string
+        nif:
+          type: string
+        e_cliente:
+          type: boolean
+        e_fornecedor:
+          type: boolean
+        e_empresa_aplicacao:
+          type: boolean
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      summary: Autenticar utilizador e emitir token Bearer
+      security: []
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Token emitido com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        '422':
+          description: Credenciais inválidas ou campos em falta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorValidacao'
+
+  /auth/logout:
+    post:
+      summary: Revogar token actual
+      tags: [Auth]
+      responses:
+        '204':
+          description: Token revogado
+        '401':
+          description: Não autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNaoAutenticado'
+
+  /auth/tokens:
+    post:
+      summary: Criar token adicional para o utilizador autenticado
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome_token]
+              properties:
+                nome_token:
+                  type: string
+                  maxLength: 255
+      responses:
+        '200':
+          description: Token criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        '401':
+          description: Não autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '422':
+          description: Campos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorValidacao'
+
+  /categorias-documento:
+    get:
+      summary: Listar categorias de documento (cursor pagination)
+      tags: [CategoriaDocumento]
+      parameters:
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            maximum: 100
+            default: 15
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [nome, slug, tipo_movimento, created_at]
+        - in: query
+          name: direction
+          schema:
+            type: string
+            enum: [asc, desc]
+        - in: query
+          name: cursor
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista paginada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CategoriaDocumento'
+                  links:
+                    type: object
+                    properties:
+                      prev:
+                        type: ['string', 'null']
+                      next:
+                        type: ['string', 'null']
+                  meta:
+                    type: object
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+
+    post:
+      summary: Criar categoria de documento
+      tags: [CategoriaDocumento]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome, slug, tipo_movimento]
+              properties:
+                nome:
+                  type: string
+                slug:
+                  type: string
+                tipo_movimento:
+                  type: string
+                  enum: [debito, credito, neutro]
+      responses:
+        '201':
+          description: Categoria criada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CategoriaDocumento'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '422':
+          $ref: '#/components/schemas/ErrorValidacao'
+
+  /categorias-documento/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: Ver categoria de documento
+      tags: [CategoriaDocumento]
+      responses:
+        '200':
+          description: Categoria encontrada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CategoriaDocumento'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+
+    put:
+      summary: Actualizar categoria de documento
+      tags: [CategoriaDocumento]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome, slug, tipo_movimento]
+              properties:
+                nome:
+                  type: string
+                slug:
+                  type: string
+                tipo_movimento:
+                  type: string
+                  enum: [debito, credito, neutro]
+      responses:
+        '200':
+          description: Categoria actualizada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CategoriaDocumento'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+        '422':
+          $ref: '#/components/schemas/ErrorValidacao'
+
+    delete:
+      summary: Eliminar categoria de documento
+      tags: [CategoriaDocumento]
+      responses:
+        '204':
+          description: Eliminada com sucesso
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+
+  /entidades:
+    get:
+      summary: Listar entidades (cursor pagination)
+      tags: [Entidade]
+      parameters:
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            maximum: 100
+            default: 15
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [nome, nif, created_at]
+        - in: query
+          name: direction
+          schema:
+            type: string
+            enum: [asc, desc]
+        - in: query
+          name: cursor
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista paginada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Entidade'
+                  links:
+                    type: object
+                    properties:
+                      prev:
+                        type: ['string', 'null']
+                      next:
+                        type: ['string', 'null']
+                  meta:
+                    type: object
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+
+    post:
+      summary: Criar entidade
+      tags: [Entidade]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome, nif, e_cliente, e_fornecedor, e_empresa_aplicacao]
+              properties:
+                nome:
+                  type: string
+                nif:
+                  type: string
+                  maxLength: 20
+                e_cliente:
+                  type: boolean
+                e_fornecedor:
+                  type: boolean
+                e_empresa_aplicacao:
+                  type: boolean
+      responses:
+        '201':
+          description: Entidade criada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Entidade'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '422':
+          $ref: '#/components/schemas/ErrorValidacao'
+
+  /entidades/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: Ver entidade
+      tags: [Entidade]
+      responses:
+        '200':
+          description: Entidade encontrada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Entidade'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+
+    put:
+      summary: Actualizar entidade
+      tags: [Entidade]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome, nif, e_cliente, e_fornecedor, e_empresa_aplicacao]
+              properties:
+                nome:
+                  type: string
+                nif:
+                  type: string
+                  maxLength: 20
+                e_cliente:
+                  type: boolean
+                e_fornecedor:
+                  type: boolean
+                e_empresa_aplicacao:
+                  type: boolean
+      responses:
+        '200':
+          description: Entidade actualizada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Entidade'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+        '422':
+          $ref: '#/components/schemas/ErrorValidacao'
+
+    delete:
+      summary: Eliminar entidade
+      tags: [Entidade]
+      responses:
+        '204':
+          description: Eliminada com sucesso
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+
+  /entidades/{id}/empresa-mae:
+    patch:
+      summary: Converter entidade em empresa mãe
+      tags: [Entidade]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Entidade convertida em empresa mãe
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Entidade'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'

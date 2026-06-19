@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 use App\Features\CategoriaDocumento\Criar\CriarCategoriaRequest;
 use App\Models\CategoriaDocumento;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Validator;
+
+uses(RefreshDatabase::class);
+
+beforeEach(fn () => $this->actingAs(User::factory()->create()));
 
 describe('CriarCategoriaRequest — autorização e regras', function (): void {
     it('authorize retorna true', function (): void {
@@ -73,8 +78,6 @@ describe('CriarCategoriaRequest — autorização e regras', function (): void {
 });
 
 describe('CriarCategoriaRequest — unicidade (BD)', function (): void {
-    uses(RefreshDatabase::class);
-
     it('rejeita slug duplicado', function (): void {
         CategoriaDocumento::factory()->create(['slug' => 'fatura']);
 

@@ -5,9 +5,12 @@ declare(strict_types=1);
 use App\Features\Entidade\Criar\CriarEntidadeAction;
 use App\Features\Entidade\Criar\CriarEntidadeDto;
 use App\Models\Entidade;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
+
+beforeEach(fn () => $this->actingAs(User::factory()->create()));
 
 it('cria entidade com dados válidos', function (): void {
     $dto = new CriarEntidadeDto(

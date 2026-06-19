@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 use App\Features\CategoriaDocumento\Eliminar\EliminarCategoriaAction;
 use App\Models\CategoriaDocumento;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
+
+beforeEach(fn () => $this->actingAs(User::factory()->create()));
 
 it('elimina quando recebe CategoriaDocumento directamente', function (): void {
     $categoria = CategoriaDocumento::factory()->create();

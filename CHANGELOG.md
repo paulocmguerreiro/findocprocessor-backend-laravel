@@ -7,6 +7,21 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
+- **Issue #35** — Autenticação via Laravel Sanctum (API tokens Bearer)
+  - `laravel/sanctum v4.3.2` instalado via `php artisan install:api`; migration `personal_access_tokens` criada; `SANCTUM_TOKEN_EXPIRATION=525600` (1 ano) no `.env.example`
+  - `HasApiTokens` adicionado ao model `User`; `@property-read Collection<int, PersonalAccessToken> $tokens` documentado
+  - Feature slice `Auth`: `LoginAction` (emite token), `LogoutAction` (revoga token actual), `CriarTokenAction` (cria token adicional); `AuthController` com 3 endpoints
+  - Rotas `POST /auth/login` (pública), `POST /auth/logout` e `POST /auth/tokens` (protegidas); todas as rotas existentes movidas para grupo `auth:sanctum`
+  - **Breaking change:** `GET/POST /api/categorias-documento`, `GET/POST /api/entidades` e sub-rotas passam a exigir `Authorization: Bearer <token>` — pedidos sem token recebem 401
+  - Policies `CategoriaDocumentoPolicy` e `EntidadePolicy`: `?User` → `User` (guests não chegam às policies com `auth:sanctum`)
+  - `ApiResponse::devolverSucesso()` estendido para aceitar `JsonResource|array<string, mixed>`
+  - Padrão dual de testes Auth: 3 Unit tests (Actions) + 5 Feature tests (HTTP + regressão)
+  - 11 Feature tests existentes actualizados: `Sanctum::actingAs()` + testes 401 por endpoint
+  - 12 Unit tests existentes actualizados: `beforeEach(actingAs())` — necessário após policies tornarem-se não-nullable
+  - `openapi.yaml` criado com `bearerAuth` (OpenAPI 3.1.0), segurança global, `POST /auth/login` pública e todas as 14 rotas documentadas
+  - Índice parcial MySQL removido da migration `entidades` (incompatível com MySQL/MariaDB); garantia mantida na Action layer
+  - 187 testes, 100% cobertura, PHPStan 0 erros
+
 - **Issue #41** — `CategoriaDocumento`: `ListarCategoriasActionTest` — padrão dual completo
   - Criado `tests/Unit/Features/CategoriaDocumento/ListarCategoriasActionTest.php` (3 testes: lista vazia, ordenação ascendente, `per_page` com cursor)
   - Padrão dual unit+feature agora completo para todas as 5 Actions de `CategoriaDocumento`
