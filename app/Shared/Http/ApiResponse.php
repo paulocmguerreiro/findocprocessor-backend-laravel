@@ -13,7 +13,10 @@ use Illuminate\Support\Collection;
 
 final class ApiResponse
 {
-    public static function devolverSucesso(JsonResource $recurso): JsonResponse
+    /**
+     * @param  JsonResource|array<string, mixed>  $recurso
+     */
+    public static function devolverSucesso(JsonResource|array $recurso): JsonResponse
     {
         return response()->json(['data' => $recurso], Response::HTTP_OK);
     }
