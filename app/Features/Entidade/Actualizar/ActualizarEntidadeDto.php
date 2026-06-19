@@ -24,4 +24,21 @@ final readonly class ActualizarEntidadeDto
             throw new \InvalidArgumentException('nif não pode ser vazio.');
         }
     }
+
+    /**
+     * @throws \InvalidArgumentException
+     */
+    public static function fromRequest(ActualizarEntidadeRequest $request): self
+    {
+        /** @var array{nome: string, nif: string, e_cliente: bool, e_fornecedor: bool, e_empresa_aplicacao: bool} $dadosValidados */
+        $dadosValidados = $request->validated();
+
+        return new self(
+            nome: $dadosValidados['nome'],
+            nif: $dadosValidados['nif'],
+            eCliente: (bool) $dadosValidados['e_cliente'],
+            eFornecedor: (bool) $dadosValidados['e_fornecedor'],
+            eEmpresaAplicacao: (bool) $dadosValidados['e_empresa_aplicacao'],
+        );
+    }
 }
