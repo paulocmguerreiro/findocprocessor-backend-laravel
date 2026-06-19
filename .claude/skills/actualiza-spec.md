@@ -52,7 +52,8 @@ Actualiza os ficheiros `docs/system_spec/` com base no Debrief e no `SYSTEM_SPEC
 - Nova feature slice → criar `01-features/<slug>.md` (nunca acrescentar ao ficheiro de outra feature)
 - `02-shared/` → apenas componentes em `app/Shared/` (nunca feature-specific)
 - `04-infra/` → um ficheiro por subsistema (Redis ≠ Jobs ≠ Repositories)
-- `00-index.md` → actualizar sempre que um ficheiro novo é criado
+
+> **Obrigatório — ficheiro novo → actualizar `00-index.md`.** Sempre que esta skill cria um ficheiro **novo** em `docs/system_spec/` (nova feature slice, novo Model, novo subsistema de infra, etc.), tem de actualizar também `docs/system_spec/00-index.md` com uma linha na tabela correcta — no mesmo commit. Um ficheiro não registado no índice é invisível para a descoberta.
 
 ### angular
 | Tipo de alteração | Ficheiro a actualizar |

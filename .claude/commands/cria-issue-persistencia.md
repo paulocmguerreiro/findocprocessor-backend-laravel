@@ -78,16 +78,7 @@ Só avançar para o Passo 3 depois de o utilizador confirmar os componentes.
 
 ### 4 — Verificação de invariantes
 
-Antes de gerar o body, verificar:
-- Interface do repositório usa tipos nativos PHP 8.5 (sem `mixed`, sem `array` não tipado)?
-- `final class` para o EloquentRepository (não `readonly` — Eloquent não é imutável)?
-- Implementação injiecta o Model via construtor (não acede ao Facade nem ao `new Model()`)?
-- Paginação usa `cursorPaginate()` — nunca `paginate()` com OFFSET?
-- Se Services com interface: interface declarada + binding no Service Provider?
-- Se Services sem interface (classe concreta): justificação documentada no body?
-- Binding(s) registados em `AppServiceProvider` (repositório e/ou service)?
-- Se Policy com repositório: a Policy injiecta a **interface** (nunca o EloquentRepository directamente)?
-- Se Policy com repositório: o método do repositório usado já existe ou é novo? (novo → CA adicional)
+Antes de finalizar a issue, verificar conformidade com `docs/system_spec/02-shared/contratos-por-camada.md` — secção "Camada de persistência" e `docs/system_spec/04-infra/repositories.md`.
 
 ### 5 — Gerar e propor issue
 

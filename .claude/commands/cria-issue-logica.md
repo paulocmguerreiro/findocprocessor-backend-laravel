@@ -105,19 +105,7 @@ Só avançar para o Passo 3 depois de o utilizador confirmar os componentes.
 
 ### 4 — Verificação de invariantes
 
-Antes de gerar o body, verificar:
-- Controller tem zero lógica — apenas dispatch?
-- Cada operação tem a sua própria Action (não uma Action multi-propósito)?
-- Actions injectam interface do repositório (se existe) ou Eloquent directo apenas
-  em CRUD simples (≤ 1 query, sem lógica partilhada) — ver CLAUDE.md?
-- Events são disparados na Action (nunca no Controller nem no Model)?
-- `FormRequest::authorize()` chama a Policy via `$this->authorize()` — nunca `return true` hardcoded sem justificação?
-- Se não existe Policy ainda, `return true` é aceitável temporariamente mas documentado como dívida técnica?
-- Se FormRequests + DTOs existem: `fromRequest()` é implementado no DTO desta issue?
-- Se Jobs: `final class implements ShouldQueue` (se assíncrono); `$tries` e `$timeout` declarados?
-- Se Jobs assíncronos: qual a queue? Está declarada em `.env`?
-- Se Observers: registado via `#[ObservedBy(XxxObserver::class)]` no Model ou em `AppServiceProvider::boot()`?
-- Se Observers com dependências externas: injectadas via construtor (nunca `app()` ou `resolve()`)?
+Antes de finalizar a issue, verificar conformidade com `docs/system_spec/02-shared/contratos-por-camada.md` — secção "Camada de lógica".
 
 ### 5 — Gerar e propor issue
 

@@ -45,9 +45,28 @@ enum DirecaoOrdenacao: string
 
 _Pendente — implementado com a feature Document._
 
-PHP 8.1 backed enum (string). Ciclo de estados do documento:
+PHP 8.1 backed enum (string). Representa o estado de processamento de um documento. Cases em TitleCase PT; values em UPPER_SNAKE (alinhados com o ciclo de estados).
+
+```php
+enum DocumentStatus: string
+{
+    case Pending         = 'PENDING';
+    case AguardaEnvio    = 'AGUARDA_ENVIO';
+    case Enviado         = 'ENVIADO';
+    case AguardaResposta = 'AGUARDA_RESPOSTA';
+    case Done            = 'DONE';
+    case Error           = 'ERROR';
+    case Perigoso        = 'PERIGOSO';
+}
+```
+
+Ciclo de estados (transições permitidas):
 ```
 PENDING → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → DONE
                                                       ↘ ERROR
                                                       ↘ PERIGOSO
 ```
+
+- Valores na BD: `'PENDING'`, `'AGUARDA_ENVIO'`, `'ENVIADO'`, `'AGUARDA_RESPOSTA'`, `'DONE'`, `'ERROR'`, `'PERIGOSO'`
+- Detalhe das transições e semântica de cada estado em `02-shared/estados.md`
+- Usado em: `Document::$status` (cast Eloquent) — feature pendente

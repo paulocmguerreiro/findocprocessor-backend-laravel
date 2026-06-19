@@ -27,14 +27,25 @@
 
 | Componente | Ficheiro |
 |---|---|
-| Enums partilhados (`TipoMovimento`, `DirecaoOrdenacao`) | `02-shared/enums.md` |
-| HTTP (`ApiResponse`, Exception Handler) | `02-shared/http.md` |
+| Enums partilhados (`TipoMovimento`, `DirecaoOrdenacao`, `DocumentStatus`) | `02-shared/enums.md` |
+| HTTP (`ApiResponse`, Exception Handler, cursor pagination) | `02-shared/http.md` |
 | Estados de documento + Contratos | `02-shared/estados.md` |
+
+## Padrões e convenções (Shared)
+
+| Tema | Ficheiro |
+|---|---|
+| Padrões de Actions (autorização dupla camada) | `02-shared/padroes-acoes.md` |
+| Padrões de DTOs (Value Object) | `02-shared/padroes-dtos.md` |
+| Padrões de tipagem (array shape, `@throws`) | `02-shared/padroes-tipagem.md` |
+| Convenções de nomenclatura (PT/EN) | `02-shared/convencoes-nomenclatura.md` |
+| Contratos por camada (checklist arquitectural) | `02-shared/contratos-por-camada.md` |
 
 ## Modelos Eloquent
 
 | Model | Ficheiro |
 |---|---|
+| Convenções canónicas de Models | `03-models/00-convencoes-models.md` |
 | `CategoriaDocumento` | `03-models/categoria-documento.md` |
 | `Entidade` | `03-models/entidade.md` |
 | `Document` _(pendente)_ | `03-models/documento.md` |
@@ -57,3 +68,9 @@
 | Rotas Entidade | `05-routes/entidades.md` |
 | Rotas planeadas | `05-routes/planeadas.md` |
 | Configuração e .env | `06-config.md` |
+
+## Testes
+
+| Área | Ficheiro |
+|---|---|
+| Padrão dual de testes (Unit + Feature) + ArchTest | `07-testing.md` |

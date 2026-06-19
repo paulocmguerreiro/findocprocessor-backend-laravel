@@ -1,0 +1,76 @@
+# System Spec — Shared: Padrões de Actions
+
+> Padrões transversais a todas as Actions em `app/Features/<Feature>/<Action>/`.
+
+A Action é a unidade de lógica de negócio da arquitectura Vertical Slice. Cada operação (criar, listar, ver, actualizar, eliminar, …) tem a sua própria Action com um único método público `handle()`.
+
+---
+
+## Regras estruturais
+
+- Controllers **sem lógica** — apenas fazem dispatch para a Action.
+- Actions injectam **interfaces**, nunca implementações concretas.
+- Acesso directo ao Eloquent só em CRUD simples; caso contrário, via Repository (ver `04-infra/repositories.md`).
+- Transição de estado via objecto de estado — `$doc->state()->correct($data)`, nunca `if ($doc->status == ...)`.
+- Actions de escrita envolvem a persistência em `DB::transaction()` (ver `04-infra/transactions.md`).
+
+---
+
+## Autorização dupla camada (obrigatório)
+
+A autorização acontece em **dois sítios distintos** — não é redundância, são dois contextos de invocação diferentes:
+
+| Camada | Onde | Contexto que protege |
+|---|---|---|
+| HTTP | `FormRequest::authorize()` via `Gate::authorize()` / `$this->authorize()` | Pedidos HTTP — o Laravel converte falha em `403` automaticamente |
+| Lógica | `Action::handle()` via `Gate::authorize()` | Invocações **fora** de HTTP: Jobs, Artisan, Events, testes de integração |
+
+Se a autorização estivesse só no `FormRequest`, uma Action invocada por um Job ou comando Artisan correria sem qualquer verificação de Policy. A duplicação garante que a Policy se aplica **independentemente do ponto de entrada**.
+
+### Exemplo
+
+`FormRequest` (camada HTTP):
+```php
+final class CriarCategoriaRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return Gate::allows('create', CategoriaDocumento::class);
+    }
+
+    // rules(), messages()...
+}
+```
+
+`Action` (camada de lógica):
+```php
+final class CriarCategoriaAction
+{
+    /**
+     * @throws \Throwable
+     */
+    public function handle(CriarCategoriaDto $dados): CategoriaDocumento
+    {
+        Gate::authorize('create', CategoriaDocumento::class);   // fora da transação
+
+        return DB::transaction(fn (): CategoriaDocumento => CategoriaDocumento::create([
+            'nome'           => $dados->nome,
+            'slug'           => $dados->slug,
+            'tipo_movimento' => $dados->tipoMovimento,
+        ]));
+    }
+}
+```
+
+`Gate::authorize()` lança `AuthorizationException` (convertida em `403` pelo exception handler — ver `02-shared/http.md`). Fica **fora** da `DB::transaction()` — autorização não é operação de BD.
+
+---
+
+## Posição do `Gate::authorize()` face à transação
+
+```
+Gate::authorize(...)            ← fora — autorização não é operação de BD
+DB::transaction(fn () => ...)   ← dentro — apenas a persistência
+```
+
+Detalhe do padrão transaccional em `04-infra/transactions.md`.

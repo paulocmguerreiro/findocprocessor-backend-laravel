@@ -67,6 +67,7 @@ Traduz o Brief em requisitos técnicos verificáveis, alinhados com a arquitectu
 
 ## SYSTEM_SPEC a actualizar
 - `docs/system_spec/<ficheiro>.md` — secção X
+- Ficheiro novo em `docs/system_spec/` (nova feature slice, novo Model, etc.) → criar o ficheiro **e** actualizar `docs/system_spec/00-index.md` com uma linha na tabela correcta
 
 ## Verificação RGPD/NIS2
 - Dados pessoais: [detalhe]
@@ -87,18 +88,9 @@ Antes de gerar a Spec, verificar invariantes da secção `ARQUITECTURA` do `CLAU
 - Campos sensíveis excluídos de logs e DTOs?
 
 **laravel (Vertical Slice)**
-- Nova feature cabe numa existente em `app/Features/`?
-- Cada operação tem a sua `<Name>Action.php`?
-- Controller tem zero lógica — apenas dispatch?
-- Actions injectam interfaces? (nunca Eloquent directo)
-- Todos os ficheiros com `declare(strict_types=1)`?
-
-**laravel — Convenções de nomenclatura (verificar em Spec e Plan)**
-- Métodos de domínio em VERBO+Intenção PT? (`criarCategoria`, `validarMovimento`) — excepção: métodos impostos pelo framework (`handle`, `store`, `index`, `update`, `destroy`, `boot`, `register`, `rules`, `messages`, `toArray`, `authorize`, `definition`)
-- Variáveis e propriedades em camelCase PT com NOME+Intenção[+Escala]? (`$dadosValidados`, `$camposParaActualizar`, `$totalFaturas`) — nomes genéricos como `$data`, `$result`, `$validated`, `$campos`, `$response` são violação
-- Propriedades de DTOs em camelCase PHP (`$tipoMovimento`), mesmo que o campo BD seja snake_case (`'tipo_movimento'` na chave do `fill()`)
-- snake_case apenas nas colunas de base de dados (convenção Laravel/Eloquent) e nos parâmetros de route model binding (impostos pela rota)
-- Parâmetros de controller que coincidem com route model binding são excepção — não renomear
+Antes de finalizar a Spec, verificar conformidade com:
+- `docs/system_spec/02-shared/contratos-por-camada.md` — checklist por camada
+- `docs/system_spec/02-shared/convencoes-nomenclatura.md` — nomenclatura PT/EN
 
 **angular (Standalone)**
 - Todos os componentes com `standalone: true` e `OnPush`?

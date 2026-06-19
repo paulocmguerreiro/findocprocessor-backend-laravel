@@ -21,6 +21,69 @@ Factory estática `final` para respostas de sucesso. Único ponto de saída de r
 - Não injectable — formatação pura sem lógica de negócio
 - Classe `final` — não extensível
 
+### Payloads completos por método
+
+**`devolverSucesso` / `devolverCriado`** (200 / 201):
+```json
+{
+  "data": {
+    "id": "019741b2-...",
+    "nome": "Fatura de Fornecedor",
+    "slug": "fatura-de-fornecedor",
+    "tipo_movimento": "debito"
+  }
+}
+```
+
+**`devolverVazio`** (204): body vazio, sem conteúdo.
+
+**`devolverPaginado`** (200 — cursor pagination):
+```json
+{
+  "data": [
+    { "id": "019741b2-...", "nome": "Fatura", "slug": "fatura", "tipo_movimento": "debito" }
+  ],
+  "links": {
+    "first": null,
+    "last": null,
+    "prev": "https://.../api/categorias-documento?cursor=eyJpZCI6...",
+    "next": "https://.../api/categorias-documento?cursor=eyJpZCI6..."
+  },
+  "meta": {
+    "path": "https://.../api/categorias-documento",
+    "per_page": 15,
+    "next_cursor": "eyJpZCI6...",
+    "prev_cursor": null
+  }
+}
+```
+
+**`devolverColeccao`** (200 — colecção não paginada):
+```json
+{
+  "data": [ { "id": "...", "nome": "..." } ],
+  "meta": { "total": 3 }
+}
+```
+
+---
+
+## Cursor pagination — convenção obrigatória
+
+Todas as listagens da API usam **cursor pagination (keyset)** — `cursorPaginate()`. **Nunca** `paginate()` com OFFSET.
+
+| Aspecto | Regra |
+|---|---|
+| Método de paginação | `cursorPaginate()` — keyset, estável sob inserções concorrentes |
+| OFFSET (`paginate()`, `simplePaginate()`) | **Proibido** — degrada em datasets grandes e produz duplicados/saltos |
+| Tamanho de página | parâmetro `per_page` no request; valor máximo validado (≤ 100) no FormRequest |
+| Ordenação | campo de ordenação exposto como **enum** (nunca string livre) + direcção via `DirecaoOrdenacao` |
+| Cursor | opaco, base64 — o cliente nunca o constrói; segue `links.next` / `links.prev` |
+
+Razões: o keyset não usa `OFFSET N`, logo não relê N linhas a cada página, e mantém-se correcto mesmo que registos sejam inseridos/removidos entre pedidos.
+
+A resposta de uma listagem é sempre produzida por `ApiResponse::devolverPaginado()`.
+
 ---
 
 ## Exception Handler (`bootstrap/app.php`)
