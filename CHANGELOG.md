@@ -7,6 +7,10 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
+- **Issue #41** — `CategoriaDocumento`: `ListarCategoriasActionTest` — padrão dual completo
+  - Criado `tests/Unit/Features/CategoriaDocumento/ListarCategoriasActionTest.php` (3 testes: lista vazia, ordenação ascendente, `per_page` com cursor)
+  - Padrão dual unit+feature agora completo para todas as 5 Actions de `CategoriaDocumento`
+
 - **Issue #40** — `Entidade`: feature slice completo (Actions + Controller + FormRequests + Testes)
   - CRUD completo via API REST: `GET/POST /api/entidades`, `GET/PUT/DELETE /api/entidades/{id}`, `PATCH /api/entidades/{id}/empresa-mae`
   - `CriarEntidadeAction`, `VerEntidadeAction`, `ActualizarEntidadeAction`, `EliminarEntidadeAction`, `ListarEntidadesAction` — com autorização dupla (FormRequest + Action) e `DB::transaction()` nas actions de escrita
