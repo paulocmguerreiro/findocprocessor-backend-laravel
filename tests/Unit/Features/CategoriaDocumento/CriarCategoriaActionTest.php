@@ -5,10 +5,13 @@ declare(strict_types=1);
 use App\Features\CategoriaDocumento\Criar\CriarCategoriaAction;
 use App\Features\CategoriaDocumento\Criar\CriarCategoriaDto;
 use App\Models\CategoriaDocumento;
+use App\Models\User;
 use App\Shared\Enums\TipoMovimento;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
+
+beforeEach(fn () => $this->actingAs(User::factory()->create()));
 
 it('cria categoria com dados válidos', function (): void {
     $dto = new CriarCategoriaDto(

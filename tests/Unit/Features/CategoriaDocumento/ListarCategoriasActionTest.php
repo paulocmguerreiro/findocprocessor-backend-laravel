@@ -5,10 +5,13 @@ declare(strict_types=1);
 use App\Features\CategoriaDocumento\Listar\CampoOrdenacaoCategorias;
 use App\Features\CategoriaDocumento\Listar\ListarCategoriasAction;
 use App\Models\CategoriaDocumento;
+use App\Models\User;
 use App\Shared\Enums\DirecaoOrdenacao;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
+
+beforeEach(fn () => $this->actingAs(User::factory()->create()));
 
 it('devolve lista vazia quando não existem categorias', function (): void {
     $resultado = (new ListarCategoriasAction)->handle(15, CampoOrdenacaoCategorias::Nome, DirecaoOrdenacao::Asc);

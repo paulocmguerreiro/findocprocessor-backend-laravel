@@ -5,9 +5,12 @@ declare(strict_types=1);
 use App\Features\Entidade\Actualizar\ActualizarEntidadeAction;
 use App\Features\Entidade\Actualizar\ActualizarEntidadeDto;
 use App\Models\Entidade;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
+
+beforeEach(fn () => $this->actingAs(User::factory()->create()));
 
 it('actualiza quando recebe Entidade directamente', function (): void {
     $entidade = Entidade::factory()->create(['nome' => 'Original', 'nif' => '111111111']);

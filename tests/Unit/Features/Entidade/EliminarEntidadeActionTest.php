@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 use App\Features\Entidade\Eliminar\EliminarEntidadeAction;
 use App\Models\Entidade;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
+
+beforeEach(fn () => $this->actingAs(User::factory()->create()));
 
 it('elimina quando recebe Entidade directamente', function (): void {
     $entidade = Entidade::factory()->create();
