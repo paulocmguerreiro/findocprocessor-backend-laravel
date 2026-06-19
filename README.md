@@ -7,11 +7,12 @@ Implementação alternativa do pipeline de processamento de documentos financeir
 ## Stack
 
 - **Laravel 13** / PHP 8.5 — Vertical Slice Architecture
+- **Laravel Sanctum** — autenticação API via Bearer tokens
 - **Eloquent ORM** — SQLite (dev) / MySQL (prod via Docker)
 - **Pest 4 + Mockery** (retrocompatível com PHPUnit) — padrão de testes dual (unit + HTTP)
 - **Larastan nível 9 + Rector + Laravel Pint** — qualidade e tipagem estática
 
-Planeado (ver [Roadmap](#roadmap)): autenticação Laravel Sanctum, cache Redis (predis), Laravel Queue + Schedule para processamento assíncrono.
+Planeado (ver [Roadmap](#roadmap)): cache Redis (predis), Laravel Queue + Schedule para processamento assíncrono.
 
 ## Arquitectura
 
@@ -40,6 +41,8 @@ php artisan serve
 
 API disponível em `http://localhost:8000`.
 
+**Autenticação:** todas as rotas (excepto `POST /api/auth/login`) exigem `Authorization: Bearer <token>`. Obter token via `POST /api/auth/login` com `email` e `password`.
+
 ## Testes
 
 ```bash
@@ -50,13 +53,23 @@ composer test:coverage # Pest — cobertura 100%
 
 ## Estado actual
 
-Features implementadas até ao momento. **Nota:** os endpoints ainda não estão protegidos por autenticação — Laravel Sanctum está no [Roadmap](#roadmap).
+Features implementadas até ao momento.
+
+### Auth
+
+| Método | Path | Descrição | Auth |
+| ------ | ---- | --------- | ---- |
+| POST | `/api/auth/login` | Obter token Bearer | — (pública) |
+| POST | `/api/auth/logout` | Revogar token actual | Bearer |
+| POST | `/api/auth/tokens` | Criar token adicional | Bearer |
 
 ### Categorias de documento
 
+Todas as rotas exigem Bearer token.
+
 | Método | Path                             | Descrição          |
 | ------ | -------------------------------- | ------------------ |
-| GET    | `/api/categorias-documento`      | Listar todas       |
+| GET    | `/api/categorias-documento`      | Listar (cursor)    |
 | POST   | `/api/categorias-documento`      | Criar              |
 | GET    | `/api/categorias-documento/{id}` | Ver detalhe        |
 | PUT    | `/api/categorias-documento/{id}` | Actualizar (completo) |
@@ -64,9 +77,11 @@ Features implementadas até ao momento. **Nota:** os endpoints ainda não estão
 
 ### Entidades
 
+Todas as rotas exigem Bearer token.
+
 | Método | Path                                    | Descrição                    |
 | ------ | --------------------------------------- | ---------------------------- |
-| GET    | `/api/entidades`                        | Listar todas (cursor)        |
+| GET    | `/api/entidades`                        | Listar (cursor)              |
 | POST   | `/api/entidades`                        | Criar                        |
 | GET    | `/api/entidades/{id}`                   | Ver detalhe                  |
 | PUT    | `/api/entidades/{id}`                   | Actualizar (completo)        |
@@ -86,7 +101,6 @@ Features implementadas até ao momento. **Nota:** os endpoints ainda não estão
 
 Próximos passos, geridos como issues no repositório:
 
-- **Autenticação** — Laravel Sanctum (API tokens) para proteger as rotas
 - **Autorização** — roles/permissions com Spatie Laravel Permission + Policies
 - **Logging estruturado** — Actions, Controllers, erros e contexto de request
 - **Cache Redis** — listagens e queries frequentes com invalidação por tags
