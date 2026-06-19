@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace App\Features\Entidade\Actualizar;
 
+use App\Features\Entidade\ComFlagsEfectivosEmpresaMae;
+
 final readonly class ActualizarEntidadeDto
 {
+    use ComFlagsEfectivosEmpresaMae;
+
     /**
      * @throws \InvalidArgumentException
      */

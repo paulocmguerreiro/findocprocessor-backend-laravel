@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace App\Features\Entidade\Criar;
 
+use App\Features\Entidade\ComFlagsEfectivosEmpresaMae;
+
 final readonly class CriarEntidadeDto
 {
+    use ComFlagsEfectivosEmpresaMae;
+
     /**
      * @throws \InvalidArgumentException
      */
