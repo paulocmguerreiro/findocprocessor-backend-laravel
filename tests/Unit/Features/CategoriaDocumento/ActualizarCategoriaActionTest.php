@@ -77,6 +77,6 @@ it('lança AuthorizationException quando utilizador não tem permissão de escri
 
     $dto = new ActualizarCategoriaDto(nome: 'Alterado', slug: 'alterado', tipoMovimento: TipoMovimento::Neutro);
 
-    expect(fn () => (new ActualizarCategoriaAction)->handle($categoria, $dto))
+    expect(fn (): CategoriaDocumento => (new ActualizarCategoriaAction)->handle($categoria, $dto))
         ->toThrow(AuthorizationException::class);
 });

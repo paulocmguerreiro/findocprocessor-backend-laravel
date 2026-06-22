@@ -64,6 +64,6 @@ it('lança AuthorizationException quando utilizador não tem permissão de escri
         tipoMovimento: TipoMovimento::Debito,
     );
 
-    expect(fn () => (new CriarCategoriaAction)->handle($dto))
+    expect(fn (): CategoriaDocumento => (new CriarCategoriaAction)->handle($dto))
         ->toThrow(AuthorizationException::class);
 });

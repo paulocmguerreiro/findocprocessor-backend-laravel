@@ -39,6 +39,6 @@ it('lança AuthorizationException quando utilizador não tem permissão de leitu
     $utilizador = User::factory()->create(); // sem role — sem categorias-documento.ver
     $this->actingAs($utilizador);
 
-    expect(fn () => (new VerCategoriaAction)->handle($categoria))
+    expect(fn (): CategoriaDocumento => (new VerCategoriaAction)->handle($categoria))
         ->toThrow(AuthorizationException::class);
 });

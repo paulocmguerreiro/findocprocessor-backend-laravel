@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Shared\Enums\DirecaoOrdenacao;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Pagination\CursorPaginator;
 use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
@@ -50,6 +51,6 @@ it('lança AuthorizationException quando utilizador não tem permissão de leitu
     $utilizador = User::factory()->create(); // sem role — sem categorias-documento.ver
     $this->actingAs($utilizador);
 
-    expect(fn () => (new ListarCategoriasAction)->handle(15, CampoOrdenacaoCategorias::Nome, DirecaoOrdenacao::Asc))
+    expect(fn (): CursorPaginator => (new ListarCategoriasAction)->handle(15, CampoOrdenacaoCategorias::Nome, DirecaoOrdenacao::Asc))
         ->toThrow(AuthorizationException::class);
 });
