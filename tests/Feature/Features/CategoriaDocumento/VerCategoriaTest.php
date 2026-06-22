@@ -3,25 +3,14 @@
 declare(strict_types=1);
 
 use App\Models\CategoriaDocumento;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Response;
 use Illuminate\Testing\Fluent\AssertableJson;
-use Laravel\Sanctum\Sanctum;
-use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function (): void {
-    app(PermissionRegistrar::class)->forgetCachedPermissions();
-});
-
 describe('autenticado', function (): void {
-    beforeEach(function (): void {
-        $utilizador = User::factory()->create();
-        $utilizador->assignRole('admin');
-        Sanctum::actingAs($utilizador, ['api']);
-    });
+    beforeEach(fn () => criarEAutenticarAdmin());
 
     it('devolve categoria existente com estrutura correcta', function (): void {
         $categoria = CategoriaDocumento::factory()->create();
@@ -48,9 +37,7 @@ describe('autenticado', function (): void {
 
 it('utilizador com permissão de leitura devolve 200', function (): void {
     $categoria = CategoriaDocumento::factory()->create();
-    $utilizador = User::factory()->create();
-    $utilizador->assignRole('utilizador');
-    Sanctum::actingAs($utilizador, ['api']);
+    criarEAutenticarUtilizador();
 
     $this->getJson("/api/categorias-documento/{$categoria->id}")
         ->assertOk();

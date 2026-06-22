@@ -3,19 +3,12 @@
 declare(strict_types=1);
 
 use App\Models\CategoriaDocumento;
-use App\Models\User;
 use App\Shared\Enums\TipoMovimento;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Response;
 use Illuminate\Testing\Fluent\AssertableJson;
-use Laravel\Sanctum\Sanctum;
-use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
-
-beforeEach(function (): void {
-    app(PermissionRegistrar::class)->forgetCachedPermissions();
-});
 
 function payloadActualizar(array $sobrepor = []): array
 {
@@ -27,11 +20,7 @@ function payloadActualizar(array $sobrepor = []): array
 }
 
 describe('autenticado', function (): void {
-    beforeEach(function (): void {
-        $utilizador = User::factory()->create();
-        $utilizador->assignRole('admin');
-        Sanctum::actingAs($utilizador, ['api']);
-    });
+    beforeEach(fn () => criarEAutenticarAdmin());
 
     it('actualiza todos os campos e devolve 200 com o recurso', function (): void {
         $categoria = CategoriaDocumento::factory()->comMovimentoDebito()->create(['nome' => 'Nome Original']);
@@ -95,9 +84,7 @@ describe('autenticado', function (): void {
 
 it('utilizador sem permissão recebe 403', function (): void {
     $categoria = CategoriaDocumento::factory()->create();
-    $utilizador = User::factory()->create();
-    $utilizador->assignRole('utilizador');
-    Sanctum::actingAs($utilizador, ['api']);
+    criarEAutenticarUtilizador();
 
     $this->putJson("/api/categorias-documento/{$categoria->id}", payloadActualizar())
         ->assertForbidden();
