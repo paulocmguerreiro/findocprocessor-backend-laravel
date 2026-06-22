@@ -7,12 +7,19 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\Fluent\AssertableJson;
 use Laravel\Sanctum\Sanctum;
+use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function (): void {
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+});
+
 describe('autenticado', function (): void {
     beforeEach(function (): void {
-        Sanctum::actingAs(User::factory()->create(), ['api']);
+        $utilizador = User::factory()->create();
+        $utilizador->assignRole('admin');
+        Sanctum::actingAs($utilizador, ['api']);
     });
 
     it('cria entidade e devolve 201 com o recurso', function (): void {
@@ -87,6 +94,20 @@ describe('autenticado', function (): void {
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['nif']);
     });
+});
+
+it('utilizador sem permissão recebe 403', function (): void {
+    $utilizador = User::factory()->create();
+    $utilizador->assignRole('utilizador');
+    Sanctum::actingAs($utilizador, ['api']);
+
+    $this->postJson('/api/entidades', [
+        'nome' => 'Empresa Utilizador',
+        'nif' => '999999999',
+        'e_cliente' => true,
+        'e_fornecedor' => false,
+        'e_empresa_aplicacao' => false,
+    ])->assertForbidden();
 });
 
 it('guest sem token recebe 401', function (): void {

@@ -6,11 +6,18 @@ use App\Features\Entidade\Actualizar\ActualizarEntidadeAction;
 use App\Features\Entidade\Actualizar\ActualizarEntidadeDto;
 use App\Models\Entidade;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
 
-beforeEach(fn () => $this->actingAs(User::factory()->create()));
+beforeEach(function (): void {
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $utilizador = User::factory()->create();
+    $utilizador->assignRole('admin');
+    $this->actingAs($utilizador);
+});
 
 it('actualiza quando recebe Entidade directamente', function (): void {
     $entidade = Entidade::factory()->create(['nome' => 'Original', 'nif' => '111111111']);
@@ -86,4 +93,16 @@ it('faz rollback quando ocorre excepção durante update', function (): void {
         ->toThrow(RuntimeException::class, 'falha simulada durante update');
 
     $this->assertDatabaseHas('entidades', ['id' => $entidade->id, 'nome' => 'Original']);
+});
+
+it('lança AuthorizationException quando utilizador não tem permissão de escrita', function (): void {
+    $entidade = Entidade::factory()->create();
+    $utilizador = User::factory()->create();
+    $utilizador->assignRole('utilizador');
+    $this->actingAs($utilizador);
+
+    $dto = new ActualizarEntidadeDto(nome: $entidade->nome, nif: $entidade->nif, eCliente: true, eFornecedor: false, eEmpresaAplicacao: false);
+
+    expect(fn () => app(ActualizarEntidadeAction::class)->handle($entidade, $dto))
+        ->toThrow(AuthorizationException::class);
 });

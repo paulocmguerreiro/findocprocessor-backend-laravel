@@ -7,12 +7,19 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\Cursor;
 use Laravel\Sanctum\Sanctum;
+use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function (): void {
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+});
+
 describe('autenticado', function (): void {
     beforeEach(function (): void {
-        Sanctum::actingAs(User::factory()->create(), ['api']);
+        $utilizador = User::factory()->create();
+        $utilizador->assignRole('admin');
+        Sanctum::actingAs($utilizador, ['api']);
     });
 
     it('devolve lista vazia quando não existem entidades', function (): void {
@@ -97,6 +104,15 @@ describe('autenticado', function (): void {
             ->assertJsonCount(0, 'data')
             ->assertJsonPath('links.next', null);
     });
+});
+
+it('utilizador com permissão de leitura devolve 200', function (): void {
+    $utilizador = User::factory()->create();
+    $utilizador->assignRole('utilizador');
+    Sanctum::actingAs($utilizador, ['api']);
+
+    $this->getJson('/api/entidades')
+        ->assertOk();
 });
 
 it('guest sem token recebe 401', function (): void {

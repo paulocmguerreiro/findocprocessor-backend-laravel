@@ -7,11 +7,18 @@ use App\Features\CategoriaDocumento\Listar\ListarCategoriasAction;
 use App\Models\CategoriaDocumento;
 use App\Models\User;
 use App\Shared\Enums\DirecaoOrdenacao;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
 
-beforeEach(fn () => $this->actingAs(User::factory()->create()));
+beforeEach(function (): void {
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $utilizador = User::factory()->create();
+    $utilizador->assignRole('admin');
+    $this->actingAs($utilizador);
+});
 
 it('devolve lista vazia quando não existem categorias', function (): void {
     $resultado = (new ListarCategoriasAction)->handle(15, CampoOrdenacaoCategorias::Nome, DirecaoOrdenacao::Asc);
@@ -37,4 +44,12 @@ it('respeita o per_page na paginação por cursor', function (): void {
 
     expect($resultado->count())->toBe(2)
         ->and($resultado->nextCursor())->not->toBeNull();
+});
+
+it('lança AuthorizationException quando utilizador não tem permissão de leitura', function (): void {
+    $utilizador = User::factory()->create(); // sem role — sem categorias-documento.ver
+    $this->actingAs($utilizador);
+
+    expect(fn () => (new ListarCategoriasAction)->handle(15, CampoOrdenacaoCategorias::Nome, DirecaoOrdenacao::Asc))
+        ->toThrow(AuthorizationException::class);
 });

@@ -6,12 +6,19 @@ use App\Models\Entidade;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function (): void {
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+});
+
 describe('autenticado', function (): void {
     beforeEach(function (): void {
-        Sanctum::actingAs(User::factory()->create(), ['api']);
+        $utilizador = User::factory()->create();
+        $utilizador->assignRole('admin');
+        Sanctum::actingAs($utilizador, ['api']);
     });
 
     it('actualiza entidade e devolve 200 com o recurso', function (): void {
@@ -69,6 +76,21 @@ describe('autenticado', function (): void {
             ->assertUnprocessable()
             ->assertJsonStructure(['status', 'detail', 'errors' => ['nome', 'nif', 'e_cliente', 'e_fornecedor', 'e_empresa_aplicacao']]);
     });
+});
+
+it('utilizador sem permissão recebe 403', function (): void {
+    $entidade = Entidade::factory()->create();
+    $utilizador = User::factory()->create();
+    $utilizador->assignRole('utilizador');
+    Sanctum::actingAs($utilizador, ['api']);
+
+    $this->putJson("/api/entidades/{$entidade->id}", [
+        'nome' => 'Teste',
+        'nif' => '123456789',
+        'e_cliente' => true,
+        'e_fornecedor' => false,
+        'e_empresa_aplicacao' => false,
+    ])->assertForbidden();
 });
 
 it('guest sem token recebe 401', function (): void {

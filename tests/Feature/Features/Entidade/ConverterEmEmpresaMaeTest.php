@@ -6,12 +6,19 @@ use App\Models\Entidade;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function (): void {
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+});
+
 describe('autenticado', function (): void {
     beforeEach(function (): void {
-        Sanctum::actingAs(User::factory()->create(), ['api']);
+        $utilizador = User::factory()->create();
+        $utilizador->assignRole('admin');
+        Sanctum::actingAs($utilizador, ['api']);
     });
 
     it('converte entidade em empresa mãe e força os três flags', function (): void {
@@ -51,6 +58,16 @@ describe('autenticado', function (): void {
         $this->patchJson('/api/entidades/00000000-0000-0000-0000-000000000000/empresa-mae')
             ->assertNotFound();
     });
+});
+
+it('utilizador sem permissão recebe 403', function (): void {
+    $entidade = Entidade::factory()->create();
+    $utilizador = User::factory()->create();
+    $utilizador->assignRole('utilizador');
+    Sanctum::actingAs($utilizador, ['api']);
+
+    $this->patchJson("/api/entidades/{$entidade->id}/empresa-mae")
+        ->assertForbidden();
 });
 
 it('guest sem token recebe 401', function (): void {
