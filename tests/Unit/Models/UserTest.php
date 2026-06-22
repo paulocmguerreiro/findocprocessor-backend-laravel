@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -23,32 +21,30 @@ describe('Roles e Permissions', function (): void {
     });
 
     it('pode receber um role', function (): void {
-        $role = Role::create(['name' => 'admin']);
         $utilizador = User::factory()->create();
-
-        $utilizador->assignRole($role);
+        $utilizador->assignRole('admin');
 
         expect($utilizador->hasRole('admin'))->toBeTrue();
     });
 
-    it('tem permissão quando o role a inclui', function (): void {
-        $permission = Permission::create(['name' => 'entidades.ver']);
-        $role = Role::create(['name' => 'utilizador']);
-        $role->givePermissionTo($permission);
-
+    it('admin tem permissão entidades.ver', function (): void {
         $utilizador = User::factory()->create();
-        $utilizador->assignRole($role);
+        $utilizador->assignRole('admin');
 
         expect($utilizador->hasPermissionTo('entidades.ver'))->toBeTrue();
     });
 
-    it('não tem permissão quando o role não a inclui', function (): void {
-        Role::create(['name' => 'utilizador']);
-        Permission::create(['name' => 'entidades.criar']);
-
+    it('utilizador não tem permissão entidades.criar', function (): void {
         $utilizador = User::factory()->create();
         $utilizador->assignRole('utilizador');
 
         expect($utilizador->hasPermissionTo('entidades.criar'))->toBeFalse();
+    });
+
+    it('utilizador tem permissão entidades.ver', function (): void {
+        $utilizador = User::factory()->create();
+        $utilizador->assignRole('utilizador');
+
+        expect($utilizador->hasPermissionTo('entidades.ver'))->toBeTrue();
     });
 });
