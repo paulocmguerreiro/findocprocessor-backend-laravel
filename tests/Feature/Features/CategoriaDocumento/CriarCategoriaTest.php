@@ -9,12 +9,19 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Response;
 use Illuminate\Testing\Fluent\AssertableJson;
 use Laravel\Sanctum\Sanctum;
+use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function (): void {
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+});
+
 describe('autenticado', function (): void {
     beforeEach(function (): void {
-        Sanctum::actingAs(User::factory()->create(), ['api']);
+        $utilizador = User::factory()->create();
+        $utilizador->assignRole('admin');
+        Sanctum::actingAs($utilizador, ['api']);
     });
 
     it('cria categoria e devolve 201 com o recurso', function (): void {
@@ -67,6 +74,18 @@ describe('autenticado', function (): void {
             ->assertUnprocessable()
             ->assertJsonStructure(['status', 'detail', 'errors' => ['nome', 'slug', 'tipo_movimento']]);
     });
+});
+
+it('utilizador sem permissão recebe 403', function (): void {
+    $utilizador = User::factory()->create();
+    $utilizador->assignRole('utilizador');
+    Sanctum::actingAs($utilizador, ['api']);
+
+    $this->postJson('/api/categorias-documento', [
+        'nome' => 'Categoria Utilizador',
+        'slug' => 'categoria-utilizador',
+        'tipo_movimento' => TipoMovimento::Neutro->value,
+    ])->assertForbidden();
 });
 
 it('guest sem token recebe 401', function (): void {

@@ -6,11 +6,18 @@ use App\Features\Entidade\Criar\CriarEntidadeAction;
 use App\Features\Entidade\Criar\CriarEntidadeDto;
 use App\Models\Entidade;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
 
-beforeEach(fn () => $this->actingAs(User::factory()->create()));
+beforeEach(function (): void {
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $utilizador = User::factory()->create();
+    $utilizador->assignRole('admin');
+    $this->actingAs($utilizador);
+});
 
 it('cria entidade com dados válidos', function (): void {
     $dto = new CriarEntidadeDto(
@@ -69,4 +76,15 @@ it('faz rollback quando ocorre excepção após insert', function (): void {
         ->toThrow(RuntimeException::class, 'falha simulada após insert');
 
     $this->assertDatabaseCount('entidades', 0);
+});
+
+it('lança AuthorizationException quando utilizador não tem permissão de escrita', function (): void {
+    $utilizador = User::factory()->create();
+    $utilizador->assignRole('utilizador');
+    $this->actingAs($utilizador);
+
+    $dto = new CriarEntidadeDto(nome: 'Empresa', nif: '500000001', eCliente: true, eFornecedor: false, eEmpresaAplicacao: false);
+
+    expect(fn () => app(CriarEntidadeAction::class)->handle($dto))
+        ->toThrow(AuthorizationException::class);
 });

@@ -7,11 +7,18 @@ use App\Features\CategoriaDocumento\Criar\CriarCategoriaDto;
 use App\Models\CategoriaDocumento;
 use App\Models\User;
 use App\Shared\Enums\TipoMovimento;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
 
-beforeEach(fn () => $this->actingAs(User::factory()->create()));
+beforeEach(function (): void {
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $utilizador = User::factory()->create();
+    $utilizador->assignRole('admin');
+    $this->actingAs($utilizador);
+});
 
 it('cria categoria com dados válidos', function (): void {
     $dto = new CriarCategoriaDto(
@@ -44,4 +51,19 @@ it('faz rollback quando ocorre excepção após insert', function (): void {
         ->toThrow(RuntimeException::class, 'falha simulada após insert');
 
     $this->assertDatabaseCount('categorias_documento', 0);
+});
+
+it('lança AuthorizationException quando utilizador não tem permissão de escrita', function (): void {
+    $utilizador = User::factory()->create();
+    $utilizador->assignRole('utilizador');
+    $this->actingAs($utilizador);
+
+    $dto = new CriarCategoriaDto(
+        nome: 'Fornecedores',
+        slug: 'fornecedores',
+        tipoMovimento: TipoMovimento::Debito,
+    );
+
+    expect(fn (): CategoriaDocumento => (new CriarCategoriaAction)->handle($dto))
+        ->toThrow(AuthorizationException::class);
 });

@@ -5,11 +5,18 @@ declare(strict_types=1);
 use App\Features\Entidade\Eliminar\EliminarEntidadeAction;
 use App\Models\Entidade;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
 
-beforeEach(fn () => $this->actingAs(User::factory()->create()));
+beforeEach(function (): void {
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $utilizador = User::factory()->create();
+    $utilizador->assignRole('admin');
+    $this->actingAs($utilizador);
+});
 
 it('elimina quando recebe Entidade directamente', function (): void {
     $entidade = Entidade::factory()->create();
@@ -38,4 +45,14 @@ it('faz rollback quando ocorre excepção durante eliminação', function (): vo
         ->toThrow(RuntimeException::class, 'falha simulada durante eliminação');
 
     $this->assertDatabaseHas('entidades', ['id' => $entidade->id]);
+});
+
+it('lança AuthorizationException quando utilizador não tem permissão de escrita', function (): void {
+    $entidade = Entidade::factory()->create();
+    $utilizador = User::factory()->create();
+    $utilizador->assignRole('utilizador');
+    $this->actingAs($utilizador);
+
+    expect(fn () => (new EliminarEntidadeAction)->handle($entidade))
+        ->toThrow(AuthorizationException::class);
 });

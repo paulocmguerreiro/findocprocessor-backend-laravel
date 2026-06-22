@@ -9,8 +9,13 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Response;
 use Illuminate\Testing\Fluent\AssertableJson;
 use Laravel\Sanctum\Sanctum;
+use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function (): void {
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+});
 
 function payloadActualizar(array $sobrepor = []): array
 {
@@ -23,7 +28,9 @@ function payloadActualizar(array $sobrepor = []): array
 
 describe('autenticado', function (): void {
     beforeEach(function (): void {
-        Sanctum::actingAs(User::factory()->create(), ['api']);
+        $utilizador = User::factory()->create();
+        $utilizador->assignRole('admin');
+        Sanctum::actingAs($utilizador, ['api']);
     });
 
     it('actualiza todos os campos e devolve 200 com o recurso', function (): void {
@@ -84,6 +91,16 @@ describe('autenticado', function (): void {
         $this->putJson("/api/categorias-documento/{$categoria->id}", payloadActualizar(['slug' => 'slug-proprio']))
             ->assertOk();
     });
+});
+
+it('utilizador sem permissão recebe 403', function (): void {
+    $categoria = CategoriaDocumento::factory()->create();
+    $utilizador = User::factory()->create();
+    $utilizador->assignRole('utilizador');
+    Sanctum::actingAs($utilizador, ['api']);
+
+    $this->putJson("/api/categorias-documento/{$categoria->id}", payloadActualizar())
+        ->assertForbidden();
 });
 
 it('guest sem token recebe 401', function (): void {

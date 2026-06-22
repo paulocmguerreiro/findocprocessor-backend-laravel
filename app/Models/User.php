@@ -14,6 +14,9 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Sanctum\PersonalAccessToken;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Traits\HasRoles;
 
 /**
  * @property-read int $id
@@ -25,13 +28,15 @@ use Laravel\Sanctum\PersonalAccessToken;
  * @property-read Carbon $created_at
  * @property-read Carbon $updated_at
  * @property-read Collection<int, PersonalAccessToken> $tokens
+ * @property-read Collection<int, Role> $roles
+ * @property-read Collection<int, Permission> $permissions
  */
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
     /** @return array<string, string> */
     #[\Override]

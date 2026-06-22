@@ -7,11 +7,18 @@ use App\Features\CategoriaDocumento\Actualizar\ActualizarCategoriaDto;
 use App\Models\CategoriaDocumento;
 use App\Models\User;
 use App\Shared\Enums\TipoMovimento;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
 
-beforeEach(fn () => $this->actingAs(User::factory()->create()));
+beforeEach(function (): void {
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $utilizador = User::factory()->create();
+    $utilizador->assignRole('admin');
+    $this->actingAs($utilizador);
+});
 
 it('actualiza quando recebe CategoriaDocumento directamente', function (): void {
     $categoria = CategoriaDocumento::factory()->comMovimentoDebito()->create(['nome' => 'Original']);
@@ -60,4 +67,16 @@ it('faz rollback quando ocorre excepção durante update', function (): void {
         ->toThrow(RuntimeException::class, 'falha simulada durante update');
 
     $this->assertDatabaseHas('categorias_documento', ['id' => $categoria->id, 'nome' => 'Original', 'slug' => 'original']);
+});
+
+it('lança AuthorizationException quando utilizador não tem permissão de escrita', function (): void {
+    $categoria = CategoriaDocumento::factory()->create();
+    $utilizador = User::factory()->create();
+    $utilizador->assignRole('utilizador');
+    $this->actingAs($utilizador);
+
+    $dto = new ActualizarCategoriaDto(nome: 'Alterado', slug: 'alterado', tipoMovimento: TipoMovimento::Neutro);
+
+    expect(fn (): CategoriaDocumento => (new ActualizarCategoriaAction)->handle($categoria, $dto))
+        ->toThrow(AuthorizationException::class);
 });

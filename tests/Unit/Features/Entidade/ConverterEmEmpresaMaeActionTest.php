@@ -5,11 +5,18 @@ declare(strict_types=1);
 use App\Features\Entidade\EmpresaMae\ConverterEmEmpresaMaeAction;
 use App\Models\Entidade;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
 
-beforeEach(fn () => $this->actingAs(User::factory()->create()));
+beforeEach(function (): void {
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $utilizador = User::factory()->create();
+    $utilizador->assignRole('admin');
+    $this->actingAs($utilizador);
+});
 
 it('converte quando recebe Entidade directamente', function (): void {
     $entidade = Entidade::factory()->create([
@@ -54,4 +61,14 @@ it('faz rollback quando ocorre excepção durante conversão', function (): void
         ->toThrow(RuntimeException::class, 'falha simulada durante conversão');
 
     $this->assertDatabaseHas('entidades', ['id' => $entidade->id, 'e_empresa_aplicacao' => false]);
+});
+
+it('lança AuthorizationException quando utilizador não tem permissão de escrita', function (): void {
+    $entidade = Entidade::factory()->create();
+    $utilizador = User::factory()->create();
+    $utilizador->assignRole('utilizador');
+    $this->actingAs($utilizador);
+
+    expect(fn () => app(ConverterEmEmpresaMaeAction::class)->handle($entidade))
+        ->toThrow(AuthorizationException::class);
 });
