@@ -3,12 +3,13 @@
 declare(strict_types=1);
 
 use App\Models\Entidade;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 describe('autenticado', function (): void {
-    beforeEach(fn () => criarEAutenticarAdmin());
+    beforeEach(fn (): User => criarEAutenticarAdmin());
 
     it('elimina entidade e devolve 204', function (): void {
         $entidade = Entidade::factory()->create();

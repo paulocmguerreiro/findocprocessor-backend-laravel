@@ -3,13 +3,14 @@
 declare(strict_types=1);
 
 use App\Models\Entidade;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\Fluent\AssertableJson;
 
 uses(RefreshDatabase::class);
 
 describe('autenticado', function (): void {
-    beforeEach(fn () => criarEAutenticarAdmin());
+    beforeEach(fn (): User => criarEAutenticarAdmin());
 
     it('cria entidade e devolve 201 com o recurso', function (): void {
         $payload = [

@@ -86,6 +86,61 @@ tests/
 
 ---
 
+## Helpers globais de autenticação
+
+Definidos em `tests/Pest.php`. Disponíveis em todos os ficheiros de teste (Unit e Feature).
+
+| Helper | O que faz | Quando usar |
+|---|---|---|
+| `criarAdmin(): User` | Cria utilizador com role `admin` | Unit tests — `$this->actingAs(criarAdmin())` |
+| `criarUtilizador(): User` | Cria utilizador com role `utilizador` | Unit tests — `$this->actingAs(criarUtilizador())` |
+| `criarEAutenticarAdmin(): User` | Cria admin + `Sanctum::actingAs($u, ['api'])` | Feature tests — `beforeEach(fn(): User => criarEAutenticarAdmin())` |
+| `criarEAutenticarUtilizador(): User` | Cria utilizador + `Sanctum::actingAs($u, ['api'])` | Feature tests — testes 403 fora do `describe` |
+
+O `beforeEach` global em `Pest.php` invoca `forgetCachedPermissions()` antes de cada teste — não é necessário repeti-lo nos ficheiros individuais.
+
+### Padrão `describe()` por role — Unit tests
+
+```php
+describe('como admin', function (): void {
+    beforeEach(fn () => $this->actingAs(criarAdmin()));
+
+    it('happy path...', function (): void { ... });
+    it('rollback...', function (): void { ... });
+});
+
+describe('sem permissão de escrita', function (): void {   // ou 'leitura' para Ver/Listar
+    beforeEach(fn () => $this->actingAs(criarUtilizador())); // ou User::factory()->create() se sem role
+    it('lança AuthorizationException...', function (): void { ... });
+});
+```
+
+Ordem obrigatória: `'como admin'` primeiro, `'sem permissão'` depois.
+
+Para actions sem Gate (ex: `RemoverMarcacaoEmpresaMaeAction`) — não usar `describe()`, sem setup de autenticação.
+
+### Padrão `describe()` por role — Feature tests
+
+```php
+describe('autenticado', function (): void {
+    beforeEach(fn (): User => criarEAutenticarAdmin());
+    // testes happy path e validações — sem alteração
+});
+
+it('utilizador sem permissão recebe 403', function (): void {
+    criarEAutenticarUtilizador();
+    $this->postJson(...)->assertForbidden();
+});
+
+it('guest sem token recebe 401', function (): void {
+    $this->postJson(...)->assertUnauthorized();
+});
+```
+
+Para endpoints com acesso de leitura ao role `utilizador`, usar `criarEAutenticarUtilizador()` no teste 200.
+
+---
+
 ## ArchTest — classes não-final a excluir
 
 Em `tests/ArchTest.php`, adicionar ao `ignoring` do `arch('actions are final')`:

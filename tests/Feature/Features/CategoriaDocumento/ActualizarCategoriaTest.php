@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\CategoriaDocumento;
+use App\Models\User;
 use App\Shared\Enums\TipoMovimento;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Response;
@@ -20,7 +21,7 @@ function payloadActualizar(array $sobrepor = []): array
 }
 
 describe('autenticado', function (): void {
-    beforeEach(fn () => criarEAutenticarAdmin());
+    beforeEach(fn (): User => criarEAutenticarAdmin());
 
     it('actualiza todos os campos e devolve 200 com o recurso', function (): void {
         $categoria = CategoriaDocumento::factory()->comMovimentoDebito()->create(['nome' => 'Nome Original']);

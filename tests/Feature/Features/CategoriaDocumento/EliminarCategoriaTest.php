@@ -3,13 +3,14 @@
 declare(strict_types=1);
 
 use App\Models\CategoriaDocumento;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Response;
 
 uses(RefreshDatabase::class);
 
 describe('autenticado', function (): void {
-    beforeEach(fn () => criarEAutenticarAdmin());
+    beforeEach(fn (): User => criarEAutenticarAdmin());
 
     it('elimina categoria existente e devolve 204', function (): void {
         $categoria = CategoriaDocumento::factory()->create();

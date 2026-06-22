@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\CategoriaDocumento;
+use App\Models\User;
 use App\Shared\Enums\TipoMovimento;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Response;
@@ -11,7 +12,7 @@ use Illuminate\Testing\Fluent\AssertableJson;
 uses(RefreshDatabase::class);
 
 describe('autenticado', function (): void {
-    beforeEach(fn () => criarEAutenticarAdmin());
+    beforeEach(fn (): User => criarEAutenticarAdmin());
 
     it('cria categoria e devolve 201 com o recurso', function (): void {
         $payload = [

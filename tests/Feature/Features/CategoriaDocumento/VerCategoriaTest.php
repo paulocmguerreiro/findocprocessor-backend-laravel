@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\CategoriaDocumento;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Response;
 use Illuminate\Testing\Fluent\AssertableJson;
@@ -10,7 +11,7 @@ use Illuminate\Testing\Fluent\AssertableJson;
 uses(RefreshDatabase::class);
 
 describe('autenticado', function (): void {
-    beforeEach(fn () => criarEAutenticarAdmin());
+    beforeEach(fn (): User => criarEAutenticarAdmin());
 
     it('devolve categoria existente com estrutura correcta', function (): void {
         $categoria = CategoriaDocumento::factory()->create();
