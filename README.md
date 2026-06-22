@@ -6,6 +6,7 @@ Implementação de pipeline de processamento de documentos financeiros, em Larav
 
 - **Laravel 13** / PHP 8.5 — Vertical Slice Architecture
 - **Laravel Sanctum** — autenticação API via Bearer tokens
+- **Spatie Laravel Permission** — autorização por roles (`admin`, `utilizador`) e permissions granulares
 - **Eloquent ORM** — SQLite (dev) / MySQL (prod via Docker)
 - **Pest 4 + Mockery** — padrão de testes dual (unit + HTTP)
 - **Larastan nível 9 + Rector + Laravel Pint** — qualidade e tipagem estática
@@ -40,6 +41,8 @@ php artisan serve
 API disponível em `http://localhost:8000`.
 
 **Autenticação:** todas as rotas (excepto `POST /api/auth/login`) exigem `Authorization: Bearer <token>`. Obter token via `POST /api/auth/login` com `email` e `password`.
+
+**Autorização:** duas roles disponíveis — `admin` (acesso total) e `utilizador` (só leitura). Em desenvolvimento, usar `admin@findocprocessor.test` / `password` com token `dev-token` (criado pelo seeder).
 
 ## Testes
 
@@ -99,7 +102,7 @@ Todas as rotas exigem Bearer token.
 
 Próximos passos, geridos como issues no repositório:
 
-- **Autorização** — roles/permissions com Spatie Laravel Permission + Policies
+- **Logging estruturado** — Actions, Controllers, erros e contexto de request _(próximo)_
 - **Logging estruturado** — Actions, Controllers, erros e contexto de request
 - **Cache Redis** — listagens e queries frequentes com invalidação por tags
 - **Documento** — model layer (migration + model + factory + policy + DTOs + resource)

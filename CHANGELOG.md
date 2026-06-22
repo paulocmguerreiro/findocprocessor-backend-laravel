@@ -7,6 +7,17 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
+- **Issue #36** — Autorização por roles/permissions (Spatie Laravel Permission + Policies)
+  - `spatie/laravel-permission ^8.0` instalado; guard `web` (único guard configurado — Sanctum autentica via middleware, não regista guard separado)
+  - Data migration `seed_roles_and_permissions` — cria roles (`admin`, `utilizador`) e 8 permissions (`entidades.*`, `categorias-documento.*`) automaticamente com `php artisan migrate` em todos os ambientes, incluindo produção
+  - `HasRoles` adicionado ao model `User`; `@property-read Collection<int, Role> $roles` e `@property-read Collection<int, Permission> $permissions` documentados
+  - `EntidadePolicy` e `CategoriaDocumentoPolicy`: stubs `return true` substituídos por `hasPermissionTo()` real — leitura para `utilizador`; escrita exclusiva para `admin`
+  - `RolesPermissionsSeeder` (desenvolvimento): cria `admin@findocprocessor.test` com role `admin` e token Sanctum `dev-token`
+  - **Testes dupla camada:** 7 cenários 403 para `utilizador` em operações de escrita (HTTP); 4 cenários 200 para `utilizador` em leitura; 11 cenários `AuthorizationException` nas Actions (invocação directa sem permissão)
+  - 22 ficheiros de testes existentes actualizados: `admin` role + `PermissionRegistrar::forgetCachedPermissions()` no `beforeEach`
+  - System spec: `03-models/user.md` actualizado; `04-infra/autorizacao.md` criado; `00-index.md` actualizado
+  - 229 testes, 100% cobertura, PHPStan nível 9 sem erros
+
 - **Issue #35** — Autenticação via Laravel Sanctum (API tokens Bearer)
   - `laravel/sanctum v4.3.2` instalado via `php artisan install:api`; migration `personal_access_tokens` criada; `SANCTUM_TOKEN_EXPIRATION=525600` (1 ano) no `.env.example`
   - `HasApiTokens` adicionado ao model `User`; `@property-read Collection<int, PersonalAccessToken> $tokens` documentado
