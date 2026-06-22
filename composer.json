@@ -9,7 +9,8 @@
         "php": "^8.5",
         "laravel/framework": "^13.16.1",
         "laravel/sanctum": "^4.0",
-        "laravel/tinker": "^3.0.2"
+        "laravel/tinker": "^3.0.2",
+        "spatie/laravel-permission": "^8.0"
     },
     "require-dev": {
         "andreapollastri/checkpoint": "^1.1.1",
