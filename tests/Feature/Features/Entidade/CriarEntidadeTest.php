@@ -6,21 +6,11 @@ use App\Models\Entidade;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\Fluent\AssertableJson;
-use Laravel\Sanctum\Sanctum;
-use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function (): void {
-    app(PermissionRegistrar::class)->forgetCachedPermissions();
-});
-
 describe('autenticado', function (): void {
-    beforeEach(function (): void {
-        $utilizador = User::factory()->create();
-        $utilizador->assignRole('admin');
-        Sanctum::actingAs($utilizador, ['api']);
-    });
+    beforeEach(fn (): User => criarEAutenticarAdmin());
 
     it('cria entidade e devolve 201 com o recurso', function (): void {
         $payload = [
@@ -97,9 +87,7 @@ describe('autenticado', function (): void {
 });
 
 it('utilizador sem permissão recebe 403', function (): void {
-    $utilizador = User::factory()->create();
-    $utilizador->assignRole('utilizador');
-    Sanctum::actingAs($utilizador, ['api']);
+    criarEAutenticarUtilizador();
 
     $this->postJson('/api/entidades', [
         'nome' => 'Empresa Utilizador',

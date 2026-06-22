@@ -8,21 +8,11 @@ use App\Shared\Enums\TipoMovimento;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Response;
 use Illuminate\Testing\Fluent\AssertableJson;
-use Laravel\Sanctum\Sanctum;
-use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function (): void {
-    app(PermissionRegistrar::class)->forgetCachedPermissions();
-});
-
 describe('autenticado', function (): void {
-    beforeEach(function (): void {
-        $utilizador = User::factory()->create();
-        $utilizador->assignRole('admin');
-        Sanctum::actingAs($utilizador, ['api']);
-    });
+    beforeEach(fn (): User => criarEAutenticarAdmin());
 
     it('cria categoria e devolve 201 com o recurso', function (): void {
         $payload = [
@@ -77,9 +67,7 @@ describe('autenticado', function (): void {
 });
 
 it('utilizador sem permissão recebe 403', function (): void {
-    $utilizador = User::factory()->create();
-    $utilizador->assignRole('utilizador');
-    Sanctum::actingAs($utilizador, ['api']);
+    criarEAutenticarUtilizador();
 
     $this->postJson('/api/categorias-documento', [
         'nome' => 'Categoria Utilizador',
