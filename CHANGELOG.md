@@ -6,6 +6,15 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Changed
+- **Issue #48** — Refactor: helpers globais de autenticação e `describe()` por role nos testes
+  - `tests/Pest.php` — `beforeEach` global com `forgetCachedPermissions()` (removido dos 22 ficheiros individuais) + 4 helper functions: `criarAdmin()`, `criarUtilizador()`, `criarEAutenticarAdmin()`, `criarEAutenticarUtilizador()`
+  - 11 Unit Action tests (Entidade + CategoriaDocumento) reestruturados com `describe('como admin')` e `describe('sem permissão de escrita/leitura')` — elimina override inline que desperdiçava o utilizador do `beforeEach`
+  - 11 Feature tests simplificados: `describe('autenticado') { beforeEach }` usa `criarEAutenticarAdmin()`; testes 403 usam `criarEAutenticarUtilizador()` (1 linha em vez de 3)
+  - Imports `PermissionRegistrar`, `Sanctum`, `User` removidos onde dispensáveis
+  - `docs/system_spec/07-testing.md` — nova secção "Helpers globais de autenticação" com tabela dos 4 helpers e padrões `describe()` para Unit e Feature tests
+  - Redução líquida: ~185 linhas de boilerplate eliminadas; 229 testes, 100% cobertura, PHPStan nível 9 sem erros
+
 ### Added
 - **Issue #36** — Autorização por roles/permissions (Spatie Laravel Permission + Policies)
   - `spatie/laravel-permission ^8.0` instalado; guard `web` (único guard configurado — Sanctum autentica via middleware, não regista guard separado)
