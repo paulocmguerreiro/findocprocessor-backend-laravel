@@ -7,38 +7,35 @@ use App\Models\Entidade;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function (): void {
-    app(PermissionRegistrar::class)->forgetCachedPermissions();
-    $utilizador = User::factory()->create();
-    $utilizador->assignRole('admin');
-    $this->actingAs($utilizador);
+describe('como admin', function (): void {
+    beforeEach(fn () => $this->actingAs(criarAdmin()));
+
+    it('devolve o modelo quando recebe Entidade directamente', function (): void {
+        $entidade = Entidade::factory()->create();
+
+        $resultado = (new VerEntidadeAction)->handle($entidade);
+
+        expect($resultado)->toBe($entidade);
+    });
+
+    it('resolve o modelo quando recebe string UUID', function (): void {
+        $entidade = Entidade::factory()->create();
+
+        $resultado = (new VerEntidadeAction)->handle($entidade->id);
+
+        expect($resultado->id)->toBe($entidade->id);
+    });
 });
 
-it('devolve o modelo quando recebe Entidade directamente', function (): void {
-    $entidade = Entidade::factory()->create();
+describe('sem permissão de leitura', function (): void {
+    it('lança AuthorizationException quando utilizador não tem permissão de leitura', function (): void {
+        $entidade = Entidade::factory()->create();
+        $this->actingAs(User::factory()->create()); // sem role — sem entidades.ver
 
-    $resultado = (new VerEntidadeAction)->handle($entidade);
-
-    expect($resultado)->toBe($entidade);
-});
-
-it('resolve o modelo quando recebe string UUID', function (): void {
-    $entidade = Entidade::factory()->create();
-
-    $resultado = (new VerEntidadeAction)->handle($entidade->id);
-
-    expect($resultado->id)->toBe($entidade->id);
-});
-
-it('lança AuthorizationException quando utilizador não tem permissão de leitura', function (): void {
-    $entidade = Entidade::factory()->create();
-    $utilizador = User::factory()->create(); // sem role — sem entidades.ver
-    $this->actingAs($utilizador);
-
-    expect(fn (): Entidade => (new VerEntidadeAction)->handle($entidade))
-        ->toThrow(AuthorizationException::class);
+        expect(fn (): Entidade => (new VerEntidadeAction)->handle($entidade))
+            ->toThrow(AuthorizationException::class);
+    });
 });
