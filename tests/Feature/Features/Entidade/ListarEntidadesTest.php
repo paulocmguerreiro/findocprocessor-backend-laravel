@@ -3,24 +3,13 @@
 declare(strict_types=1);
 
 use App\Models\Entidade;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\Cursor;
-use Laravel\Sanctum\Sanctum;
-use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function (): void {
-    app(PermissionRegistrar::class)->forgetCachedPermissions();
-});
-
 describe('autenticado', function (): void {
-    beforeEach(function (): void {
-        $utilizador = User::factory()->create();
-        $utilizador->assignRole('admin');
-        Sanctum::actingAs($utilizador, ['api']);
-    });
+    beforeEach(fn () => criarEAutenticarAdmin());
 
     it('devolve lista vazia quando não existem entidades', function (): void {
         $this->getJson('/api/entidades')
@@ -107,9 +96,7 @@ describe('autenticado', function (): void {
 });
 
 it('utilizador com permissão de leitura devolve 200', function (): void {
-    $utilizador = User::factory()->create();
-    $utilizador->assignRole('utilizador');
-    Sanctum::actingAs($utilizador, ['api']);
+    criarEAutenticarUtilizador();
 
     $this->getJson('/api/entidades')
         ->assertOk();

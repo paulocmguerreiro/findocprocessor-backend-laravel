@@ -3,23 +3,12 @@
 declare(strict_types=1);
 
 use App\Models\Entidade;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Laravel\Sanctum\Sanctum;
-use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function (): void {
-    app(PermissionRegistrar::class)->forgetCachedPermissions();
-});
-
 describe('autenticado', function (): void {
-    beforeEach(function (): void {
-        $utilizador = User::factory()->create();
-        $utilizador->assignRole('admin');
-        Sanctum::actingAs($utilizador, ['api']);
-    });
+    beforeEach(fn () => criarEAutenticarAdmin());
 
     it('elimina entidade e devolve 204', function (): void {
         $entidade = Entidade::factory()->create();
@@ -38,9 +27,7 @@ describe('autenticado', function (): void {
 
 it('utilizador sem permissão recebe 403', function (): void {
     $entidade = Entidade::factory()->create();
-    $utilizador = User::factory()->create();
-    $utilizador->assignRole('utilizador');
-    Sanctum::actingAs($utilizador, ['api']);
+    criarEAutenticarUtilizador();
 
     $this->deleteJson("/api/entidades/{$entidade->id}")
         ->assertForbidden();
