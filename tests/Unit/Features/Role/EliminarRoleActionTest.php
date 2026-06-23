@@ -21,14 +21,14 @@ describe('como admin', function (): void {
     });
 
     it('lança DomainException ao tentar eliminar role admin', function (): void {
-        $role = Role::findByName('admin');
+        $role = Role::findByName('admin', 'web');
 
         expect(fn () => (new EliminarRoleAction)->handle($role))
             ->toThrow(DomainException::class, 'Não é possível eliminar um role de sistema.');
     });
 
     it('lança DomainException ao tentar eliminar role utilizador', function (): void {
-        $role = Role::findByName('utilizador');
+        $role = Role::findByName('utilizador', 'web');
 
         expect(fn () => (new EliminarRoleAction)->handle($role))
             ->toThrow(DomainException::class, 'Não é possível eliminar um role de sistema.');
