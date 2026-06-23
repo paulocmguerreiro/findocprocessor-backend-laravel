@@ -23,16 +23,21 @@ Configuração publicada em `config/permission.php`. Guard: `web` (único guard 
 
 ### Permissions disponíveis
 
-| Permission | Descrição |
-|---|---|
-| `entidades.ver` | Listar e ver entidades |
-| `entidades.criar` | Criar entidade |
-| `entidades.actualizar` | Actualizar entidade |
-| `entidades.eliminar` | Eliminar entidade |
-| `categorias-documento.ver` | Listar e ver categorias de documento |
-| `categorias-documento.criar` | Criar categoria de documento |
-| `categorias-documento.actualizar` | Actualizar categoria de documento |
-| `categorias-documento.eliminar` | Eliminar categoria de documento |
+| Permission | Descrição | Migration |
+|---|---|---|
+| `entidades.ver` | Listar e ver entidades | `seed_roles_and_permissions` |
+| `entidades.criar` | Criar entidade | `seed_roles_and_permissions` |
+| `entidades.actualizar` | Actualizar entidade | `seed_roles_and_permissions` |
+| `entidades.eliminar` | Eliminar entidade | `seed_roles_and_permissions` |
+| `categorias-documento.ver` | Listar e ver categorias de documento | `seed_roles_and_permissions` |
+| `categorias-documento.criar` | Criar categoria de documento | `seed_roles_and_permissions` |
+| `categorias-documento.actualizar` | Actualizar categoria de documento | `seed_roles_and_permissions` |
+| `categorias-documento.eliminar` | Eliminar categoria de documento | `seed_roles_and_permissions` |
+| `roles.ver` | Listar e ver roles | `seed_roles_permissions_v2` |
+| `roles.criar` | Criar role | `seed_roles_permissions_v2` |
+| `roles.actualizar` | Actualizar role | `seed_roles_permissions_v2` |
+| `roles.eliminar` | Eliminar role | `seed_roles_permissions_v2` |
+| `utilizadores.atribuir-role` | Atribuir role a utilizador | `seed_roles_permissions_v2` |
 
 ### Matriz role → permissions
 
@@ -46,6 +51,11 @@ Configuração publicada em `config/permission.php`. Guard: `web` (único guard 
 | `categorias-documento.criar` | ✅ | ❌ |
 | `categorias-documento.actualizar` | ✅ | ❌ |
 | `categorias-documento.eliminar` | ✅ | ❌ |
+| `roles.ver` | ✅ | ❌ |
+| `roles.criar` | ✅ | ❌ |
+| `roles.actualizar` | ✅ | ❌ |
+| `roles.eliminar` | ✅ | ❌ |
+| `utilizadores.atribuir-role` | ✅ | ❌ |
 
 ---
 
@@ -92,12 +102,14 @@ public function view(User $utilizador, Entidade $entidade): bool
 
 ### Policies existentes
 
-| Policy | Modelo | Ficheiro |
-|---|---|---|
-| `EntidadePolicy` | `Entidade` | `app/Policies/EntidadePolicy.php` |
-| `CategoriaDocumentoPolicy` | `CategoriaDocumento` | `app/Policies/CategoriaDocumentoPolicy.php` |
+| Policy | Modelo | Ficheiro | Registo |
+|---|---|---|---|
+| `EntidadePolicy` | `Entidade` | `app/Policies/EntidadePolicy.php` | Automático (convenção nome `ModelPolicy`) |
+| `CategoriaDocumentoPolicy` | `CategoriaDocumento` | `app/Policies/CategoriaDocumentoPolicy.php` | Automático (convenção nome `ModelPolicy`) |
+| `RolePolicy` | `Spatie\Permission\Models\Role` | `app/Policies/RolePolicy.php` | `Gate::policy(Role::class, RolePolicy::class)` em `AppServiceProvider` |
+| `UtilizadorPolicy` | `User` | `app/Policies/UtilizadorPolicy.php` | `#[UsePolicy(UtilizadorPolicy::class)]` no modelo `User` |
 
-Registo automático via `AppServiceProvider` — convenção Laravel (nome `ModelPolicy`).
+> **Nota:** Modelos de terceiros (como `Spatie\Permission\Models\Role`) não suportam `#[UsePolicy]` — têm de ser registados via `Gate::policy()` no `AppServiceProvider`.
 
 ---
 

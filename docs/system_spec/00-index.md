@@ -10,6 +10,8 @@
 | Auth | `01-features/auth.md` | 3 (Login, Logout, CriarToken) | 3 REST |
 | CategoriaDocumento | `01-features/categoria-documento.md` | 5 CRUD | 5 REST |
 | Entidade | `01-features/entidade.md` | 7 (5 CRUD + ConverterEmEmpresaMae + Remover) | 5 REST + 1 especial |
+| Role | `01-features/role.md` | 5 CRUD | 5 REST |
+| Utilizador | `01-features/utilizador.md` | 1 (AtribuirRole) | 1 especial |
 
 ## Features planeadas
 
@@ -71,6 +73,7 @@
 | Rotas Auth | `05-routes/auth.md` |
 | Rotas CategoriaDocumento | `05-routes/categorias-documento.md` |
 | Rotas Entidade | `05-routes/entidades.md` |
+| Rotas Role + Utilizador | `05-routes/role.md` |
 | Rotas planeadas | `05-routes/planeadas.md` |
 | Configuração e .env | `06-config.md` |
 

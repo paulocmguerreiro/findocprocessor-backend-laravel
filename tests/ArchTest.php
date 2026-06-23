@@ -8,6 +8,7 @@ use App\Features\Entidade\Actualizar\ActualizarEntidadeRequest;
 use App\Features\Entidade\ComFlagsEfectivosEmpresaMae;
 use App\Features\Entidade\Criar\CriarEntidadeRequest;
 use App\Features\Entidade\Listar\CampoOrdenacaoEntidades;
+use App\Features\Role\Listar\CampoOrdenacaoRoles;
 use App\Http\Controllers\Controller;
 
 arch()->preset()->laravel()->ignoring(['App\Shared\Enums', 'App\Features']);
@@ -38,4 +39,5 @@ arch('actions are final')
         ActualizarEntidadeRequest::class,
         CampoOrdenacaoEntidades::class,
         ComFlagsEfectivosEmpresaMae::class,
+        CampoOrdenacaoRoles::class,
     ]);
