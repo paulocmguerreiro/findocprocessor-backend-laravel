@@ -12,7 +12,7 @@ use Spatie\Permission\Models\Role;
 final class RoleResource extends JsonResource
 {
     /**
-     * @return array{id: int, nome: string, permissoes: array<int, string>}
+     * @return array{id: int|string, nome: string, permissoes: array<int, mixed>}
      */
     #[\Override]
     public function toArray(Request $request): array
