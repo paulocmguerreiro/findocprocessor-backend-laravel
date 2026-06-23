@@ -13,11 +13,16 @@ final class AtribuirRoleAction
 {
     /**
      * @throws AuthorizationException
+     * @throws \DomainException
      * @throws \Throwable
      */
     public function handle(User $utilizador, string $nomeRole): User
     {
         Gate::authorize('atribuirRole', $utilizador);
+
+        if (auth()->id() === $utilizador->id) {
+            throw new \DomainException('Não é possível alterar o próprio role.');
+        }
 
         DB::transaction(function () use ($utilizador, $nomeRole): void {
             $utilizador->syncRoles([$nomeRole]);
