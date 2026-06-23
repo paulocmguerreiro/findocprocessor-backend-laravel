@@ -60,6 +60,14 @@ return Application::configure(basePath: dirname(__DIR__))
             return $problemDetails(Response::HTTP_UNAUTHORIZED, 'Não autenticado.');
         });
 
+        $exceptions->render(function (DomainException $e, Request $request) use ($problemDetails): ?JsonResponse {
+            if (! $request->expectsJson()) {
+                return null;
+            }
+
+            return $problemDetails(Response::HTTP_UNPROCESSABLE_ENTITY, $e->getMessage());
+        });
+
         $exceptions->render(function (Throwable $_e, Request $request) use ($problemDetails): ?JsonResponse {
             if (! $request->expectsJson()) {
                 return null;
