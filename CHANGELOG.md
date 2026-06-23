@@ -6,6 +6,17 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Added
+- **Issue #50** — Gestão de roles e atribuição de role a utilizadores
+  - Feature slice `Role`: CRUD completo (`ListarRoles`, `VerRole`, `CriarRole`, `ActualizarRole`, `EliminarRole`) com `RoleResource`, `CampoOrdenacaoRoles`, DTOs e cursor pagination
+  - Feature slice `Utilizador`: `AtribuirRole` — substitui role via `syncRoles()`
+  - `RolePolicy` + `UtilizadorPolicy` — autorização por permission granular; `RolePolicy` registada via `Gate::policy()` no `AppServiceProvider`; `UtilizadorPolicy` via `#[UsePolicy]` no modelo `User`
+  - 5 novas permissions (`roles.ver`, `roles.criar`, `roles.actualizar`, `roles.eliminar`, `utilizadores.atribuir-role`) criadas via data migration e atribuídas ao role `admin`
+  - Invariante de domínio: utilizador não pode alterar o próprio role (`DomainException` → 422)
+  - Roles de sistema (`admin`, `utilizador`) protegidos contra eliminação (`DomainException` → 422)
+  - `DomainException` mapeada para 422 em `bootstrap/app.php`
+  - 277 testes totais, 100% cobertura, PHPStan nível 9 sem erros
+
 ### Changed
 - **Issue #48** — Refactor: helpers globais de autenticação e `describe()` por role nos testes
   - `tests/Pest.php` — `beforeEach` global com `forgetCachedPermissions()` (removido dos 22 ficheiros individuais) + 4 helper functions: `criarAdmin()`, `criarUtilizador()`, `criarEAutenticarAdmin()`, `criarEAutenticarUtilizador()`
