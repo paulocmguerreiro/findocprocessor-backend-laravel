@@ -9,7 +9,7 @@
 
 > API REST para processamento de documentos financeiros, organizada em **Vertical Slice Architecture** em Laravel 13 / PHP 8.5.
 
-**O que este projecto demonstra:**
+**Regras estruturais/lógicas:**
 
 - **Vertical Slice Architecture** consistente — lógica organizada por caso de uso (`app/Features/`), não por camada técnica.
 - **Actions `final readonly`** como unidade de lógica, controllers magros (só fazem dispatch), DTOs como Value Objects.
