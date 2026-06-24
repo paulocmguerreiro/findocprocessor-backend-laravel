@@ -1,18 +1,39 @@
 # FinDocProcessor — Backend Laravel
 
-Implementação de pipeline de processamento de documentos financeiros, em Laravel / PHP. 
+[![CI](https://github.com/paulocmguerreiro/findocprocessor-backend-laravel/actions/workflows/ci.yml/badge.svg)](https://github.com/paulocmguerreiro/findocprocessor-backend-laravel/actions/workflows/ci.yml)
+![PHP 8.5](https://img.shields.io/badge/PHP-8.5-777BB4?logo=php&logoColor=white)
+![Laravel 13](https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel&logoColor=white)
+![Larastan](https://img.shields.io/badge/Larastan-nível%209-2D2D2D)
+![Coverage](https://img.shields.io/badge/cobertura-100%25-3FB950)
+![License](https://img.shields.io/badge/licença-MIT-blue)
+
+> API REST para processamento de documentos financeiros, construída como
+> demonstração de **Vertical Slice Architecture** em Laravel 13 / PHP 8.5 com
+> disciplina de engenharia de nível sénior: tipagem estática máxima, 100% de
+> cobertura de testes e CI a impor o gate de qualidade completo.
+
+**O que este projecto demonstra:**
+
+- **Vertical Slice Architecture** consistente — lógica organizada por caso de uso (`app/Features/`), não por camada técnica.
+- **Actions `final readonly`** como unidade de lógica, controllers magros (só fazem dispatch), DTOs como Value Objects.
+- **Autorização dupla camada** (`Gate::authorize()` no FormRequest **e** na Action) — cobre HTTP e não-HTTP (Jobs, Artisan, testes).
+- **Qualidade imposta por CI:** Larastan nível 9, 100% type-coverage, 100% cobertura de testes, Pint e Rector — zero excepções.
+- **Testes em padrão dual** por slice: invocação directa (unit) **e** via HTTP (feature).
+
+> **Estado:** fundação de engenharia sólida com auth, autorização por roles e
+> CRUDs de domínio (Categorias, Entidades). A feature-título — ingestão e
+> extração de dados de documentos (OCR + análise de imagem + IA) — é o próximo
+> marco e está descrita no [Roadmap](#roadmap).
 
 ## Stack
 
 - **Laravel 13** / PHP 8.5 — Vertical Slice Architecture
 - **Laravel Sanctum** — autenticação API via Bearer tokens
 - **Spatie Laravel Permission** — autorização por roles (`admin`, `utilizador`) e permissions granulares
-- **Eloquent ORM** — SQLite (dev) / MySQL (prod via Docker)
+- **Eloquent ORM** — SQLite (dev/testes) / MySQL (Docker)
 - **Redis + predis** — cache com invalidação por tags (`CacheServico`, `TagCache`, `TtlCache`)
 - **Pest 4 + Mockery** — padrão de testes dual (unit + HTTP)
 - **Larastan nível 9 + Rector + Laravel Pint** — qualidade e tipagem estática
-
-Planeado (ver [Roadmap](#roadmap)): Laravel Queue + Schedule para processamento assíncrono e recurso a sistemas de IA para extração de dados.
 
 ## Arquitectura
 
@@ -23,41 +44,64 @@ app/Policies/              ← Autorização por Gate/Policy
 app/Shared/                ← Enums, Http (ApiResponse) e Cache (CacheServico, TagCache, TtlCache)
 app/Http/Controllers/      ← Thin controllers (só dispatch para Actions)
 app/Http/Middleware/       ← InjectarContextoLog (trace_id UUID por request via Context facade)
-app/Infrastructure/        ← Repositories, AI, FileSystem  (scaffold — ver Roadmap)
-app/Jobs/                  ← Jobs de processamento assíncrono       (scaffold — ver Roadmap)
+app/Infrastructure/        ← AI, FileSystem, Repositories  →  ver Roadmap (ingestão de documentos)
+app/Jobs/                  ← Processamento assíncrono       →  ver Roadmap (pipeline de inbox)
 ```
 
-Padrões aplicados: Actions `final readonly`, autorização dupla camada (`Gate::authorize()` no FormRequest **e** na Action), `DB::transaction()` em todas as escritas, DTOs como Value Objects, `strict_types=1` em todos os ficheiros, logging estruturado com `trace_id` por request (propagado a Jobs).
+> As pastas `app/Infrastructure/` e `app/Jobs/` estão reservadas para o pipeline
+> de ingestão de documentos (OCR / análise de imagem / IA) descrito no
+> [Roadmap](#roadmap) — ainda não contêm implementação.
 
-## Como correr (dev)
+Padrões aplicados: Actions `final readonly`, autorização dupla camada (`Gate::authorize()` no FormRequest **e** na Action), `DB::transaction()` em todas as escritas, DTOs como Value Objects, `strict_types=1` em todos os ficheiros, cursor pagination (keyset) nas listagens, cache Redis com invalidação por tags e logging estruturado com `trace_id` por request (propagado a Jobs).
+
+> Documentação de arquitectura detalhada em [`docs/system_spec/00-index.md`](docs/system_spec/00-index.md).
+
+## Como correr
+
+### Opção A — Docker (MySQL + Redis, recomendado)
+
+Stack completo a partir de um clone limpo, sem PHP/Composer instalados localmente:
+
+```bash
+docker compose up -d --build
+```
+
+- API em `http://localhost:8000`
+- Migrations e seed correm automaticamente no arranque
+- Correr a pipeline de qualidade dentro do container:
+
+```bash
+docker compose exec app composer test
+```
+
+### Opção B — Local (SQLite)
 
 ```bash
 # Pré-requisitos: PHP 8.5, Composer, Node.js
 composer install
-npm install && npm run build
 cp .env.example .env
 php artisan key:generate
-php artisan migrate          # SQLite por omissão em dev
+php artisan migrate --seed      # SQLite por omissão em dev
 php artisan serve
 ```
 
 API disponível em `http://localhost:8000`.
 
+### Acesso
+
 **Autenticação:** todas as rotas (excepto `POST /api/auth/login`) exigem `Authorization: Bearer <token>`. Obter token via `POST /api/auth/login` com `email` e `password`.
 
-**Autorização:** duas roles disponíveis — `admin` (acesso total) e `utilizador` (só leitura). Em desenvolvimento, usar `admin@findocprocessor.test` / `password` com token `dev-token` (criado pelo seeder).
+**Autorização:** duas roles — `admin` (acesso total) e `utilizador` (só leitura). Após o seed, usar `admin@findocprocessor.test` / `password` (o seeder cria também o token de dev `dev-token`).
 
 ## Testes
 
 ```bash
-composer test          # pipeline completa (lint + types + arquitectura + cobertura)
+composer test          # pipeline completa (lint + arquitectura + tipos + cobertura)
 composer test:types    # Larastan nível 9 — zero erros
 composer test:coverage # Pest — cobertura 100%
 ```
 
-## Estado actual
-
-Features implementadas até ao momento.
+## API — estado actual
 
 ### Auth
 
@@ -92,24 +136,38 @@ Todas as rotas exigem Bearer token.
 | DELETE | `/api/entidades/{id}`                   | Eliminar                     |
 | PATCH  | `/api/entidades/{id}/empresa-mae`       | Converter em empresa-mãe     |
 
+### Roles & Utilizadores
+
+Todas as rotas exigem Bearer token (role `admin`).
+
+| Método | Path                              | Descrição                |
+| ------ | --------------------------------- | ------------------------ |
+| GET/POST/PUT/DELETE | `/api/roles`         | CRUD de roles            |
+| PUT    | `/api/utilizadores/{id}/role`     | Atribuir role a utilizador |
+
 ## Qualidade
 
-- Larastan nível 9 (PHPStan com regras Laravel)
-- Laravel Pint (formatação PSR-12 + opinionated)
-- Rector (modernização PHP 8.5 + regras Laravel)
-- `strict_types=1` em todos os ficheiros
+- Larastan nível 9 (PHPStan com regras Laravel) — zero erros
+- 100% type-coverage (todos os tipos declarados)
 - Cobertura de testes 100% (Pest, padrão dual unit + HTTP)
+- `strict_types=1` em todos os ficheiros
+- Laravel Pint (PSR-12 + opinionated) + Rector (modernização PHP 8.5)
 - CI obrigatório: pint ✓ rector ✓ phpstan ✓ testes ✓
 
 ## Roadmap
 
 Próximos passos, geridos como issues no repositório:
 
-- **Logging estruturado** — Actions, Controllers, erros e contexto de request _(próximo)_
-- **Documento** — model layer (migration + model + factory + policy + DTOs + resource)
-- **Processamento assíncrono** — Jobs + Schedule sobre a pasta de inbox
+- **Documento — gestão manual** _(próximo)_ — model layer (migration + model + factory + policy + DTOs + resource), upload `multipart/form-data` e ciclo de estados (`PENDING → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → DONE`).
+- **Gestão financeira** — movimentos (débito/crédito) associados a documentos e entidades.
+- **Audit trail** — registo de alterações nos registos de domínio.
+- **Pipeline de ingestão** — Jobs + Schedule sobre a pasta de inbox, com OCR, análise de imagem e extração de dados via IA (`app/Infrastructure/AI`).
 
 ## Relacionado (roadmap)
 
 - `findocprocessor-frontend` — Dashboard Angular (repositório separado)
 - `findocprocessor-backend-dotnet` — Implementação alternativa em .NET
+
+## Licença
+
+[MIT](LICENSE) © Paulo Guerreiro
