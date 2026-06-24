@@ -22,11 +22,12 @@ app/Models/                ← Eloquent Models (UUID PK, @property-read)
 app/Policies/              ← Autorização por Gate/Policy
 app/Shared/                ← Enums, Http (ApiResponse) e Cache (CacheServico, TagCache, TtlCache)
 app/Http/Controllers/      ← Thin controllers (só dispatch para Actions)
+app/Http/Middleware/       ← InjectarContextoLog (trace_id UUID por request via Context facade)
 app/Infrastructure/        ← Repositories, AI, FileSystem  (scaffold — ver Roadmap)
 app/Jobs/                  ← Jobs de processamento assíncrono       (scaffold — ver Roadmap)
 ```
 
-Padrões aplicados: Actions `final readonly`, autorização dupla camada (`Gate::authorize()` no FormRequest **e** na Action), `DB::transaction()` em todas as escritas, DTOs como Value Objects, `strict_types=1` em todos os ficheiros.
+Padrões aplicados: Actions `final readonly`, autorização dupla camada (`Gate::authorize()` no FormRequest **e** na Action), `DB::transaction()` em todas as escritas, DTOs como Value Objects, `strict_types=1` em todos os ficheiros, logging estruturado com `trace_id` por request (propagado a Jobs).
 
 ## Como correr (dev)
 
