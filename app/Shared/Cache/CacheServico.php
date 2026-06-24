@@ -19,7 +19,7 @@ final class CacheServico
         ?User $utilizador = null,
     ): string {
         ksort($params);
-        $hash = md5(http_build_query($params));
+        $hash = hash('sha256', http_build_query($params));
 
         if ($utilizador instanceof User) {
             return "{$tag->value}:utilizador:{$utilizador->id}:{$operacao->value}:{$hash}";
