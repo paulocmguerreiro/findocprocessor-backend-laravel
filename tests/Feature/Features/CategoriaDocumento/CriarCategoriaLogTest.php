@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
 use App\Shared\Enums\TipoMovimento;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
 
 uses(RefreshDatabase::class);
 
-beforeEach(fn () => criarEAutenticarAdmin());
+beforeEach(fn (): User => criarEAutenticarAdmin());
 
 it('regista inicio e fim ao criar categoria', function (): void {
     Log::spy();
