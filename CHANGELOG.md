@@ -7,6 +7,15 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
+- **Issue #38** — Cache Redis — listagens e queries frequentes com invalidação por tags
+  - Infra partilhada `app/Shared/Cache/`: `TagCache` (enum domínio), `TagOperacao` (enum operação), `TtlCache` (enum duração: `Curta=30s`, `Media=300s`, `Longa=3600s`, `Alargada=86400s`), `CacheServico` (serviço final injectável com `criarChave()`, `lembrar()`, `invalidarCache()`)
+  - `ListarEntidadesAction` e `VerEntidadeAction` — cache com `TagCache::Entidades`; 4 Actions de escrita invalidam em `DB::transaction()`
+  - `ListarCategoriasAction` e `VerCategoriaAction` — cache com `TagCache::CategoriasDocumento`; 3 Actions de escrita invalidam em `DB::transaction()`
+  - `config/cache.php` — `serializable_classes` com whitelist explícita (`Entidade`, `CategoriaDocumento`, `CursorPaginator`, `Collection`, `EloquentCollection`); default `redis`
+  - `PERMISSION_CACHE_STORE=array` em `phpunit.xml` — isola cache Spatie por worker em testes paralelos
+  - `predis/predis` adicionado ao `composer.json`; `REDIS_CLIENT=predis` em `.env`
+  - 289 testes totais, 100% cobertura, PHPStan nível 9 sem erros
+
 - **Issue #50** — Gestão de roles e atribuição de role a utilizadores
   - Feature slice `Role`: CRUD completo (`ListarRoles`, `VerRole`, `CriarRole`, `ActualizarRole`, `EliminarRole`) com `RoleResource`, `CampoOrdenacaoRoles`, DTOs e cursor pagination
   - Feature slice `Utilizador`: `AtribuirRole` — substitui role via `syncRoles()`

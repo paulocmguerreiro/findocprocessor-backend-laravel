@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 use App\Models\CategoriaDocumento;
 use App\Models\User;
+use App\Shared\Enums\TipoMovimento;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\Cursor;
+use Illuminate\Support\Facades\Cache;
 
 uses(RefreshDatabase::class);
+
+beforeEach(fn () => Cache::tags(['categorias_documento'])->flush());
 
 describe('autenticado', function (): void {
     beforeEach(fn (): User => criarEAutenticarAdmin());
@@ -97,6 +101,20 @@ describe('autenticado', function (): void {
         $this->getJson('/api/categorias-documento?direction=invalido')
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['direction']);
+    });
+
+    it('invalida cache após criar categoria — nova categoria aparece no GET seguinte', function (): void {
+        $this->getJson('/api/categorias-documento')->assertOk()->assertJsonCount(0, 'data');
+
+        $this->postJson('/api/categorias-documento', [
+            'nome' => 'Categoria Nova',
+            'slug' => 'categoria-nova',
+            'tipo_movimento' => TipoMovimento::Debito->value,
+        ])->assertCreated();
+
+        $this->getJson('/api/categorias-documento')
+            ->assertOk()
+            ->assertJsonCount(1, 'data');
     });
 
     it('cursor além do fim devolve lista vazia', function (): void {

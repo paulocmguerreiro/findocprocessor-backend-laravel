@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace App\Features\CategoriaDocumento\Actualizar;
 
 use App\Models\CategoriaDocumento;
+use App\Shared\Cache\CacheServico;
+use App\Shared\Cache\TagCache;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
-final class ActualizarCategoriaAction
+final readonly class ActualizarCategoriaAction
 {
+    public function __construct(private CacheServico $cache) {}
+
     /**
      * @throws ModelNotFoundException
      * @throws AuthorizationException
@@ -34,6 +38,8 @@ final class ActualizarCategoriaAction
             ])->save();
 
             $categoria->refresh();
+
+            $this->cache->invalidarCache(TagCache::CategoriasDocumento);
 
             return $categoria;
         });

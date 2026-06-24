@@ -8,10 +8,11 @@ Implementação de pipeline de processamento de documentos financeiros, em Larav
 - **Laravel Sanctum** — autenticação API via Bearer tokens
 - **Spatie Laravel Permission** — autorização por roles (`admin`, `utilizador`) e permissions granulares
 - **Eloquent ORM** — SQLite (dev) / MySQL (prod via Docker)
+- **Redis + predis** — cache com invalidação por tags (`CacheServico`, `TagCache`, `TtlCache`)
 - **Pest 4 + Mockery** — padrão de testes dual (unit + HTTP)
 - **Larastan nível 9 + Rector + Laravel Pint** — qualidade e tipagem estática
 
-Planeado (ver [Roadmap](#roadmap)): cache Redis (predis), Laravel Queue + Schedule para processamento assíncrono e recurso a sistemas de IA para extração de dados.
+Planeado (ver [Roadmap](#roadmap)): Laravel Queue + Schedule para processamento assíncrono e recurso a sistemas de IA para extração de dados.
 
 ## Arquitectura
 
@@ -19,9 +20,9 @@ Planeado (ver [Roadmap](#roadmap)): cache Redis (predis), Laravel Queue + Schedu
 app/Features/              ← Actions agrupadas por caso de uso (Vertical Slice)
 app/Models/                ← Eloquent Models (UUID PK, @property-read)
 app/Policies/              ← Autorização por Gate/Policy
-app/Shared/                ← Enums e Http (ApiResponse); Contracts/DTOs/States/Exceptions
+app/Shared/                ← Enums, Http (ApiResponse) e Cache (CacheServico, TagCache, TtlCache)
 app/Http/Controllers/      ← Thin controllers (só dispatch para Actions)
-app/Infrastructure/        ← Repositories, AI, FileSystem, Cache  (scaffold — ver Roadmap)
+app/Infrastructure/        ← Repositories, AI, FileSystem  (scaffold — ver Roadmap)
 app/Jobs/                  ← Jobs de processamento assíncrono       (scaffold — ver Roadmap)
 ```
 
@@ -103,8 +104,6 @@ Todas as rotas exigem Bearer token.
 Próximos passos, geridos como issues no repositório:
 
 - **Logging estruturado** — Actions, Controllers, erros e contexto de request _(próximo)_
-- **Logging estruturado** — Actions, Controllers, erros e contexto de request
-- **Cache Redis** — listagens e queries frequentes com invalidação por tags
 - **Documento** — model layer (migration + model + factory + policy + DTOs + resource)
 - **Processamento assíncrono** — Jobs + Schedule sobre a pasta de inbox
 

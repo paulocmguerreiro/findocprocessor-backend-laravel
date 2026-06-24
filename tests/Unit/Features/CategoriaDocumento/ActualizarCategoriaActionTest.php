@@ -8,8 +8,11 @@ use App\Models\CategoriaDocumento;
 use App\Shared\Enums\TipoMovimento;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 
 uses(RefreshDatabase::class);
+
+beforeEach(fn () => Cache::tags(['categorias_documento'])->flush());
 
 describe('como admin', function (): void {
     beforeEach(fn () => $this->actingAs(criarAdmin()));
@@ -22,7 +25,7 @@ describe('como admin', function (): void {
             slug: 'actualizado',
             tipoMovimento: TipoMovimento::Credito,
         );
-        $resultado = (new ActualizarCategoriaAction)->handle($categoria, $dto);
+        $resultado = app(ActualizarCategoriaAction::class)->handle($categoria, $dto);
 
         expect($resultado->nome)->toBe('Actualizado')
             ->and($resultado->slug)->toBe('actualizado')
@@ -37,7 +40,7 @@ describe('como admin', function (): void {
             slug: 'actualizado',
             tipoMovimento: TipoMovimento::Debito,
         );
-        $resultado = (new ActualizarCategoriaAction)->handle($categoria->id, $dto);
+        $resultado = app(ActualizarCategoriaAction::class)->handle($categoria->id, $dto);
 
         expect($resultado->nome)->toBe('Actualizado')
             ->and($resultado->slug)->toBe('actualizado')
@@ -57,7 +60,7 @@ describe('como admin', function (): void {
             tipoMovimento: TipoMovimento::Credito,
         );
 
-        expect(fn (): CategoriaDocumento => (new ActualizarCategoriaAction)->handle($categoria, $dto))
+        expect(fn (): CategoriaDocumento => app(ActualizarCategoriaAction::class)->handle($categoria, $dto))
             ->toThrow(RuntimeException::class, 'falha simulada durante update');
 
         $this->assertDatabaseHas('categorias_documento', ['id' => $categoria->id, 'nome' => 'Original', 'slug' => 'original']);
@@ -72,7 +75,7 @@ describe('sem permissão de escrita', function (): void {
 
         $dto = new ActualizarCategoriaDto(nome: 'Alterado', slug: 'alterado', tipoMovimento: TipoMovimento::Neutro);
 
-        expect(fn (): CategoriaDocumento => (new ActualizarCategoriaAction)->handle($categoria, $dto))
+        expect(fn (): CategoriaDocumento => app(ActualizarCategoriaAction::class)->handle($categoria, $dto))
             ->toThrow(AuthorizationException::class);
     });
 });

@@ -7,8 +7,11 @@ use App\Features\Entidade\Criar\CriarEntidadeDto;
 use App\Models\Entidade;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 
 uses(RefreshDatabase::class);
+
+beforeEach(fn () => Cache::tags(['entidades'])->flush());
 
 describe('como admin', function (): void {
     beforeEach(fn () => $this->actingAs(criarAdmin()));

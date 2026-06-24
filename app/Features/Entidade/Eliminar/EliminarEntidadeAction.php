@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace App\Features\Entidade\Eliminar;
 
 use App\Models\Entidade;
+use App\Shared\Cache\CacheServico;
+use App\Shared\Cache\TagCache;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
-final class EliminarEntidadeAction
+final readonly class EliminarEntidadeAction
 {
+    public function __construct(private CacheServico $cache) {}
+
     /**
      * @throws ModelNotFoundException<Entidade>
      * @throws AuthorizationException
@@ -26,6 +30,9 @@ final class EliminarEntidadeAction
 
         Gate::authorize('delete', $entidade);
 
-        DB::transaction(fn (): ?bool => $entidade->delete());
+        DB::transaction(function () use ($entidade): void {
+            $entidade->delete();
+            $this->cache->invalidarCache(TagCache::Entidades);
+        });
     }
 }
