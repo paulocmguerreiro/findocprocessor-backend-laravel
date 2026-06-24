@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Models\CategoriaDocumento;
+use App\Models\Entidade;
+use Illuminate\Pagination\CursorPaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 return [
@@ -17,7 +21,7 @@ return [
     |
     */
 
-    'default' => env('CACHE_STORE', 'database'),
+    'default' => env('CACHE_STORE', 'redis'),
 
     /*
     |--------------------------------------------------------------------------
@@ -127,6 +131,11 @@ return [
     |
     */
 
-    'serializable_classes' => false,
+    'serializable_classes' => [
+        Entidade::class,
+        CategoriaDocumento::class,
+        CursorPaginator::class,
+        Collection::class,
+    ],
 
 ];
