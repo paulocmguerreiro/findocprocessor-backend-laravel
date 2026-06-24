@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Cache;
 
 uses(RefreshDatabase::class);
 
-beforeEach(fn () => Cache::flush());
+beforeEach(fn () => Cache::tags(['entidades'])->flush());
 
 describe('autenticado', function (): void {
     beforeEach(fn (): User => criarEAutenticarAdmin());

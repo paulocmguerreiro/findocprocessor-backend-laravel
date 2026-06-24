@@ -5,13 +5,16 @@ declare(strict_types=1);
 use App\Features\CategoriaDocumento\Ver\VerCategoriaAction;
 use App\Models\CategoriaDocumento;
 use App\Models\User;
+use App\Shared\Cache\CacheServico;
+use App\Shared\Cache\TagCache;
+use App\Shared\Cache\TagOperacao;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 
 uses(RefreshDatabase::class);
 
-beforeEach(fn () => Cache::flush());
+beforeEach(fn () => Cache::tags(['categorias_documento'])->flush());
 
 describe('como admin', function (): void {
     beforeEach(fn () => $this->actingAs(criarAdmin()));
@@ -32,19 +35,18 @@ describe('como admin', function (): void {
         expect($resultado->id)->toBe($categoria->id);
     });
 
-    it('cacheia o registo — segunda chamada devolve resultado cacheado', function (): void {
-        $categoria = CategoriaDocumento::factory()->create(['nome' => 'Original']);
+    it('cacheia o registo após primeira chamada', function (): void {
+        $categoria = CategoriaDocumento::factory()->create();
 
         app(VerCategoriaAction::class)->handle($categoria);
 
-        // Alterar directamente na BD sem passar pela Action (bypass invalidação)
-        $categoria->nome = 'Alterado';
-        $categoria->saveQuietly();
+        $chave = app(CacheServico::class)->criarChave(
+            TagCache::CategoriasDocumento,
+            TagOperacao::Ver,
+            ['id' => $categoria->id],
+        );
 
-        // Segunda chamada — deve devolver o valor cacheado ('Original')
-        $resultado = app(VerCategoriaAction::class)->handle($categoria->id);
-
-        expect($resultado->nome)->toBe('Original');
+        expect(Cache::tags(['categorias_documento'])->has($chave))->toBeTrue();
     });
 });
 

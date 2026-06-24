@@ -62,7 +62,7 @@
 | Transações de BD | `04-infra/transactions.md` | implementado |
 | Autorização (Roles/Permissions) | `04-infra/autorizacao.md` | implementado |
 | Repositories | `04-infra/repositories.md` | pendente |
-| Cache / Redis | `04-infra/cache.md` | pendente |
+| Cache / Redis | `04-infra/cache.md` | implementado |
 | Jobs / Queue | `04-infra/queue-jobs.md` | pendente |
 | APIs externas (IA) | `04-infra/external-apis.md` | pendente |
 

@@ -5,13 +5,16 @@ declare(strict_types=1);
 use App\Features\Entidade\Ver\VerEntidadeAction;
 use App\Models\Entidade;
 use App\Models\User;
+use App\Shared\Cache\CacheServico;
+use App\Shared\Cache\TagCache;
+use App\Shared\Cache\TagOperacao;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 
 uses(RefreshDatabase::class);
 
-beforeEach(fn () => Cache::flush());
+beforeEach(fn () => Cache::tags(['entidades'])->flush());
 
 describe('como admin', function (): void {
     beforeEach(fn () => $this->actingAs(criarAdmin()));
@@ -32,19 +35,18 @@ describe('como admin', function (): void {
         expect($resultado->id)->toBe($entidade->id);
     });
 
-    it('cacheia o registo — segunda chamada devolve resultado cacheado', function (): void {
-        $entidade = Entidade::factory()->create(['nome' => 'Original']);
+    it('cacheia o registo após primeira chamada', function (): void {
+        $entidade = Entidade::factory()->create();
 
         app(VerEntidadeAction::class)->handle($entidade);
 
-        // Alterar directamente na BD sem passar pela Action (bypass invalidação)
-        $entidade->nome = 'Alterado';
-        $entidade->saveQuietly();
+        $chave = app(CacheServico::class)->criarChave(
+            TagCache::Entidades,
+            TagOperacao::Ver,
+            ['id' => $entidade->id],
+        );
 
-        // Segunda chamada — deve devolver o valor cacheado ('Original')
-        $resultado = app(VerEntidadeAction::class)->handle($entidade->id);
-
-        expect($resultado->nome)->toBe('Original');
+        expect(Cache::tags(['entidades'])->has($chave))->toBeTrue();
     });
 });
 

@@ -66,3 +66,40 @@ it('invalida cache — callback volta a ser executado após flush', function ():
 
     expect($contador)->toBe(2);
 });
+
+it('lembrar com utilizador — usa tag com scope de utilizador', function (): void {
+    $utilizador = User::factory()->create();
+    $servico = new CacheServico;
+    $chave = $servico->criarChave(TagCache::Entidades, TagOperacao::Ver, ['id' => 'x'], $utilizador);
+    $contador = 0;
+
+    $servico->lembrar(TagCache::Entidades, $chave, TtlCache::Media, function () use (&$contador): string {
+        $contador++;
+
+        return 'valor';
+    }, $utilizador);
+
+    $resultado = $servico->lembrar(TagCache::Entidades, $chave, TtlCache::Media, function () use (&$contador): string {
+        $contador++;
+
+        return 'valor';
+    }, $utilizador);
+
+    expect($contador)->toBe(1)->and($resultado)->toBe('valor');
+});
+
+it('invalidarCache com utilizador — invalida apenas o scope do utilizador', function (): void {
+    $utilizador = User::factory()->create();
+    $servico = new CacheServico;
+    $chave = $servico->criarChave(TagCache::Entidades, TagOperacao::Ver, ['id' => 'y'], $utilizador);
+    $contador = 0;
+    $cb = function () use (&$contador): int {
+        return ++$contador;
+    };
+
+    $servico->lembrar(TagCache::Entidades, $chave, TtlCache::Curta, $cb, $utilizador);
+    $servico->invalidarCache(TagCache::Entidades, $utilizador);
+    $servico->lembrar(TagCache::Entidades, $chave, TtlCache::Curta, $cb, $utilizador);
+
+    expect($contador)->toBe(2);
+});

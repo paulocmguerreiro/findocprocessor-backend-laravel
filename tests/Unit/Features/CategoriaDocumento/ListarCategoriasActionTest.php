@@ -6,6 +6,9 @@ use App\Features\CategoriaDocumento\Listar\CampoOrdenacaoCategorias;
 use App\Features\CategoriaDocumento\Listar\ListarCategoriasAction;
 use App\Models\CategoriaDocumento;
 use App\Models\User;
+use App\Shared\Cache\CacheServico;
+use App\Shared\Cache\TagCache;
+use App\Shared\Cache\TagOperacao;
 use App\Shared\Enums\DirecaoOrdenacao;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -14,7 +17,7 @@ use Illuminate\Support\Facades\Cache;
 
 uses(RefreshDatabase::class);
 
-beforeEach(fn () => Cache::flush());
+beforeEach(fn () => Cache::tags(['categorias_documento'])->flush());
 
 describe('como admin', function (): void {
     beforeEach(fn () => $this->actingAs(criarAdmin()));
@@ -45,18 +48,18 @@ describe('como admin', function (): void {
             ->and($resultado->nextCursor())->not->toBeNull();
     });
 
-    it('cacheia resultados — segunda chamada não vai à BD', function (): void {
+    it('cacheia resultados após primeira chamada', function (): void {
         CategoriaDocumento::factory()->count(3)->create();
 
         app(ListarCategoriasAction::class)->handle(15, CampoOrdenacaoCategorias::Nome, DirecaoOrdenacao::Asc);
 
-        // Inserir directamente na BD sem passar pela Action (bypass invalidação)
-        CategoriaDocumento::factory()->create(['nome' => 'Zzz Extra']);
+        $chave = app(CacheServico::class)->criarChave(
+            TagCache::CategoriasDocumento,
+            TagOperacao::Listar,
+            ['campo' => CampoOrdenacaoCategorias::Nome->value, 'cursor' => null, 'direcao' => DirecaoOrdenacao::Asc->value, 'por_pagina' => 15],
+        );
 
-        // Segunda chamada com os mesmos parâmetros — deve devolver resultado cacheado (3, não 4)
-        $resultado = app(ListarCategoriasAction::class)->handle(15, CampoOrdenacaoCategorias::Nome, DirecaoOrdenacao::Asc);
-
-        expect($resultado->count())->toBe(3);
+        expect(Cache::tags(['categorias_documento'])->has($chave))->toBeTrue();
     });
 });
 

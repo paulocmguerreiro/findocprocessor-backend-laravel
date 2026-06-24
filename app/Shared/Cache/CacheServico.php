@@ -31,14 +31,14 @@ final class CacheServico
     /**
      * @template T
      *
-     * @param  callable(): T  $callback
+     * @param  \Closure(): T  $callback
      * @return T
      */
     public function lembrar(
         TagCache $tag,
         string $chave,
         TtlCache $ttl,
-        callable $callback,
+        \Closure $callback,
         ?User $utilizador = null,
     ): mixed {
         $tags = [$tag->value];
