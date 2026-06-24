@@ -17,11 +17,6 @@
 - **Qualidade imposta por CI:** Larastan nível 9, 100% type-coverage, 100% cobertura de testes, Pint e Rector — zero excepções.
 - **Testes em padrão dual** por slice: invocação directa (unit) **e** via HTTP (feature).
 
-> **Estado:** fundação de engenharia sólida com auth, autorização por roles e
-> CRUDs de domínio (Categorias, Entidades). A feature-título — ingestão e
-> extração de dados de documentos (OCR + análise de imagem + IA) — é o próximo
-> marco e está descrita no [Roadmap](#roadmap).
-
 ## Stack
 
 - **Laravel 13** / PHP 8.5 — Vertical Slice Architecture
