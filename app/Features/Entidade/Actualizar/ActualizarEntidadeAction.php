@@ -10,8 +10,10 @@ use App\Shared\Cache\CacheServico;
 use App\Shared\Cache\TagCache;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 
 final readonly class ActualizarEntidadeAction
 {
@@ -34,7 +36,9 @@ final readonly class ActualizarEntidadeAction
 
         Gate::authorize('update', $entidade);
 
-        return DB::transaction(function () use ($entidade, $dados): Entidade {
+        Log::info('entidade.actualizar.inicio', ['id_utilizador' => Auth::id()]);
+
+        $entidade = DB::transaction(function () use ($entidade, $dados): Entidade {
             $this->regraUnicidade->handle($dados->eEmpresaAplicacao);
 
             $entidade->fill([
@@ -51,5 +55,9 @@ final readonly class ActualizarEntidadeAction
 
             return $entidade;
         });
+
+        Log::info('entidade.actualizar.fim', ['id_utilizador' => Auth::id(), 'id_entidade' => $entidade->id]);
+
+        return $entidade;
     }
 }

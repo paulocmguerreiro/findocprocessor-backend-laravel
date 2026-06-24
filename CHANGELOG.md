@@ -7,6 +7,17 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
+- **Issue #37** — Logging estruturado — Actions, autenticação e contexto de request
+  - `app/Http/Middleware/InjectarContextoLog` — gera `trace_id` UUID por request via `Context::add()`; registado no grupo `api`; propaga automaticamente para Jobs (Laravel Context dehydrate/hydrate)
+  - `app/Features/Auth/Login/LoginDto` — Value Object `final readonly` com `email`, `password`, `ip`, `agente`; `fromRequest()` extrai contexto HTTP (IP de `$request->ip()`, nunca do body)
+  - `LoginAction` — assinatura alterada para `handle(LoginDto $dados)`; eventos `auth.login.tentativa` (info), `auth.login.sucesso` (info), `auth.login.falhou` (warning); password nunca logada
+  - 7 Actions de escrita — padrão `<dominio>.<operacao>.inicio` / `.fim` com `id_utilizador`; `.fim` só registado após commit da transação
+  - `bootstrap/app.php` — `$exceptions->report()` com `Log::error()` global para todas as excepções não tratadas
+  - `.env.example` — `LOG_DAILY_DAYS=14` documentado; canal `daily` configurado em `config/logging.php` para produção
+  - 4 ficheiros de teste novos (`InjectarContextoLogTest`, `LoginDtoTest`, `LoginActionLogTest`, `CriarCategoriaLogTest`) + actualização de `LoginActionTest`
+  - `docs/system_spec/04-infra/logging.md` — catálogo completo de eventos, padrão de logging e configuração
+  - 299 testes totais, 100% cobertura, PHPStan nível 9 sem erros
+
 - **Issue #38** — Cache Redis — listagens e queries frequentes com invalidação por tags
   - Infra partilhada `app/Shared/Cache/`: `TagCache` (enum domínio), `TagOperacao` (enum operação), `TtlCache` (enum duração: `Curta=30s`, `Media=300s`, `Longa=3600s`, `Alargada=86400s`), `CacheServico` (serviço final injectável com `criarChave()`, `lembrar()`, `invalidarCache()`)
   - `ListarEntidadesAction` e `VerEntidadeAction` — cache com `TagCache::Entidades`; 4 Actions de escrita invalidam em `DB::transaction()`

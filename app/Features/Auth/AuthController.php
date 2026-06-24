@@ -7,6 +7,7 @@ namespace App\Features\Auth;
 use App\Features\Auth\CriarToken\CriarTokenAction;
 use App\Features\Auth\CriarToken\CriarTokenRequest;
 use App\Features\Auth\Login\LoginAction;
+use App\Features\Auth\Login\LoginDto;
 use App\Features\Auth\Login\LoginRequest;
 use App\Features\Auth\Logout\LogoutAction;
 use App\Http\Controllers\Controller;
@@ -22,10 +23,7 @@ final class AuthController extends Controller
      */
     public function login(LoginRequest $pedido, LoginAction $accao): JsonResponse
     {
-        /** @var array{email: string, password: string} $dados */
-        $dados = $pedido->validated();
-
-        $token = $accao->handle($dados['email'], $dados['password']);
+        $token = $accao->handle(LoginDto::fromRequest($pedido));
 
         return ApiResponse::devolverSucesso(['token' => $token]);
     }

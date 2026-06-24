@@ -9,8 +9,10 @@ use App\Shared\Cache\CacheServico;
 use App\Shared\Cache\TagCache;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 
 final readonly class ActualizarCategoriaAction
 {
@@ -30,7 +32,9 @@ final readonly class ActualizarCategoriaAction
 
         Gate::authorize('update', $categoria);
 
-        return DB::transaction(function () use ($categoria, $dados): CategoriaDocumento {
+        Log::info('categoria.actualizar.inicio', ['id_utilizador' => Auth::id()]);
+
+        $categoria = DB::transaction(function () use ($categoria, $dados): CategoriaDocumento {
             $categoria->fill([
                 'nome' => $dados->nome,
                 'slug' => $dados->slug,
@@ -43,5 +47,9 @@ final readonly class ActualizarCategoriaAction
 
             return $categoria;
         });
+
+        Log::info('categoria.actualizar.fim', ['id_utilizador' => Auth::id(), 'id_categoria' => $categoria->id]);
+
+        return $categoria;
     }
 }

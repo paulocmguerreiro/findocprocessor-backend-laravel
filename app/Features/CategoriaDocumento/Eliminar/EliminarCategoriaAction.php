@@ -9,8 +9,10 @@ use App\Shared\Cache\CacheServico;
 use App\Shared\Cache\TagCache;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 
 final readonly class EliminarCategoriaAction
 {
@@ -30,9 +32,13 @@ final readonly class EliminarCategoriaAction
 
         Gate::authorize('delete', $categoria);
 
+        Log::info('categoria.eliminar.inicio', ['id_utilizador' => Auth::id()]);
+
         DB::transaction(function () use ($categoria): void {
             $categoria->delete();
             $this->cache->invalidarCache(TagCache::CategoriasDocumento);
         });
+
+        Log::info('categoria.eliminar.fim', ['id_utilizador' => Auth::id()]);
     }
 }

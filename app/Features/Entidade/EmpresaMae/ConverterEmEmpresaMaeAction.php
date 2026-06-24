@@ -9,8 +9,10 @@ use App\Shared\Cache\CacheServico;
 use App\Shared\Cache\TagCache;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 
 final readonly class ConverterEmEmpresaMaeAction
 {
@@ -33,7 +35,9 @@ final readonly class ConverterEmEmpresaMaeAction
 
         Gate::authorize('update', $entidade);
 
-        return DB::transaction(function () use ($entidade): Entidade {
+        Log::info('entidade.converter_empresa_mae.inicio', ['id_utilizador' => Auth::id()]);
+
+        $entidade = DB::transaction(function () use ($entidade): Entidade {
             $this->regraUnicidade->handle(true);
 
             $entidade->update([
@@ -48,5 +52,9 @@ final readonly class ConverterEmEmpresaMaeAction
 
             return $entidade;
         });
+
+        Log::info('entidade.converter_empresa_mae.fim', ['id_utilizador' => Auth::id(), 'id_entidade' => $entidade->id]);
+
+        return $entidade;
     }
 }
