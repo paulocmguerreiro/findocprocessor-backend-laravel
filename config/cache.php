@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\CategoriaDocumento;
 use App\Models\Entidade;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -136,6 +137,7 @@ return [
         CategoriaDocumento::class,
         CursorPaginator::class,
         Collection::class,
+        EloquentCollection::class,
     ],
 
 ];

@@ -15,7 +15,7 @@ uses(RefreshDatabase::class);
 beforeEach(fn () => Cache::flush());
 
 it('gera a mesma chave independentemente da ordem dos params', function (): void {
-    $servico = new CacheServico();
+    $servico = new CacheServico;
 
     $chave1 = $servico->criarChave(TagCache::Entidades, TagOperacao::Listar, ['b' => '2', 'a' => '1']);
     $chave2 = $servico->criarChave(TagCache::Entidades, TagOperacao::Listar, ['a' => '1', 'b' => '2']);
@@ -25,7 +25,7 @@ it('gera a mesma chave independentemente da ordem dos params', function (): void
 
 it('inclui o id do utilizador na chave quando fornecido', function (): void {
     $utilizador = User::factory()->create();
-    $servico = new CacheServico();
+    $servico = new CacheServico;
 
     $chave = $servico->criarChave(TagCache::Entidades, TagOperacao::Ver, ['id' => 'x'], $utilizador);
 
@@ -33,7 +33,7 @@ it('inclui o id do utilizador na chave quando fornecido', function (): void {
 });
 
 it('executa callback no miss e devolve valor cacheado no hit', function (): void {
-    $servico = new CacheServico();
+    $servico = new CacheServico;
     $chave = $servico->criarChave(TagCache::Entidades, TagOperacao::Ver, ['id' => 'abc']);
     $contador = 0;
 
@@ -53,10 +53,12 @@ it('executa callback no miss e devolve valor cacheado no hit', function (): void
 });
 
 it('invalida cache — callback volta a ser executado após flush', function (): void {
-    $servico = new CacheServico();
+    $servico = new CacheServico;
     $chave = $servico->criarChave(TagCache::Entidades, TagOperacao::Listar, []);
     $contador = 0;
-    $cb = function () use (&$contador): int { return ++$contador; };
+    $cb = function () use (&$contador): int {
+        return ++$contador;
+    };
 
     $servico->lembrar(TagCache::Entidades, $chave, TtlCache::Curta, $cb);
     $servico->invalidarCache(TagCache::Entidades);
