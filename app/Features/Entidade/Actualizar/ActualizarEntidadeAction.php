@@ -6,6 +6,8 @@ namespace App\Features\Entidade\Actualizar;
 
 use App\Features\Entidade\EmpresaMae\RegraUnicidadeEmpresaMae;
 use App\Models\Entidade;
+use App\Shared\Cache\CacheServico;
+use App\Shared\Cache\TagCache;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +17,7 @@ final readonly class ActualizarEntidadeAction
 {
     public function __construct(
         private RegraUnicidadeEmpresaMae $regraUnicidade,
+        private CacheServico $cache,
     ) {}
 
     /**
@@ -43,6 +46,8 @@ final readonly class ActualizarEntidadeAction
             ])->save();
 
             $entidade->refresh();
+
+            $this->cache->invalidarCache(TagCache::Entidades);
 
             return $entidade;
         });

@@ -6,6 +6,8 @@ namespace App\Features\Entidade\Criar;
 
 use App\Features\Entidade\EmpresaMae\RegraUnicidadeEmpresaMae;
 use App\Models\Entidade;
+use App\Shared\Cache\CacheServico;
+use App\Shared\Cache\TagCache;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -14,6 +16,7 @@ final readonly class CriarEntidadeAction
 {
     public function __construct(
         private RegraUnicidadeEmpresaMae $regraUnicidade,
+        private CacheServico $cache,
     ) {}
 
     /**
@@ -27,13 +30,17 @@ final readonly class CriarEntidadeAction
         return DB::transaction(function () use ($dados): Entidade {
             $this->regraUnicidade->handle($dados->eEmpresaAplicacao);
 
-            return Entidade::create([
+            $entidade = Entidade::create([
                 'nome' => $dados->nome,
                 'nif' => $dados->nif,
                 'e_cliente' => $dados->eClienteEfectivo(),
                 'e_fornecedor' => $dados->eFornecedorEfectivo(),
                 'e_empresa_aplicacao' => $dados->eEmpresaAplicacao,
             ]);
+
+            $this->cache->invalidarCache(TagCache::Entidades);
+
+            return $entidade;
         });
     }
 }

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Features\Entidade\EmpresaMae;
 
 use App\Models\Entidade;
+use App\Shared\Cache\CacheServico;
+use App\Shared\Cache\TagCache;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +16,7 @@ final readonly class ConverterEmEmpresaMaeAction
 {
     public function __construct(
         private RegraUnicidadeEmpresaMae $regraUnicidade,
+        private CacheServico $cache,
     ) {}
 
     /**
@@ -40,6 +43,8 @@ final readonly class ConverterEmEmpresaMaeAction
             ]);
 
             $entidade->refresh();
+
+            $this->cache->invalidarCache(TagCache::Entidades);
 
             return $entidade;
         });
