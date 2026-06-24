@@ -7,10 +7,7 @@
 ![Coverage](https://img.shields.io/badge/cobertura-100%25-3FB950)
 ![License](https://img.shields.io/badge/licença-MIT-blue)
 
-> API REST para processamento de documentos financeiros, construída como
-> demonstração de **Vertical Slice Architecture** em Laravel 13 / PHP 8.5 com
-> disciplina de engenharia de nível sénior: tipagem estática máxima, 100% de
-> cobertura de testes e CI a impor o gate de qualidade completo.
+> API REST para processamento de documentos financeiros, organizada em **Vertical Slice Architecture** em Laravel 13 / PHP 8.5.
 
 **O que este projecto demonstra:**
 
