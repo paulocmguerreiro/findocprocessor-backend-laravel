@@ -22,9 +22,10 @@ Produz apenas artefactos locais. Para criar o PR, usar `/publica-implementacao`.
 3. Skill `actualiza-spec` — actualizar `docs/system_spec/*.md` conforme `SYSTEM_SPEC_MAP` do `CLAUDE.md`
 4. Skill `actualiza-changelog` — adicionar entrada em `CHANGELOG.md`
 5. Skill `actualiza-readme` — actualizar `README.md` se afectado (novas rotas, stack, instruções)
+5b. **Contrato OpenAPI** — se a issue afectou endpoints ou schemas, actualizar `./openapi.yaml` (raiz) para reflectir o contrato real implementado; confirmar contra as rotas/Resources efectivas. Se a issue não tocou na API, não há alterações.
 6. Commitar todos os artefactos de documentação:
    ```bash
-   git add docs/debriefs/ docs/system_spec/ CHANGELOG.md README.md
+   git add docs/debriefs/ docs/system_spec/ CHANGELOG.md README.md openapi.yaml
    git commit -m "docs(process): debrief + system_spec + changelog — Issue #N <slug>"
    ```
 7. Actualizar `docs/workflow-state.md`:
@@ -40,6 +41,7 @@ Produz apenas artefactos locais. Para criar o PR, usar `/publica-implementacao`.
    SYSTEM_SPEC: actualizado
    Changelog:  actualizado
    README:     actualizado (ou sem alterações)
+   OpenAPI:    actualizado (ou sem alterações)
    Próximo:    /publica-implementacao #N
    ```
 

@@ -99,8 +99,8 @@ Antes de finalizar a Spec, verificar conformidade com:
 - Nenhum tipo `any` no TypeScript?
 
 **OpenAPI (qualquer stack se afectar API)**
-- Novo endpoint → adicionar ao `findocprocessor-workflow/docs/openapi.yaml`
-- Alteração de schema → actualizar no `openapi.yaml`
+- O contrato vive em `./openapi.yaml` (raiz deste repo) — não no repo de workflow
+- Novo endpoint / alteração de schema → a Spec **declara** o delta do contrato (que rotas/schemas mudam); a escrita efectiva em `./openapi.yaml` é feita na Fase 3a (`/documenta-implementacao`)
 - Breaking change → documentar e criar issues linked nos outros repos
 
 ---

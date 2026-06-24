@@ -104,6 +104,18 @@ components:
         e_empresa_aplicacao:
           type: boolean
 
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+        permissoes:
+          type: array
+          items:
+            type: string
+
 security:
   - bearerAuth: []
 
@@ -237,6 +249,8 @@ paths:
                     type: object
         '401':
           $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
 
     post:
       summary: Criar categoria de documento
@@ -268,6 +282,8 @@ paths:
                     $ref: '#/components/schemas/CategoriaDocumento'
         '401':
           $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
         '422':
           $ref: '#/components/schemas/ErrorValidacao'
 
@@ -295,6 +311,8 @@ paths:
                     $ref: '#/components/schemas/CategoriaDocumento'
         '401':
           $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
         '404':
           $ref: '#/components/schemas/ErrorNaoEncontrado'
 
@@ -328,6 +346,8 @@ paths:
                     $ref: '#/components/schemas/CategoriaDocumento'
         '401':
           $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
         '404':
           $ref: '#/components/schemas/ErrorNaoEncontrado'
         '422':
@@ -341,6 +361,8 @@ paths:
           description: Eliminada com sucesso
         '401':
           $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
         '404':
           $ref: '#/components/schemas/ErrorNaoEncontrado'
 
@@ -392,6 +414,8 @@ paths:
                     type: object
         '401':
           $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
 
     post:
       summary: Criar entidade
@@ -427,6 +451,8 @@ paths:
                     $ref: '#/components/schemas/Entidade'
         '401':
           $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
         '422':
           $ref: '#/components/schemas/ErrorValidacao'
 
@@ -454,6 +480,8 @@ paths:
                     $ref: '#/components/schemas/Entidade'
         '401':
           $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
         '404':
           $ref: '#/components/schemas/ErrorNaoEncontrado'
 
@@ -491,6 +519,8 @@ paths:
                     $ref: '#/components/schemas/Entidade'
         '401':
           $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
         '404':
           $ref: '#/components/schemas/ErrorNaoEncontrado'
         '422':
@@ -504,6 +534,8 @@ paths:
           description: Eliminada com sucesso
         '401':
           $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
         '404':
           $ref: '#/components/schemas/ErrorNaoEncontrado'
 
@@ -530,5 +562,206 @@ paths:
                     $ref: '#/components/schemas/Entidade'
         '401':
           $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
         '404':
           $ref: '#/components/schemas/ErrorNaoEncontrado'
+
+  /roles:
+    get:
+      summary: Listar roles (cursor pagination)
+      tags: [Role]
+      parameters:
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            maximum: 100
+            default: 15
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [name]
+            default: name
+        - in: query
+          name: direction
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+        - in: query
+          name: cursor
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista paginada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Role'
+                  links:
+                    type: object
+                    properties:
+                      prev:
+                        type: ['string', 'null']
+                      next:
+                        type: ['string', 'null']
+                  meta:
+                    type: object
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+
+    post:
+      summary: Criar role
+      tags: [Role]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome, permissoes]
+              properties:
+                nome:
+                  type: string
+                  maxLength: 255
+                permissoes:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Role criado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Role'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '422':
+          $ref: '#/components/schemas/ErrorValidacao'
+
+  /roles/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+
+    get:
+      summary: Ver role
+      tags: [Role]
+      responses:
+        '200':
+          description: Role encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Role'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+
+    put:
+      summary: Actualizar role
+      tags: [Role]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [permissoes]
+              properties:
+                nome:
+                  type: string
+                  maxLength: 255
+                permissoes:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Role actualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Role'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+        '422':
+          $ref: '#/components/schemas/ErrorValidacao'
+
+    delete:
+      summary: Eliminar role
+      tags: [Role]
+      responses:
+        '204':
+          description: Eliminado com sucesso
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+
+  /utilizadores/{id}/role:
+    put:
+      summary: Atribuir role a um utilizador
+      tags: [Utilizador]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role:
+                  type: string
+      responses:
+        '204':
+          description: Role atribuído com sucesso
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+        '422':
+          $ref: '#/components/schemas/ErrorValidacao'

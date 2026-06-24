@@ -105,6 +105,7 @@ PENDING → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → DONE
 | Cache ou Redis                                 | `04-infra/cache.md`                                           |
 | API externa (IA ou outro serviço)              | `04-infra/external-apis.md`                                   |
 | Nova rota API                                  | `05-routes/<slug>.md`                                         |
+| Alteração de contrato / rota API (OpenAPI)     | `./openapi.yaml` (raiz) — escrito na Fase 3a (`/documenta-implementacao`) |
 | Nova configuração ou .env var                  | `06-config.md`                                                |
 | Nova classe `Regra*` (invariante de domínio)   | `02-shared/regras-negocio.md`                                 |
 
