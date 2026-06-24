@@ -6,8 +6,11 @@ use App\Models\Entidade;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\Cursor;
+use Illuminate\Support\Facades\Cache;
 
 uses(RefreshDatabase::class);
+
+beforeEach(fn () => Cache::flush());
 
 describe('autenticado', function (): void {
     beforeEach(fn (): User => criarEAutenticarAdmin());
@@ -82,6 +85,22 @@ describe('autenticado', function (): void {
         $this->getJson('/api/entidades?direction=invalido')
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['direction']);
+    });
+
+    it('invalida cache após criar entidade — nova entidade aparece no GET seguinte', function (): void {
+        $this->getJson('/api/entidades')->assertOk()->assertJsonCount(0, 'data');
+
+        $this->postJson('/api/entidades', [
+            'nome' => 'Empresa Nova',
+            'nif' => '501234567',
+            'e_cliente' => true,
+            'e_fornecedor' => false,
+            'e_empresa_aplicacao' => false,
+        ])->assertCreated();
+
+        $this->getJson('/api/entidades')
+            ->assertOk()
+            ->assertJsonCount(1, 'data');
     });
 
     it('cursor além do fim devolve lista vazia', function (): void {
