@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\InjectarContextoLog;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -21,7 +22,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->api(append: [
+            InjectarContextoLog::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $problemDetails = function (int $status, string $detail, array $extra = []): JsonResponse {
