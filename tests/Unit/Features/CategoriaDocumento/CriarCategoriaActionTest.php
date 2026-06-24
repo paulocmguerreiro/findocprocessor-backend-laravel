@@ -8,8 +8,11 @@ use App\Models\CategoriaDocumento;
 use App\Shared\Enums\TipoMovimento;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 
 uses(RefreshDatabase::class);
+
+beforeEach(fn () => Cache::flush());
 
 describe('como admin', function (): void {
     beforeEach(fn () => $this->actingAs(criarAdmin()));
@@ -21,7 +24,7 @@ describe('como admin', function (): void {
             tipoMovimento: TipoMovimento::Debito,
         );
 
-        $resultado = (new CriarCategoriaAction)->handle($dto);
+        $resultado = app(CriarCategoriaAction::class)->handle($dto);
 
         expect($resultado->nome)->toBe('Fornecedores')
             ->and($resultado->slug)->toBe('fornecedores')
@@ -41,7 +44,7 @@ describe('como admin', function (): void {
             tipoMovimento: TipoMovimento::Debito,
         );
 
-        expect(fn (): CategoriaDocumento => (new CriarCategoriaAction)->handle($dto))
+        expect(fn (): CategoriaDocumento => app(CriarCategoriaAction::class)->handle($dto))
             ->toThrow(RuntimeException::class, 'falha simulada após insert');
 
         $this->assertDatabaseCount('categorias_documento', 0);
@@ -58,7 +61,7 @@ describe('sem permissão de escrita', function (): void {
             tipoMovimento: TipoMovimento::Debito,
         );
 
-        expect(fn (): CategoriaDocumento => (new CriarCategoriaAction)->handle($dto))
+        expect(fn (): CategoriaDocumento => app(CriarCategoriaAction::class)->handle($dto))
             ->toThrow(AuthorizationException::class);
     });
 });

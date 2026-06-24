@@ -10,14 +10,17 @@ use App\Shared\Enums\DirecaoOrdenacao;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\CursorPaginator;
+use Illuminate\Support\Facades\Cache;
 
 uses(RefreshDatabase::class);
+
+beforeEach(fn () => Cache::flush());
 
 describe('como admin', function (): void {
     beforeEach(fn () => $this->actingAs(criarAdmin()));
 
     it('devolve lista vazia quando não existem categorias', function (): void {
-        $resultado = (new ListarCategoriasAction)->handle(15, CampoOrdenacaoCategorias::Nome, DirecaoOrdenacao::Asc);
+        $resultado = app(ListarCategoriasAction::class)->handle(15, CampoOrdenacaoCategorias::Nome, DirecaoOrdenacao::Asc);
 
         expect($resultado->count())->toBe(0);
     });
@@ -27,7 +30,7 @@ describe('como admin', function (): void {
         CategoriaDocumento::factory()->create(['nome' => 'Alfa']);
         CategoriaDocumento::factory()->create(['nome' => 'Beta']);
 
-        $resultado = (new ListarCategoriasAction)->handle(15, CampoOrdenacaoCategorias::Nome, DirecaoOrdenacao::Asc);
+        $resultado = app(ListarCategoriasAction::class)->handle(15, CampoOrdenacaoCategorias::Nome, DirecaoOrdenacao::Asc);
         $nomes = $resultado->pluck('nome')->all();
 
         expect($nomes)->toBe(['Alfa', 'Beta', 'Zeta']);
@@ -36,10 +39,24 @@ describe('como admin', function (): void {
     it('respeita o per_page na paginação por cursor', function (): void {
         CategoriaDocumento::factory()->count(5)->create();
 
-        $resultado = (new ListarCategoriasAction)->handle(2, CampoOrdenacaoCategorias::Nome, DirecaoOrdenacao::Asc);
+        $resultado = app(ListarCategoriasAction::class)->handle(2, CampoOrdenacaoCategorias::Nome, DirecaoOrdenacao::Asc);
 
         expect($resultado->count())->toBe(2)
             ->and($resultado->nextCursor())->not->toBeNull();
+    });
+
+    it('cacheia resultados — segunda chamada não vai à BD', function (): void {
+        CategoriaDocumento::factory()->count(3)->create();
+
+        app(ListarCategoriasAction::class)->handle(15, CampoOrdenacaoCategorias::Nome, DirecaoOrdenacao::Asc);
+
+        // Inserir directamente na BD sem passar pela Action (bypass invalidação)
+        CategoriaDocumento::factory()->create(['nome' => 'Zzz Extra']);
+
+        // Segunda chamada com os mesmos parâmetros — deve devolver resultado cacheado (3, não 4)
+        $resultado = app(ListarCategoriasAction::class)->handle(15, CampoOrdenacaoCategorias::Nome, DirecaoOrdenacao::Asc);
+
+        expect($resultado->count())->toBe(3);
     });
 });
 
@@ -47,7 +64,7 @@ describe('sem permissão de leitura', function (): void {
     it('lança AuthorizationException quando utilizador não tem permissão de leitura', function (): void {
         $this->actingAs(User::factory()->create()); // sem role — sem categorias-documento.ver
 
-        expect(fn (): CursorPaginator => (new ListarCategoriasAction)->handle(15, CampoOrdenacaoCategorias::Nome, DirecaoOrdenacao::Asc))
+        expect(fn (): CursorPaginator => app(ListarCategoriasAction::class)->handle(15, CampoOrdenacaoCategorias::Nome, DirecaoOrdenacao::Asc))
             ->toThrow(AuthorizationException::class);
     });
 });

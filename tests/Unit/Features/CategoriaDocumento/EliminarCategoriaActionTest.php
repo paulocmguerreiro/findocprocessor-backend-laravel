@@ -6,8 +6,11 @@ use App\Features\CategoriaDocumento\Eliminar\EliminarCategoriaAction;
 use App\Models\CategoriaDocumento;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 
 uses(RefreshDatabase::class);
+
+beforeEach(fn () => Cache::flush());
 
 describe('como admin', function (): void {
     beforeEach(fn () => $this->actingAs(criarAdmin()));
@@ -15,7 +18,7 @@ describe('como admin', function (): void {
     it('elimina quando recebe CategoriaDocumento directamente', function (): void {
         $categoria = CategoriaDocumento::factory()->create();
 
-        (new EliminarCategoriaAction)->handle($categoria);
+        app(EliminarCategoriaAction::class)->handle($categoria);
 
         $this->assertDatabaseMissing('categorias_documento', ['id' => $categoria->id]);
     });
@@ -23,7 +26,7 @@ describe('como admin', function (): void {
     it('elimina quando recebe string UUID', function (): void {
         $categoria = CategoriaDocumento::factory()->create();
 
-        (new EliminarCategoriaAction)->handle($categoria->id);
+        app(EliminarCategoriaAction::class)->handle($categoria->id);
 
         $this->assertDatabaseMissing('categorias_documento', ['id' => $categoria->id]);
     });
@@ -35,7 +38,7 @@ describe('como admin', function (): void {
             throw new RuntimeException('falha simulada durante eliminação');
         });
 
-        expect(fn () => (new EliminarCategoriaAction)->handle($categoria))
+        expect(fn () => app(EliminarCategoriaAction::class)->handle($categoria))
             ->toThrow(RuntimeException::class, 'falha simulada durante eliminação');
 
         $this->assertDatabaseHas('categorias_documento', ['id' => $categoria->id]);
@@ -48,7 +51,7 @@ describe('sem permissão de escrita', function (): void {
     it('lança AuthorizationException quando utilizador não tem permissão de escrita', function (): void {
         $categoria = CategoriaDocumento::factory()->create();
 
-        expect(fn () => (new EliminarCategoriaAction)->handle($categoria))
+        expect(fn () => app(EliminarCategoriaAction::class)->handle($categoria))
             ->toThrow(AuthorizationException::class);
     });
 });
