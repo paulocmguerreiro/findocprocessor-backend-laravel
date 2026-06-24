@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace App\Features\CategoriaDocumento\Eliminar;
 
 use App\Models\CategoriaDocumento;
+use App\Shared\Cache\CacheServico;
+use App\Shared\Cache\TagCache;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
-final class EliminarCategoriaAction
+final readonly class EliminarCategoriaAction
 {
+    public function __construct(private CacheServico $cache) {}
+
     /**
      * @throws ModelNotFoundException<CategoriaDocumento>
      * @throws AuthorizationException
@@ -26,6 +30,9 @@ final class EliminarCategoriaAction
 
         Gate::authorize('delete', $categoria);
 
-        DB::transaction(fn (): ?bool => $categoria->delete());
+        DB::transaction(function () use ($categoria): void {
+            $categoria->delete();
+            $this->cache->invalidarCache(TagCache::CategoriasDocumento);
+        });
     }
 }
