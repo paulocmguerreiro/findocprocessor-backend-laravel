@@ -44,6 +44,12 @@ composer refactor  # Rector — modernizações PHP/Laravel
 ```
 Se houver alterações, incluí-las nos ficheiros do checkpoint. Não commitar código sem passar pelo Pint e Rector.
 
+### Definition of Done — paridade Docker
+Se a tarefa alterou **`composer.json`**, **extensões PHP necessárias** ou **`.env.example`**:
+→ actualizar `Dockerfile` / `compose.yaml` / `.dockerignore` em conformidade e
+incluir essas alterações no **mesmo** checkpoint. Não deixar o setup Docker
+desactualizado em relação ao código. Detalhe: `docs/system_spec/04-infra/ambiente-docker.md`.
+
 ### Checkpoint por tarefa
 Skill `pausa-checkpoint` tipo=task — mostrar ficheiros alterados e aguardar resposta:
 ```

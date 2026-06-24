@@ -66,6 +66,7 @@
 | Logging estruturado | `04-infra/logging.md` | implementado |
 | Jobs / Queue | `04-infra/queue-jobs.md` | pendente |
 | APIs externas (IA) | `04-infra/external-apis.md` | pendente |
+| Ambiente Docker + paridade de testes (MySQL) | `04-infra/ambiente-docker.md` | implementado |
 
 ## Rotas e Configuração
 

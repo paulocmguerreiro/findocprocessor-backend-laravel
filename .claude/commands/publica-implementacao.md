@@ -19,6 +19,15 @@ Requer `/documenta-implementacao` completo antes de executar.
    gh pr list --repo $GITHUB_REPO --head <branch> --json number,url,state
    ```
    Se existir → mostrar URL e parar.
+4. **Gate de paridade Docker/MySQL (local, falha fecha)** — só para stack Laravel:
+   ```bash
+   docker compose up -d --build
+   docker compose exec -T app composer test:mysql   # suite contra MySQL (findocprocessor_testing)
+   docker compose down
+   ```
+   Corre a mesma suite contra MySQL real, o mais próximo do stack de produção.
+   Se falhar → **parar, NÃO publicar** e reportar o erro. Detalhe do ambiente:
+   `docs/system_spec/04-infra/ambiente-docker.md`.
 
 ## Passos
 
