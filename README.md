@@ -32,8 +32,9 @@ Padrões aplicados: Actions `final readonly`, autorização dupla camada (`Gate:
 ## Como correr (dev)
 
 ```bash
-# Pré-requisitos: PHP 8.5, Composer
+# Pré-requisitos: PHP 8.5, Composer, Node.js
 composer install
+npm install && npm run build
 cp .env.example .env
 php artisan key:generate
 php artisan migrate          # SQLite por omissão em dev
