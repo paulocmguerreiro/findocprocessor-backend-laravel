@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @property-read string $id
@@ -31,7 +33,7 @@ use Illuminate\Support\Carbon;
 class Entidade extends Model
 {
     /** @use HasFactory<EntidadeFactory> */
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuids, LogsActivity;
 
     /**
      * @return array{e_cliente: string, e_fornecedor: string, e_empresa_aplicacao: string}
@@ -44,6 +46,15 @@ class Entidade extends Model
             'e_fornecedor' => 'boolean',
             'e_empresa_aplicacao' => 'boolean',
         ];
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logExcept(['nif'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
     }
 
     /**
