@@ -27,6 +27,7 @@ Representa os intervenientes do domínio financeiro: Clientes, Fornecedores e a 
 
 - `HasUuids` — UUID como PK, não autoincrement (UUIDv7 por default)
 - `HasFactory` — `EntidadeFactory`
+- `RegistaActividade` — audit trail; sobrepõe `atributosExcluidosDaActividade()` → `['nif']` (dado fiscal — RGPD). Ver `04-infra/audit-trail.md`
 - `#[Table('entidades')]`
 - `#[Fillable(['nome', 'nif', 'e_cliente', 'e_fornecedor', 'e_empresa_aplicacao'])]`
 - `#[UsePolicy(EntidadePolicy::class)]`

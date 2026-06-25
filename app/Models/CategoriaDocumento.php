@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\RegistaActividade;
 use App\Policies\CategoriaDocumentoPolicy;
 use App\Shared\Enums\TipoMovimento;
 use Database\Factories\CategoriaDocumentoFactory;
@@ -32,6 +33,7 @@ class CategoriaDocumento extends Model
     use HasFactory;
 
     use HasUuids;
+    use RegistaActividade;
 
     #[\Override]
     protected function casts(): array

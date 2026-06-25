@@ -53,6 +53,7 @@
 | `User` | `03-models/user.md` |
 | `CategoriaDocumento` | `03-models/categoria-documento.md` |
 | `Entidade` | `03-models/entidade.md` |
+| `Role` (Spatie — audit via Observer) | `03-models/role.md` |
 | `Document` _(pendente)_ | `03-models/documento.md` |
 
 ## Infra
@@ -64,6 +65,7 @@
 | Repositories | `04-infra/repositories.md` | pendente |
 | Cache / Redis | `04-infra/cache.md` | implementado |
 | Logging estruturado | `04-infra/logging.md` | implementado |
+| Audit trail (spatie/laravel-activitylog) | `04-infra/audit-trail.md` | implementado |
 | Jobs / Queue | `04-infra/queue-jobs.md` | pendente |
 | APIs externas (IA) | `04-infra/external-apis.md` | pendente |
 | Ambiente Docker + paridade de testes (MySQL) | `04-infra/ambiente-docker.md` | implementado |

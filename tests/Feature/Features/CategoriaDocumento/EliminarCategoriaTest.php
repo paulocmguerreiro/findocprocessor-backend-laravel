@@ -6,19 +6,27 @@ use App\Models\CategoriaDocumento;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Response;
+use Spatie\Activitylog\Models\Activity;
 
 uses(RefreshDatabase::class);
+
+// Os seeds de roles deixam actividade persistente fora da transação do teste.
+beforeEach(fn () => Activity::query()->delete());
 
 describe('autenticado', function (): void {
     beforeEach(fn (): User => criarEAutenticarAdmin());
 
     it('elimina categoria existente e devolve 204', function (): void {
         $categoria = CategoriaDocumento::factory()->create();
+        Activity::query()->delete();
 
         $this->deleteJson("/api/categorias-documento/{$categoria->id}")
             ->assertNoContent();
 
         $this->assertDatabaseMissing('categorias_documento', ['id' => $categoria->id]);
+
+        expect(Activity::count())->toBe(1)
+            ->and(Activity::query()->first()->event)->toBe('deleted');
     });
 
     it('devolve 404 quando a categoria não existe', function (): void {
@@ -32,9 +40,12 @@ describe('autenticado', function (): void {
 it('utilizador sem permissão recebe 403', function (): void {
     $categoria = CategoriaDocumento::factory()->create();
     criarEAutenticarUtilizador();
+    Activity::query()->delete();
 
     $this->deleteJson("/api/categorias-documento/{$categoria->id}")
         ->assertForbidden();
+
+    expect(Activity::count())->toBe(0);
 });
 
 it('guest sem token recebe 401', function (): void {

@@ -25,6 +25,7 @@ Entidade de referência. Classifica documentos financeiros e define o tipo de mo
 
 - `HasUuids` — UUID como PK, não autoincrement
 - `HasFactory` — `CategoriaDocumentoFactory`
+- `RegistaActividade` — audit trail (logFillable, logOnlyDirty); sem campos excluídos. Ver `04-infra/audit-trail.md`
 - `#[Table('categorias_documento')]` — nome explícito (não inferível pelo Eloquent)
 - `#[Fillable(['nome', 'slug', 'tipo_movimento'])]`
 - Cast via método `casts()`: `'tipo_movimento' => TipoMovimento::class`

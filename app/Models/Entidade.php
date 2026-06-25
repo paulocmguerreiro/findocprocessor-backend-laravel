@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\RegistaActividade;
 use App\Policies\EntidadePolicy;
 use Database\Factories\EntidadeFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -31,7 +32,7 @@ use Illuminate\Support\Carbon;
 class Entidade extends Model
 {
     /** @use HasFactory<EntidadeFactory> */
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuids, RegistaActividade;
 
     /**
      * @return array{e_cliente: string, e_fornecedor: string, e_empresa_aplicacao: string}
@@ -44,6 +45,14 @@ class Entidade extends Model
             'e_fornecedor' => 'boolean',
             'e_empresa_aplicacao' => 'boolean',
         ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function atributosExcluidosDaActividade(): array
+    {
+        return ['nif'];
     }
 
     /**
