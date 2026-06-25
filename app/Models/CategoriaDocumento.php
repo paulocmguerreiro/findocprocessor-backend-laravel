@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @property-read string $id
@@ -32,6 +34,7 @@ class CategoriaDocumento extends Model
     use HasFactory;
 
     use HasUuids;
+    use LogsActivity;
 
     #[\Override]
     protected function casts(): array
@@ -39,5 +42,13 @@ class CategoriaDocumento extends Model
         return [
             'tipo_movimento' => TipoMovimento::class,
         ];
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
     }
 }
