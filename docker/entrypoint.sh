@@ -5,6 +5,13 @@ set -e
 
 cd /var/www/html
 
+# Garantir directórios necessários ao Laravel (ignorados pelo git).
+mkdir -p bootstrap/cache \
+    storage/framework/cache \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/logs
+
 # Garantir .env (a partir do exemplo) na primeira execução.
 if [ ! -f .env ]; then
     cp .env.example .env

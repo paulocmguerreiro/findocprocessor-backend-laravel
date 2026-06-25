@@ -60,6 +60,9 @@ services:
     networks: [findoc]
 
   queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: findocprocessor-app
     restart: unless-stopped
     command: php artisan queue:work --tries=3 --timeout=90
