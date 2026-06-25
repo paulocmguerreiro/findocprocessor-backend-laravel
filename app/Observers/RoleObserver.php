@@ -25,10 +25,8 @@ final class RoleObserver
 
     public function updated(Role $role): void
     {
-        if ($role->getDirty() === []) {
-            return;
-        }
-
+        // O evento updated do Eloquent só dispara quando há alterações reais,
+        // pelo que não é necessário um guard a getDirty().
         activity()
             ->performedOn($role)
             ->event('updated')
