@@ -17,10 +17,10 @@
 
 | Feature | Actions planeadas |
 |---|---|
-| Documents/List | `ListDocumentsAction` |
-| Documents/Correct | `CorrectDocumentAction` |
-| Documents/Delete | `DeleteDoneAction`, `DeleteErrorAction` |
-| Documents/Reprocess | `ReprocessDocumentAction` |
+| Documento/Listar | `ListarDocumentosAction` |
+| Documento/Corrigir | `CorrigirDocumentoAction` |
+| Documento/Eliminar | `EliminarDocumentoAction` |
+| Documento/Reprocessar | `ReprocessarDocumentoAction` |
 | Upload | `HandleUploadAction` |
 | Batch | `ForceBatchCycleAction` |
 | Files | `ListDirectoryAction`, `OpenFileAction` |
@@ -30,9 +30,9 @@
 
 | Componente | Ficheiro |
 |---|---|
-| Enums partilhados (`TipoMovimento`, `DirecaoOrdenacao`, `DocumentStatus`) | `02-shared/enums.md` |
+| Enums partilhados (`TipoMovimento`, `DirecaoOrdenacao`, `EstadoDocumento`) | `02-shared/enums.md` |
 | HTTP (`ApiResponse`, Exception Handler, cursor pagination) | `02-shared/http.md` |
-| Estados de documento + Contratos | `02-shared/estados.md` |
+| Estados de documento + Interface `ContratoEstadoDocumento` + 7 state objects | `02-shared/estados.md` |
 
 ## Padrões e convenções (Shared)
 
@@ -54,7 +54,7 @@
 | `CategoriaDocumento` | `03-models/categoria-documento.md` |
 | `Entidade` | `03-models/entidade.md` |
 | `Role` (Spatie — audit via Observer) | `03-models/role.md` |
-| `Document` _(pendente)_ | `03-models/documento.md` |
+| `Documento` (migration, Model, Factory, Policy, DTOs, Resource) | `03-models/documento.md` |
 
 ## Infra
 

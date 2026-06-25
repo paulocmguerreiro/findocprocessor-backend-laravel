@@ -41,32 +41,30 @@ enum DirecaoOrdenacao: string
 
 ---
 
-## `DocumentStatus` — `App\Shared\Enums\DocumentStatus`
+## `EstadoDocumento` — `App\Shared\Enums\EstadoDocumento`
 
-_Pendente — implementado com a feature Document._
-
-PHP 8.1 backed enum (string). Representa o estado de processamento de um documento. Cases em TitleCase PT; values em UPPER_SNAKE (alinhados com o ciclo de estados).
+PHP 8.5 backed enum (string). Representa o estado de processamento de um documento. Cases em TitleCase PT; values em UPPER_SNAKE.
 
 ```php
-enum DocumentStatus: string
+enum EstadoDocumento: string
 {
-    case Pending         = 'PENDING';
+    case Pendente        = 'PENDENTE';
     case AguardaEnvio    = 'AGUARDA_ENVIO';
     case Enviado         = 'ENVIADO';
     case AguardaResposta = 'AGUARDA_RESPOSTA';
-    case Done            = 'DONE';
-    case Error           = 'ERROR';
+    case Processado      = 'PROCESSADO';
+    case Erro            = 'ERRO';
     case Perigoso        = 'PERIGOSO';
 }
 ```
 
 Ciclo de estados (transições permitidas):
 ```
-PENDING → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → DONE
-                                                      ↘ ERROR
-                                                      ↘ PERIGOSO
+PENDENTE → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → PROCESSADO
+                                                       ↘ ERRO
+                                                       ↘ PERIGOSO
 ```
 
-- Valores na BD: `'PENDING'`, `'AGUARDA_ENVIO'`, `'ENVIADO'`, `'AGUARDA_RESPOSTA'`, `'DONE'`, `'ERROR'`, `'PERIGOSO'`
-- Detalhe das transições e semântica de cada estado em `02-shared/estados.md`
-- Usado em: `Document::$status` (cast Eloquent) — feature pendente
+- Valores na BD: `'PENDENTE'`, `'AGUARDA_ENVIO'`, `'ENVIADO'`, `'AGUARDA_RESPOSTA'`, `'PROCESSADO'`, `'ERRO'`, `'PERIGOSO'`
+- Detalhe das transições, state objects e mapeamento estado→disco em `02-shared/estados.md`
+- Usado em: `Documento::$status` (cast Eloquent), `Documento::estado()` (match exaustivo)

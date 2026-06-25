@@ -1,28 +1,211 @@
-# System Spec — Model: Document
+# System Spec — Model: Documento
 
-> `app/Models/Document.php`
-
-_Pendente — implementado com a feature Document._
+> `app/Models/Documento.php` · Tabela: `documentos` · Issue #45
 
 ---
 
-## Campos planeados
+## Tabela `documentos`
 
-| Coluna | Tipo BD | Notas |
+| Coluna | Tipo BD | Nullable | Notas |
+|---|---|---|---|
+| `id` | `uuid` PK | Não | UUIDv7 via `HasUuids` |
+| `status` | `string(50)` | Não | Default `'PENDENTE'`; índice simples; cast → `EstadoDocumento` |
+| `id_fornecedor` | `uuid` FK | Sim | → `entidades.id`; `nullOnDelete()` |
+| `id_cliente` | `uuid` FK | Sim | → `entidades.id`; `nullOnDelete()` |
+| `id_categoria` | `uuid` FK | Sim | → `categorias_documento.id`; `nullOnDelete()` |
+| `valor` | `decimal(15,2)` | Sim | Cast `decimal:2` → devolve `string` em PHP (não `float`) |
+| `data_documento` | `date` | Sim | Índice simples; cast → `Carbon` |
+| `nome_ficheiro_original` | `string(500)` | Não | Nome original do ficheiro no upload |
+| `disco_storage` | `string(50)` | Não | Nome do disco Laravel onde reside o ficheiro |
+| `nome_ficheiro_storage` | `string(500)` | Não | Nome do ficheiro no disco |
+| `hash_sha256` | `string(64)` | Não | SHA-256 do conteúdo; índice único (previne duplicados) |
+| `created_at` / `updated_at` | `timestamp` | — | `timestamps()` |
+
+**Nota:** FKs nullable por design — campos de domínio podem estar a `null` em `Pendente` (registo automático iniciado sem dados completos).
+
+---
+
+## Model `Documento`
+
+**Ficheiro:** `app/Models/Documento.php`
+
+```php
+#[Table('documentos')]
+#[Fillable(['status', 'id_fornecedor', 'id_cliente', 'id_categoria', 'valor',
+    'data_documento', 'nome_ficheiro_original', 'disco_storage',
+    'nome_ficheiro_storage', 'hash_sha256'])]
+#[UsePolicy(DocumentoPolicy::class)]
+class Documento extends Model
+{
+    use HasFactory, HasUuids, RegistaActividade;
+}
+```
+
+### PHPDoc `@property-read`
+
+```php
+/**
+ * @property-read string $id
+ * @property-read EstadoDocumento $status
+ * @property-read ?string $id_fornecedor
+ * @property-read ?string $id_cliente
+ * @property-read ?string $id_categoria
+ * @property-read ?string $valor          // cast decimal:2 → string
+ * @property-read ?Carbon $data_documento
+ * @property-read string $nome_ficheiro_original
+ * @property-read string $disco_storage
+ * @property-read string $nome_ficheiro_storage
+ * @property-read string $hash_sha256
+ * @property-read Carbon $created_at
+ * @property-read Carbon $updated_at
+ * @property-read ?Entidade $fornecedor
+ * @property-read ?Entidade $cliente
+ * @property-read ?CategoriaDocumento $categoria
+ */
+```
+
+### Casts
+
+```php
+protected function casts(): array
+{
+    return [
+        'status'         => EstadoDocumento::class,
+        'valor'          => 'decimal:2',    // devolve string, não float
+        'data_documento' => 'date',
+    ];
+}
+```
+
+### Audit trail (`RegistaActividade`)
+
+Campos excluídos do log (RGPD / PII indirecta):
+```php
+protected function atributosExcluidosDaActividade(): array
+{
+    return ['hash_sha256', 'disco_storage', 'nome_ficheiro_storage'];
+}
+```
+
+### Método `estado()`
+
+```php
+public function estado(): ContratoEstadoDocumento
+{
+    return match ($this->status) {
+        EstadoDocumento::Pendente        => DocumentoPendente::deDocumento($this),
+        EstadoDocumento::AguardaEnvio    => DocumentoAguardaEnvio::deDocumento($this),
+        EstadoDocumento::Enviado         => DocumentoEnviado::deDocumento($this),
+        EstadoDocumento::AguardaResposta => DocumentoAguardaResposta::deDocumento($this),
+        EstadoDocumento::Processado      => DocumentoProcessado::deDocumento($this),
+        EstadoDocumento::Erro            => DocumentoErro::deDocumento($this),
+        EstadoDocumento::Perigoso        => DocumentoPerigoso::deDocumento($this),
+    };
+}
+```
+
+`match` **sem `default`** — Larastan 9 valida a exaustividade dos 7 casos. Adicionar um 8.º estado ao enum sem tratar aqui produz erro em `composer test:types`.
+
+### Relações
+
+```php
+public function fornecedor(): BelongsTo  // → Entidade (id_fornecedor)
+public function cliente(): BelongsTo     // → Entidade (id_cliente)
+public function categoria(): BelongsTo   // → CategoriaDocumento (id_categoria)
+```
+
+### Scopes
+
+| Scope | Assinatura | Filtra |
 |---|---|---|
-| `id` | `uuid` PK | UUIDv7 via `HasUuids` |
-| `status` | `string` | Cast para `DocumentStatus` enum |
-| `original_filename` | `string` | — |
-| `stored_path` | `string` | — |
-| `sha256_hash` | `string` | — |
-| `tipo_documento` | `string` | — |
-| `categoria` | `string` | FK → `categorias_documento` |
-| `fornecedor` | `string` | FK → `entidades` |
-| `cliente` | `string` | FK → `entidades` |
-| `valor_total` | `decimal` | — |
-| `data_documento` | `date` | — |
-| `nif_fornecedor` | `string` | **Sensível — não logar** |
-| `nif_cliente` | `string` | **Sensível — não logar** |
-| `error_message` | `text\|null` | — |
-| `created_at` | `timestamp` | — |
-| `updated_at` | `timestamp` | — |
+| `whereEstado` | `(Builder $query, EstadoDocumento $estado)` | Genérico — qualquer estado |
+| `whereProcessado` | `(Builder $query)` | `PROCESSADO` |
+| `wherePendente` | `(Builder $query)` | `PENDENTE` |
+| `wherePerigoso` | `(Builder $query)` | `PERIGOSO` |
+| `whereErro` | `(Builder $query)` | `ERRO` |
+
+---
+
+## Factory `DocumentoFactory`
+
+**Ficheiro:** `database/factories/DocumentoFactory.php`
+
+Base (`definition()`) = estado `Processado` com todos os campos preenchidos. 7 states disponíveis:
+
+| State | `status` | `disco_storage` | FKs/valor/data |
+|---|---|---|---|
+| `pendente()` | `Pendente` | `entrada` | null |
+| `aguardaEnvio()` | `AguardaEnvio` | `entrada` | null |
+| `enviado()` | `Enviado` | `enviado` | null |
+| `aguardaResposta()` | `AguardaResposta` | `enviado` | null |
+| `processado()` | `Processado` | `processado` | preenchidos |
+| `erro()` | `Erro` | `erro` | null |
+| `perigoso()` | `Perigoso` | `perigoso` | null |
+
+`hash_sha256` gerado com `hash('sha256', fake()->unique()->sha256())` — garante 64 chars hex únicos por teste.
+
+---
+
+## Policy `DocumentoPolicy`
+
+**Ficheiro:** `app/Policies/DocumentoPolicy.php`
+
+Stub temporário — todos os métodos devolvem `true`. Assinaturas prontas para substituição por `hasPermissionTo(...)` na issue de autenticação.
+
+```php
+final class DocumentoPolicy
+{
+    public function viewAny(User $utilizador): bool  { return true; }
+    public function view(User $utilizador, Documento $documento): bool  { return true; }
+    public function create(User $utilizador): bool  { return true; }
+    public function update(User $utilizador, Documento $documento): bool  { return true; }
+    public function delete(User $utilizador, Documento $documento): bool  { return true; }
+}
+```
+
+---
+
+## DTOs
+
+| DTO | Ficheiro | Invariantes |
+|---|---|---|
+| `CriarDocumentoManualDto` | `app/Features/Documento/Criar/CriarDocumentoManualDto.php` | `valor >= 0`; `hashSha256` = 64 chars; strings obrigatórias não-vazias |
+| `ActualizarDocumentoDto` | `app/Features/Documento/Actualizar/ActualizarDocumentoDto.php` | Idem (update completo) |
+
+Ambos `final readonly`. **Sem `fromRequest()`** — adicionado na issue de Lógica (#57).
+
+---
+
+## Resource `DocumentoResource`
+
+**Ficheiro:** `app/Features/Documento/DocumentoResource.php`
+
+```json
+{
+  "id": "uuid",
+  "status": "PROCESSADO",
+  "fornecedor": { ... },
+  "cliente": { ... },
+  "categoria": { ... },
+  "valor": 1234.56,
+  "data_documento": "2026-06-25",
+  "nome_ficheiro_original": "fatura.pdf",
+  "hash_sha256": "abc123...64chars",
+  "criado_em": "2026-06-25T10:00:00.000000Z",
+  "actualizado_em": "2026-06-25T10:00:00.000000Z"
+}
+```
+
+- `status` → `->value` (string UPPER_SNAKE)
+- `valor` → conversão explícita `(float)` (cast `decimal:2` devolve `string`)
+- Relações via `whenLoaded()` + `EntidadeResource` / `CategoriaDocumentoResource`
+- **Não expõe** `disco_storage` nem `nome_ficheiro_storage` (detalhes internos / PII indirecta)
+
+---
+
+## Notas arquitecturais
+
+- **Cast `decimal:2` devolve `string`** — `@property-read ?string $valor`. A conversão para `float` é responsabilidade do Resource (não do Model nem do DTO de input).
+- **Model não é `final`** — coerente com `Entidade`/`CategoriaDocumento`; o ArchTest "actions are final" não cobre Models.
+- **Sem Repository** — desvio aceite; listagem directa no Eloquent (sem queries complexas nesta camada). A issue de Lógica (#57) reavaliará se a `ListarDocumentosAction` justifica Repository.
+- **`#[UsePolicy(DocumentoPolicy::class)]`** registado no Model — prepara a issue de autenticação.
