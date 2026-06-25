@@ -5,8 +5,12 @@ declare(strict_types=1);
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\Fluent\AssertableJson;
+use Spatie\Activitylog\Models\Activity;
 
 uses(RefreshDatabase::class);
+
+// Os seeds de roles deixam actividade persistente fora da transação do teste.
+beforeEach(fn () => Activity::query()->delete());
 
 describe('autenticado como admin', function (): void {
     beforeEach(fn (): User => criarEAutenticarAdmin());
@@ -26,6 +30,9 @@ describe('autenticado como admin', function (): void {
             );
 
         $this->assertDatabaseHas('roles', ['name' => 'editor']);
+
+        expect(Activity::count())->toBe(1)
+            ->and(Activity::query()->first()->event)->toBe('created');
     });
 
     it('devolve 422 quando nome já existe', function (): void {
@@ -57,6 +64,8 @@ it('utilizador sem roles.criar recebe 403', function (): void {
 
     $this->postJson('/api/roles', ['nome' => 'editor', 'permissoes' => []])
         ->assertForbidden();
+
+    expect(Activity::count())->toBe(0);
 });
 
 it('guest sem token recebe 401', function (): void {

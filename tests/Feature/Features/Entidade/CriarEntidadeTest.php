@@ -6,8 +6,12 @@ use App\Models\Entidade;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\Fluent\AssertableJson;
+use Spatie\Activitylog\Models\Activity;
 
 uses(RefreshDatabase::class);
+
+// Os seeds de roles deixam actividade persistente fora da transação do teste.
+beforeEach(fn () => Activity::query()->delete());
 
 describe('autenticado', function (): void {
     beforeEach(fn (): User => criarEAutenticarAdmin());
@@ -35,6 +39,11 @@ describe('autenticado', function (): void {
             );
 
         $this->assertDatabaseHas('entidades', ['nif' => '501234567']);
+
+        $actividade = Activity::query()->first();
+        expect(Activity::count())->toBe(1)
+            ->and($actividade->event)->toBe('created')
+            ->and($actividade->properties->get('attributes'))->not->toHaveKey('nif');
     });
 
     it('cria entidade como empresa mãe e força e_cliente e e_fornecedor a true', function (): void {
@@ -96,6 +105,8 @@ it('utilizador sem permissão recebe 403', function (): void {
         'e_fornecedor' => false,
         'e_empresa_aplicacao' => false,
     ])->assertForbidden();
+
+    expect(Activity::count())->toBe(0);
 });
 
 it('guest sem token recebe 401', function (): void {

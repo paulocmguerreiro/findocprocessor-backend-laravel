@@ -8,8 +8,12 @@ use App\Shared\Enums\TipoMovimento;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Response;
 use Illuminate\Testing\Fluent\AssertableJson;
+use Spatie\Activitylog\Models\Activity;
 
 uses(RefreshDatabase::class);
+
+// Os seeds de roles deixam actividade persistente fora da transação do teste.
+beforeEach(fn () => Activity::query()->delete());
 
 function payloadActualizar(array $sobrepor = []): array
 {
@@ -25,6 +29,7 @@ describe('autenticado', function (): void {
 
     it('actualiza todos os campos e devolve 200 com o recurso', function (): void {
         $categoria = CategoriaDocumento::factory()->comMovimentoDebito()->create(['nome' => 'Nome Original']);
+        Activity::query()->delete();
 
         $this->putJson("/api/categorias-documento/{$categoria->id}", payloadActualizar([
             'nome' => 'Nome Actualizado',
@@ -47,6 +52,9 @@ describe('autenticado', function (): void {
             'slug' => 'nome-actualizado',
             'tipo_movimento' => TipoMovimento::Credito->value,
         ]);
+
+        expect(Activity::count())->toBe(1)
+            ->and(Activity::query()->first()->event)->toBe('updated');
     });
 
     it('devolve 404 quando a categoria não existe', function (): void {
@@ -86,9 +94,12 @@ describe('autenticado', function (): void {
 it('utilizador sem permissão recebe 403', function (): void {
     $categoria = CategoriaDocumento::factory()->create();
     criarEAutenticarUtilizador();
+    Activity::query()->delete();
 
     $this->putJson("/api/categorias-documento/{$categoria->id}", payloadActualizar())
         ->assertForbidden();
+
+    expect(Activity::count())->toBe(0);
 });
 
 it('guest sem token recebe 401', function (): void {
