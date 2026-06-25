@@ -7,6 +7,20 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
+- **Issue #45** — Documento — Camada de Modelo (migration + enum + state objects + model + factory + policy + DTOs + resource + testes)
+  - Migration `documentos`: UUID PK, `status` string+índice, 3 FKs nullable `nullOnDelete()` (→ `entidades` × 2, → `categorias_documento`), `valor decimal(15,2)`, `data_documento date`+índice, `nome_ficheiro_original`, `disco_storage`, `nome_ficheiro_storage`, `hash_sha256` único
+  - Enum `EstadoDocumento` (PT-PT) — 7 casos: `Pendente`, `AguardaEnvio`, `Enviado`, `AguardaResposta`, `Processado`, `Erro`, `Perigoso` (substitui placeholder EN `DocumentStatus`)
+  - Interface `ContratoEstadoDocumento` — 4 getters comuns a todos os estados (`estado()`, `id()`, `discoStorage()`, `nomeFicheiroStorage()`)
+  - 7 state objects `final readonly` (`DocumentoPendente`, `DocumentoAguardaEnvio`, `DocumentoEnviado`, `DocumentoAguardaResposta`, `DocumentoProcessado`, `DocumentoErro`, `DocumentoPerigoso`)
+  - Model `Documento` — `HasUuids`; atributos PHP `#[Table]` `#[Fillable]` `#[UsePolicy]`; casts (`status` → enum, `valor` → `decimal:2` (string), `data_documento` → Carbon); `estado()` com `match` exaustivo (sem `default`); 3 relações `BelongsTo`; 5 scopes (`whereEstado`, `whereProcessado`, `wherePendente`, `wherePerigoso`, `whereErro`); `RegistaActividade` excluindo campos sensíveis (`hash_sha256`, `disco_storage`, `nome_ficheiro_storage`)
+  - `DocumentoFactory` — base = `processado()` (todos os campos); 7 states com mapeamento correcto estado→disco (`entrada`/`enviado`/`processado`/`erro`/`perigoso`)
+  - `DocumentoPolicy` — stub com 5 métodos `true`; `final class`; assinaturas prontas para `hasPermissionTo()`
+  - `CriarDocumentoManualDto` + `ActualizarDocumentoDto` — `final readonly`; invariantes: `valor >= 0`, `hashSha256` = 64 chars, strings obrigatórias não-vazias; sem `fromRequest()` (pertence à #57)
+  - `DocumentoResource` — serialização JSON; `valor` convertido para `float`; relações via `whenLoaded()`; omite `disco_storage`/`nome_ficheiro_storage`
+  - 5 discos de storage PT em `config/filesystems.php`: `entrada`, `enviado`, `processado`, `erro`, `perigoso`
+  - Testes unitários: `DocumentoTest`, `EstadoDocumentoStatesTest`, `DocumentoPolicyTest`, `CriarDocumentoManualDtoTest`, `ActualizarDocumentoDtoTest`, `DocumentoResourceTest`
+  - 399 testes totais, 100% cobertura, 100% type coverage, Larastan 9 zero erros
+
 - **Issue #54** — Audit Trail com spatie/laravel-activitylog
   - `spatie/laravel-activitylog ^4.0` instalado; tabela `activity_log` migrada antes dos seeds de roles
   - `app/Models/Concerns/RegistaActividade` — trait que centraliza a política de audit trail (`logFillable + logOnlyDirty + dontSubmitEmptyLogs`) com hook `atributosExcluidosDaActividade()` para campos sensíveis

@@ -62,6 +62,37 @@ return [
             'report' => false,
         ],
 
+        // Discos por estado do ciclo de vida do Documento (mapeiam disco_storage gravado na BD).
+        'entrada' => [
+            'driver' => 'local',
+            'root' => storage_path('app/entrada'),
+            'throw' => false,
+        ],
+
+        'enviado' => [
+            'driver' => 'local',
+            'root' => storage_path('app/enviado'),
+            'throw' => false,
+        ],
+
+        'processado' => [
+            'driver' => 'local',
+            'root' => storage_path('app/processado'),
+            'throw' => false,
+        ],
+
+        'erro' => [
+            'driver' => 'local',
+            'root' => storage_path('app/erro'),
+            'throw' => false,
+        ],
+
+        'perigoso' => [
+            'driver' => 'local',
+            'root' => storage_path('app/perigoso'),
+            'throw' => false,
+        ],
+
     ],
 
     /*

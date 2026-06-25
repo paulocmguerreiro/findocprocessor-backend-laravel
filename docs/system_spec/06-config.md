@@ -39,3 +39,21 @@ FILESYSTEM_ALLOWED_EXTENSIONS=.pdf,.png,.jpg,.jpeg
 ```
 
 _Valores definitivos pendentes de implementação._
+
+---
+
+## Storage — Discos de ficheiros (`config/filesystems.php`)
+
+5 discos `local` adicionados para o ciclo de vida dos documentos (Issue #45):
+
+```php
+'entrada'    => ['driver' => 'local', 'root' => storage_path('app/entrada'),    'throw' => false],
+'enviado'    => ['driver' => 'local', 'root' => storage_path('app/enviado'),    'throw' => false],
+'processado' => ['driver' => 'local', 'root' => storage_path('app/processado'), 'throw' => false],
+'erro'       => ['driver' => 'local', 'root' => storage_path('app/erro'),       'throw' => false],
+'perigoso'   => ['driver' => 'local', 'root' => storage_path('app/perigoso'),   'throw' => false],
+```
+
+Mapeamento estado → disco: `Pendente`/`AguardaEnvio` → `entrada`; `Enviado`/`AguardaResposta` → `enviado`; `Processado` → `processado`; `Erro` → `erro`; `Perigoso` → `perigoso`.
+
+O campo `disco_storage` na tabela `documentos` armazena o nome do disco activo. A movimentação de ficheiros entre discos (ao transitar de estado) é responsabilidade das Actions de transição (Issue #57).

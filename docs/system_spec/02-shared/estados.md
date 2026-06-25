@@ -1,44 +1,121 @@
 # System Spec — Shared: Estados e Contratos
 
-> `app/Shared/`
+> `app/Shared/States/`
 
 ---
 
-## States (`app/Shared/States/`)
+## Ciclo de estados do `Documento`
 
-Ciclo de estados do documento — fluxo feliz na horizontal, ramos de falha/risco em baixo:
+Fluxo feliz na horizontal; ramos de falha/risco em baixo:
 
 ```
-PENDING → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → DONE
-                                                      ↘ ERROR
-                                                      ↘ PERIGOSO
+PENDENTE → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → PROCESSADO
+                                                       ↘ ERRO
+                                                       ↘ PERIGOSO
 ```
 
-### Estados
+### Semântica dos estados
 
-| Estado | Significado |
+| Estado (enum) | Value BD | Significado |
+|---|---|---|
+| `Pendente` | `PENDENTE` | Documento recebido; campos de domínio podem estar a null (registo automático iniciado) |
+| `AguardaEnvio` | `AGUARDA_ENVIO` | Pronto a ser enviado para o serviço de extracção |
+| `Enviado` | `ENVIADO` | Enviado para o serviço de extracção (IA / OCR) |
+| `AguardaResposta` | `AGUARDA_RESPOSTA` | À espera da resposta do serviço de extracção |
+| `Processado` | `PROCESSADO` | Processamento concluído com sucesso; todos os campos preenchidos |
+| `Erro` | `ERRO` | Falha no processamento — recuperável (permite reprocessar) |
+| `Perigoso` | `PERIGOSO` | Documento marcado como potencialmente malicioso/suspeito |
+
+### Mapeamento estado → disco de storage
+
+| Estado | `disco_storage` |
 |---|---|
-| `PENDING` | Documento recebido, ainda não enfileirado para processamento |
-| `AGUARDA_ENVIO` | Pronto a ser enviado para o serviço de extracção |
-| `ENVIADO` | Enviado para o serviço de extracção (IA) |
-| `AGUARDA_RESPOSTA` | À espera da resposta do serviço de extracção |
-| `DONE` | Processamento concluído com sucesso |
-| `ERROR` | Falha no processamento — recuperável (permite reprocessar) |
-| `PERIGOSO` | Documento marcado como potencialmente malicioso/suspeito |
-
-### Transições
-
-A mudança de estado é feita sempre através do objecto de estado — `$doc->state()->correct($data)` — **nunca** com `if ($doc->status == ...)` nas Actions. O estado actual é a fonte de verdade para as transições permitidas.
-
-`ERROR` e `PERIGOSO` são estados terminais do ponto de vista do fluxo automático; saídas destes estados são desencadeadas por acções explícitas (reprocessar, eliminar).
-
-_Implementações pendentes — os objectos de estado e a coluna `status` são definidos com a feature Document. O enum correspondente está documentado em `02-shared/enums.md` (`DocumentStatus`)._
+| `Pendente`, `AguardaEnvio` | `entrada` |
+| `Enviado`, `AguardaResposta` | `enviado` |
+| `Processado` | `processado` |
+| `Erro` | `erro` |
+| `Perigoso` | `perigoso` |
 
 ---
 
-## Contracts (`app/Shared/Contracts/`)
+## Interface — `ContratoEstadoDocumento`
 
-_Vazio até à primeira issue implementada._
+**Ficheiro:** `app/Shared/States/ContratoEstadoDocumento.php`
+
+```php
+interface ContratoEstadoDocumento
+{
+    public function estado(): EstadoDocumento;
+    public function id(): string;
+    public function discoStorage(): string;
+    public function nomeFicheiroStorage(): string;
+}
+```
+
+Declara apenas os **4 getters comuns a todos os 7 estados**. Campos adicionais vivem nas classes concretas.
+
+---
+
+## State objects — `app/Shared/States/Documento*.php`
+
+7 classes `final readonly`, cada uma implementando `ContratoEstadoDocumento`. Construídas via `static deDocumento(Documento $documento): self` — nunca instanciadas directamente pelo consumidor.
+
+**Regra:** a mudança de estado é feita na issue de Lógica (#57) via Actions. Aqui os state objects são **read-only** — sem método `correct()`.
+
+### Grupos de campos
+
+| Grupo | Classes | Getters específicos (além dos 4 comuns) |
+|---|---|---|
+| Parciais | `DocumentoPendente`, `DocumentoAguardaEnvio`, `DocumentoEnviado`, `DocumentoAguardaResposta` | `nomeFicheiroOriginal()`, `hashSha256()` |
+| Mínimos | `DocumentoErro`, `DocumentoPerigoso` | — (só os 4 da interface) |
+| Completo | `DocumentoProcessado` | `nomeFicheiroOriginal()`, `hashSha256()`, `idFornecedor()`, `idCliente()`, `idCategoria()`, `valor()`, `dataDocumento()` |
+
+### Padrão de implementação (exemplo `DocumentoPendente`)
+
+```php
+final readonly class DocumentoPendente implements ContratoEstadoDocumento
+{
+    public function __construct(
+        private string $id,
+        private string $discoStorage,
+        private string $nomeFicheiroStorage,
+        private string $nomeFicheiroOriginal,
+        private string $hashSha256,
+    ) {}
+
+    public static function deDocumento(Documento $documento): self
+    {
+        return new self(
+            id: $documento->id,
+            discoStorage: $documento->disco_storage,
+            nomeFicheiroStorage: $documento->nome_ficheiro_storage,
+            nomeFicheiroOriginal: $documento->nome_ficheiro_original,
+            hashSha256: $documento->hash_sha256,
+        );
+    }
+
+    public function estado(): EstadoDocumento { return EstadoDocumento::Pendente; }
+    public function id(): string { return $this->id; }
+    public function discoStorage(): string { return $this->discoStorage; }
+    public function nomeFicheiroStorage(): string { return $this->nomeFicheiroStorage; }
+    public function nomeFicheiroOriginal(): string { return $this->nomeFicheiroOriginal; }
+    public function hashSha256(): string { return $this->hashSha256; }
+}
+```
+
+### Invocação no Model
+
+```php
+$documento->estado(); // → ContratoEstadoDocumento (match exaustivo, sem default)
+```
+
+O `match` em `Documento::estado()` cobre os 7 casos sem `default` — Larastan 9 valida a exaustividade.
+
+---
+
+## Regras de transição
+
+A mudança de estado é sempre feita por Actions de transição (issue #57), **nunca** com `if ($doc->status == ...)`. Os state objects da issue #45 são read-only — a lógica de transição, movimentação de ficheiro entre discos e registo em `EtapaDocumento` (issue #56) pertencem à issue de Lógica (#57).
 
 ---
 
