@@ -30,7 +30,8 @@ RUN composer install --no-interaction --prefer-dist --no-progress --no-scripts -
 
 # Copiar o resto do código e finalizar o autoloader.
 COPY . .
-RUN composer dump-autoload --optimize \
+RUN mkdir -p bootstrap/cache storage/framework/{cache,sessions,views} storage/logs \
+    && composer dump-autoload --optimize \
     && chown -R www-data:www-data storage bootstrap/cache
 
 # Entrypoint: prepara .env/APP_KEY, corre migrations + seed e arranca o FPM.
