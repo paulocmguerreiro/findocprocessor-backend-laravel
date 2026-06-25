@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\RegistaActividade;
 use App\Policies\EntidadePolicy;
 use Database\Factories\EntidadeFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -14,8 +15,6 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @property-read string $id
@@ -33,7 +32,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class Entidade extends Model
 {
     /** @use HasFactory<EntidadeFactory> */
-    use HasFactory, HasUuids, LogsActivity;
+    use HasFactory, HasUuids, RegistaActividade;
 
     /**
      * @return array{e_cliente: string, e_fornecedor: string, e_empresa_aplicacao: string}
@@ -48,13 +47,12 @@ class Entidade extends Model
         ];
     }
 
-    public function getActivitylogOptions(): LogOptions
+    /**
+     * @return list<string>
+     */
+    protected function atributosExcluidosDaActividade(): array
     {
-        return LogOptions::defaults()
-            ->logFillable()
-            ->logExcept(['nif'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs();
+        return ['nif'];
     }
 
     /**
