@@ -22,6 +22,7 @@
 - **Laravel 13** / PHP 8.5 — Vertical Slice Architecture
 - **Laravel Sanctum** — autenticação API via Bearer tokens
 - **Spatie Laravel Permission** — autorização por roles (`admin`, `utilizador`) e permissions granulares
+- **spatie/laravel-activitylog** — audit trail persistente (`activity_log`) com atomicidade garantida pela transação
 - **Eloquent ORM** — SQLite (dev/testes) / MySQL (Docker)
 - **Redis + predis** — cache com invalidação por tags (`CacheServico`, `TagCache`, `TtlCache`)
 - **Pest 4 + Mockery** — padrão de testes dual (unit + HTTP)
@@ -152,7 +153,6 @@ Próximos passos, geridos como issues no repositório:
 
 - **Documento — gestão manual** _(próximo)_ — model layer (migration + model + factory + policy + DTOs + resource), upload `multipart/form-data` e ciclo de estados (`PENDING → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → DONE`).
 - **Gestão financeira** — movimentos (débito/crédito) associados a documentos e entidades.
-- **Audit trail** — registo de alterações nos registos de domínio.
 - **Pipeline de ingestão** — Jobs + Schedule sobre a pasta de inbox, com OCR, análise de imagem e extração de dados via IA (`app/Infrastructure/AI`).
 
 ## Relacionado (roadmap)

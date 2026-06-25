@@ -7,6 +7,19 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
+- **Issue #54** — Audit Trail com spatie/laravel-activitylog
+  - `spatie/laravel-activitylog ^4.0` instalado; tabela `activity_log` migrada antes dos seeds de roles
+  - `app/Models/Concerns/RegistaActividade` — trait que centraliza a política de audit trail (`logFillable + logOnlyDirty + dontSubmitEmptyLogs`) com hook `atributosExcluidosDaActividade()` para campos sensíveis
+  - `CategoriaDocumento` e `Entidade` — adicionam `RegistaActividade`; `Entidade` exclui `nif` (dado fiscal — RGPD)
+  - `app/Observers/RoleObserver` — audita `Spatie\Permission\Models\Role` (modelo de terceiro) via Observer registado em `AppServiceProvider`; sem alterações a `config/permission.php`
+  - `subject_id` em `char(36)` (em vez de `bigint`) para acomodar sujeitos com UUID e bigint em simultâneo
+  - `causer` associado automaticamente ao `Auth::user()` pelo pacote — sem configuração nas Actions
+  - Atomicidade garantida: eventos Eloquent disparam dentro da `DB::transaction()` das Actions; rollback reverte o registo de actividade
+  - Testes Unit (`tests/Unit/Features/AuditTrail/`): 3 ficheiros — `created`/`updated`/`deleted`, no-op (logOnlyDirty), rollback e exclusão de `nif`
+  - Assertions `Activity::count()` adicionadas nos testes HTTP de escrita existentes (CategoriaDocumento, Entidade, Role) — criar/actualizar/eliminar/403
+  - `docs/system_spec/04-infra/audit-trail.md` criado; `docs/system_spec/03-models/role.md` criado
+  - 315 testes totais, 100% cobertura, PHPStan nível 9 sem erros
+
 - **Issue #37** — Logging estruturado — Actions, autenticação e contexto de request
   - `app/Http/Middleware/InjectarContextoLog` — gera `trace_id` UUID por request via `Context::add()`; registado no grupo `api`; propaga automaticamente para Jobs (Laravel Context dehydrate/hydrate)
   - `app/Features/Auth/Login/LoginDto` — Value Object `final readonly` com `email`, `password`, `ip`, `agente`; `fromRequest()` extrai contexto HTTP (IP de `$request->ip()`, nunca do body)
