@@ -142,20 +142,25 @@ Para endpoints com acesso de leitura ao role `utilizador`, usar `criarEAutentica
 
 ---
 
-## Matriz de autorização obrigatória (4 actores)
+## Matriz de autorização obrigatória (3 estados)
 
-Qualquer Action ou endpoint protegido por `Gate::authorize(...)` tem de ser testado contra os **4 estados de actor**, nas **duas camadas** (Action e HTTP — autorização dupla camada). A omissão de qualquer linha é lacuna de cobertura, não opção.
+A autorização não tem "papéis" como actores. `admin` e `utilizador` são apenas **configurações de permissões** (conjuntos de abilities) e só existem como actor quando há login efectuado. O que distingue o resultado de uma operação são **três estados**, definidos pela relação entre o utilizador e a **permissão daquela operação**:
 
-| Actor | Como autenticar | Acesso esperado |
-|---|---|---|
-| **admin** (acesso total) | `criarAdmin()` / `criarEAutenticarAdmin()` | happy path — todas as operações |
-| **utilizador** (acesso parcial) | `criarUtilizador()` / `criarEAutenticarUtilizador()` | leituras permitidas → **200**; escritas → negado |
-| **utilizador sem essa permissão** | idem (role sem a ability) | Action → `AuthorizationException`; HTTP → **403** |
-| **guest** (sem autenticação) | `auth()->logout()` (Action) / sem token (HTTP) | Action → `AuthorizationException`; HTTP → **401** |
+| Estado | Como reproduzir | HTTP | Action (`Gate::authorize`) |
+|---|---|---|---|
+| **Sem autenticação** (guest) | sem token (HTTP) / `auth()->logout()` (Action) | **401** | `AuthorizationException` |
+| **Autenticado COM a permissão** | utilizador cuja config de permissões inclui a ability da operação | **2xx** (happy path) | executa |
+| **Autenticado SEM a permissão** | utilizador cuja config **não** inclui a ability da operação | **403** | `AuthorizationException` |
 
-> **Falha sempre que falte autorização real.** Se a Policy devolver `true` incondicionalmente, os casos "utilizador sem permissão" e "guest" passam por engano e a lacuna fica mascarada. A Policy tem de usar `hasPermissionTo(...)` — ver checklist em `04-infra/autorizacao.md`.
+Pontos a reter:
 
-**Distinção 403 vs 401:** `403` é utilizador autenticado **sem** a permissão (a Policy nega); `401` é ausência de autenticação (middleware Sanctum bloqueia antes da Policy). O `guest` na camada Action dá `AuthorizationException` (não há 401 fora de HTTP) — o primeiro parâmetro do método de Policy ser `User` (não `?User`) faz o Laravel negar guests automaticamente.
+- **`admin` e `utilizador` não são actores distintos** — são configs de permissões. O *mesmo* `utilizador` está "COM a permissão" numa leitura (`documentos.ver`) → 200, e "SEM a permissão" numa escrita → 403. O estado depende da **operação**, não da identidade. Por isso o teste escolhe a config que produz cada estado: hoje `admin` materializa "COM" em tudo; `utilizador` materializa "COM" nas leituras e "SEM" nas escritas; um utilizador sem role nenhuma materializa "SEM" até nas leituras.
+- **Guest não acede a nada da API exceto `login`.** `POST /api/auth/login` é a única rota pública; todas as outras exigem token e devolvem **401** sem ele. O teste de guest confirma exactamente isso.
+- **As duas camadas (HTTP e Action)** cobrem-se independentemente — a dupla camada de autorização exige testar ambas. Na camada Action não existe "401" (não há HTTP): tanto o guest como o autenticado-sem-permissão resultam em `AuthorizationException`.
+
+> **Falha sempre que falte autorização real.** Se a Policy devolver `true` incondicionalmente, os estados "sem permissão" e "guest" passam por engano e a lacuna fica mascarada. A Policy tem de usar `hasPermissionTo(...)` — ver checklist em `04-infra/autorizacao.md`.
+
+**Distinção 403 vs 401:** `403` é utilizador autenticado **sem** a permissão (a Policy nega); `401` é ausência de autenticação (middleware Sanctum bloqueia antes da Policy). Na camada Action o guest dá `AuthorizationException` (não 401) — o primeiro parâmetro do método de Policy ser `User` (não `?User`) faz o Laravel negar guests automaticamente.
 
 **Listagens com cache:** flush da tag no `beforeEach` — `CACHE_STORE=redis` nos testes **não isola entre testes**, e um paginador serializado de um teste anterior rebenta noutro (`unserialize` de objecto incompleto → 500):
 

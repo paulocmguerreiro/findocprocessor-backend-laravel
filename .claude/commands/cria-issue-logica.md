@@ -37,7 +37,7 @@ Selecciona os componentes a incluir nesta issue:
 [ ] Events           — eventos de domínio disparados dentro das Actions
 [ ] Listeners        — reagem a Events (pode ser issue futura)
 [ ] Observers        — reagem a eventos Eloquent do Model (created, updated, deleted…)
-[ ] Testes de feature — endpoints HTTP (matriz de 4 actores: admin/utilizador/utilizador-sem-permissão→403/guest→401, ver `07-testing.md`) + 404 + Jobs + Observers
+[ ] Testes de feature — endpoints HTTP (matriz de 3 estados: guest→401 / com-permissão→2xx / sem-permissão→403, ver `07-testing.md`) + 404 + Jobs + Observers
 ```
 
 Só avançar para o Passo 3 depois de o utilizador confirmar os componentes.
@@ -176,7 +176,7 @@ Omitir secção completa se FormRequests não seleccionados.
 - [ ] CA-06: Events são disparados dentro das Actions (nunca no Controller)
 - [ ] CA-07: Jobs têm `$tries` e `$timeout` declarados (se assíncronos)
 - [ ] CA-08: Observers injectam dependências via construtor (nunca `app()`)
-- [ ] CA-09: Testes cobrem a matriz de 4 actores por endpoint/Action protegido (admin, utilizador, utilizador-sem-permissão → 403, guest → 401) + 404 — nas duas camadas (HTTP e Action), ver `07-testing.md`
+- [ ] CA-09: Testes cobrem a matriz de 3 estados por endpoint/Action protegido (guest → 401 / com-permissão → 2xx / sem-permissão → 403) + 404 — nas duas camadas (HTTP e Action), ver `07-testing.md`
 - [ ] CA-10: Testes cobrem dispatch de Jobs (`assertDispatched`) e execução isolada
 - [ ] CA-11: Testes cobrem Observer para cada evento Eloquent configurado
 - [ ] CA-12: 100% code coverage e 100% type coverage (`composer test`)
