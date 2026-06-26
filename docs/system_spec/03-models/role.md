@@ -22,3 +22,9 @@ Como `Role` é de terceiro, não pode usar o trait `RegistaActividade`. A audito
 - O Observer corre dentro da `DB::transaction()` das Actions de Role — atomicidade garantida.
 
 > Detalhe completo: `04-infra/audit-trail.md`.
+
+---
+
+## Policy
+
+Como `Role` é modelo de terceiro, **não** suporta `#[UsePolicy]`. A `RolePolicy` é registada manualmente via `Gate::policy(Role::class, RolePolicy::class)` no `AppServiceProvider::boot()`. `hasPermissionTo('roles.<accao>')` por ability. Detalhe em `04-infra/autorizacao.md`.

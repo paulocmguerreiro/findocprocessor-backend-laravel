@@ -11,7 +11,7 @@ HTTP Request → FormRequest (autoriza + valida) → Controller (constrói DTO) 
 
 **Decisão arquitectural:** Actions aceitam `CategoriaDocumento|string` — compatíveis com Route Model Binding (HTTP) e testes unitários (UUID directo). Sem Repository — Eloquent abstrai suficientemente a persistência para este CRUD simples (desvio explícito CLAUDE.md, aprovado na Issue #5). A listagem usa cursor pagination (keyset) em vez de OFFSET — padrão do sistema para todas as listagens futuras (Issue #9).
 
-**Autorização:** dupla verificação intencional — FormRequest (`Gate::authorize()`) na camada HTTP + Action (`Gate::authorize()`) na camada de lógica. Garante que a Policy se aplica mesmo em invocações fora do contexto HTTP (Jobs, Artisan). Policy auto-descoberta por convenção de nome (`CategoriaDocumentoPolicy` ↔ `CategoriaDocumento`). Nesta fase, todos os métodos retornam `true` (acesso aberto, incluindo guests).
+**Autorização:** dupla verificação intencional — FormRequest (`Gate::authorize()`) na camada HTTP + Action (`Gate::authorize()`) na camada de lógica. Garante que a Policy se aplica mesmo em invocações fora do contexto HTTP (Jobs, Artisan). Policy ligada por `#[UsePolicy(CategoriaDocumentoPolicy::class)]`; cada método verifica `hasPermissionTo('categorias-documento.<accao>')` (admin todas; utilizador só `.ver`; guests negados). Ver `04-infra/autorizacao.md`.
 
 ---
 
@@ -29,61 +29,14 @@ HTTP Request → FormRequest (autoriza + valida) → Controller (constrói DTO) 
 
 ## DTOs
 
-Todos `final readonly`. Padrão Value Object — construtor valida invariantes estruturais; `fromRequest()` só mapeia.
+Todos `final readonly` com `fromRequest()` (array shape `@var`; `tipo_movimento` via `TipoMovimento::from()`). Padrão Value Object — construtor valida invariantes estruturais; `fromRequest()` só mapeia.
 
-### `CriarCategoriaDto` — `App\Features\CategoriaDocumento\Criar\CriarCategoriaDto`
+| DTO | Namespace | Campos (tipo) | Invariantes (construtor) |
+|---|---|---|---|
+| `CriarCategoriaDto` | `CategoriaDocumento\Criar` | `nome:string`, `slug:string`, `tipoMovimento:TipoMovimento` | `nome`/`slug` não-vazios (`trim`) |
+| `ActualizarCategoriaDto` | `CategoriaDocumento\Actualizar` | idem (update completo — PUT) | idem (valida incondicionalmente) |
 
-```php
-final readonly class CriarCategoriaDto
-{
-    /** @throws \InvalidArgumentException */
-    public function __construct(
-        public string $nome,
-        public string $slug,
-        public TipoMovimento $tipoMovimento,
-    ) {
-        if (trim($this->nome) === '') { throw new \InvalidArgumentException('nome não pode ser vazio.'); }
-        if (trim($this->slug) === '') { throw new \InvalidArgumentException('slug não pode ser vazio.'); }
-    }
-
-    /** @throws \InvalidArgumentException */
-    public static function fromRequest(CriarCategoriaRequest $request): self
-    {
-        /** @var array{nome: string, slug: string, tipo_movimento: string} $dadosValidados */
-        $dadosValidados = $request->validated();
-        return new self(nome: $dadosValidados['nome'], slug: $dadosValidados['slug'], tipoMovimento: TipoMovimento::from($dadosValidados['tipo_movimento']));
-    }
-}
-```
-
-### `ActualizarCategoriaDto` — `App\Features\CategoriaDocumento\Actualizar\ActualizarCategoriaDto`
-
-```php
-final readonly class ActualizarCategoriaDto
-{
-    /** @throws \InvalidArgumentException */
-    public function __construct(
-        public string $nome,
-        public string $slug,
-        public TipoMovimento $tipoMovimento,
-    ) {
-        if (trim($this->nome) === '') { throw new \InvalidArgumentException('nome não pode ser vazio.'); }
-        if (trim($this->slug) === '') { throw new \InvalidArgumentException('slug não pode ser vazio.'); }
-    }
-
-    /** @throws \InvalidArgumentException */
-    public static function fromRequest(ActualizarCategoriaRequest $request): self
-    {
-        /** @var array{nome: string, slug: string, tipo_movimento: string} $dadosValidados */
-        $dadosValidados = $request->validated();
-        return new self(nome: $dadosValidados['nome'], slug: $dadosValidados['slug'], tipoMovimento: TipoMovimento::from($dadosValidados['tipo_movimento']));
-    }
-}
-```
-
-- Campos não-nullable — update completo (PUT); construtor valida invariantes incondicionalmente
-- Estrutura idêntica ao `CriarCategoriaDto` (Issue #30)
-- Array shape sem `?` — todos os campos são `required` no FormRequest
+> Array shape sem `?` — todos os campos são `required` no FormRequest. Estrutura idêntica entre os dois (Issue #30).
 
 ---
 
@@ -97,17 +50,14 @@ final readonly class ActualizarCategoriaDto
 
 ## Policy
 
-`CategoriaDocumentoPolicy` (`App\Policies`) — `final class`, `strict_types=1`. Auto-descoberta por convenção de nome. Todos os métodos aceitam `?User $utilizador` (nullable — permite guests). Nesta fase, todos retornam `true`.
+`CategoriaDocumentoPolicy` (`App\Policies`) — `final class`, `strict_types=1`. Ligada por `#[UsePolicy(CategoriaDocumentoPolicy::class)]` no Model. Cada método exige `User` e verifica `hasPermissionTo('categorias-documento.<accao>')`; guests são negados pelo Laravel (1.º parâmetro `User`, não `?User`). Matriz role→permission em `04-infra/autorizacao.md`.
 
-| Método | Assinatura |
+| Método | Permissão |
 |---|---|
-| `viewAny` | `viewAny(?User $utilizador): bool` |
-| `view` | `view(?User $utilizador, CategoriaDocumento $categoriaDocumento): bool` |
-| `create` | `create(?User $utilizador): bool` |
-| `update` | `update(?User $utilizador, CategoriaDocumento $categoriaDocumento): bool` |
-| `delete` | `delete(?User $utilizador, CategoriaDocumento $categoriaDocumento): bool` |
-
-**Nota `rector.php`:** `RemoveUnusedPublicMethodParameterRector` excluído para `app/Policies/` — parâmetros `?User` e `CategoriaDocumento` são contrato do framework (o Laravel usa reflexão para decidir se guests passam), não dead code.
+| `viewAny` / `view` | `categorias-documento.ver` |
+| `create` | `categorias-documento.criar` |
+| `update` | `categorias-documento.actualizar` |
+| `delete` | `categorias-documento.eliminar` |
 
 ---
 
