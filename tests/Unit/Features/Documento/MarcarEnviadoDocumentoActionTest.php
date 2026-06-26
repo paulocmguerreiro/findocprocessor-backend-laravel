@@ -6,20 +6,19 @@ use App\Features\Documento\MarcarEnviado\MarcarEnviadoDocumentoAction;
 use App\Models\Documento;
 use App\Shared\Enums\EstadoDocumento;
 use App\Shared\Exceptions\TransicaoInvalidaException;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
+// Transição de sistema (pipeline): corre sem utilizador autenticado, sem Gate.
 beforeEach(function (): void {
     Storage::fake('entrada');
     Storage::fake('enviado');
-    $this->actingAs(criarAdmin());
 });
 
-it('transiciona AguardaEnvio → Enviado e move o ficheiro entrada → enviado', function (): void {
+it('transiciona AguardaEnvio → Enviado e move o ficheiro entrada → enviado (passo de sistema, sem login)', function (): void {
     $documento = Documento::factory()->aguardaEnvio()->create();
     Storage::disk('entrada')->put($documento->nome_ficheiro_storage, 'conteudo');
 
@@ -30,10 +29,12 @@ it('transiciona AguardaEnvio → Enviado e move o ficheiro entrada → enviado',
 
     Storage::disk('enviado')->assertExists($documento->nome_ficheiro_storage);
     Storage::disk('entrada')->assertMissing($documento->nome_ficheiro_storage);
+    // Etapa gravada como passo automático de sistema — id_utilizador null.
     $this->assertDatabaseHas('etapas_documento', [
         'id_documento' => $documento->id,
         'estado' => EstadoDocumento::Enviado->value,
         'motivo' => 'enviado para extracção',
+        'id_utilizador' => null,
     ]);
 });
 
@@ -64,12 +65,4 @@ it('rejeita a transição a partir de um estado inválido', function (): void {
         ->toThrow(TransicaoInvalidaException::class);
 
     $this->assertDatabaseCount('etapas_documento', 0);
-});
-
-it('exige utilizador autenticado (guest é rejeitado)', function (): void {
-    auth()->logout();
-    $documento = Documento::factory()->aguardaEnvio()->create();
-
-    expect(fn (): Documento => app(MarcarEnviadoDocumentoAction::class)->handle($documento))
-        ->toThrow(AuthorizationException::class);
 });

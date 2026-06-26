@@ -14,13 +14,13 @@ use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
+// Transição de sistema (pipeline): corre sem utilizador autenticado, sem Gate.
 beforeEach(function (): void {
     Storage::fake('enviado');
     Storage::fake('erro');
-    $this->actingAs(criarAdmin());
 });
 
-it('transiciona AguardaResposta → Erro: move enviado → erro, regista o motivo e emite o evento', function (): void {
+it('transiciona AguardaResposta → Erro: move enviado → erro, regista o motivo e emite o evento (passo de sistema)', function (): void {
     $documento = Documento::factory()->aguardaResposta()->create();
     Storage::disk('enviado')->put($documento->nome_ficheiro_storage, 'conteudo');
 
@@ -37,6 +37,7 @@ it('transiciona AguardaResposta → Erro: move enviado → erro, regista o motiv
         'id_documento' => $documento->id,
         'estado' => EstadoDocumento::Erro->value,
         'motivo' => 'timeout do serviço',
+        'id_utilizador' => null,
     ]);
 
     Event::assertDispatched(

@@ -12,7 +12,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     Storage::fake('processado');
-    criarEAutenticarAdmin();
+    $this->utilizador = criarEAutenticarAdmin();
 });
 
 function payloadManual(array $sobrepor = []): array
@@ -31,10 +31,12 @@ it('regista um documento manual e devolve 201 em Processado', function (): void 
     $this->post('/api/documentos', payloadManual())
         ->assertCreated()
         ->assertJsonPath('data.status', EstadoDocumento::Processado->value)
-        ->assertJsonPath('data.fornecedor.nome', 'Fornecedor Lda');
+        ->assertJsonPath('data.fornecedor.nome', 'Fornecedor Lda')
+        ->assertJsonPath('data.id_responsavel', $this->utilizador->id);
 
     Storage::disk('processado')->assertExists('2026-06-25-fornecedor-lda-despesas.pdf');
     $this->assertDatabaseCount('documentos', 1);
+    $this->assertDatabaseHas('documentos', ['id_responsavel' => $this->utilizador->id]);
 });
 
 it('rejeita o registo sem ficheiro com 422', function (): void {

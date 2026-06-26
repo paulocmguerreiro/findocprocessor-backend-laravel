@@ -6,6 +6,7 @@ use App\Models\CategoriaDocumento;
 use App\Models\Documento;
 use App\Models\Entidade;
 use App\Models\EtapaDocumento;
+use App\Models\User;
 use App\Shared\Enums\EstadoDocumento;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -22,7 +23,7 @@ describe('Model', function (): void {
         $modelo = new Documento;
 
         expect($modelo->getFillable())->toBe([
-            'status', 'id_fornecedor', 'id_cliente', 'id_categoria', 'valor',
+            'status', 'id_responsavel', 'id_fornecedor', 'id_cliente', 'id_categoria', 'valor',
             'data_documento', 'nome_ficheiro_original', 'disco_storage',
             'nome_ficheiro_storage', 'hash_sha256',
         ]);
@@ -67,6 +68,23 @@ describe('Relações', function (): void {
 
         expect($documento->fornecedor)->toBeInstanceOf(Entidade::class)
             ->and($documento->fornecedor->id)->toBe($fornecedor->id);
+    });
+
+    it('belongsTo responsavel (User)', function (): void {
+        $responsavel = User::factory()->create();
+        $documento = Documento::factory()->create(['id_responsavel' => $responsavel->id]);
+
+        expect($documento->responsavel)->toBeInstanceOf(User::class)
+            ->and($documento->responsavel->id)->toBe($responsavel->id);
+    });
+
+    it('coloca id_responsavel a null quando o utilizador é eliminado (nullOnDelete)', function (): void {
+        $responsavel = User::factory()->create();
+        $documento = Documento::factory()->create(['id_responsavel' => $responsavel->id]);
+
+        $responsavel->delete();
+
+        expect($documento->fresh()->id_responsavel)->toBeNull();
     });
 
     it('belongsTo cliente (Entidade)', function (): void {

@@ -52,7 +52,8 @@ it('regista directo em Processado: deriva hash + nome canónico, escreve no disc
         ->and($documento->disco_storage)->toBe('processado')
         ->and($documento->nome_ficheiro_storage)->toBe('2026-06-25-fornecedor-lda-despesas.pdf')
         ->and($documento->hash_sha256)->toBe($hashEsperado)
-        ->and($documento->nome_ficheiro_original)->toBe('fatura.pdf');
+        ->and($documento->nome_ficheiro_original)->toBe('fatura.pdf')
+        ->and($documento->id_responsavel)->toBe($utilizador?->getAuthIdentifier());
 
     Storage::disk('processado')->assertExists('2026-06-25-fornecedor-lda-despesas.pdf');
 

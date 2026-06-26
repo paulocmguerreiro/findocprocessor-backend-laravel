@@ -31,6 +31,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property-read string $id
  * @property-read EstadoDocumento $status
+ * @property-read ?int $id_responsavel
  * @property-read ?string $id_fornecedor
  * @property-read ?string $id_cliente
  * @property-read ?string $id_categoria
@@ -45,11 +46,12 @@ use Illuminate\Support\Carbon;
  * @property-read ?Entidade $fornecedor
  * @property-read ?Entidade $cliente
  * @property-read ?CategoriaDocumento $categoria
+ * @property-read ?User $responsavel
  * @property-read Collection<int, EtapaDocumento> $historico
  */
 #[Table('documentos')]
 #[Fillable([
-    'status', 'id_fornecedor', 'id_cliente', 'id_categoria', 'valor',
+    'status', 'id_responsavel', 'id_fornecedor', 'id_cliente', 'id_categoria', 'valor',
     'data_documento', 'nome_ficheiro_original', 'disco_storage',
     'nome_ficheiro_storage', 'hash_sha256',
 ])]
@@ -114,6 +116,12 @@ class Documento extends Model
     public function categoria(): BelongsTo
     {
         return $this->belongsTo(CategoriaDocumento::class, 'id_categoria');
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function responsavel(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'id_responsavel');
     }
 
     /** @return HasMany<EtapaDocumento, $this> */

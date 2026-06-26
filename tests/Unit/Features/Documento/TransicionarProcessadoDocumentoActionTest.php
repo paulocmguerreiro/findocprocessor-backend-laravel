@@ -10,6 +10,7 @@ use App\Models\Documento;
 use App\Models\Entidade;
 use App\Shared\Enums\EstadoDocumento;
 use App\Shared\Exceptions\TransicaoInvalidaException;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
@@ -17,6 +18,8 @@ use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
+// Mantém Gate::authorize('update') — escreve os dados de negócio extraídos
+// (não é mera flag de estado como as Marcar*). Requer permissão documentos.actualizar.
 beforeEach(function (): void {
     Storage::fake('enviado');
     Storage::fake('processado');
@@ -66,4 +69,23 @@ it('rejeita a transição a partir de um estado inválido', function (): void {
         ->toThrow(TransicaoInvalidaException::class);
 
     $this->assertDatabaseCount('etapas_documento', 0);
+});
+
+it('guest (sem autenticação) é rejeitado', function (): void {
+    $documento = Documento::factory()->aguardaResposta()->create();
+    auth()->logout();
+
+    expect(fn (): Documento => app(TransicionarProcessadoDocumentoAction::class)->handle($documento, dtoTransicao()))
+        ->toThrow(AuthorizationException::class);
+});
+
+describe('sem permissão de escrita', function (): void {
+    beforeEach(fn () => $this->actingAs(criarUtilizador()));
+
+    it('lança AuthorizationException quando utilizador não tem permissão de escrita', function (): void {
+        $documento = Documento::factory()->aguardaResposta()->create();
+
+        expect(fn (): Documento => app(TransicionarProcessadoDocumentoAction::class)->handle($documento, dtoTransicao()))
+            ->toThrow(AuthorizationException::class);
+    });
 });

@@ -10,6 +10,7 @@
 |---|---|---|---|
 | `id` | `uuid` PK | Não | UUIDv7 via `HasUuids` |
 | `status` | `string(50)` | Não | Default `'PENDENTE'`; índice simples; cast → `EstadoDocumento` |
+| `id_responsavel` | `bigint` FK | Sim | → `users.id`; `nullOnDelete()`; autor do registo/upload (sempre o utilizador autenticado); `null` = utilizador removido |
 | `id_fornecedor` | `uuid` FK | Sim | → `entidades.id`; `nullOnDelete()` |
 | `id_cliente` | `uuid` FK | Sim | → `entidades.id`; `nullOnDelete()` |
 | `id_categoria` | `uuid` FK | Sim | → `categorias_documento.id`; `nullOnDelete()` |
@@ -21,7 +22,9 @@
 | `hash_sha256` | `string(64)` | Não | SHA-256 do conteúdo; índice único (previne duplicados) |
 | `created_at` / `updated_at` | `timestamp` | — | `timestamps()` |
 
-**Nota:** FKs nullable por design — campos de domínio podem estar a `null` em `Pendente` (registo automático iniciado sem dados completos).
+**Nota:** FKs de domínio nullable por design — campos de domínio podem estar a `null` em `Pendente` (registo automático iniciado sem dados completos).
+
+**`id_responsavel`** (Issue #57 — revisão) — FK `bigint` para `users.id` (o PK de `users` é incremental, não UUID). É o autor da entrada: definido pela `RegistarDocumentoManualAction` e pela `ReceberUploadDocumentoAction` a partir de `Auth::id()` — **nunca vem do cliente** (campo derivado server-side, como o `hash_sha256`). Nullable só para tolerar a remoção do utilizador (`nullOnDelete()`); está sempre preenchido à criação. As transições de pipeline (`Marcar*`) **não** alteram o responsável.
 
 ---
 
@@ -31,7 +34,7 @@
 
 ```php
 #[Table('documentos')]
-#[Fillable(['status', 'id_fornecedor', 'id_cliente', 'id_categoria', 'valor',
+#[Fillable(['status', 'id_responsavel', 'id_fornecedor', 'id_cliente', 'id_categoria', 'valor',
     'data_documento', 'nome_ficheiro_original', 'disco_storage',
     'nome_ficheiro_storage', 'hash_sha256'])]
 #[UsePolicy(DocumentoPolicy::class)]
@@ -47,6 +50,7 @@ class Documento extends Model
 /**
  * @property-read string $id
  * @property-read EstadoDocumento $status
+ * @property-read ?int $id_responsavel
  * @property-read ?string $id_fornecedor
  * @property-read ?string $id_cliente
  * @property-read ?string $id_categoria
@@ -58,6 +62,7 @@ class Documento extends Model
  * @property-read string $hash_sha256
  * @property-read Carbon $created_at
  * @property-read Carbon $updated_at
+ * @property-read ?User $responsavel
  * @property-read ?Entidade $fornecedor
  * @property-read ?Entidade $cliente
  * @property-read ?CategoriaDocumento $categoria
@@ -115,6 +120,7 @@ public function estado(): ContratoEstadoDocumento
 ### Relações
 
 ```php
+public function responsavel(): BelongsTo // → User (id_responsavel)
 public function fornecedor(): BelongsTo  // → Entidade (id_fornecedor)
 public function cliente(): BelongsTo     // → Entidade (id_cliente)
 public function categoria(): BelongsTo   // → CategoriaDocumento (id_categoria)
@@ -193,6 +199,7 @@ Ambos `final readonly`. **Sem `fromRequest()`** — adicionado na issue de Lógi
 {
   "id": "uuid",
   "status": "PROCESSADO",
+  "id_responsavel": 1,
   "fornecedor": { ... },
   "cliente": { ... },
   "categoria": { ... },
@@ -206,6 +213,7 @@ Ambos `final readonly`. **Sem `fromRequest()`** — adicionado na issue de Lógi
 ```
 
 - `status` → `->value` (string UPPER_SNAKE)
+- `id_responsavel` → `int|null` (id do utilizador autor; não expõe nome/email — só o id)
 - `valor` → conversão explícita `(float)` (cast `decimal:2` devolve `string`)
 - Relações via `whenLoaded()` + `EntidadeResource` / `CategoriaDocumentoResource`
 - **Não expõe** `disco_storage` nem `nome_ficheiro_storage` (detalhes internos / PII indirecta)

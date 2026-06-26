@@ -31,7 +31,8 @@ it('calcula o hash, escreve em entrada e cria o documento em Pendente', function
     expect($documento->status)->toBe(EstadoDocumento::Pendente)
         ->and($documento->disco_storage)->toBe('entrada')
         ->and($documento->hash_sha256)->toBe($hashEsperado)
-        ->and($documento->nome_ficheiro_original)->toBe('fatura.pdf');
+        ->and($documento->nome_ficheiro_original)->toBe('fatura.pdf')
+        ->and($documento->id_responsavel)->toBe($utilizador?->getAuthIdentifier());
 
     Storage::disk('entrada')->assertExists($documento->nome_ficheiro_storage);
 

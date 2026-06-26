@@ -73,6 +73,7 @@ final readonly class RegistarDocumentoManualAction
             $documento = DB::transaction(function () use ($dados, $hash, $nomeStorage): Documento {
                 $documento = Documento::create([
                     'status' => EstadoDocumento::Processado,
+                    'id_responsavel' => Auth::id(),
                     'id_fornecedor' => $dados->idFornecedor,
                     'id_cliente' => $dados->idCliente,
                     'id_categoria' => $dados->idCategoria,

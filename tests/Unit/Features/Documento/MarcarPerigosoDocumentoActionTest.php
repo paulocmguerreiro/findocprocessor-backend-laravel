@@ -14,11 +14,11 @@ use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
+// Transição de sistema (pipeline): corre sem utilizador autenticado, sem Gate.
 beforeEach(function (): void {
     Storage::fake('entrada');
     Storage::fake('enviado');
     Storage::fake('perigoso');
-    $this->actingAs(criarAdmin());
 });
 
 it('marca Perigoso a partir de Pendente (pré-scan) e move para o disco perigoso', function (): void {
@@ -38,6 +38,7 @@ it('marca Perigoso a partir de Pendente (pré-scan) e move para o disco perigoso
         'id_documento' => $documento->id,
         'estado' => EstadoDocumento::Perigoso->value,
         'motivo' => 'injecção detectada',
+        'id_utilizador' => null,
     ]);
 
     Event::assertDispatched(DocumentoMarcadoPerigoso::class);
