@@ -59,3 +59,12 @@ describe('sem permissão de leitura', function (): void {
             ->toThrow(AuthorizationException::class);
     });
 });
+
+it('exige utilizador autenticado (guest é rejeitado)', function (): void {
+    auth()->logout();
+
+    $categoria = CategoriaDocumento::factory()->create();
+
+    expect(fn (): CategoriaDocumento => app(VerCategoriaAction::class)->handle($categoria))
+        ->toThrow(AuthorizationException::class);
+});

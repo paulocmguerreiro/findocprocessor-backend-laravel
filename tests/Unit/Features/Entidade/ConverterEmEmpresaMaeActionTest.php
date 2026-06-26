@@ -71,3 +71,12 @@ describe('sem permissão de escrita', function (): void {
             ->toThrow(AuthorizationException::class);
     });
 });
+
+it('exige utilizador autenticado (guest é rejeitado)', function (): void {
+    auth()->logout();
+
+    $entidade = Entidade::factory()->create();
+
+    expect(fn () => app(ConverterEmEmpresaMaeAction::class)->handle($entidade))
+        ->toThrow(AuthorizationException::class);
+});

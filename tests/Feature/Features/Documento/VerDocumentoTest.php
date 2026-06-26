@@ -34,3 +34,11 @@ it('utilizador com permissão de leitura vê e devolve 200', function (): void {
 
     $this->getJson("/api/documentos/{$documento->id}")->assertOk();
 });
+
+it('utilizador sem permissão de leitura recebe 403', function (): void {
+    $documento = Documento::factory()->processado()->create();
+
+    criarEAutenticarSemRole();
+
+    $this->getJson("/api/documentos/{$documento->id}")->assertForbidden();
+});

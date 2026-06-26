@@ -105,3 +105,13 @@ describe('sem permissão de escrita', function (): void {
             ->toThrow(AuthorizationException::class);
     });
 });
+
+it('exige utilizador autenticado (guest é rejeitado)', function (): void {
+    auth()->logout();
+
+    $entidade = Entidade::factory()->create();
+    $dto = new ActualizarEntidadeDto(nome: $entidade->nome, nif: $entidade->nif, eCliente: true, eFornecedor: false, eEmpresaAplicacao: false);
+
+    expect(fn () => app(ActualizarEntidadeAction::class)->handle($entidade, $dto))
+        ->toThrow(AuthorizationException::class);
+});

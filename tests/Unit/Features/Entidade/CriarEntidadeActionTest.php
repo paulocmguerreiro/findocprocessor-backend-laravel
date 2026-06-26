@@ -86,3 +86,12 @@ describe('sem permissão de escrita', function (): void {
             ->toThrow(AuthorizationException::class);
     });
 });
+
+it('exige utilizador autenticado (guest é rejeitado)', function (): void {
+    auth()->logout();
+
+    $dto = new CriarEntidadeDto(nome: 'Empresa', nif: '500000001', eCliente: true, eFornecedor: false, eEmpresaAplicacao: false);
+
+    expect(fn () => app(CriarEntidadeAction::class)->handle($dto))
+        ->toThrow(AuthorizationException::class);
+});

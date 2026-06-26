@@ -75,3 +75,19 @@ describe('sem permissão de escrita', function (): void {
             ->toThrow(AuthorizationException::class);
     });
 });
+
+it('exige utilizador autenticado (guest é rejeitado)', function (): void {
+    auth()->logout();
+
+    $documento = Documento::factory()->processado()->create();
+    $dados = new CorrigirDocumentoDto(
+        idFornecedor: Entidade::factory()->create()->id,
+        idCliente: Entidade::factory()->create()->id,
+        idCategoria: CategoriaDocumento::factory()->create()->id,
+        valor: 10.0,
+        dataDocumento: Carbon::parse('2026-06-25'),
+    );
+
+    expect(fn (): Documento => app(CorrigirDocumentoAction::class)->handle($documento, $dados))
+        ->toThrow(AuthorizationException::class);
+});

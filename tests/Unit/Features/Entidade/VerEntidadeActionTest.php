@@ -59,3 +59,12 @@ describe('sem permissão de leitura', function (): void {
             ->toThrow(AuthorizationException::class);
     });
 });
+
+it('exige utilizador autenticado (guest é rejeitado)', function (): void {
+    auth()->logout();
+
+    $entidade = Entidade::factory()->create();
+
+    expect(fn (): Entidade => app(VerEntidadeAction::class)->handle($entidade))
+        ->toThrow(AuthorizationException::class);
+});

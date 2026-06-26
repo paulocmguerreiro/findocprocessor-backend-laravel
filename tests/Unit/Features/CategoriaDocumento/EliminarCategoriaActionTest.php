@@ -55,3 +55,12 @@ describe('sem permissão de escrita', function (): void {
             ->toThrow(AuthorizationException::class);
     });
 });
+
+it('exige utilizador autenticado (guest é rejeitado)', function (): void {
+    auth()->logout();
+
+    $categoria = CategoriaDocumento::factory()->create();
+
+    expect(fn () => app(EliminarCategoriaAction::class)->handle($categoria))
+        ->toThrow(AuthorizationException::class);
+});

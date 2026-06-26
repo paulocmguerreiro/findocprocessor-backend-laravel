@@ -36,3 +36,12 @@ it('utilizador com permissão de leitura descarrega e devolve 200', function ():
 
     $this->get("/api/documentos/{$documento->id}/ficheiro")->assertOk();
 });
+
+it('utilizador sem permissão de leitura recebe 403', function (): void {
+    $documento = Documento::factory()->processado()->create();
+    Storage::disk('processado')->put($documento->nome_ficheiro_storage, 'conteudo');
+
+    criarEAutenticarSemRole();
+
+    $this->get("/api/documentos/{$documento->id}/ficheiro")->assertForbidden();
+});

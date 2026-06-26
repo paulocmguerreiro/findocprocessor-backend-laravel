@@ -58,3 +58,13 @@ describe('sem permissão', function (): void {
             ->toThrow(AuthorizationException::class);
     });
 });
+
+it('exige utilizador autenticado (guest é rejeitado)', function (): void {
+    auth()->logout();
+
+    $role = Role::create(['name' => 'editor', 'guard_name' => 'web']);
+    $dto = new ActualizarRoleDto(nome: null, permissoes: []);
+
+    expect(fn (): Role => (new ActualizarRoleAction)->handle($role, $dto))
+        ->toThrow(AuthorizationException::class);
+});

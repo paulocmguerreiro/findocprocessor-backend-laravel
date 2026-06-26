@@ -56,9 +56,9 @@ it('faz rollback se falhar a meio', function (): void {
 
 | Endpoint | Cenários mínimos | Autorização (ver matriz) |
 |---|---|---|
-| `GET /api/...` (listar) | lista vazia, estrutura correcta, `per_page`, cursor sem duplicados, 422 `per_page>100`, 422 `sort` inválido | utilizador (leitura) → 200; guest → 401 |
+| `GET /api/...` (listar) | lista vazia, estrutura correcta, `per_page`, cursor sem duplicados, 422 `per_page>100`, 422 `sort` inválido | utilizador COM leitura → 200; utilizador SEM leitura → 403; guest → 401 |
 | `POST /api/...` (criar) | 201 com recurso, 422 campos obrigatórios em falta | utilizador sem permissão → 403; guest → 401 |
-| `GET /api/.../{id}` (ver) | 200 com recurso, 404 UUID inexistente | utilizador (leitura) → 200; guest → 401 |
+| `GET /api/.../{id}` (ver) | 200 com recurso, 404 UUID inexistente | utilizador COM leitura → 200; utilizador SEM leitura → 403; guest → 401 |
 | `PUT/PATCH /api/.../{id}` (actualizar) | 200 actualizado, 404, 422 campos obrigatórios em falta | utilizador sem permissão → 403; guest → 401 |
 | `DELETE /api/.../{id}` (eliminar) | 204, 404 | utilizador sem permissão → 403; guest → 401 |
 | Endpoints especiais | happy path + 404 | conforme a ability exigida |
@@ -97,6 +97,7 @@ Definidos em `tests/Pest.php`. Disponíveis em todos os ficheiros de teste (Unit
 | `criarUtilizador(): User` | Cria utilizador com role `utilizador` | Unit tests — `$this->actingAs(criarUtilizador())` |
 | `criarEAutenticarAdmin(): User` | Cria admin + `Sanctum::actingAs($u, ['api'])` | Feature tests — `beforeEach(fn(): User => criarEAutenticarAdmin())` |
 | `criarEAutenticarUtilizador(): User` | Cria utilizador + `Sanctum::actingAs($u, ['api'])` | Feature tests — testes 403 fora do `describe` |
+| `criarEAutenticarSemRole(): User` | Cria utilizador **sem role** + `Sanctum::actingAs($u, ['api'])` | Feature tests — estado "SEM permissão → 403" nas **leituras** (`utilizador` tem `*.ver`, logo o 403 de leitura exige um actor sem role) |
 
 O `beforeEach` global em `Pest.php` invoca `forgetCachedPermissions()` antes de cada teste — não é necessário repeti-lo nos ficheiros individuais.
 
