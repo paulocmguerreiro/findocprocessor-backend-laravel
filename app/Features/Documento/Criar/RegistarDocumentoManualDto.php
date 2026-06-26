@@ -6,6 +6,7 @@ namespace App\Features\Documento\Criar;
 
 use DateTimeInterface;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 
 /**
@@ -41,5 +42,26 @@ final readonly class RegistarDocumentoManualDto
         if ($this->valor < 0) {
             throw new InvalidArgumentException('valor não pode ser negativo.');
         }
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public static function fromRequest(CriarDocumentoManualRequest $request): self
+    {
+        /** @var array{id_fornecedor: string, id_cliente: string, id_categoria: string, valor: numeric-string|float|int, data_documento: string} $dados */
+        $dados = $request->validated();
+
+        /** @var UploadedFile $ficheiro */
+        $ficheiro = $request->file('ficheiro');
+
+        return new self(
+            idFornecedor: $dados['id_fornecedor'],
+            idCliente: $dados['id_cliente'],
+            idCategoria: $dados['id_categoria'],
+            valor: (float) $dados['valor'],
+            dataDocumento: Carbon::parse($dados['data_documento']),
+            ficheiro: $ficheiro,
+        );
     }
 }

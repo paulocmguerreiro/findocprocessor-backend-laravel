@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Features\Documento\Corrigir;
 
 use DateTimeInterface;
+use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 
 /**
@@ -39,5 +40,22 @@ final readonly class CorrigirDocumentoDto
         if ($this->valor < 0) {
             throw new InvalidArgumentException('valor não pode ser negativo.');
         }
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public static function fromRequest(CorrigirDocumentoRequest $request): self
+    {
+        /** @var array{id_fornecedor: string, id_cliente: string, id_categoria: string, valor: numeric-string|float|int, data_documento: string} $dados */
+        $dados = $request->validated();
+
+        return new self(
+            idFornecedor: $dados['id_fornecedor'],
+            idCliente: $dados['id_cliente'],
+            idCategoria: $dados['id_categoria'],
+            valor: (float) $dados['valor'],
+            dataDocumento: Carbon::parse($dados['data_documento']),
+        );
     }
 }

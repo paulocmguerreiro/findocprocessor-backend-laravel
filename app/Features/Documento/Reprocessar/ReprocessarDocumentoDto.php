@@ -11,4 +11,12 @@ namespace App\Features\Documento\Reprocessar;
 final readonly class ReprocessarDocumentoDto
 {
     public function __construct(public ModoReprocessamento $modo) {}
+
+    public static function fromRequest(ReprocessarDocumentoRequest $request): self
+    {
+        /** @var array{modo: string} $dados */
+        $dados = $request->validated();
+
+        return new self(ModoReprocessamento::from($dados['modo']));
+    }
 }
