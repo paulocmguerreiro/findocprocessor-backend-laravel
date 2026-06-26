@@ -11,12 +11,12 @@ use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
+// Transição de sistema (pipeline): corre sem utilizador autenticado, sem Gate.
 beforeEach(function (): void {
     Storage::fake('enviado');
-    $this->actingAs(criarAdmin());
 });
 
-it('transiciona Enviado → AguardaResposta sem mover o ficheiro', function (): void {
+it('transiciona Enviado → AguardaResposta sem mover o ficheiro (passo de sistema, sem login)', function (): void {
     $documento = Documento::factory()->enviado()->create();
     Storage::disk('enviado')->put($documento->nome_ficheiro_storage, 'conteudo');
 
@@ -30,6 +30,7 @@ it('transiciona Enviado → AguardaResposta sem mover o ficheiro', function (): 
         'id_documento' => $documento->id,
         'estado' => EstadoDocumento::AguardaResposta->value,
         'motivo' => 'a aguardar resposta da extracção',
+        'id_utilizador' => null,
     ]);
 });
 

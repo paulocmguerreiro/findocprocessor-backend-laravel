@@ -11,7 +11,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     Storage::fake('entrada');
-    criarEAutenticarAdmin();
+    $this->utilizador = criarEAutenticarAdmin();
 });
 
 it('recebe um upload e devolve 201 em Pendente', function (): void {
@@ -23,6 +23,7 @@ it('recebe um upload e devolve 201 em Pendente', function (): void {
 
     $documento = Documento::query()->firstOrFail();
     Storage::disk('entrada')->assertExists($documento->nome_ficheiro_storage);
+    expect($documento->id_responsavel)->toBe($this->utilizador->id);
 });
 
 it('rejeita um upload de tipo não permitido com 422', function (): void {

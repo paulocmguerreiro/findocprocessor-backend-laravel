@@ -157,6 +157,7 @@ Pontos a reter:
 - **`admin` e `utilizador` não são actores distintos** — são configs de permissões. O *mesmo* `utilizador` está "COM a permissão" numa leitura (`documentos.ver`) → 200, e "SEM a permissão" numa escrita → 403. O estado depende da **operação**, não da identidade. Por isso o teste escolhe a config que produz cada estado: hoje `admin` materializa "COM" em tudo; `utilizador` materializa "COM" nas leituras e "SEM" nas escritas; um utilizador sem role nenhuma materializa "SEM" até nas leituras.
 - **Guest não acede a nada da API exceto `login`.** `POST /api/auth/login` é a única rota pública; todas as outras exigem token e devolvem **401** sem ele. O teste de guest confirma exactamente isso.
 - **As duas camadas (HTTP e Action)** cobrem-se independentemente — a dupla camada de autorização exige testar ambas. Na camada Action não existe "401" (não há HTTP): tanto o guest como o autenticado-sem-permissão resultam em `AuthorizationException`.
+- **Actions de sistema (background, sem `Gate`)** ficam **fora** desta matriz — não há autorização a testar. Correm sem utilizador autenticado; o teste verifica que executam sem login e que a `EtapaDocumento` fica como passo de sistema (`id_utilizador = null`). Ex.: as transições `Marcar*` do Documento (ver `02-shared/padroes-acoes.md`).
 
 > **Falha sempre que falte autorização real.** Se a Policy devolver `true` incondicionalmente, os estados "sem permissão" e "guest" passam por engano e a lacuna fica mascarada. A Policy tem de usar `hasPermissionTo(...)` — ver checklist em `04-infra/autorizacao.md`.
 

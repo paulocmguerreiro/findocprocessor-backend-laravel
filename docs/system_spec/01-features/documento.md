@@ -201,17 +201,21 @@ Todos com `messages()` em PT.
 
 ## Autorização — mapeamento abilities
 
-Os 5 abilities CRUD do `DocumentoPolicy` mapeiam para permissões granulares (`hasPermissionTo`) — `documentos.ver` (`viewAny`/`view`), `documentos.criar` (`create`), `documentos.actualizar` (`update`), `documentos.eliminar` (`delete`). Matriz role→permission em `04-infra/autorizacao.md` (admin todas; utilizador só `documentos.ver`).
+As Actions **com login** mapeiam abilities do `DocumentoPolicy` para permissões granulares (`hasPermissionTo`) — `documentos.ver` (`viewAny`/`view`), `documentos.criar` (`create`), `documentos.actualizar` (`update`), `documentos.eliminar` (`delete`). Matriz role→permission em `04-infra/autorizacao.md` (admin todas; utilizador só `documentos.ver`).
 
-| Ability | Permissão | Actions |
+| Ability | Permissão | Actions (com `Gate::authorize`) |
 |---|---|---|
 | `viewAny` | `documentos.ver` | `ListarDocumentosAction` |
 | `view` | `documentos.ver` | `VerDocumentoAction`, `DescarregarDocumentoAction` |
 | `create` | `documentos.criar` | `RegistarDocumentoManualAction`, `ReceberUploadDocumentoAction` |
-| `update` | `documentos.actualizar` | `CorrigirDocumentoAction`, `ReprocessarDocumentoAction`, `TransicionarProcessadoDocumentoAction`, `MarcarAguardaEnvioDocumentoAction`, `MarcarEnviadoDocumentoAction`, `MarcarAguardaRespostaDocumentoAction`, `MarcarErroDocumentoAction`, `MarcarPerigosoDocumentoAction` |
+| `update` | `documentos.actualizar` | `CorrigirDocumentoAction`, `ReprocessarDocumentoAction`, `TransicionarProcessadoDocumentoAction` |
 | `delete` | `documentos.eliminar` | `EliminarDocumentoAction` |
 
-> As Actions de pipeline (`Marcar*`, `Transicionar`) usam `update` → `documentos.actualizar`. Correm em Jobs como o autor do upload, que tem `documentos.criar` e `documentos.actualizar` (perfil admin).
+### Transições de sistema (sem Gate)
+
+As 5 transições intermédias de pipeline **não têm `Gate::authorize`** — correm sempre em background (Jobs de extracção), sem utilizador autenticado: `MarcarAguardaEnvioDocumentoAction`, `MarcarEnviadoDocumentoAction`, `MarcarAguardaRespostaDocumentoAction`, `MarcarErroDocumentoAction`, `MarcarPerigosoDocumentoAction`. A `EtapaDocumento` que gravam fica como **passo de sistema** (`id_utilizador = null`).
+
+O `TransicionarProcessadoDocumentoAction` é a excepção: apesar de não ter endpoint, **mantém `Gate::authorize('update')`** porque escreve os dados de negócio extraídos (fornecedor, valor, categoria, nome canónico) — é um write significativo, não uma mera flag de estado. Ver padrão em `02-shared/padroes-acoes.md`.
 
 ---
 
@@ -219,5 +223,5 @@ Os 5 abilities CRUD do `DocumentoPolicy` mapeiam para permissões granulares (`h
 
 - **Colisão de nome canónico**: `RegraNomearProcessado` gera `yyyy-mm-dd-{slug-fornecedor}-{slug-categoria}.{ext}`. Dois documentos com o mesmo fornecedor/categoria/data terão o mesmo nome — `Storage::put()` sobrepõe silenciosamente. Diferido.
 - **Atomicidade filesystem↔BD**: o ficheiro é movido antes da transação; em dupla falha (mover OK + compensação falha), a BD reverte mas o ficheiro fica no disco destino. Reconciliação manual necessária. Mitigação real exigiria outbox/saga.
-- **Apenas duas roles**: `admin` (acesso total) e `utilizador` (só `documentos.ver`). Não há ainda ownership por documento — qualquer utilizador com a permissão de escrita pode alterar qualquer documento.
+- **Sem ownership na autorização**: o `id_responsavel` regista o autor da entrada, mas o `DocumentoPolicy` ainda **não** o usa — qualquer utilizador com `documentos.actualizar`/`documentos.eliminar` pode alterar qualquer documento, não só os seus. Ownership por responsável fica para futuro.
 - **Jobs reais de pipeline** (`WatchInboxJob`, `ProcessBatchJob`) diferidos: a issue garante que as Actions são invocáveis programaticamente e que os Events são `after_commit`.

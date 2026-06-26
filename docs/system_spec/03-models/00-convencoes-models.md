@@ -11,7 +11,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\RegistaActividade;
 use App\Shared\Enums\TipoMovimento;
+use App\Policies\CategoriaDocumentoPolicy;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -28,10 +30,13 @@ use Illuminate\Database\Eloquent\Model;
  */
 #[Table('categorias_documento')]
 #[Fillable(['nome', 'slug', 'tipo_movimento'])]
+#[UsePolicy(CategoriaDocumentoPolicy::class)]
 final class CategoriaDocumento extends Model
 {
     use HasFactory;
     use HasUuids;
+
+    use RegistaActividade;
 
     /**
      * @return array<string, string>
@@ -47,16 +52,16 @@ final class CategoriaDocumento extends Model
 
 ## Regras obrigatórias
 
-| Regra | Detalhe |
-|---|---|
-| `HasUuids` como PK | UUIDv7 — nunca ID autoincrement |
-| `#[Table('...')]` | Nome explícito da tabela (atributo, não propriedade `$table`) |
-| `#[Fillable([...])]` | Atributo, não propriedade `$fillable` |
-| `#[Hidden([...])]` | Para campos sensíveis (atributo, não `$hidden`) |
-| `casts()` | Método — enums e tipos especiais; nunca propriedade `$casts` |
-| `@property-read` | **Obrigatório** para todas as colunas — tipagem completa para Larastan e IA |
-| `HasFactory` | Sempre que existe factory |
-| `#[UsePolicy(...)]` | Quando a Policy não é descoberta por convenção de nome |
+| Regra                | Detalhe                                                                     |
+| -------------------- | --------------------------------------------------------------------------- |
+| `HasUuids` como PK   | UUIDv7 — nunca ID autoincrement                                             |
+| `#[Table('...')]`    | Nome explícito da tabela (atributo, não propriedade `$table`)               |
+| `#[Fillable([...])]` | Atributo, não propriedade `$fillable`                                       |
+| `#[Hidden([...])]`   | Para campos sensíveis (atributo, não `$hidden`)                             |
+| `casts()`            | Método — enums e tipos especiais; nunca propriedade `$casts`                |
+| `@property-read`     | **Obrigatório** para todas as colunas — tipagem completa para Larastan e IA |
+| `HasFactory`         | Sempre que existe factory                                                   |
+| `#[UsePolicy(...)]`  | Quando a Policy não é descoberta por convenção de nome                      |
 
 ---
 

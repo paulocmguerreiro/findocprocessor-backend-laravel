@@ -7,6 +7,7 @@ namespace Database\Factories;
 use App\Models\CategoriaDocumento;
 use App\Models\Documento;
 use App\Models\Entidade;
+use App\Models\User;
 use App\Shared\Enums\EstadoDocumento;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -23,6 +24,7 @@ class DocumentoFactory extends Factory
      *
      * @return array{
      *     status: EstadoDocumento,
+     *     id_responsavel: Factory<User>,
      *     id_fornecedor: Factory<Entidade>,
      *     id_cliente: Factory<Entidade>,
      *     id_categoria: Factory<CategoriaDocumento>,
@@ -38,6 +40,7 @@ class DocumentoFactory extends Factory
     {
         return [
             'status' => EstadoDocumento::Processado,
+            'id_responsavel' => User::factory(),
             'id_fornecedor' => Entidade::factory()->fornecedor(),
             'id_cliente' => Entidade::factory()->cliente(),
             'id_categoria' => CategoriaDocumento::factory(),

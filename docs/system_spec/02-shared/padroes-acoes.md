@@ -64,6 +64,14 @@ final class CriarCategoriaAction
 
 `Gate::authorize()` lança `AuthorizationException` (convertida em `403` pelo exception handler — ver `02-shared/http.md`). Fica **fora** da `DB::transaction()` — autorização não é operação de BD.
 
+### Excepção: Actions de sistema (background, sem login)
+
+Actions que correm **sempre** em background (Jobs de pipeline), **sem endpoint HTTP e sem utilizador autenticado**, não têm `Gate::authorize` — não há actor a autorizar. São transições de sistema: registam a `EtapaDocumento` como passo automático (`id_utilizador = null`).
+
+Exemplo: as transições intermédias do Documento (`MarcarAguardaEnvio`, `MarcarEnviado`, `MarcarAguardaResposta`, `MarcarErro`, `MarcarPerigoso`) — ver `01-features/documento.md`.
+
+Critério: a Action é **exclusivamente** de pipeline (nunca invocada por um pedido do utilizador) **e** não escreve dados de negócio que justifiquem autorização. Se escrever dados significativos (ex.: `TransicionarProcessadoDocumentoAction` preenche fornecedor/valor/categoria), **mantém** `Gate::authorize`, mesmo sem endpoint. Na dúvida, manter o Gate.
+
 ---
 
 ## Posição do `Gate::authorize()` face à transação
