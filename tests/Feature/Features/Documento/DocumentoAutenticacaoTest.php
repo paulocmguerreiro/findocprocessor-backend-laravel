@@ -14,6 +14,9 @@ it('exige autenticação nos endpoints de Documento (401 sem token)', function (
     'registar' => ['POST', '/api/documentos'],
     'upload' => ['POST', '/api/documentos/upload'],
     'ver' => ['GET', '/api/documentos/00000000-0000-0000-0000-000000000000'],
+    'corrigir' => ['PATCH', '/api/documentos/00000000-0000-0000-0000-000000000000'],
+    'reprocessar' => ['POST', '/api/documentos/00000000-0000-0000-0000-000000000000/reprocessar'],
+    'descarregar' => ['GET', '/api/documentos/00000000-0000-0000-0000-000000000000/ficheiro'],
     'eliminar' => ['DELETE', '/api/documentos/00000000-0000-0000-0000-000000000000'],
 ]);
 

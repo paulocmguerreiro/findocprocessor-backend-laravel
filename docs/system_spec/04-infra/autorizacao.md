@@ -103,7 +103,7 @@ Toda a feature cujo recurso tem operações protegidas tem de ligar a autorizaç
 2. **Policy real** — `hasPermissionTo('<recurso>.<accao>')` por ability: `viewAny`/`view` → `.ver`, `create` → `.criar`, `update` → `.actualizar`, `delete` → `.eliminar`. **Nunca `return true`** (stub é dívida que mascara a falta de autorização).
 3. **`tests/Unit/Policies/<X>PolicyTest.php`** — valida `admin` (todas as abilities permitidas) vs `utilizador` (só leitura permitida, escritas negadas). Não testar o stub.
 
-Além disto, os testes de Action e de feature da slice cobrem a **matriz de 4 actores** (`07-testing.md`).
+Além disto, os testes de Action e de feature da slice cobrem a **matriz de 3 estados** (guest / autenticado-com-permissão / autenticado-sem-permissão) nas duas camadas (`07-testing.md`).
 
 ---
 

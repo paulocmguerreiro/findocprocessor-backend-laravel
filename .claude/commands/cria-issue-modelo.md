@@ -83,7 +83,7 @@ Só avançar para o Passo 3 depois de o utilizador confirmar os componentes.
 **Se Testes seleccionados — perguntar:**
 - Há regras de negócio no model que precisam de teste directo?
   (ex: accessors, mutators, scopes)
-- Se Policy incluída: `PolicyTest` cobre admin (todas as abilities) vs utilizador (só leitura permitida, escritas negadas) — matriz de 4 actores em `07-testing.md`
+- Se Policy incluída: `PolicyTest` cobre config-com-permissão (admin: todas as abilities) vs config-sem-permissão (utilizador: leituras permitidas, escritas negadas) — matriz de 3 estados em `07-testing.md`
 - Se DTOs incluídos: cobrir happy path + cada `\InvalidArgumentException`
 - Se Resource incluído: cobrir serialização (campos presentes e tipos correctos)
 
@@ -151,7 +151,7 @@ Gerar body no formato padrão do `/cria-issue`:
 - [ ] CA-02: Model tem casts correctos para enums e tipos especiais
 - [ ] CA-03: Factory produz instâncias válidas para cada state definido
 - [ ] CA-04: Policy usa `hasPermissionTo('<recurso>.<accao>')` por método (nunca `return true`) + migration `seed_<recurso>_permissions` (admin todas, utilizador só `.ver`)
-- [ ] CA-05: `PolicyTest` cobre admin (permitido) vs utilizador (escritas negadas) — matriz de 4 actores (`07-testing.md`)
+- [ ] CA-05: `PolicyTest` cobre config-com-permissão (admin) vs config-sem-permissão (utilizador: escritas negadas) — matriz de 3 estados (`07-testing.md`)
 - [ ] CA-06: `CriarDto` e `ActualizarDto` são `final readonly class` com
              construtor que valida invariantes
 - [ ] CA-07: Construtor lança `\InvalidArgumentException` para cada
