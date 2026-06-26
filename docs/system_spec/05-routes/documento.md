@@ -15,7 +15,7 @@
 | `PATCH` | `/api/documentos/{documento}` | `CorrigirDocumentoAction` | `200` `DocumentoResource` |
 | `POST` | `/api/documentos/{documento}/reprocessar` | `ReprocessarDocumentoAction` | `200` `DocumentoResource` |
 | `DELETE` | `/api/documentos/{documento}` | `EliminarDocumentoAction` | `204` |
-| `GET` | `/api/documentos/{documento}/descarregar` | `DescarregarDocumentoAction` | `200` stream download |
+| `GET` | `/api/documentos/{documento}/ficheiro` | `DescarregarDocumentoAction` | `200` stream download |
 
 ---
 
@@ -42,7 +42,7 @@
 ## Notas de implementação
 
 - `POST /documentos/upload` — `multipart/form-data`; campo `ficheiro` (UploadedFile); validação de tipo e dimensão no `ReceberUploadDocumentoRequest`.
-- `GET /documentos/{documento}/descarregar` — o Controller faz `streamDownload` do ficheiro do disco actual do documento; o `Content-Type` é inferido do MIME do ficheiro.
+- `GET /documentos/{documento}/ficheiro` — o Controller faz `streamDownload` do ficheiro do disco actual do documento; o `Content-Type` é inferido do MIME do ficheiro.
 - As transições de pipeline (`MarcarAguardaEnvio`, `MarcarEnviado`, `MarcarAguardaResposta`, `TransicionarProcessado`, `MarcarErro`, `MarcarPerigoso`) **não têm endpoint** — são invocadas programaticamente pelos Jobs da extracção (issue futura).
 
 ---
@@ -50,11 +50,14 @@
 ## Definição em `routes/api.php`
 
 ```php
-Route::apiResource('documentos', DocumentoController::class)
-    ->only(['index', 'store', 'show', 'destroy']);
-
-Route::patch('documentos/{documento}', [DocumentoController::class, 'corrigir']);
+Route::get('documentos', [DocumentoController::class, 'index']);
+Route::post('documentos', [DocumentoController::class, 'store']);
 Route::post('documentos/upload', [DocumentoController::class, 'upload']);
+Route::get('documentos/{documento}', [DocumentoController::class, 'show']);
+Route::get('documentos/{documento}/ficheiro', [DocumentoController::class, 'descarregar']);
+Route::patch('documentos/{documento}', [DocumentoController::class, 'update']);
 Route::post('documentos/{documento}/reprocessar', [DocumentoController::class, 'reprocessar']);
-Route::get('documentos/{documento}/descarregar', [DocumentoController::class, 'descarregar']);
+Route::delete('documentos/{documento}', [DocumentoController::class, 'destroy']);
 ```
+
+> O `PATCH` mapeia o método `update` do Controller (resource idiomático), que delega na `CorrigirDocumentoAction`.

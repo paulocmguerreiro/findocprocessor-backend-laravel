@@ -83,7 +83,7 @@ por `cascadeOnDelete` (#56).
 |---|---|---|
 | `ListarDocumentosAction` | `viewAny` | ✅ `GET /documentos` |
 | `VerDocumentoAction` | `view` | ✅ `GET /documentos/{documento}` |
-| `DescarregarDocumentoAction` | `view` | ✅ `GET /documentos/{documento}/descarregar` |
+| `DescarregarDocumentoAction` | `view` | ✅ `GET /documentos/{documento}/ficheiro` |
 
 `ListarDocumentosAction` — `cursorPaginate` com `CampoOrdenacaoDocumentos` + `DirecaoOrdenacao`;
 filtro opcional por estado via `whereEstado(EstadoDocumento)`; cache `TagCache::Documentos` TTL

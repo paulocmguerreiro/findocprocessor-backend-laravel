@@ -129,6 +129,21 @@ Todas as rotas exigem Bearer token.
 | DELETE | `/api/entidades/{id}`                   | Eliminar                     |
 | PATCH  | `/api/entidades/{id}/empresa-mae`       | Converter em empresa-mãe     |
 
+### Documentos
+
+Todas as rotas exigem Bearer token. Ciclo de estados `Pendente → AguardaEnvio → Enviado → AguardaResposta → Processado`, com ramos terminais `Erro` e `Perigoso`. As transições são validadas por `RegraTransicaoEstado` — uma transição inválida devolve `422`.
+
+| Método | Path                                       | Descrição                                  |
+| ------ | ------------------------------------------ | ------------------------------------------ |
+| GET    | `/api/documentos`                          | Listar (cursor)                            |
+| POST   | `/api/documentos`                          | Registar manualmente (`multipart/form-data`) |
+| POST   | `/api/documentos/upload`                   | Receber upload (`multipart/form-data`)     |
+| GET    | `/api/documentos/{id}`                      | Ver detalhe (com histórico de etapas)      |
+| PATCH  | `/api/documentos/{id}`                      | Corrigir metadados                         |
+| DELETE | `/api/documentos/{id}`                      | Eliminar                                   |
+| GET    | `/api/documentos/{id}/ficheiro`             | Descarregar ficheiro                       |
+| POST   | `/api/documentos/{id}/reprocessar`          | Reprocessar (volta a estado anterior)      |
+
 ### Roles & Utilizadores
 
 Todas as rotas exigem Bearer token (role `admin`).
@@ -151,8 +166,7 @@ Todas as rotas exigem Bearer token (role `admin`).
 
 Próximos passos, geridos como issues no repositório:
 
-- **Documento — gestão manual** _(próximo)_ — model layer (migration + model + factory + policy + DTOs + resource), upload `multipart/form-data` e ciclo de estados (`PENDING → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → DONE`).
-- **Gestão financeira** — movimentos (débito/crédito) associados a documentos e entidades.
+- **Gestão financeira** _(próximo)_ — movimentos (débito/crédito) associados a documentos e entidades.
 - **Pipeline de ingestão** — Jobs + Schedule sobre a pasta de inbox, com OCR, análise de imagem e extração de dados via IA (`app/Infrastructure/AI`).
 
 ## Relacionado (roadmap)
