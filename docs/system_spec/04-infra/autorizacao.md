@@ -95,6 +95,18 @@ Criar nova data migration que chama `forgetCachedPermissions()` + `Permission::c
 
 ---
 
+## Checklist por feature com autorização
+
+Toda a feature cujo recurso tem operações protegidas tem de ligar a autorização **por completo** — não basta criar a Policy. Sem as três peças, o recurso fica de acesso aberto e os testes passam por engano (Policy permissiva mascara a lacuna). Aplicar à imagem de `Entidade`/`CategoriaDocumento`:
+
+1. **Migration de permissões** — `seed_<recurso>_permissions` cria `<recurso>.{ver,criar,actualizar,eliminar}`; `admin` recebe todas, `utilizador` só `<recurso>.ver`. Migration nova (nunca editar existente), com `forgetCachedPermissions()`.
+2. **Policy real** — `hasPermissionTo('<recurso>.<accao>')` por ability: `viewAny`/`view` → `.ver`, `create` → `.criar`, `update` → `.actualizar`, `delete` → `.eliminar`. **Nunca `return true`** (stub é dívida que mascara a falta de autorização).
+3. **`tests/Unit/Policies/<X>PolicyTest.php`** — valida `admin` (todas as abilities permitidas) vs `utilizador` (só leitura permitida, escritas negadas). Não testar o stub.
+
+Além disto, os testes de Action e de feature da slice cobrem a **matriz de 4 actores** (`07-testing.md`).
+
+---
+
 ## Policies
 
 ### Padrão
