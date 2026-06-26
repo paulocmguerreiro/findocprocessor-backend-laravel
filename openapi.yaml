@@ -1075,7 +1075,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorTransicaoInvalida'
 
-  /documentos/{documento}/descarregar:
+  /documentos/{documento}/ficheiro:
     get:
       summary: Descarregar ficheiro do documento
       tags: [Documento]
