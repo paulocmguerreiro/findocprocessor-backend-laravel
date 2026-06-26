@@ -55,6 +55,7 @@
 | `Entidade` | `03-models/entidade.md` |
 | `Role` (Spatie — audit via Observer) | `03-models/role.md` |
 | `Documento` (migration, Model, Factory, Policy, DTOs, Resource) | `03-models/documento.md` |
+| `EtapaDocumento` (histórico append-only de estados do documento) | `03-models/etapa-documento.md` |
 
 ## Infra
 
