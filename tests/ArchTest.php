@@ -4,6 +4,8 @@ declare(strict_types=1);
 use App\Features\CategoriaDocumento\Actualizar\ActualizarCategoriaRequest;
 use App\Features\CategoriaDocumento\Criar\CriarCategoriaRequest;
 use App\Features\CategoriaDocumento\Listar\CampoOrdenacaoCategorias;
+use App\Features\Documento\Listar\CampoOrdenacaoDocumentos;
+use App\Features\Documento\Reprocessar\ModoReprocessamento;
 use App\Features\Entidade\Actualizar\ActualizarEntidadeRequest;
 use App\Features\Entidade\ComFlagsEfectivosEmpresaMae;
 use App\Features\Entidade\Criar\CriarEntidadeRequest;
@@ -11,7 +13,7 @@ use App\Features\Entidade\Listar\CampoOrdenacaoEntidades;
 use App\Features\Role\Listar\CampoOrdenacaoRoles;
 use App\Http\Controllers\Controller;
 
-arch()->preset()->laravel()->ignoring(['App\Shared\Enums', 'App\Shared\Cache', 'App\Features']);
+arch()->preset()->laravel()->ignoring(['App\Shared\Enums', 'App\Shared\Cache', 'App\Features', 'App\Shared\Exceptions']);
 arch()->preset()->security();
 
 arch('strict types')
@@ -40,4 +42,6 @@ arch('actions are final')
         CampoOrdenacaoEntidades::class,
         ComFlagsEfectivosEmpresaMae::class,
         CampoOrdenacaoRoles::class,
+        CampoOrdenacaoDocumentos::class,
+        ModoReprocessamento::class,
     ]);

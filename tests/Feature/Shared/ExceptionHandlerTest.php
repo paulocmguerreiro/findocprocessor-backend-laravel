@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Shared\Enums\EstadoDocumento;
+use App\Shared\Exceptions\TransicaoInvalidaException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -12,6 +14,10 @@ use Illuminate\Validation\ValidationException;
 beforeEach(function (): void {
     Route::get('/test-validation', function (): never {
         throw ValidationException::withMessages(['nome' => ['O campo nome é obrigatório.']]);
+    });
+
+    Route::get('/test-transicao-invalida', function (): never {
+        throw TransicaoInvalidaException::entre(EstadoDocumento::Processado, EstadoDocumento::Enviado);
     });
 
     Route::get('/test-not-found', function (): never {
@@ -37,6 +43,13 @@ it('ValidationException mapeia para 422 com campo errors', function (): void {
         ->assertJsonPath('status', Response::HTTP_UNPROCESSABLE_ENTITY)
         ->assertJsonStructure(['status', 'detail', 'errors'])
         ->assertJsonPath('errors.nome.0', 'O campo nome é obrigatório.');
+});
+
+it('TransicaoInvalidaException mapeia para 422 com a mensagem de domínio', function (): void {
+    $this->getJson('/test-transicao-invalida')
+        ->assertUnprocessable()
+        ->assertJsonPath('status', Response::HTTP_UNPROCESSABLE_ENTITY)
+        ->assertJsonPath('detail', 'Transição de estado inválida: de "PROCESSADO" para "ENVIADO".');
 });
 
 it('ModelNotFoundException mapeia para 404', function (): void {

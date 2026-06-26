@@ -68,3 +68,38 @@ PENDENTE → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → PROCESSADO
 - Valores na BD: `'PENDENTE'`, `'AGUARDA_ENVIO'`, `'ENVIADO'`, `'AGUARDA_RESPOSTA'`, `'PROCESSADO'`, `'ERRO'`, `'PERIGOSO'`
 - Detalhe das transições, state objects e mapeamento estado→disco em `02-shared/estados.md`
 - Usado em: `Documento::$status` (cast Eloquent), `Documento::estado()` (match exaustivo)
+
+---
+
+## `ModoReprocessamento` — `App\Features\Documento\Reprocessar\ModoReprocessamento`
+
+Classifica o modo de reprocessamento de um documento em `Erro`.
+
+```php
+enum ModoReprocessamento: string
+{
+    case Modelo     = 'MODELO';
+    case Ferramenta = 'FERRAMENTA';
+}
+```
+
+- Valores na BD/histórico: `'MODELO'`, `'FERRAMENTA'` (registados como `motivo` na `EtapaDocumento`)
+- A semântica de fallback entre modelos/ferramentas é diferida para a issue de extracção (IA/OCR)
+- Usado em: `ReprocessarDocumentoDto::$modo`, `ReprocessarDocumentoAction`, `DocumentoReprocessado`
+
+---
+
+## `CampoOrdenacaoDocumentos` — `App\Features\Documento\Listar\CampoOrdenacaoDocumentos`
+
+Campo de ordenação da listagem de documentos.
+
+```php
+enum CampoOrdenacaoDocumentos: string
+{
+    case DataDocumento = 'data_documento';
+    case CriadoEm     = 'created_at';
+}
+```
+
+- Valores na query string: `'data_documento'`, `'created_at'`
+- Usado em: `ListarDocumentosAction::handle()`, `ListarDocumentosRequest`

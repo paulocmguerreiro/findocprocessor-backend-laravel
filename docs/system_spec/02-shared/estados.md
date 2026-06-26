@@ -113,9 +113,29 @@ O `match` em `Documento::estado()` cobre os 7 casos sem `default` — Larastan 9
 
 ---
 
-## Regras de transição
+## Regras de transição (implementadas — Issue #57)
 
-A mudança de estado é sempre feita por Actions de transição (issue #57), **nunca** com `if ($doc->status == ...)`. Os state objects da issue #45 são read-only — a lógica de transição, movimentação de ficheiro entre discos e registo em `EtapaDocumento` (issue #56) pertencem à issue de Lógica (#57).
+A mudança de estado é sempre feita por Actions de transição, **nunca** com `if ($doc->status == ...)`.
+O mapa central é validado por `RegraTransicaoEstado` (ver `02-shared/regras-negocio.md`).
+
+### Mapa De → Para (mapa central)
+
+| De | Para | Action | Via |
+|---|---|---|---|
+| `Pendente` | `AguardaEnvio` | `MarcarAguardaEnvioDocumentoAction` | pipeline |
+| `Pendente` | `Perigoso` | `MarcarPerigosoDocumentoAction` | pipeline (pré-scan) |
+| `AguardaEnvio` | `Enviado` | `MarcarEnviadoDocumentoAction` | pipeline |
+| `Enviado` | `AguardaResposta` | `MarcarAguardaRespostaDocumentoAction` | pipeline |
+| `AguardaResposta` | `Processado` | `TransicionarProcessadoDocumentoAction` | pipeline |
+| `AguardaResposta` | `Erro` | `MarcarErroDocumentoAction` | pipeline |
+| `AguardaResposta` | `Perigoso` | `MarcarPerigosoDocumentoAction` | pipeline (guardrail) |
+| `Erro` | `AguardaEnvio` | `ReprocessarDocumentoAction` | HTTP |
+| `Processado` | `Processado` | `CorrigirDocumentoAction` | HTTP (self-loop) |
+
+Qualquer par não listado lança `TransicaoInvalidaException` (→ 422).
+
+Os state objects da issue #45 são read-only — sem método `correct()`. A transição, o movimento de
+ficheiro entre discos e o registo em `EtapaDocumento` (issue #56) são feitos pelas Actions (#57).
 
 ---
 
