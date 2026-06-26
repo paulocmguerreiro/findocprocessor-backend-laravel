@@ -71,3 +71,10 @@ describe('sem permissão de leitura', function (): void {
             ->toThrow(AuthorizationException::class);
     });
 });
+
+it('exige utilizador autenticado (guest é rejeitado)', function (): void {
+    auth()->logout();
+
+    expect(fn (): CursorPaginator => app(ListarEntidadesAction::class)->handle(15, CampoOrdenacaoEntidades::Nome, DirecaoOrdenacao::Asc))
+        ->toThrow(AuthorizationException::class);
+});

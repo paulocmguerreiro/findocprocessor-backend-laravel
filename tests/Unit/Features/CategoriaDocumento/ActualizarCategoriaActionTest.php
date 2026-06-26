@@ -79,3 +79,13 @@ describe('sem permissão de escrita', function (): void {
             ->toThrow(AuthorizationException::class);
     });
 });
+
+it('exige utilizador autenticado (guest é rejeitado)', function (): void {
+    auth()->logout();
+
+    $categoria = CategoriaDocumento::factory()->create();
+    $dto = new ActualizarCategoriaDto(nome: 'Alterado', slug: 'alterado', tipoMovimento: TipoMovimento::Neutro);
+
+    expect(fn (): CategoriaDocumento => app(ActualizarCategoriaAction::class)->handle($categoria, $dto))
+        ->toThrow(AuthorizationException::class);
+});

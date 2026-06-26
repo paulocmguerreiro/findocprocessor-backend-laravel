@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Features\Documento\Descarregar\DescarregarDocumentoAction;
 use App\Features\Documento\Descarregar\FicheiroDocumentoDto;
 use App\Models\Documento;
+use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -39,6 +40,14 @@ it('lança 404 quando o ficheiro não existe no disco', function (): void {
 it('exige utilizador autenticado (guest é rejeitado)', function (): void {
     $documento = Documento::factory()->processado()->create();
     auth()->logout();
+
+    expect(fn (): FicheiroDocumentoDto => app(DescarregarDocumentoAction::class)->handle($documento))
+        ->toThrow(AuthorizationException::class);
+});
+
+it('lança AuthorizationException quando utilizador não tem permissão de leitura', function (): void {
+    $documento = Documento::factory()->processado()->create();
+    $this->actingAs(User::factory()->create()); // sem role — sem documentos.ver
 
     expect(fn (): FicheiroDocumentoDto => app(DescarregarDocumentoAction::class)->handle($documento))
         ->toThrow(AuthorizationException::class);

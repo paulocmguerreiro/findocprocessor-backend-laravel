@@ -122,6 +122,13 @@ it('utilizador com permissão de leitura devolve 200', function (): void {
         ->assertOk();
 });
 
+it('utilizador sem permissão de leitura recebe 403', function (): void {
+    criarEAutenticarSemRole();
+
+    $this->getJson('/api/entidades')
+        ->assertForbidden();
+});
+
 it('guest sem token recebe 401', function (): void {
     $this->getJson('/api/entidades')
         ->assertUnauthorized();

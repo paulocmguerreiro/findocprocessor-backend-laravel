@@ -44,3 +44,11 @@ function criarEAutenticarUtilizador(): User
 
     return $utilizador;
 }
+
+function criarEAutenticarSemRole(): User
+{
+    $utilizador = User::factory()->create();
+    Sanctum::actingAs($utilizador, ['api']);
+
+    return $utilizador;
+}

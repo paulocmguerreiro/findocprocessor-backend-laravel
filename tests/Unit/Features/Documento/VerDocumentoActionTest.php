@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Features\Documento\Ver\VerDocumentoAction;
 use App\Models\Documento;
 use App\Models\EtapaDocumento;
+use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -44,6 +45,14 @@ describe('autenticado', function (): void {
 
 it('exige utilizador autenticado (guest é rejeitado)', function (): void {
     $documento = Documento::factory()->processado()->create();
+
+    expect(fn (): Documento => app(VerDocumentoAction::class)->handle($documento))
+        ->toThrow(AuthorizationException::class);
+});
+
+it('lança AuthorizationException quando utilizador não tem permissão de leitura', function (): void {
+    $documento = Documento::factory()->processado()->create();
+    $this->actingAs(User::factory()->create()); // sem role — sem documentos.ver
 
     expect(fn (): Documento => app(VerDocumentoAction::class)->handle($documento))
         ->toThrow(AuthorizationException::class);

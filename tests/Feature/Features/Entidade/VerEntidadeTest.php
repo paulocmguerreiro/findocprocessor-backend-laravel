@@ -37,6 +37,14 @@ it('utilizador com permissão de leitura devolve 200', function (): void {
         ->assertOk();
 });
 
+it('utilizador sem permissão de leitura recebe 403', function (): void {
+    $entidade = Entidade::factory()->create();
+    criarEAutenticarSemRole();
+
+    $this->getJson("/api/entidades/{$entidade->id}")
+        ->assertForbidden();
+});
+
 it('guest sem token recebe 401', function (): void {
     $entidade = Entidade::factory()->create();
 

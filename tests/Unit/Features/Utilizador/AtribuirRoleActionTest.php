@@ -51,3 +51,12 @@ describe('sem permissão', function (): void {
             ->toThrow(AuthorizationException::class);
     });
 });
+
+it('exige utilizador autenticado (guest é rejeitado)', function (): void {
+    auth()->logout();
+
+    $alvo = User::factory()->create();
+
+    expect(fn (): User => (new AtribuirRoleAction)->handle($alvo, 'utilizador'))
+        ->toThrow(AuthorizationException::class);
+});

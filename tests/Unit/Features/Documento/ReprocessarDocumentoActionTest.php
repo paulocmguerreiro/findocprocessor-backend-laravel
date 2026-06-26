@@ -67,3 +67,12 @@ describe('sem permissão de escrita', function (): void {
             ->toThrow(AuthorizationException::class);
     });
 });
+
+it('exige utilizador autenticado (guest é rejeitado)', function (): void {
+    auth()->logout();
+
+    $documento = Documento::factory()->erro()->create();
+
+    expect(fn (): Documento => app(ReprocessarDocumentoAction::class)->handle($documento, new ReprocessarDocumentoDto(ModoReprocessamento::Modelo)))
+        ->toThrow(AuthorizationException::class);
+});

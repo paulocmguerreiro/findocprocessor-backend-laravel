@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Features\Documento\Listar\CampoOrdenacaoDocumentos;
 use App\Features\Documento\Listar\ListarDocumentosAction;
 use App\Models\Documento;
+use App\Models\User;
 use App\Shared\Cache\CacheServico;
 use App\Shared\Cache\TagCache;
 use App\Shared\Cache\TagOperacao;
@@ -86,6 +87,14 @@ describe('autenticado', function (): void {
 });
 
 it('exige utilizador autenticado (guest é rejeitado)', function (): void {
+    expect(fn (): CursorPaginator => app(ListarDocumentosAction::class)
+        ->handle(15, CampoOrdenacaoDocumentos::CriadoEm, DirecaoOrdenacao::Desc))
+        ->toThrow(AuthorizationException::class);
+});
+
+it('lança AuthorizationException quando utilizador não tem permissão de leitura', function (): void {
+    $this->actingAs(User::factory()->create()); // sem role — sem documentos.ver
+
     expect(fn (): CursorPaginator => app(ListarDocumentosAction::class)
         ->handle(15, CampoOrdenacaoDocumentos::CriadoEm, DirecaoOrdenacao::Desc))
         ->toThrow(AuthorizationException::class);

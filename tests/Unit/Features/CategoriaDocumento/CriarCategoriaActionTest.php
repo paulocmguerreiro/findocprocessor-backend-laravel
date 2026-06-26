@@ -65,3 +65,16 @@ describe('sem permissão de escrita', function (): void {
             ->toThrow(AuthorizationException::class);
     });
 });
+
+it('exige utilizador autenticado (guest é rejeitado)', function (): void {
+    auth()->logout();
+
+    $dto = new CriarCategoriaDto(
+        nome: 'Fornecedores',
+        slug: 'fornecedores',
+        tipoMovimento: TipoMovimento::Debito,
+    );
+
+    expect(fn (): CategoriaDocumento => app(CriarCategoriaAction::class)->handle($dto))
+        ->toThrow(AuthorizationException::class);
+});

@@ -45,3 +45,12 @@ describe('sem permissão', function (): void {
             ->toThrow(AuthorizationException::class);
     });
 });
+
+it('exige utilizador autenticado (guest é rejeitado)', function (): void {
+    auth()->logout();
+
+    $role = Role::create(['name' => 'editor', 'guard_name' => 'web']);
+
+    expect(fn () => (new EliminarRoleAction)->handle($role))
+        ->toThrow(AuthorizationException::class);
+});

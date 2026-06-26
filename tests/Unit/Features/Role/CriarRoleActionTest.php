@@ -40,3 +40,12 @@ describe('sem permissão', function (): void {
             ->toThrow(AuthorizationException::class);
     });
 });
+
+it('exige utilizador autenticado (guest é rejeitado)', function (): void {
+    auth()->logout();
+
+    $dto = new CriarRoleDto(nome: 'editor', permissoes: []);
+
+    expect(fn (): Role => (new CriarRoleAction)->handle($dto))
+        ->toThrow(AuthorizationException::class);
+});
