@@ -5,7 +5,6 @@ declare(strict_types=1);
 use App\Features\Documento\Descarregar\DescarregarDocumentoAction;
 use App\Features\Documento\Descarregar\FicheiroDocumentoDto;
 use App\Models\Documento;
-use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -15,7 +14,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     Storage::fake('processado');
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(criarAdmin());
 });
 
 it('devolve a referência do ficheiro quando existe no disco', function (): void {

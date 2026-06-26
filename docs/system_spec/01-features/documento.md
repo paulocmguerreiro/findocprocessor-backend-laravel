@@ -201,15 +201,17 @@ Todos com `messages()` em PT.
 
 ## Autorização — mapeamento abilities
 
-Reutiliza os 5 abilities CRUD do `DocumentoPolicy` (stub `true`). Sem abilities granulares novas.
+Os 5 abilities CRUD do `DocumentoPolicy` mapeiam para permissões granulares (`hasPermissionTo`) — `documentos.ver` (`viewAny`/`view`), `documentos.criar` (`create`), `documentos.actualizar` (`update`), `documentos.eliminar` (`delete`). Matriz role→permission em `04-infra/autorizacao.md` (admin todas; utilizador só `documentos.ver`).
 
-| Ability | Actions |
-|---|---|
-| `viewAny` | `ListarDocumentosAction` |
-| `view` | `VerDocumentoAction`, `DescarregarDocumentoAction` |
-| `create` | `RegistarDocumentoManualAction`, `ReceberUploadDocumentoAction` |
-| `update` | `CorrigirDocumentoAction`, `ReprocessarDocumentoAction`, `TransicionarProcessadoDocumentoAction`, `MarcarAguardaEnvioDocumentoAction`, `MarcarEnviadoDocumentoAction`, `MarcarAguardaRespostaDocumentoAction`, `MarcarErroDocumentoAction`, `MarcarPerigosoDocumentoAction` |
-| `delete` | `EliminarDocumentoAction` |
+| Ability | Permissão | Actions |
+|---|---|---|
+| `viewAny` | `documentos.ver` | `ListarDocumentosAction` |
+| `view` | `documentos.ver` | `VerDocumentoAction`, `DescarregarDocumentoAction` |
+| `create` | `documentos.criar` | `RegistarDocumentoManualAction`, `ReceberUploadDocumentoAction` |
+| `update` | `documentos.actualizar` | `CorrigirDocumentoAction`, `ReprocessarDocumentoAction`, `TransicionarProcessadoDocumentoAction`, `MarcarAguardaEnvioDocumentoAction`, `MarcarEnviadoDocumentoAction`, `MarcarAguardaRespostaDocumentoAction`, `MarcarErroDocumentoAction`, `MarcarPerigosoDocumentoAction` |
+| `delete` | `documentos.eliminar` | `EliminarDocumentoAction` |
+
+> As Actions de pipeline (`Marcar*`, `Transicionar`) usam `update` → `documentos.actualizar`. Correm em Jobs como o autor do upload, que tem `documentos.criar` e `documentos.actualizar` (perfil admin).
 
 ---
 
@@ -217,5 +219,5 @@ Reutiliza os 5 abilities CRUD do `DocumentoPolicy` (stub `true`). Sem abilities 
 
 - **Colisão de nome canónico**: `RegraNomearProcessado` gera `yyyy-mm-dd-{slug-fornecedor}-{slug-categoria}.{ext}`. Dois documentos com o mesmo fornecedor/categoria/data terão o mesmo nome — `Storage::put()` sobrepõe silenciosamente. Diferido.
 - **Atomicidade filesystem↔BD**: o ficheiro é movido antes da transação; em dupla falha (mover OK + compensação falha), a BD reverte mas o ficheiro fica no disco destino. Reconciliação manual necessária. Mitigação real exigiria outbox/saga.
-- **`DocumentoPolicy` é stub** (`return true`): autorização real diferida para issue de autorização granular.
+- **Apenas duas roles**: `admin` (acesso total) e `utilizador` (só `documentos.ver`). Não há ainda ownership por documento — qualquer utilizador com a permissão de escrita pode alterar qualquer documento.
 - **Jobs reais de pipeline** (`WatchInboxJob`, `ProcessBatchJob`) diferidos: a issue garante que as Actions são invocáveis programaticamente e que os Events são `after_commit`.

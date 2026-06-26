@@ -5,7 +5,6 @@ declare(strict_types=1);
 use App\Features\Documento\Ver\VerDocumentoAction;
 use App\Models\Documento;
 use App\Models\EtapaDocumento;
-use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -16,7 +15,7 @@ uses(RefreshDatabase::class);
 beforeEach(fn () => Cache::tags(['documentos'])->flush());
 
 describe('autenticado', function (): void {
-    beforeEach(fn () => $this->actingAs(User::factory()->create()));
+    beforeEach(fn () => $this->actingAs(criarAdmin()));
 
     it('devolve o documento com o histórico carregado', function (): void {
         $documento = Documento::factory()->processado()->create();

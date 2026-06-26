@@ -159,16 +159,16 @@ Base (`definition()`) = estado `Processado` com todos os campos preenchidos. 7 s
 
 **Ficheiro:** `app/Policies/DocumentoPolicy.php`
 
-Stub temporário — todos os métodos devolvem `true`. Assinaturas prontas para substituição por `hasPermissionTo(...)` na issue de autenticação.
+Autorização granular via `hasPermissionTo(...)` — `viewAny`/`view` exigem `documentos.ver`; `create` exige `documentos.criar`; `update` exige `documentos.actualizar`; `delete` exige `documentos.eliminar`. As permissões e a matriz role→permission estão em `04-infra/autorizacao.md`.
 
 ```php
 final class DocumentoPolicy
 {
-    public function viewAny(User $utilizador): bool  { return true; }
-    public function view(User $utilizador, Documento $documento): bool  { return true; }
-    public function create(User $utilizador): bool  { return true; }
-    public function update(User $utilizador, Documento $documento): bool  { return true; }
-    public function delete(User $utilizador, Documento $documento): bool  { return true; }
+    public function viewAny(User $utilizador): bool  { return $utilizador->hasPermissionTo('documentos.ver'); }
+    public function view(User $utilizador, Documento $documento): bool  { return $utilizador->hasPermissionTo('documentos.ver'); }
+    public function create(User $utilizador): bool  { return $utilizador->hasPermissionTo('documentos.criar'); }
+    public function update(User $utilizador, Documento $documento): bool  { return $utilizador->hasPermissionTo('documentos.actualizar'); }
+    public function delete(User $utilizador, Documento $documento): bool  { return $utilizador->hasPermissionTo('documentos.eliminar'); }
 }
 ```
 
@@ -217,4 +217,4 @@ Ambos `final readonly`. **Sem `fromRequest()`** — adicionado na issue de Lógi
 - **Cast `decimal:2` devolve `string`** — `@property-read ?string $valor`. A conversão para `float` é responsabilidade do Resource (não do Model nem do DTO de input).
 - **Model não é `final`** — coerente com `Entidade`/`CategoriaDocumento`; o ArchTest "actions are final" não cobre Models.
 - **Sem Repository** — desvio aceite; listagem directa no Eloquent (sem queries complexas nesta camada). A issue de Lógica (#57) reavaliará se a `ListarDocumentosAction` justifica Repository.
-- **`#[UsePolicy(DocumentoPolicy::class)]`** registado no Model — prepara a issue de autenticação.
+- **`#[UsePolicy(DocumentoPolicy::class)]`** registado no Model — auto-descoberta da Policy granular (`hasPermissionTo`).

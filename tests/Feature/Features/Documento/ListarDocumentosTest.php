@@ -5,11 +5,12 @@ declare(strict_types=1);
 use App\Models\Documento;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Laravel\Sanctum\Sanctum;
+use Illuminate\Support\Facades\Cache;
 
 uses(RefreshDatabase::class);
 
-beforeEach(fn () => Sanctum::actingAs(User::factory()->create(), ['api']));
+beforeEach(fn () => Cache::tags(['documentos'])->flush());
+beforeEach(fn (): User => criarEAutenticarAdmin());
 
 it('lista documentos paginados e devolve 200', function (): void {
     Documento::factory()->count(3)->processado()->create();
@@ -34,4 +35,10 @@ it('rejeita um estado de filtro inválido com 422', function (): void {
     $this->getJson('/api/documentos?estado=INEXISTENTE')
         ->assertUnprocessable()
         ->assertJsonPath('detail', 'Os dados fornecidos são inválidos.');
+});
+
+it('utilizador com permissão de leitura lista e devolve 200', function (): void {
+    criarEAutenticarUtilizador();
+
+    $this->getJson('/api/documentos')->assertOk();
 });

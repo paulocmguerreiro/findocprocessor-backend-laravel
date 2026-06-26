@@ -6,7 +6,6 @@ use App\Events\DocumentoMarcadoPerigoso;
 use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoAction;
 use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoDto;
 use App\Models\Documento;
-use App\Models\User;
 use App\Shared\Enums\EstadoDocumento;
 use App\Shared\Exceptions\TransicaoInvalidaException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,7 +18,7 @@ beforeEach(function (): void {
     Storage::fake('entrada');
     Storage::fake('enviado');
     Storage::fake('perigoso');
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(criarAdmin());
 });
 
 it('marca Perigoso a partir de Pendente (pré-scan) e move para o disco perigoso', function (): void {

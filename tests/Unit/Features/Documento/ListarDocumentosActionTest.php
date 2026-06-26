@@ -5,7 +5,6 @@ declare(strict_types=1);
 use App\Features\Documento\Listar\CampoOrdenacaoDocumentos;
 use App\Features\Documento\Listar\ListarDocumentosAction;
 use App\Models\Documento;
-use App\Models\User;
 use App\Shared\Cache\CacheServico;
 use App\Shared\Cache\TagCache;
 use App\Shared\Cache\TagOperacao;
@@ -21,7 +20,7 @@ uses(RefreshDatabase::class);
 beforeEach(fn () => Cache::tags(['documentos'])->flush());
 
 describe('autenticado', function (): void {
-    beforeEach(fn () => $this->actingAs(User::factory()->create()));
+    beforeEach(fn () => $this->actingAs(criarAdmin()));
 
     it('devolve lista vazia quando não há documentos', function (): void {
         $resultado = app(ListarDocumentosAction::class)

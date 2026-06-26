@@ -5,15 +5,13 @@ declare(strict_types=1);
 use App\Models\CategoriaDocumento;
 use App\Models\Documento;
 use App\Models\Entidade;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     Storage::fake('processado');
-    Sanctum::actingAs(User::factory()->create(), ['api']);
+    criarEAutenticarAdmin();
 });
 
 it('corrige um documento Processado e devolve 200 com os campos actualizados', function (): void {
@@ -49,4 +47,18 @@ it('rejeita a correcção com fornecedor inexistente (422)', function (): void {
         'valor' => 10,
         'data_documento' => '2026-06-25',
     ])->assertUnprocessable();
+});
+
+it('utilizador sem permissão de escrita recebe 403', function (): void {
+    $documento = Documento::factory()->processado()->create();
+
+    criarEAutenticarUtilizador();
+
+    $this->patchJson("/api/documentos/{$documento->id}", [
+        'id_fornecedor' => Entidade::factory()->create()->id,
+        'id_cliente' => Entidade::factory()->create()->id,
+        'id_categoria' => CategoriaDocumento::factory()->create()->id,
+        'valor' => 10,
+        'data_documento' => '2026-06-25',
+    ])->assertForbidden();
 });

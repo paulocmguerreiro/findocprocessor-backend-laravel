@@ -38,6 +38,10 @@ Configuração publicada em `config/permission.php`. Guard: `web` (único guard 
 | `roles.actualizar` | Actualizar role | `seed_roles_permissions_v2` |
 | `roles.eliminar` | Eliminar role | `seed_roles_permissions_v2` |
 | `utilizadores.atribuir-role` | Atribuir role a utilizador | `seed_roles_permissions_v2` |
+| `documentos.ver` | Listar, ver e descarregar documentos | `seed_documentos_permissions` |
+| `documentos.criar` | Registar manualmente e receber upload de documento | `seed_documentos_permissions` |
+| `documentos.actualizar` | Corrigir, reprocessar e transições de pipeline | `seed_documentos_permissions` |
+| `documentos.eliminar` | Eliminar documento | `seed_documentos_permissions` |
 
 ### Matriz role → permissions
 
@@ -56,6 +60,10 @@ Configuração publicada em `config/permission.php`. Guard: `web` (único guard 
 | `roles.actualizar` | ✅ | ❌ |
 | `roles.eliminar` | ✅ | ❌ |
 | `utilizadores.atribuir-role` | ✅ | ❌ |
+| `documentos.ver` | ✅ | ✅ |
+| `documentos.criar` | ✅ | ❌ |
+| `documentos.actualizar` | ✅ | ❌ |
+| `documentos.eliminar` | ✅ | ❌ |
 
 ---
 
@@ -106,6 +114,7 @@ public function view(User $utilizador, Entidade $entidade): bool
 |---|---|---|---|
 | `EntidadePolicy` | `Entidade` | `app/Policies/EntidadePolicy.php` | Automático (convenção nome `ModelPolicy`) |
 | `CategoriaDocumentoPolicy` | `CategoriaDocumento` | `app/Policies/CategoriaDocumentoPolicy.php` | Automático (convenção nome `ModelPolicy`) |
+| `DocumentoPolicy` | `Documento` | `app/Policies/DocumentoPolicy.php` | Automático (convenção nome `ModelPolicy`) |
 | `RolePolicy` | `Spatie\Permission\Models\Role` | `app/Policies/RolePolicy.php` | `Gate::policy(Role::class, RolePolicy::class)` em `AppServiceProvider` |
 | `UtilizadorPolicy` | `User` | `app/Policies/UtilizadorPolicy.php` | `#[UsePolicy(UtilizadorPolicy::class)]` no modelo `User` |
 
