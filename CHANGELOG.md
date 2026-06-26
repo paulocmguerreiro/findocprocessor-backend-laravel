@@ -7,6 +7,15 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
+- **Issue #56** — EtapaDocumento — Camada de Modelo (histórico append-only de estados do documento)
+  - Migration `etapas_documento`: UUID PK; FK `id_documento` → `documentos` `cascadeOnDelete()`; `estado string(50)` com índice; `motivo text nullable`; `id_utilizador bigint FK nullable` → `users` `nullOnDelete()`; só `created_at` (sem `updated_at` — append-only)
+  - Model `EtapaDocumento` — `HasUuids`; `const UPDATED_AT = null` (append-only); cast `estado → EstadoDocumento`; relações `documento()` e `utilizador()` `BelongsTo`; `@property-read` completo; **sem `RegistaActividade`** (tabela *é* o histórico de domínio)
+  - Relação `Documento->historico()` — `hasMany(EtapaDocumento::class, 'id_documento')->orderBy('created_at')` (linha temporal ascendente)
+  - `EtapaDocumentoFactory` — base `Pendente` (`id_utilizador = null`, `motivo = null`); states: `processado()`, `erro()` (com `motivo`), `perigoso()` (com `motivo`), `manual()` (`id_utilizador` via `User::factory()`)
+  - Testes unitários: `EtapaDocumentoTest` (model, append-only, casts, relações, `cascadeOnDelete`/`nullOnDelete`, factory states com dataset); `DocumentoTest` ampliado com bloco `historico` ordenado
+  - Decisão documentada: `id_utilizador` é `bigint → users` (não UUID/`utilizadores`) — schema real; `foreignUuid` falharia em runtime
+  - 420 testes totais, 100% cobertura, 100% type coverage, Larastan 9 zero erros
+
 - **Issue #45** — Documento — Camada de Modelo (migration + enum + state objects + model + factory + policy + DTOs + resource + testes)
   - Migration `documentos`: UUID PK, `status` string+índice, 3 FKs nullable `nullOnDelete()` (→ `entidades` × 2, → `categorias_documento`), `valor decimal(15,2)`, `data_documento date`+índice, `nome_ficheiro_original`, `disco_storage`, `nome_ficheiro_storage`, `hash_sha256` único
   - Enum `EstadoDocumento` (PT-PT) — 7 casos: `Pendente`, `AguardaEnvio`, `Enviado`, `AguardaResposta`, `Processado`, `Erro`, `Perigoso` (substitui placeholder EN `DocumentStatus`)

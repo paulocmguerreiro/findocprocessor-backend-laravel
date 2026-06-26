@@ -20,10 +20,12 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -43,6 +45,7 @@ use Illuminate\Support\Carbon;
  * @property-read ?Entidade $fornecedor
  * @property-read ?Entidade $cliente
  * @property-read ?CategoriaDocumento $categoria
+ * @property-read Collection<int, EtapaDocumento> $historico
  */
 #[Table('documentos')]
 #[Fillable([
@@ -111,6 +114,12 @@ class Documento extends Model
     public function categoria(): BelongsTo
     {
         return $this->belongsTo(CategoriaDocumento::class, 'id_categoria');
+    }
+
+    /** @return HasMany<EtapaDocumento, $this> */
+    public function historico(): HasMany
+    {
+        return $this->hasMany(EtapaDocumento::class, 'id_documento')->orderBy('created_at');
     }
 
     /** @param Builder<Documento> $query */

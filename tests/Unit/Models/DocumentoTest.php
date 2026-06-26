@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\CategoriaDocumento;
 use App\Models\Documento;
 use App\Models\Entidade;
+use App\Models\EtapaDocumento;
 use App\Shared\Enums\EstadoDocumento;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -100,6 +101,35 @@ describe('Relações', function (): void {
         $categoria->delete();
 
         expect($documento->fresh()->id_categoria)->toBeNull();
+    });
+});
+
+describe('historico', function (): void {
+    uses(RefreshDatabase::class);
+
+    it('hasMany etapas ordenadas por created_at ascendente', function (): void {
+        $documento = Documento::factory()->create();
+
+        $maisRecente = EtapaDocumento::factory()->create([
+            'id_documento' => $documento->id,
+            'created_at' => Carbon::parse('2026-06-03 10:00:00'),
+        ]);
+        $maisAntiga = EtapaDocumento::factory()->create([
+            'id_documento' => $documento->id,
+            'created_at' => Carbon::parse('2026-06-01 10:00:00'),
+        ]);
+        $intermedia = EtapaDocumento::factory()->create([
+            'id_documento' => $documento->id,
+            'created_at' => Carbon::parse('2026-06-02 10:00:00'),
+        ]);
+
+        $historico = $documento->historico;
+
+        expect($historico)->toHaveCount(3)
+            ->and($historico->first())->toBeInstanceOf(EtapaDocumento::class)
+            ->and($historico->pluck('id')->all())->toBe([
+                $maisAntiga->id, $intermedia->id, $maisRecente->id,
+            ]);
     });
 });
 

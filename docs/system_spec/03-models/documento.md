@@ -106,13 +106,22 @@ public function estado(): ContratoEstadoDocumento
 
 `match` **sem `default`** — Larastan 9 valida a exaustividade dos 7 casos. Adicionar um 8.º estado ao enum sem tratar aqui produz erro em `composer test:types`.
 
+### PHPDoc `@property-read` — adição Issue #56
+
+```php
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, EtapaDocumento> $historico
+```
+
 ### Relações
 
 ```php
 public function fornecedor(): BelongsTo  // → Entidade (id_fornecedor)
 public function cliente(): BelongsTo     // → Entidade (id_cliente)
 public function categoria(): BelongsTo   // → CategoriaDocumento (id_categoria)
+public function historico(): HasMany     // → EtapaDocumento (id_documento), orderBy created_at asc
 ```
+
+**`historico`** — adicionado na Issue #56. Relação `hasMany` com FK explícita `id_documento`; ordenada por `created_at` ascendente (linha temporal). Ver `03-models/etapa-documento.md` para detalhe do Model.
 
 ### Scopes
 
