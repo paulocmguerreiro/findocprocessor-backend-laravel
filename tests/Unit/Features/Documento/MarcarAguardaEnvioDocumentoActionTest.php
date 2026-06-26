@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Features\Documento\MarcarAguardaEnvio\MarcarAguardaEnvioDocumentoAction;
 use App\Models\Documento;
-use App\Models\User;
 use App\Shared\Enums\EstadoDocumento;
 use App\Shared\Exceptions\TransicaoInvalidaException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -14,7 +13,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     Storage::fake('entrada');
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(criarAdmin());
 });
 
 it('transiciona Pendente → AguardaEnvio sem mover o ficheiro', function (): void {

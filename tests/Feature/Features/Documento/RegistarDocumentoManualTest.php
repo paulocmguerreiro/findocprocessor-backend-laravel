@@ -4,17 +4,15 @@ declare(strict_types=1);
 
 use App\Models\CategoriaDocumento;
 use App\Models\Entidade;
-use App\Models\User;
 use App\Shared\Enums\EstadoDocumento;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     Storage::fake('processado');
-    Sanctum::actingAs(User::factory()->create(), ['api']);
+    criarEAutenticarAdmin();
 });
 
 function payloadManual(array $sobrepor = []): array
@@ -47,4 +45,12 @@ it('rejeita o registo sem ficheiro com 422', function (): void {
         'valor' => 10,
         'data_documento' => '2026-06-25',
     ])->assertUnprocessable();
+});
+
+it('utilizador sem permissão de escrita recebe 403', function (): void {
+    criarEAutenticarUtilizador();
+
+    $this->post('/api/documentos', payloadManual())->assertForbidden();
+
+    $this->assertDatabaseCount('documentos', 0);
 });

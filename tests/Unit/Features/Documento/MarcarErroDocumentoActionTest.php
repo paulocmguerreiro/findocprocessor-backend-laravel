@@ -6,7 +6,6 @@ use App\Events\DocumentoMarcadoErro;
 use App\Features\Documento\MarcarErro\MarcarErroDocumentoAction;
 use App\Features\Documento\MarcarErro\MarcarErroDocumentoDto;
 use App\Models\Documento;
-use App\Models\User;
 use App\Shared\Enums\EstadoDocumento;
 use App\Shared\Exceptions\TransicaoInvalidaException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,7 +17,7 @@ uses(RefreshDatabase::class);
 beforeEach(function (): void {
     Storage::fake('enviado');
     Storage::fake('erro');
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(criarAdmin());
 });
 
 it('transiciona AguardaResposta → Erro: move enviado → erro, regista o motivo e emite o evento', function (): void {

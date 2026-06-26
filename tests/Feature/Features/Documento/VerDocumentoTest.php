@@ -6,11 +6,10 @@ use App\Models\Documento;
 use App\Models\EtapaDocumento;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
 
-beforeEach(fn () => Sanctum::actingAs(User::factory()->create(), ['api']));
+beforeEach(fn (): User => criarEAutenticarAdmin());
 
 it('mostra o documento com o histórico e devolve 200', function (): void {
     $documento = Documento::factory()->processado()->create();
@@ -26,4 +25,12 @@ it('mostra o documento com o histórico e devolve 200', function (): void {
 it('devolve 404 para um documento inexistente', function (): void {
     $this->getJson('/api/documentos/00000000-0000-0000-0000-000000000000')
         ->assertNotFound();
+});
+
+it('utilizador com permissão de leitura vê e devolve 200', function (): void {
+    $documento = Documento::factory()->processado()->create();
+
+    criarEAutenticarUtilizador();
+
+    $this->getJson("/api/documentos/{$documento->id}")->assertOk();
 });

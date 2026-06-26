@@ -8,7 +8,6 @@ use App\Features\Documento\TransicionarProcessado\TransicionarProcessadoDocument
 use App\Models\CategoriaDocumento;
 use App\Models\Documento;
 use App\Models\Entidade;
-use App\Models\User;
 use App\Shared\Enums\EstadoDocumento;
 use App\Shared\Exceptions\TransicaoInvalidaException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,7 +20,7 @@ uses(RefreshDatabase::class);
 beforeEach(function (): void {
     Storage::fake('enviado');
     Storage::fake('processado');
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(criarAdmin());
 });
 
 function dtoTransicao(): TransicionarProcessadoDocumentoDto

@@ -6,7 +6,6 @@ use App\Features\Documento\RecepcaoUpload\DocumentoDuplicadoException;
 use App\Features\Documento\RecepcaoUpload\ReceberUploadDocumentoAction;
 use App\Features\Documento\RecepcaoUpload\ReceberUploadDocumentoDto;
 use App\Models\Documento;
-use App\Models\User;
 use App\Shared\Enums\EstadoDocumento;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Filesystem\Filesystem;
@@ -19,7 +18,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     Storage::fake('entrada');
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(criarAdmin());
 });
 
 it('calcula o hash, escreve em entrada e cria o documento em Pendente', function (): void {
@@ -88,4 +87,17 @@ it('exige utilizador autenticado (guest é rejeitado)', function (): void {
 
     expect(fn (): Documento => app(ReceberUploadDocumentoAction::class)->handle(new ReceberUploadDocumentoDto($ficheiro)))
         ->toThrow(AuthorizationException::class);
+});
+
+describe('sem permissão de escrita', function (): void {
+    beforeEach(fn () => $this->actingAs(criarUtilizador()));
+
+    it('lança AuthorizationException quando utilizador não tem permissão de escrita', function (): void {
+        $ficheiro = UploadedFile::fake()->create('fatura.pdf', 100);
+
+        expect(fn (): Documento => app(ReceberUploadDocumentoAction::class)->handle(new ReceberUploadDocumentoDto($ficheiro)))
+            ->toThrow(AuthorizationException::class);
+
+        $this->assertDatabaseCount('documentos', 0);
+    });
 });

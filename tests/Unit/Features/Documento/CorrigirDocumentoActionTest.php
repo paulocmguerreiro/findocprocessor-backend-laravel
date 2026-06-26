@@ -8,8 +8,8 @@ use App\Features\Documento\Corrigir\CorrigirDocumentoDto;
 use App\Models\CategoriaDocumento;
 use App\Models\Documento;
 use App\Models\Entidade;
-use App\Models\User;
 use App\Shared\Enums\EstadoDocumento;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
@@ -19,7 +19,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     Storage::fake('processado');
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(criarAdmin());
 });
 
 it('corrige o domínio e renomeia o ficheiro quando o nome canónico muda', function (): void {
@@ -55,4 +55,23 @@ it('corrige o domínio e renomeia o ficheiro quando o nome canónico muda', func
 
     // A correcção não re-emite o evento de processamento.
     Event::assertNotDispatched(DocumentoProcessado::class);
+});
+
+describe('sem permissão de escrita', function (): void {
+    beforeEach(fn () => $this->actingAs(criarUtilizador()));
+
+    it('lança AuthorizationException quando utilizador não tem permissão de escrita', function (): void {
+        $documento = Documento::factory()->processado()->create();
+
+        $dados = new CorrigirDocumentoDto(
+            idFornecedor: Entidade::factory()->create()->id,
+            idCliente: Entidade::factory()->create()->id,
+            idCategoria: CategoriaDocumento::factory()->create()->id,
+            valor: 10.0,
+            dataDocumento: Carbon::parse('2026-06-25'),
+        );
+
+        expect(fn (): Documento => app(CorrigirDocumentoAction::class)->handle($documento, $dados))
+            ->toThrow(AuthorizationException::class);
+    });
 });

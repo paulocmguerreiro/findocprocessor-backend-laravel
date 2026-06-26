@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Features\Documento\MarcarEnviado\MarcarEnviadoDocumentoAction;
 use App\Models\Documento;
-use App\Models\User;
 use App\Shared\Enums\EstadoDocumento;
 use App\Shared\Exceptions\TransicaoInvalidaException;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -17,7 +16,7 @@ uses(RefreshDatabase::class);
 beforeEach(function (): void {
     Storage::fake('entrada');
     Storage::fake('enviado');
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(criarAdmin());
 });
 
 it('transiciona AguardaEnvio → Enviado e move o ficheiro entrada → enviado', function (): void {

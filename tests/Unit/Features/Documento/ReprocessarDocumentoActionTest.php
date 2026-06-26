@@ -7,9 +7,9 @@ use App\Features\Documento\Reprocessar\ModoReprocessamento;
 use App\Features\Documento\Reprocessar\ReprocessarDocumentoAction;
 use App\Features\Documento\Reprocessar\ReprocessarDocumentoDto;
 use App\Models\Documento;
-use App\Models\User;
 use App\Shared\Enums\EstadoDocumento;
 use App\Shared\Exceptions\TransicaoInvalidaException;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
@@ -19,7 +19,7 @@ uses(RefreshDatabase::class);
 beforeEach(function (): void {
     Storage::fake('erro');
     Storage::fake('entrada');
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(criarAdmin());
 });
 
 it('transiciona Erro → AguardaEnvio: move erro → entrada, regista o modo e emite o evento', function (): void {
@@ -55,4 +55,15 @@ it('rejeita a transição a partir de um estado inválido', function (): void {
         ->toThrow(TransicaoInvalidaException::class);
 
     $this->assertDatabaseCount('etapas_documento', 0);
+});
+
+describe('sem permissão de escrita', function (): void {
+    beforeEach(fn () => $this->actingAs(criarUtilizador()));
+
+    it('lança AuthorizationException quando utilizador não tem permissão de escrita', function (): void {
+        $documento = Documento::factory()->erro()->create();
+
+        expect(fn (): Documento => app(ReprocessarDocumentoAction::class)->handle($documento, new ReprocessarDocumentoDto(ModoReprocessamento::Modelo)))
+            ->toThrow(AuthorizationException::class);
+    });
 });

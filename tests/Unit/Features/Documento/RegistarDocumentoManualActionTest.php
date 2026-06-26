@@ -9,7 +9,6 @@ use App\Features\Documento\RecepcaoUpload\DocumentoDuplicadoException;
 use App\Models\CategoriaDocumento;
 use App\Models\Documento;
 use App\Models\Entidade;
-use App\Models\User;
 use App\Shared\Enums\EstadoDocumento;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Filesystem\Filesystem;
@@ -24,7 +23,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     Storage::fake('processado');
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(criarAdmin());
 });
 
 function dtoManual(array $sobrepor = []): RegistarDocumentoManualDto
@@ -113,4 +112,15 @@ it('exige utilizador autenticado (guest é rejeitado)', function (): void {
 
     expect(fn (): Documento => app(RegistarDocumentoManualAction::class)->handle(dtoManual()))
         ->toThrow(AuthorizationException::class);
+});
+
+describe('sem permissão de escrita', function (): void {
+    beforeEach(fn () => $this->actingAs(criarUtilizador()));
+
+    it('lança AuthorizationException quando utilizador não tem permissão de escrita', function (): void {
+        expect(fn (): Documento => app(RegistarDocumentoManualAction::class)->handle(dtoManual()))
+            ->toThrow(AuthorizationException::class);
+
+        $this->assertDatabaseCount('documentos', 0);
+    });
 });
