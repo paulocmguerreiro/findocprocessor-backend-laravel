@@ -12,6 +12,7 @@ use App\Models\Entidade;
 use App\Models\User;
 use App\Shared\Enums\EstadoDocumento;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
@@ -91,6 +92,19 @@ it('compensa apagando o ficheiro quando a transação falha', function (): void 
         ->toThrow(RuntimeException::class, 'falha na cache');
 
     Storage::disk('processado')->assertMissing('2026-06-25-fornecedor-lda-despesas.pdf');
+    $this->assertDatabaseCount('documentos', 0);
+});
+
+it('lança quando a escrita do ficheiro no disco processado falha', function (): void {
+    $dados = dtoManual();
+
+    $disco = Mockery::mock(Filesystem::class);
+    $disco->shouldReceive('putFileAs')->andReturnFalse();
+    Storage::shouldReceive('disk')->andReturn($disco);
+
+    expect(fn (): Documento => app(RegistarDocumentoManualAction::class)->handle($dados))
+        ->toThrow(RuntimeException::class, 'Falha ao guardar o ficheiro no disco processado.');
+
     $this->assertDatabaseCount('documentos', 0);
 });
 

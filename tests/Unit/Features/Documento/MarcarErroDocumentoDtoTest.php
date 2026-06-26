@@ -10,6 +10,6 @@ it('constrói com uma mensagem de erro', function (): void {
 });
 
 it('rejeita mensagem de erro vazia', function (): void {
-    expect(fn (): \App\Features\Documento\MarcarErro\MarcarErroDocumentoDto => new MarcarErroDocumentoDto('   '))
+    expect(fn (): MarcarErroDocumentoDto => new MarcarErroDocumentoDto('   '))
         ->toThrow(InvalidArgumentException::class, 'mensagemErro não pode ser vazia.');
 });

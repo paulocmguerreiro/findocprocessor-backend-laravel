@@ -25,7 +25,7 @@ it('constrói com dados válidos', function (): void {
 });
 
 it('rejeita ids vazios e valor negativo', function (array $sobrepor): void {
-    expect(fn (): \App\Features\Documento\TransicionarProcessado\TransicionarProcessadoDocumentoDto => dtoProcessado($sobrepor))->toThrow(InvalidArgumentException::class);
+    expect(fn (): TransicionarProcessadoDocumentoDto => dtoProcessado($sobrepor))->toThrow(InvalidArgumentException::class);
 })->with([
     'fornecedor vazio' => [['idFornecedor' => '  ']],
     'cliente vazio' => [['idCliente' => '']],

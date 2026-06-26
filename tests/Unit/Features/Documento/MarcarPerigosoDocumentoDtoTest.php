@@ -10,6 +10,6 @@ it('constrói com um motivo', function (): void {
 });
 
 it('rejeita motivo vazio', function (): void {
-    expect(fn (): \App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoDto => new MarcarPerigosoDocumentoDto(''))
+    expect(fn (): MarcarPerigosoDocumentoDto => new MarcarPerigosoDocumentoDto(''))
         ->toThrow(InvalidArgumentException::class, 'motivo não pode ser vazio.');
 });

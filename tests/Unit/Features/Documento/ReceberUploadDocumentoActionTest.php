@@ -9,6 +9,7 @@ use App\Models\Documento;
 use App\Models\User;
 use App\Shared\Enums\EstadoDocumento;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
@@ -65,6 +66,19 @@ it('compensa apagando o ficheiro quando a transação falha', function (): void 
         ->toThrow(RuntimeException::class, 'falha na cache');
 
     Storage::disk('entrada')->assertMissing($nomeStorage);
+    $this->assertDatabaseCount('documentos', 0);
+});
+
+it('lança quando a escrita do ficheiro no disco de entrada falha', function (): void {
+    $ficheiro = UploadedFile::fake()->create('falha.pdf', 10);
+
+    $disco = Mockery::mock(Filesystem::class);
+    $disco->shouldReceive('putFileAs')->andReturnFalse();
+    Storage::shouldReceive('disk')->andReturn($disco);
+
+    expect(fn (): Documento => app(ReceberUploadDocumentoAction::class)->handle(new ReceberUploadDocumentoDto($ficheiro)))
+        ->toThrow(RuntimeException::class, 'Falha ao guardar o ficheiro no disco de entrada.');
+
     $this->assertDatabaseCount('documentos', 0);
 });
 
