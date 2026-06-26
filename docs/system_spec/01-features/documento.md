@@ -141,7 +141,7 @@ chamante antes de invocar `executar()`.
 |---|---|---|
 | `RegistarDocumentoManualDto` | `Criar/` | campos de domínio + `ficheiro: UploadedFile` |
 | `ReceberUploadDocumentoDto` | `RecepcaoUpload/` | `ficheiro: UploadedFile` |
-| `TransicionarProcessadoDocumentoDto` | `TransicionarProcessado/` | `idFornecedor`, `idCliente`, `idCategoria`, `valor`, `dataDocumento`, `nomeFicheiroProcessado` |
+| `TransicionarProcessadoDocumentoDto` | `TransicionarProcessado/` | `idFornecedor`, `idCliente`, `idCategoria`, `valor:float`, `dataDocumento:DateTimeInterface` |
 | `MarcarErroDocumentoDto` | `MarcarErro/` | `mensagemErro: string` (não-vazio) |
 | `MarcarPerigosoDocumentoDto` | `MarcarPerigoso/` | `motivo: string` (não-vazio) |
 | `ReprocessarDocumentoDto` | `Reprocessar/` | `modo: ModoReprocessamento` |

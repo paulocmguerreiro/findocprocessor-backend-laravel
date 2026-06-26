@@ -9,10 +9,24 @@ A Action é a unidade de lógica de negócio da arquitectura Vertical Slice. Cad
 ## Regras estruturais
 
 - Controllers **sem lógica** — apenas fazem dispatch para a Action.
-- Actions injectam **interfaces**, nunca implementações concretas.
+- Actions injectam **interface quando há substituição prevista** (ex.: Repository, cliente de API externa) — para trocar a implementação sem tocar na Action. Quando **não** se prevê substituição, injectar a classe concreta directamente é legítimo (ver abaixo).
 - Acesso directo ao Eloquent só em CRUD simples; caso contrário, via Repository (ver `04-infra/repositories.md`).
 - Transição de estado via objecto de estado — `$doc->state()->correct($data)`, nunca `if ($doc->status == ...)`.
 - Actions de escrita envolvem a persistência em `DB::transaction()` (ver `04-infra/transactions.md`).
+
+### Interface vs classe concreta na injecção
+
+A regra "injectar interface" existe para **isolar pontos de substituição** — não é um fim em si. Extrair interface quando se prevê trocar a implementação (Repository SQLite↔MySQL, cliente de IA), ou quando o mock só é possível por dupla de teste.
+
+Classes concretas injectadas directamente são legítimas quando **não** se prevê substituição e o teste não precisa de interface:
+
+| Classe concreta | Porque não tem interface |
+|---|---|
+| `CacheServico` (`app/Shared/Cache`) | Wrapper fino sobre o `Cache`; nos testes faz-se `Cache::fake()` — não é preciso mockar o serviço |
+| `Regra*` (ex.: `RegraTransicaoEstado`, `RegraMoverFicheiro`) | Regras de domínio puras; podem ter handlers distintos — uma interface obrigaria a binds desnecessários sem ganho |
+| `ExecutorTransicaoDocumento` | Orquestrador interno à feature `Documento`; partilhado pelas Actions de transição, sem variante alternativa prevista |
+
+> Critério: há mais do que uma implementação plausível **ou** o teste exige substituir o colaborador? → interface. Caso contrário, classe concreta.
 
 ---
 

@@ -182,12 +182,7 @@ final class DocumentoPolicy
 
 ## DTOs
 
-| DTO | Ficheiro | Invariantes |
-|---|---|---|
-| `CriarDocumentoManualDto` | `app/Features/Documento/Criar/CriarDocumentoManualDto.php` | `valor >= 0`; `hashSha256` = 64 chars; strings obrigatórias não-vazias |
-| `ActualizarDocumentoDto` | `app/Features/Documento/Actualizar/ActualizarDocumentoDto.php` | Idem (update completo) |
-
-Ambos `final readonly`. **Sem `fromRequest()`** — adicionado na issue de Lógica (#57).
+Os DTOs do Documento pertencem à camada de lógica (#57) e estão documentados — em forma tabular — em `01-features/documento.md` (secção DTOs). Os DTOs originais da #45 (`CriarDocumentoManualDto`, `ActualizarDocumentoDto`) foram **substituídos** na #57 por `RegistarDocumentoManualDto` e `CorrigirDocumentoDto` (os da #45 incluíam campos de storage que não devem vir do cliente).
 
 ---
 

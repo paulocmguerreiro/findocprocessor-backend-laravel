@@ -40,39 +40,12 @@ HTTP Request → FormRequest (autoriza + valida) → Controller (constrói DTO o
 
 ## DTOs
 
-### `CriarRoleDto` — `App\Features\Role\Criar\CriarRoleDto`
+Ambos `final readonly` com `fromRequest()`. `permissoes` é `array<int, string>`.
 
-`final readonly`. Construtor valida que `nome` não é vazio (`\InvalidArgumentException`).
-
-```php
-final readonly class CriarRoleDto
-{
-    /** @param array<int, string> $permissoes */
-    public function __construct(
-        public string $nome,
-        public array $permissoes,
-    ) { /* valida nome não-vazio */ }
-
-    public static function fromRequest(CriarRoleRequest $request): self { ... }
-}
-```
-
-### `ActualizarRoleDto` — `App\Features\Role\Actualizar\ActualizarRoleDto`
-
-`final readonly`. `nome` é `?string` — se `null`, o nome não é alterado.
-
-```php
-final readonly class ActualizarRoleDto
-{
-    /** @param array<int, string> $permissoes */
-    public function __construct(
-        public ?string $nome,
-        public array $permissoes,
-    ) {}
-
-    public static function fromRequest(ActualizarRoleRequest $request): self { ... }
-}
-```
+| DTO | Namespace | Campos (tipo) | Invariantes (construtor) |
+|---|---|---|---|
+| `CriarRoleDto` | `Role\Criar` | `nome:string`, `permissoes:array<int,string>` | `nome` não-vazio (`\InvalidArgumentException`) |
+| `ActualizarRoleDto` | `Role\Actualizar` | `nome:?string`, `permissoes:array<int,string>` | `nome` opcional — se `null`, o nome não é alterado (update parcial) |
 
 ---
 

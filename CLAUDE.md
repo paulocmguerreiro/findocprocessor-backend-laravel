@@ -27,7 +27,7 @@ app/Features/<Feature>/<Action>/
 ### Padrões obrigatórios
 
 - Controllers sem lógica — só fazem dispatch para Actions
-- Actions injectam interfaces, nunca implementações concretas
+- Actions injectam interface quando há substituição prevista (Repository, API externa); classes concretas sem substituição prevista (CacheServico, Regra*, Executor) são injectadas directamente — ver `docs/system_spec/02-shared/padroes-acoes.md`
 - **Autorização dupla camada:** `Gate::authorize()` no FormRequest **e** na Action — cobre os dois contextos de invocação (HTTP e fora de HTTP: Jobs, Artisan, testes).
   > Detalhe: `docs/system_spec/02-shared/padroes-acoes.md`
 - `$doc->state()->correct($data)` — sem `if($doc->status ==)`

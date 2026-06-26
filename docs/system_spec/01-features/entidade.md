@@ -39,52 +39,14 @@ HTTP Request → FormRequest (autoriza + valida) → Controller (constrói DTO o
 
 ## DTOs
 
-Todos `final readonly`. Usam o trait `ComFlagsEfectivosEmpresaMae`. `fromRequest()` com array shape `@var` (Larastan nível 9). Construtor valida `nome`/`nif` não-vazios.
+Todos `final readonly` com `fromRequest()` (array shape `@var`, Larastan nível 9). Usam o trait `ComFlagsEfectivosEmpresaMae`.
 
-### `CriarEntidadeDto` — `App\Features\Entidade\Criar\CriarEntidadeDto`
+| DTO | Namespace | Campos (tipo) | Invariantes (construtor) |
+|---|---|---|---|
+| `CriarEntidadeDto` | `Entidade\Criar` | `nome:string`, `nif:string`, `eCliente:bool`, `eFornecedor:bool`, `eEmpresaAplicacao:bool` | `nome`/`nif` não-vazios (`trim`); booleans sem validação (não têm estado "vazio") |
+| `ActualizarEntidadeDto` | `Entidade\Actualizar` | idem (update completo — sem campos opcionais) | idem (valida incondicionalmente, PUT) |
 
-```php
-final readonly class CriarEntidadeDto
-{
-    /** @throws \InvalidArgumentException */
-    public function __construct(
-        public string $nome,
-        public string $nif,
-        public bool $eCliente,
-        public bool $eFornecedor,
-        public bool $eEmpresaAplicacao,
-    ) {
-        if (trim($this->nome) === '') { throw new \InvalidArgumentException('nome não pode ser vazio.'); }
-        if (trim($this->nif) === '') { throw new \InvalidArgumentException('nif não pode ser vazio.'); }
-    }
-}
-```
-
-- Booleans sem validação — `bool` não tem estado "vazio"
-- Invariante `eEmpresaAplicacao → eCliente/eFornecedor` pertence à Action (regra de negócio)
-
-### `ActualizarEntidadeDto` — `App\Features\Entidade\Actualizar\ActualizarEntidadeDto`
-
-Estrutura idêntica a `CriarEntidadeDto` — update completo (sem campos opcionais).
-
-```php
-final readonly class ActualizarEntidadeDto
-{
-    /** @throws \InvalidArgumentException */
-    public function __construct(
-        public string $nome,
-        public string $nif,
-        public bool $eCliente,
-        public bool $eFornecedor,
-        public bool $eEmpresaAplicacao,
-    ) {
-        if (trim($this->nome) === '') { throw new \InvalidArgumentException('nome não pode ser vazio.'); }
-        if (trim($this->nif) === '') { throw new \InvalidArgumentException('nif não pode ser vazio.'); }
-    }
-}
-```
-
-- Campos não-nullable — update completo (PUT); construtor valida invariantes incondicionalmente
+> A invariante `eEmpresaAplicacao → eCliente/eFornecedor` **não** está no DTO — é regra de negócio na Action (via `ComFlagsEfectivosEmpresaMae` + `RegraUnicidadeEmpresaMae`).
 
 ---
 
@@ -106,15 +68,14 @@ final readonly class ActualizarEntidadeDto
 
 ## Policy
 
-`EntidadePolicy` (`App\Policies`) — auto-descoberta por convenção de nome. Todos os métodos aceitam `?User $utilizador` (nullable — guests permitidos). Nesta fase, todos retornam `true`.
+`EntidadePolicy` (`App\Policies`) — ligada por `#[UsePolicy(EntidadePolicy::class)]` no Model. Cada método exige `User` e verifica `hasPermissionTo('entidades.<accao>')` (guests são negados pelo Laravel por o 1.º parâmetro não ser `?User`). Matriz role→permission em `04-infra/autorizacao.md`.
 
-| Método | Assinatura |
+| Método | Permissão |
 |---|---|
-| `viewAny` | `viewAny(?User $utilizador): bool` |
-| `view` | `view(?User $utilizador, Entidade $entidade): bool` |
-| `create` | `create(?User $utilizador): bool` |
-| `update` | `update(?User $utilizador, Entidade $entidade): bool` |
-| `delete` | `delete(?User $utilizador, Entidade $entidade): bool` |
+| `viewAny` / `view` | `entidades.ver` |
+| `create` | `entidades.criar` |
+| `update` | `entidades.actualizar` |
+| `delete` | `entidades.eliminar` |
 
 ---
 

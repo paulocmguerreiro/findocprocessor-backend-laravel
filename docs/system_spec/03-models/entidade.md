@@ -60,4 +60,10 @@ Representa os intervenientes do domínio financeiro: Clientes, Fornecedores e a 
 
 ## Relações
 
-_Pendentes — definidas em issues futuras (Document → Entidade)._
+`Documento` referencia `Entidade` via `id_fornecedor` e `id_cliente` (lado `belongsTo` em `Documento`). Sem relação inversa `hasMany` definida neste Model.
+
+---
+
+## Policy
+
+`#[UsePolicy(EntidadePolicy::class)]` — auto-ligada pelo atributo. `hasPermissionTo('entidades.<accao>')` por ability. Matriz role→permission e detalhe em `04-infra/autorizacao.md`.

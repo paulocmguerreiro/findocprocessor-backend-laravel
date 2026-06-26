@@ -28,6 +28,7 @@ Entidade de referência. Classifica documentos financeiros e define o tipo de mo
 - `RegistaActividade` — audit trail (logFillable, logOnlyDirty); sem campos excluídos. Ver `04-infra/audit-trail.md`
 - `#[Table('categorias_documento')]` — nome explícito (não inferível pelo Eloquent)
 - `#[Fillable(['nome', 'slug', 'tipo_movimento'])]`
+- `#[UsePolicy(CategoriaDocumentoPolicy::class)]`
 - Cast via método `casts()`: `'tipo_movimento' => TipoMovimento::class`
 
 ---
@@ -44,4 +45,10 @@ Entidade de referência. Classifica documentos financeiros e define o tipo de mo
 
 ## Relações
 
-_Pendentes — definidas em issues futuras (Document → CategoriaDocumento)._
+`Documento` referencia `CategoriaDocumento` via `id_categoria` (lado `belongsTo` em `Documento`). Sem relação inversa `hasMany` definida neste Model.
+
+---
+
+## Policy
+
+`#[UsePolicy(CategoriaDocumentoPolicy::class)]` — auto-ligada pelo atributo. `hasPermissionTo('categorias-documento.<accao>')` por ability. Matriz role→permission e detalhe em `04-infra/autorizacao.md`.

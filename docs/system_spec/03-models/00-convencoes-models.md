@@ -31,7 +31,7 @@ use Illuminate\Database\Eloquent\Model;
 #[Table('categorias_documento')]
 #[Fillable(['nome', 'slug', 'tipo_movimento'])]
 #[UsePolicy(CategoriaDocumentoPolicy::class)]
-final class CategoriaDocumento extends Model
+class CategoriaDocumento extends Model
 {
     use HasFactory;
     use HasUuids;
@@ -61,7 +61,27 @@ final class CategoriaDocumento extends Model
 | `casts()`            | Método — enums e tipos especiais; nunca propriedade `$casts`                |
 | `@property-read`     | **Obrigatório** para todas as colunas — tipagem completa para Larastan e IA |
 | `HasFactory`         | Sempre que existe factory                                                   |
-| `#[UsePolicy(...)]`  | Quando a Policy não é descoberta por convenção de nome                      |
+| `#[UsePolicy(...)]`  | Liga explicitamente a Policy ao Model (preferido à descoberta por convenção de nome) |
+
+> **Models do domínio não são `final`** — o ArchTest "actions are final" não cobre Models, e o Eloquent precisa de estender `Model` sem restringir a subclasse. Coerente entre `Documento`, `Entidade`, `CategoriaDocumento`.
+
+---
+
+## Estrutura canónica de um doc de Model
+
+Cada `03-models/<slug>.md` segue esta ordem de secções (modelo de referência: `documento.md`). Models simples omitem as secções não aplicáveis, mas mantêm a ordem e os títulos:
+
+| Secção | Conteúdo | Obrigatória |
+|---|---|---|
+| `## Tabela <nome>` (ou `## Colunas`) | Tabela Coluna / Tipo BD / Nullable / Notas | Sim |
+| `## Model <Nome>` / `## Traits e atributos` | Atributos `#[Table]`/`#[Fillable]`/`#[Hidden]`/**`#[UsePolicy]`**, traits, `@property-read`, `casts()` | Sim |
+| `### Relações` | `belongsTo`/`hasMany`/… com FK | Se existirem |
+| `### Scopes` | Query scopes | Se existirem |
+| `## Factory` / `## Factory states` | States da factory | Se existir factory |
+| `## Policy` | Policy associada (ou referência a `04-infra/autorizacao.md`) | Se o Model tem Policy |
+| `## Notas arquitecturais` | Decisões/excepções (ex.: PK inteira do `User`) | Opcional |
+
+> **`#[UsePolicy]` é sempre documentado** na secção de atributos quando o Model o tem. Models de terceiros (ex.: `Spatie\…\Role`) registam a Policy via `Gate::policy()` no `AppServiceProvider` — documentar na secção `## Policy`.
 
 ---
 
