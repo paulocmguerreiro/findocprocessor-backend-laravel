@@ -30,6 +30,7 @@ $resultado = app(CriarEntidadeAction::class)->handle($dto);
 - Rollback: model event (`creating`, `saved`, `deleting`) lança excepção dentro da transação e o teste verifica que o estado não foi alterado na BD.
 - Regras de negócio (ex: unicidade de Empresa Mãe, invariantes de domínio).
 - 404: `findOrFail` com UUID inexistente → `ModelNotFoundException`.
+- Autorização (Actions com `Gate::authorize`): utilizador sem a permissão **e** guest → `AuthorizationException` (ver "Matriz de autorização obrigatória").
 
 **Exemplo de rollback:**
 ```php
@@ -53,14 +54,14 @@ it('faz rollback se falhar a meio', function (): void {
 
 **Cobertura obrigatória por endpoint:**
 
-| Endpoint | Cenários mínimos |
-|---|---|
-| `GET /api/...` (listar) | lista vazia, estrutura correcta, `per_page`, cursor sem duplicados, 422 `per_page>100`, 422 `sort` inválido |
-| `POST /api/...` (criar) | 201 com recurso, 422 campos obrigatórios em falta, guest pode criar (enquanto Policy retorna `true`) |
-| `GET /api/.../{id}` (ver) | 200 com recurso, 404 UUID inexistente |
-| `PUT /api/.../{id}` (actualizar) | 200 actualizado, 404, 422 campos obrigatórios em falta |
-| `DELETE /api/.../{id}` (eliminar) | 204, 404 |
-| Endpoints especiais | happy path + 404 |
+| Endpoint | Cenários mínimos | Autorização (ver matriz) |
+|---|---|---|
+| `GET /api/...` (listar) | lista vazia, estrutura correcta, `per_page`, cursor sem duplicados, 422 `per_page>100`, 422 `sort` inválido | utilizador (leitura) → 200; guest → 401 |
+| `POST /api/...` (criar) | 201 com recurso, 422 campos obrigatórios em falta | utilizador sem permissão → 403; guest → 401 |
+| `GET /api/.../{id}` (ver) | 200 com recurso, 404 UUID inexistente | utilizador (leitura) → 200; guest → 401 |
+| `PUT/PATCH /api/.../{id}` (actualizar) | 200 actualizado, 404, 422 campos obrigatórios em falta | utilizador sem permissão → 403; guest → 401 |
+| `DELETE /api/.../{id}` (eliminar) | 204, 404 | utilizador sem permissão → 403; guest → 401 |
+| Endpoints especiais | happy path + 404 | conforme a ability exigida |
 
 ---
 
@@ -138,6 +139,29 @@ it('guest sem token recebe 401', function (): void {
 ```
 
 Para endpoints com acesso de leitura ao role `utilizador`, usar `criarEAutenticarUtilizador()` no teste 200.
+
+---
+
+## Matriz de autorização obrigatória (4 actores)
+
+Qualquer Action ou endpoint protegido por `Gate::authorize(...)` tem de ser testado contra os **4 estados de actor**, nas **duas camadas** (Action e HTTP — autorização dupla camada). A omissão de qualquer linha é lacuna de cobertura, não opção.
+
+| Actor | Como autenticar | Acesso esperado |
+|---|---|---|
+| **admin** (acesso total) | `criarAdmin()` / `criarEAutenticarAdmin()` | happy path — todas as operações |
+| **utilizador** (acesso parcial) | `criarUtilizador()` / `criarEAutenticarUtilizador()` | leituras permitidas → **200**; escritas → negado |
+| **utilizador sem essa permissão** | idem (role sem a ability) | Action → `AuthorizationException`; HTTP → **403** |
+| **guest** (sem autenticação) | `auth()->logout()` (Action) / sem token (HTTP) | Action → `AuthorizationException`; HTTP → **401** |
+
+> **Falha sempre que falte autorização real.** Se a Policy devolver `true` incondicionalmente, os casos "utilizador sem permissão" e "guest" passam por engano e a lacuna fica mascarada. A Policy tem de usar `hasPermissionTo(...)` — ver checklist em `04-infra/autorizacao.md`.
+
+**Distinção 403 vs 401:** `403` é utilizador autenticado **sem** a permissão (a Policy nega); `401` é ausência de autenticação (middleware Sanctum bloqueia antes da Policy). O `guest` na camada Action dá `AuthorizationException` (não há 401 fora de HTTP) — o primeiro parâmetro do método de Policy ser `User` (não `?User`) faz o Laravel negar guests automaticamente.
+
+**Listagens com cache:** flush da tag no `beforeEach` — `CACHE_STORE=redis` nos testes **não isola entre testes**, e um paginador serializado de um teste anterior rebenta noutro (`unserialize` de objecto incompleto → 500):
+
+```php
+beforeEach(fn () => Cache::tags(['documentos'])->flush());
+```
 
 ---
 

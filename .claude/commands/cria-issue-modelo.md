@@ -65,6 +65,8 @@ Só avançar para o Passo 3 depois de o utilizador confirmar os componentes.
 - Há papéis/permissões (roles) envolvidos? (ex: `admin`, `gestor`)
 - Alguma operação é pública (sem autenticação)?
 
+> **A Policy não pode ser stub.** Toda a Policy obriga às 3 peças do checklist de `04-infra/autorizacao.md`: (a) migration `seed_<recurso>_permissions` (`<recurso>.{ver,criar,actualizar,eliminar}`; admin todas, utilizador só `.ver`); (b) métodos com `hasPermissionTo('<recurso>.<accao>')` — **nunca `return true`**; (c) `PolicyTest` admin vs utilizador. Se a autorização real não puder ser ligada nesta issue, **não** incluir a Policy (não criar stub) — fica como issue própria.
+
 **Se DTOs seleccionados — perguntar:**
 - Os DTOs são para `Criar` e `Actualizar`, ou só para uma operação?
 - O `ActualizarDto` segue update completo (todos os campos obrigatórios) ou
@@ -81,7 +83,7 @@ Só avançar para o Passo 3 depois de o utilizador confirmar os componentes.
 **Se Testes seleccionados — perguntar:**
 - Há regras de negócio no model que precisam de teste directo?
   (ex: accessors, mutators, scopes)
-- Se Policy incluída: cobrir cenários permitido + negado para cada método
+- Se Policy incluída: `PolicyTest` cobre admin (todas as abilities) vs utilizador (só leitura permitida, escritas negadas) — matriz de 4 actores em `07-testing.md`
 - Se DTOs incluídos: cobrir happy path + cada `\InvalidArgumentException`
 - Se Resource incluído: cobrir serialização (campos presentes e tipos correctos)
 
@@ -148,8 +150,8 @@ Gerar body no formato padrão do `/cria-issue`:
 - [ ] CA-01: Migration cria a tabela com todos os campos e constraints
 - [ ] CA-02: Model tem casts correctos para enums e tipos especiais
 - [ ] CA-03: Factory produz instâncias válidas para cada state definido
-- [ ] CA-04: Policy cobre todos os métodos CRUD com regras correctas
-- [ ] CA-05: Testes da Policy cobrem cenários permitido + negado por método
+- [ ] CA-04: Policy usa `hasPermissionTo('<recurso>.<accao>')` por método (nunca `return true`) + migration `seed_<recurso>_permissions` (admin todas, utilizador só `.ver`)
+- [ ] CA-05: `PolicyTest` cobre admin (permitido) vs utilizador (escritas negadas) — matriz de 4 actores (`07-testing.md`)
 - [ ] CA-06: `CriarDto` e `ActualizarDto` são `final readonly class` com
              construtor que valida invariantes
 - [ ] CA-07: Construtor lança `\InvalidArgumentException` para cada

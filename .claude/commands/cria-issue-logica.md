@@ -37,7 +37,7 @@ Selecciona os componentes a incluir nesta issue:
 [ ] Events           — eventos de domínio disparados dentro das Actions
 [ ] Listeners        — reagem a Events (pode ser issue futura)
 [ ] Observers        — reagem a eventos Eloquent do Model (created, updated, deleted…)
-[ ] Testes de feature — endpoints HTTP (happy path + 403 + 404) + Jobs + Observers
+[ ] Testes de feature — endpoints HTTP (matriz de 4 actores: admin/utilizador/utilizador-sem-permissão→403/guest→401, ver `07-testing.md`) + 404 + Jobs + Observers
 ```
 
 Só avançar para o Passo 3 depois de o utilizador confirmar os componentes.
@@ -64,9 +64,9 @@ Só avançar para o Passo 3 depois de o utilizador confirmar os componentes.
 > - `ActualizarXxxRequest` → `$this->authorize('update', $this->route('xxx'))`
 > - `EliminarXxxRequest` → `$this->authorize('delete', $this->route('xxx'))`
 >
-> Se não existe Policy: indicar que `authorize()` retorna `true` temporariamente e criar issue separada para a Policy.
+> Se não existe Policy: a Policy real (com `hasPermissionTo` + migration de permissões — ver `04-infra/autorizacao.md`) tem de ser criada **antes ou em conjunto** com esta camada. **Não** abrir esta issue com `authorize()` a retornar `true` "temporariamente" — o stub mascara a falta de autorização e os testes passam por engano. Criar primeiro a issue de modelo com a Policy, ou incluir a Policy + migration de permissões no âmbito desta issue.
 >
-> "Há operações públicas (sem autenticação)? Quais?" — esses FormRequests retornam `true` de forma explícita e documentada.
+> "Há operações públicas (sem autenticação)? Quais?" — esses FormRequests retornam `true` de forma explícita e documentada (excepção consciente, não default).
 >
 > "Existem DTOs criados em /cria-issue-modelo ou /cria-issue-persistencia para esta entidade?"
 > Se sim: os FormRequests incluem o método `fromRequest()` nos DTOs correspondentes
@@ -98,7 +98,7 @@ Só avançar para o Passo 3 depois de o utilizador confirmar os componentes.
 
 **Se Testes seleccionados — perguntar:**
 > "Há endpoints que requerem autenticação?"
-> "Há cenários de autorização a testar? (ex: utilizador sem permissão recebe 403)"
+> "Matriz de autorização (obrigatória por endpoint/Action protegido): admin (acesso total), utilizador (leituras → 200), utilizador sem permissão (→ 403 HTTP / `AuthorizationException` Action), guest (→ 401 HTTP / `AuthorizationException` Action) — ver `07-testing.md`."
 > "Há cenários de erro específicos a testar (ex: entidade não encontrada, permissão negada)?"
 > "Se Jobs: testar dispatch (assertDispatched) e execução isolada do Job?"
 > "Se Observers: testar que o Observer reage correctamente a cada evento Eloquent?"
@@ -170,13 +170,13 @@ Omitir secção completa se FormRequests não seleccionados.
 - [ ] CA-02: Controller não contém lógica de negócio — apenas dispatch
 - [ ] CA-03: Actions injectam interface do repositório (se existe) ou Eloquent
              directo apenas em CRUD simples (≤ 1 query, sem lógica partilhada)
-- [ ] CA-04: `FormRequest::authorize()` chama a Policy correcta — nunca
-             `return true` sem justificação
+- [ ] CA-04: `FormRequest::authorize()` **e** `Action::handle()` chamam a Policy correcta (dupla camada) — nunca
+             `return true` sem justificação; a Policy usa `hasPermissionTo` (não stub)
 - [ ] CA-05: `fromRequest()` implementado nos DTOs correspondentes (se DTOs existem)
 - [ ] CA-06: Events são disparados dentro das Actions (nunca no Controller)
 - [ ] CA-07: Jobs têm `$tries` e `$timeout` declarados (se assíncronos)
 - [ ] CA-08: Observers injectam dependências via construtor (nunca `app()`)
-- [ ] CA-09: Testes de feature cobrem todos os endpoints (happy path + 403 + 404)
+- [ ] CA-09: Testes cobrem a matriz de 4 actores por endpoint/Action protegido (admin, utilizador, utilizador-sem-permissão → 403, guest → 401) + 404 — nas duas camadas (HTTP e Action), ver `07-testing.md`
 - [ ] CA-10: Testes cobrem dispatch de Jobs (`assertDispatched`) e execução isolada
 - [ ] CA-11: Testes cobrem Observer para cada evento Eloquent configurado
 - [ ] CA-12: 100% code coverage e 100% type coverage (`composer test`)
