@@ -12,16 +12,12 @@
 | Entidade | `01-features/entidade.md` | 7 (5 CRUD + ConverterEmEmpresaMae + Remover) | 5 REST + 1 especial |
 | Role | `01-features/role.md` | 5 CRUD | 5 REST |
 | Utilizador | `01-features/utilizador.md` | 1 (AtribuirRole) | 1 especial |
+| Documento | `01-features/documento.md` | 13 (11 transição + Listar + Ver + Descarregar) | 8 REST |
 
 ## Features planeadas
 
 | Feature | Actions planeadas |
 |---|---|
-| Documento/Listar | `ListarDocumentosAction` |
-| Documento/Corrigir | `CorrigirDocumentoAction` |
-| Documento/Eliminar | `EliminarDocumentoAction` |
-| Documento/Reprocessar | `ReprocessarDocumentoAction` |
-| Upload | `HandleUploadAction` |
 | Batch | `ForceBatchCycleAction` |
 | Files | `ListDirectoryAction`, `OpenFileAction` |
 | Sse | `SseStreamAction` |
@@ -30,9 +26,9 @@
 
 | Componente | Ficheiro |
 |---|---|
-| Enums partilhados (`TipoMovimento`, `DirecaoOrdenacao`, `EstadoDocumento`) | `02-shared/enums.md` |
-| HTTP (`ApiResponse`, Exception Handler, cursor pagination) | `02-shared/http.md` |
-| Estados de documento + Interface `ContratoEstadoDocumento` + 7 state objects | `02-shared/estados.md` |
+| Enums partilhados (`TipoMovimento`, `DirecaoOrdenacao`, `EstadoDocumento`, `ModoReprocessamento`, `CampoOrdenacaoDocumentos`) | `02-shared/enums.md` |
+| HTTP (`ApiResponse`, Exception Handler, cursor pagination, `TransicaoInvalidaException`) | `02-shared/http.md` |
+| Estados de documento + Interface `ContratoEstadoDocumento` + 7 state objects + mapa de transições | `02-shared/estados.md` |
 
 ## Padrões e convenções (Shared)
 
@@ -67,7 +63,7 @@
 | Cache / Redis | `04-infra/cache.md` | implementado |
 | Logging estruturado | `04-infra/logging.md` | implementado |
 | Audit trail (spatie/laravel-activitylog) | `04-infra/audit-trail.md` | implementado |
-| Jobs / Queue | `04-infra/queue-jobs.md` | pendente |
+| Jobs / Queue + Events de domínio | `04-infra/queue-jobs.md` | implementado (Events #57; Jobs pendentes) |
 | APIs externas (IA) | `04-infra/external-apis.md` | pendente |
 | Ambiente Docker + paridade de testes (MySQL) | `04-infra/ambiente-docker.md` | implementado |
 
@@ -79,6 +75,7 @@
 | Rotas CategoriaDocumento | `05-routes/categorias-documento.md` |
 | Rotas Entidade | `05-routes/entidades.md` |
 | Rotas Role + Utilizador | `05-routes/role.md` |
+| Rotas Documento | `05-routes/documento.md` |
 | Rotas planeadas | `05-routes/planeadas.md` |
 | Configuração e .env | `06-config.md` |
 

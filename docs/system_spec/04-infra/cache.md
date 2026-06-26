@@ -18,6 +18,7 @@ Identifica o domínio cacheado. Uma tag por feature.
 |---|---|---|
 | `Entidades` | `'entidades'` | Feature Entidade |
 | `CategoriasDocumento` | `'categorias_documento'` | Feature CategoriaDocumento |
+| `Documentos` | `'documentos'` | Feature Documento |
 | `Roles` | `'roles'` | Feature Role (futuro) |
 
 ### `TagOperacao` (enum string)
@@ -137,3 +138,4 @@ Em testes (`phpunit.xml`): `CACHE_STORE=redis` — Redis real necessário (conta
 |---|---|---|---|
 | Entidade | `entidades` | `Curta` (30s) | `Media` (300s) |
 | CategoriaDocumento | `categorias_documento` | `Curta` (30s) | `Media` (300s) |
+| Documento | `documentos` | `Curta` (30s) | — (invalidação por escrita) |

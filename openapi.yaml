@@ -116,6 +116,65 @@ components:
           items:
             type: string
 
+    EstadoDocumento:
+      type: string
+      enum: [PENDENTE, AGUARDA_ENVIO, ENVIADO, AGUARDA_RESPOSTA, PROCESSADO, ERRO, PERIGOSO]
+
+    EtapaDocumento:
+      type: object
+      properties:
+        estado:
+          $ref: '#/components/schemas/EstadoDocumento'
+        motivo:
+          type: ['string', 'null']
+        id_utilizador:
+          type: ['integer', 'null']
+        criado_em:
+          type: string
+          format: date-time
+
+    Documento:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/EstadoDocumento'
+        nome_ficheiro_original:
+          type: ['string', 'null']
+        valor:
+          type: ['number', 'null']
+        data_documento:
+          type: ['string', 'null']
+          format: date
+        id_fornecedor:
+          type: ['string', 'null']
+          format: uuid
+        id_cliente:
+          type: ['string', 'null']
+          format: uuid
+        id_categoria:
+          type: ['string', 'null']
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        historico:
+          type: array
+          items:
+            $ref: '#/components/schemas/EtapaDocumento'
+
+    ErrorTransicaoInvalida:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 422
+        detail:
+          type: string
+          example: "Transição de estado inválida: PROCESSADO → ENVIADO."
+
 security:
   - bearerAuth: []
 
@@ -726,6 +785,315 @@ paths:
       responses:
         '204':
           description: Eliminado com sucesso
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+
+  /documentos:
+    get:
+      summary: Listar documentos (cursor pagination)
+      tags: [Documento]
+      parameters:
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            maximum: 100
+            default: 15
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [data_documento, created_at]
+        - in: query
+          name: direction
+          schema:
+            type: string
+            enum: [asc, desc]
+        - in: query
+          name: cursor
+          schema:
+            type: string
+        - in: query
+          name: estado
+          schema:
+            $ref: '#/components/schemas/EstadoDocumento'
+      responses:
+        '200':
+          description: Lista paginada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Documento'
+                  links:
+                    type: object
+                    properties:
+                      prev:
+                        type: ['string', 'null']
+                      next:
+                        type: ['string', 'null']
+                  meta:
+                    type: object
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+
+    post:
+      summary: Registar documento manual (JSON)
+      tags: [Documento]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id_fornecedor, id_cliente, id_categoria, valor, data_documento, ficheiro]
+              properties:
+                id_fornecedor:
+                  type: string
+                  format: uuid
+                id_cliente:
+                  type: string
+                  format: uuid
+                id_categoria:
+                  type: string
+                  format: uuid
+                valor:
+                  type: number
+                  minimum: 0
+                data_documento:
+                  type: string
+                  format: date
+      responses:
+        '201':
+          description: Documento registado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Documento'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '422':
+          $ref: '#/components/schemas/ErrorValidacao'
+
+  /documentos/upload:
+    post:
+      summary: Receber upload de documento (multipart/form-data)
+      tags: [Documento]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [ficheiro, id_fornecedor, id_cliente, id_categoria, valor, data_documento]
+              properties:
+                ficheiro:
+                  type: string
+                  format: binary
+                id_fornecedor:
+                  type: string
+                  format: uuid
+                id_cliente:
+                  type: string
+                  format: uuid
+                id_categoria:
+                  type: string
+                  format: uuid
+                valor:
+                  type: number
+                  minimum: 0
+                data_documento:
+                  type: string
+                  format: date
+      responses:
+        '201':
+          description: Upload recebido; documento em PENDENTE
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Documento'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '422':
+          $ref: '#/components/schemas/ErrorValidacao'
+
+  /documentos/{documento}:
+    parameters:
+      - in: path
+        name: documento
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: Ver documento
+      tags: [Documento]
+      parameters:
+        - in: query
+          name: include
+          schema:
+            type: string
+            enum: [historico]
+      responses:
+        '200':
+          description: Documento encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Documento'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+
+    patch:
+      summary: Corrigir documento (Processado → Processado)
+      tags: [Documento]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id_fornecedor, id_cliente, id_categoria, valor, data_documento]
+              properties:
+                id_fornecedor:
+                  type: string
+                  format: uuid
+                id_cliente:
+                  type: string
+                  format: uuid
+                id_categoria:
+                  type: string
+                  format: uuid
+                valor:
+                  type: number
+                  minimum: 0
+                data_documento:
+                  type: string
+                  format: date
+      responses:
+        '200':
+          description: Documento corrigido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Documento'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+        '422':
+          $ref: '#/components/schemas/ErrorValidacao'
+
+    delete:
+      summary: Eliminar documento (qualquer estado)
+      tags: [Documento]
+      responses:
+        '204':
+          description: Eliminado com sucesso
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+
+  /documentos/{documento}/reprocessar:
+    post:
+      summary: Reprocessar documento (Erro → AguardaEnvio)
+      tags: [Documento]
+      parameters:
+        - in: path
+          name: documento
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [modo]
+              properties:
+                modo:
+                  type: string
+                  enum: [MODELO, FERRAMENTA]
+      responses:
+        '200':
+          description: Documento reaberto para reprocessamento
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Documento'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+        '422':
+          description: Transição inválida ou dados em falta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorTransicaoInvalida'
+
+  /documentos/{documento}/descarregar:
+    get:
+      summary: Descarregar ficheiro do documento
+      tags: [Documento]
+      parameters:
+        - in: path
+          name: documento
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Stream do ficheiro
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
         '401':
           $ref: '#/components/schemas/ErrorNaoAutenticado'
         '403':

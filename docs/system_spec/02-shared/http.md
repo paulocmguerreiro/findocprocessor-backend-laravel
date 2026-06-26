@@ -117,4 +117,18 @@ Stack traces nunca incluídos na resposta.
 
 ## Exceptions (`app/Shared/Exceptions/`)
 
-_Vazio até à primeira issue implementada._
+### `TransicaoInvalidaException`
+
+**Ficheiro:** `app/Shared/Exceptions/TransicaoInvalidaException.php`
+
+Lançada por `RegraTransicaoEstado` quando o par De→Para não consta do mapa central de transições.
+Mapeada para `422` no exception handler (`bootstrap/app.php`) via o closure `render()` de
+`ValidationException` — foi registada como um tipo distinto mas com o mesmo payload Problem Details.
+
+**Payload 422:**
+```json
+{ "status": 422, "detail": "Transição de estado inválida: <De> → <Para>." }
+```
+
+**Nota:** A mensagem inclui os valores dos estados para facilitar o diagnóstico de clientes da API.
+Não expõe stack traces.

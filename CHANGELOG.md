@@ -7,6 +7,20 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
+- **Issue #57** — Documento — lógica (máquina de estados: Actions de transição + listagem + Regra* + Events)
+  - **13 Actions**: 2 de criação (`RegistarDocumentoManualAction`, `ReceberUploadDocumentoAction`), 6 de pipeline programático (`MarcarAguardaEnvio`, `MarcarEnviado`, `MarcarAguardaResposta`, `TransicionarProcessado`, `MarcarErro`, `MarcarPerigoso`), 3 HTTP retidas (`Reprocessar`, `Corrigir`, `Eliminar`), 2 de leitura (`Listar`, `Ver`) + `DescarregarDocumentoAction`
+  - **3 classes `Regra*`**: `RegraTransicaoEstado` (mapa central De→Para, match exaustivo sem `default`), `RegraMoverFicheiro` (cross-disk com compensação best-effort), `RegraNomearProcessado` (`yyyy-mm-dd-{slug-fornecedor}-{slug-categoria}.{ext}`)
+  - **`ExecutorTransicaoDocumento`**: orquestrador partilhado interno à feature — elimina duplicação da mecânica de transição entre as 8 Actions simples
+  - **7 DTOs** `final readonly`: `RegistarDocumentoManualDto` (ficheiro + campos de domínio), `ReceberUploadDocumentoDto`, `TransicionarProcessadoDocumentoDto`, `MarcarErroDocumentoDto`, `MarcarPerigosoDocumentoDto`, `ReprocessarDocumentoDto`, `CorrigirDocumentoDto` (só campos de domínio — sem campos de storage); `FicheiroDocumentoDto` (VO de vista)
+  - **4 Events** `ShouldDispatchAfterCommit`: `DocumentoProcessado`, `DocumentoMarcadoErro`, `DocumentoMarcadoPerigoso`, `DocumentoReprocessado` — sem Listeners nesta issue
+  - **2 enums novos**: `ModoReprocessamento` (`Modelo`, `Ferramenta`); `CampoOrdenacaoDocumentos` (`DataDocumento`, `CriadoEm`)
+  - **`TransicaoInvalidaException`** mapeada para 422 em `bootstrap/app.php`
+  - **`TagCache::Documentos`** adicionado à infra de cache
+  - **Camada HTTP completa**: `DocumentoController` (zero lógica), 8 FormRequests com `authorize()` + `messages()` PT, `DocumentoResource` (com `whenLoaded('historico')`), `EtapaDocumentoResource`, 8 endpoints (Listar, Criar, Upload, Ver, Corrigir, Reprocessar, Eliminar, Descarregar)
+  - **Decisões notáveis**: ficheiro movido antes da transação (compensação best-effort em falha); DTOs #45 (`CriarDocumentoManualDto`, `ActualizarDocumentoDto`) removidos e substituídos por DTOs sem campos de storage; `DescarregarDocumentoAction` adicionada (não estava na spec)
+  - `docs/system_spec/01-features/documento.md` criado; `02-shared/{regras-negocio,estados,enums,http}.md`, `04-infra/{queue-jobs,cache}.md`, `05-routes/documento.md` actualizados; `00-index.md` actualizado; `openapi.yaml` actualizado
+  - 527 testes totais, 100% cobertura, 100% type coverage, Larastan 9 zero erros
+
 - **Issue #56** — EtapaDocumento — Camada de Modelo (histórico append-only de estados do documento)
   - Migration `etapas_documento`: UUID PK; FK `id_documento` → `documentos` `cascadeOnDelete()`; `estado string(50)` com índice; `motivo text nullable`; `id_utilizador bigint FK nullable` → `users` `nullOnDelete()`; só `created_at` (sem `updated_at` — append-only)
   - Model `EtapaDocumento` — `HasUuids`; `const UPDATED_AT = null` (append-only); cast `estado → EstadoDocumento`; relações `documento()` e `utilizador()` `BelongsTo`; `@property-read` completo; **sem `RegistaActividade`** (tabela *é* o histórico de domínio)

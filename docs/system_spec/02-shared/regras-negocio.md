@@ -80,6 +80,82 @@ Action chamante
 
 ---
 
+### `RegraTransicaoEstado`
+
+**Ficheiro:** `app/Features/Documento/Transicao/RegraTransicaoEstado.php`
+
+**Invariante:** Toda a mudança de estado do `Documento` tem de constar do mapa central De→Para. Transições
+inválidas lançam `TransicaoInvalidaException` (→ 422). Nunca `if ($doc->status == ...)`.
+
+**Activação:** Chamada por `ExecutorTransicaoDocumento` antes de qualquer persistência.
+
+**Invocada por:** `ExecutorTransicaoDocumento` (que é usado por todas as 8 Actions de transição simples).
+
+**Mapa central (match exaustivo sem `default`):**
+
+```
+Pendente       → AguardaEnvio
+AguardaEnvio   → Enviado
+Enviado        → AguardaResposta
+AguardaResposta → Processado | Erro | Perigoso
+Pendente       → Perigoso        (pré-scan)
+Erro           → AguardaEnvio    (reprocessamento)
+Processado     → Processado      (correcção — self-loop)
+```
+
+**Nota:** O `match` em PHP 8.5 sem `default` garante que se um novo `case` de `EstadoDocumento` for
+adicionado, o Larastan 9 dá erro de compilação — impossível esquecer um caso no mapa.
+
+---
+
+### `RegraMoverFicheiro`
+
+**Ficheiro:** `app/Features/Documento/Transicao/RegraMoverFicheiro.php`
+
+**Invariante:** `status ↔ disco_storage ↔ nome_ficheiro_storage` ficam sempre consistentes após uma
+transição. O ficheiro é movido entre discos distintos com verificação do valor de retorno (discos
+configurados com `'throw' => false`).
+
+**Activação:** Chamada por `ExecutorTransicaoDocumento` antes da transação.
+
+**Invocada por:** `ExecutorTransicaoDocumento`.
+
+**Implementação:** `Storage::disk($destino)->put($nome, Storage::disk($origem)->get($nome))` + `delete()`
+na origem. Verifica o retorno de cada operação e lança em falha. Compensação best-effort em excepção:
+tenta mover de volta para a origem.
+
+**Mapa estado→disco** (ver `02-shared/estados.md` para tabela completa):
+- `Pendente`, `AguardaEnvio` → `entrada`
+- `Enviado`, `AguardaResposta` → `enviado`
+- `Processado` → `processado`
+- `Erro` → `erro`
+- `Perigoso` → `perigoso`
+
+**Limitação:** em dupla falha (mover OK + compensação falha), o ficheiro fica no disco destino com a
+BD revertida para o estado anterior — inconsistência persistente; requer reconciliação manual.
+
+---
+
+### `RegraNomearProcessado`
+
+**Ficheiro:** `app/Features/Documento/Transicao/RegraNomearProcessado.php`
+
+**Invariante:** O nome de ficheiro de um `Documento` processado segue o formato canónico
+`yyyy-mm-dd-{slug-fornecedor}-{slug-categoria}.{ext}`, derivado dos dados de domínio.
+
+**Activação:** Sempre que um documento transiciona para `Processado` ou quando uma correcção altera
+o slug (fornecedor, categoria ou data).
+
+**Invocada por:** `TransicionarProcessadoDocumentoAction`, `CorrigirDocumentoAction`.
+
+**Geração:** `Str::slug($nomeFornecedor)`, `Str::slug($nomeCategoria)`; data de `data_documento`;
+extensão preservada de `nome_ficheiro_original`.
+
+**Limitação:** dois documentos com o mesmo fornecedor, categoria e data terão o mesmo nome canónico
+— `Storage::put()` sobrepõe silenciosamente. Diferido.
+
+---
+
 ## Regras cross-cutting (planeadas)
 
 Regras que atravessam múltiplas features serão documentadas aqui quando implementadas. Candidatos esperados:
