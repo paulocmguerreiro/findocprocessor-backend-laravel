@@ -115,7 +115,7 @@ class Documento extends Model
     /** @return BelongsTo<CategoriaDocumento, $this> */
     public function categoria(): BelongsTo
     {
-        return $this->belongsTo(CategoriaDocumento::class, 'id_categoria');
+        return $this->belongsTo(CategoriaDocumento::class, 'id_categoria')->withTrashed();
     }
 
     /** @return BelongsTo<User, $this> */
