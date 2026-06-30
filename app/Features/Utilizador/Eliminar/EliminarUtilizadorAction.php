@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\Features\Utilizador\Eliminar;
 
+use App\Models\Documento;
+use App\Models\EtapaDocumento;
 use App\Models\User;
 use App\Shared\Cache\CacheServico;
 use App\Shared\Cache\TagCache;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -36,17 +37,24 @@ final readonly class EliminarUtilizadorAction
         DB::transaction(function () use ($utilizador): void {
             $utilizador->tokens()->delete();
 
-            try {
-                $utilizador->forceDelete();             // sem referências → hard delete
-            } catch (QueryException) {
-                // referenciado (restrictOnDelete) → soft delete.
-                // Anonimização RGPD dos dados pessoais neste ramo: Issue #73.
-                $utilizador->delete();
-            }
+            // Padrão B: hard delete quando não há referências; soft delete (preservando
+            // a autoria) quando o utilizador é responsável por documentos ou registou
+            // etapas. A decisão é tomada por pré-verificação determinística — o
+            // restrictOnDelete das FKs filhas é a salvaguarda ao nível da BD.
+            // Anonimização RGPD dos dados pessoais no ramo soft delete: Issue #73.
+            $this->estaReferenciado($utilizador)
+                ? $utilizador->delete()
+                : $utilizador->forceDelete();
 
             $this->cache->invalidarCache(TagCache::Utilizadores);
         });
 
         Log::info('utilizador.eliminar.fim', ['id_utilizador' => Auth::id(), 'id_alvo' => $utilizador->id]);
+    }
+
+    private function estaReferenciado(User $utilizador): bool
+    {
+        return Documento::where('id_responsavel', $utilizador->id)->exists()
+            || EtapaDocumento::where('id_utilizador', $utilizador->id)->exists();
     }
 }

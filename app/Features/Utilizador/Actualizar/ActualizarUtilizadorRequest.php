@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
-final class ActualizarUtilizadorRequest extends FormRequest
+class ActualizarUtilizadorRequest extends FormRequest
 {
     public function authorize(): bool
     {

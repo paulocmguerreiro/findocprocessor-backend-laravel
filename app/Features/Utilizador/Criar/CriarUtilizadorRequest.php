@@ -11,7 +11,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\Models\Role;
 
-final class CriarUtilizadorRequest extends FormRequest
+class CriarUtilizadorRequest extends FormRequest
 {
     public function authorize(): bool
     {
