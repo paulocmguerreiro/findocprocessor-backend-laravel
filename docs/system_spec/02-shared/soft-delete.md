@@ -73,17 +73,63 @@ enum FiltroEstadoRegisto: string
 
 - Valor por omissão: `SomenteAtivos` (comportamento pre-SoftDelete — sem regressão)
 - Valores na query string: `todos`, `somente_ativos`, `somente_inativos`
-- Validação no `FormRequest`: `Rule::enum(FiltroEstadoRegisto::class)`
+- Validação no `FormRequest`: `Rule::in(array_column(FiltroEstadoRegisto::cases(), 'value'))`
 
-### Aplicação na Action
+### Aplicação na Action — via trait `FiltravelPorEstadoRegisto`
+
+A tradução enum → scope de SoftDeletes **não é repetida em cada Action**. Vive num
+trait transversal `App\Models\Concerns\FiltravelPorEstadoRegisto`, usado por todos os
+modelos com SoftDeletes (a par do trait `SoftDeletes`). Expõe o scope
+`filtrarPorEstadoRegisto(FiltroEstadoRegisto $filtro)`:
 
 ```php
-$query = match ($filtroEstado) {
-    FiltroEstadoRegisto::Todos           => Model::withTrashed(),
-    FiltroEstadoRegisto::SomenteAtivos   => Model::query(),
-    FiltroEstadoRegisto::SomenteInativos => Model::onlyTrashed(),
-};
+// app/Models/Concerns/FiltravelPorEstadoRegisto.php
+public function scopeFiltrarPorEstadoRegisto(Builder $query, FiltroEstadoRegisto $filtro): void
+{
+    match ($filtro) {
+        FiltroEstadoRegisto::SomenteAtivos   => $query->withoutTrashed(),
+        FiltroEstadoRegisto::SomenteInativos => $query->onlyTrashed(),
+        FiltroEstadoRegisto::Todos           => $query->withTrashed(),
+    };
+}
 ```
+
+A Action de listagem apenas encadeia o scope:
+
+```php
+User::with('roles')
+    ->filtrarPorEstadoRegisto($filtroEstado)
+    ->orderBy($campo->value, $direcao->value)
+    ->cursorPaginate($porPagina);
+```
+
+> Decisão (#68): preferir sempre o scope do trait a chamadas dispersas de
+> `withTrashed()`/`onlyTrashed()`/`withoutTrashed()` no código de domínio.
+
+---
+
+## Acesso a `update`/`delete` em registos inactivos
+
+O acesso às operações de **actualização e eliminação tem de contemplar sempre todos os
+registos**, incluindo os já soft-deleted (caso contrário o route model binding devolveria
+404 para um registo inactivo, impedindo, por exemplo, a sua eliminação definitiva).
+
+O binding inclui os registos inactivos declarando-o na rota de recurso:
+
+```php
+Route::apiResource('<recurso>', <Recurso>Controller::class)
+    ->withTrashed(['update', 'destroy']);
+```
+
+- `withTrashed()` sem argumentos cobre apenas `show`/`edit`/`update` — **`destroy` exige
+  o array explícito**. Daí `['update', 'destroy']`.
+- O `FormRequest` (`authorize()` via `$this->route('<recurso>')`) e a Action recebem o
+  modelo já resolvido com o registo inactivo, mantendo a autorização dupla camada intacta.
+- Listagem (`index`) mantém o default `SomenteAtivos`; quem quiser inactivos usa `?estado=`.
+
+> Decisão (#68): `update`/`destroy` resolvem com registos inactivos incluídos; `index`
+> permanece activo-por-omissão e `show` segue o default do framework (activos), salvo
+> indicação em contrário por recurso.
 
 ---
 
@@ -154,11 +200,12 @@ Para cada modelo com SoftDelete:
 
 - [ ] Migration `add_softdeletes_to_<tabela>_table` — `$table->softDeletes()`
 - [ ] Migration para FKs das tabelas filhas — `nullOnDelete` → `restrictOnDelete`
-- [ ] Trait `SoftDeletes` no model + `@property-read ?Carbon $deleted_at`
+- [ ] Trait `SoftDeletes` + `FiltravelPorEstadoRegisto` no model + `@property-read ?Carbon $deleted_at`
 - [ ] Factory state `inativo` com `deleted_at` preenchido
 - [ ] Resource expõe `deleted_at` (null ou ISO 8601)
 - [ ] `EliminarAction` — Padrão B (`forceDelete` + `QueryException` catch + `delete`)
 - [ ] `RestaurarAction` + `RestaurarRequest` + Policy `restore()` + rota `PATCH /restaurar`
-- [ ] `ListarAction` aceita `FiltroEstadoRegisto $filtroEstado` (default `SomenteAtivos`)
+- [ ] `ListarAction` aceita `FiltroEstadoRegisto $filtroEstado` (default `SomenteAtivos`) via scope `filtrarPorEstadoRegisto()`
+- [ ] Rota de recurso com `->withTrashed(['update', 'destroy'])` (acesso a inactivos)
 - [ ] Relações nas tabelas filhas usam `withTrashed()`
 - [ ] Testes: branch hard delete (sem refs) + branch soft delete (com refs) + restaurar

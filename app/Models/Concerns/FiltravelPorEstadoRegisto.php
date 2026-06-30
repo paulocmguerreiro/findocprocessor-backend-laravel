@@ -22,8 +22,8 @@ trait FiltravelPorEstadoRegisto
     public function scopeFiltrarPorEstadoRegisto(Builder $query, FiltroEstadoRegisto $filtro): void
     {
         match ($filtro) {
-            FiltroEstadoRegisto::Activos => $query->withoutTrashed(),
-            FiltroEstadoRegisto::Inactivos => $query->onlyTrashed(),
+            FiltroEstadoRegisto::SomenteAtivos => $query->withoutTrashed(),
+            FiltroEstadoRegisto::SomenteInativos => $query->onlyTrashed(),
             FiltroEstadoRegisto::Todos => $query->withTrashed(),
         };
     }
