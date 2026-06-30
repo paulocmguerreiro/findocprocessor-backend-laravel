@@ -12,14 +12,14 @@
 | `id_documento` | `uuid` FK | Não | FK | → `documentos.id`; `cascadeOnDelete()` (histórico segue o documento) |
 | `estado` | `string(50)` | Não | simples | Cast → `EstadoDocumento`; a etapa atingida |
 | `motivo` | `text` | Sim | — | Motivo/resposta/nota; pode conter detalhe sensível |
-| `id_utilizador` | `bigint unsigned` FK | Sim | FK | → `users.id`; `nullOnDelete()` — `null` = passo automático (sistema) |
+| `id_utilizador` | `bigint unsigned` FK | Sim | FK | → `users.id`; `restrictOnDelete()` (Issue #68 — era `nullOnDelete`); `null` = passo automático (sistema) |
 | `created_at` | `timestamp` | Sim | — | Data+hora da etapa; **sem `updated_at`** (append-only) |
 
 **Notas:**
 - **Sem `updated_at`** — tabela append-only; cada transição de estado cria uma linha nova; nunca há updates.
 - `id_utilizador` é `bigint` (não UUID) porque `users.id` é `bigint auto_increment` (sem `HasUuids`). Desvio documentado no Brief/Debrief da Issue #56.
 - `cascadeOnDelete()` em `id_documento` — histórico não existe sem o documento.
-- `nullOnDelete()` em `id_utilizador` — etapa sobrevive mesmo se o utilizador for eliminado.
+- `restrictOnDelete()` em `id_utilizador` (Issue #68) — um utilizador que registou etapas não pode ser hard-deleted; `EliminarUtilizadorAction` cai no soft delete, preservando a autoria da etapa.
 
 ---
 

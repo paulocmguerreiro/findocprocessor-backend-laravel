@@ -126,6 +126,35 @@ components:
           items:
             type: string
 
+    Utilizador:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        roles:
+          type: array
+          items:
+            type: string
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: "ISO 8601 se inactivo; null se activo"
+        created_at:
+          type: string
+          format: date-time
+
+    FiltroEstadoRegisto:
+      type: string
+      enum: [todos, somente_ativos, somente_inativos]
+      default: somente_ativos
+      description: "Filtro de SoftDelete nas listagens"
+
     EstadoDocumento:
       type: string
       enum: [PENDENTE, AGUARDA_ENVIO, ENVIADO, AGUARDA_RESPOSTA, PROCESSADO, ERRO, PERIGOSO]
@@ -1111,6 +1140,196 @@ paths:
         '404':
           $ref: '#/components/schemas/ErrorNaoEncontrado'
 
+  /utilizadores:
+    get:
+      summary: Listar utilizadores (cursor pagination)
+      tags: [Utilizador]
+      parameters:
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            maximum: 100
+            default: 15
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [name, email, created_at]
+            default: name
+        - in: query
+          name: direction
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+        - in: query
+          name: estado
+          schema:
+            $ref: '#/components/schemas/FiltroEstadoRegisto'
+        - in: query
+          name: cursor
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista paginada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Utilizador'
+                  links:
+                    type: object
+                    properties:
+                      prev:
+                        type: ['string', 'null']
+                      next:
+                        type: ['string', 'null']
+                  meta:
+                    type: object
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+
+    post:
+      summary: Criar utilizador
+      tags: [Utilizador]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, password_confirmation]
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                email:
+                  type: string
+                  format: email
+                  maxLength: 255
+                password:
+                  type: string
+                  description: "Mínimo 8 caracteres, maiúsculas e minúsculas, números e símbolos"
+                password_confirmation:
+                  type: string
+                role:
+                  type: string
+                  nullable: true
+                  description: "Nome de um role existente (opcional)"
+      responses:
+        '201':
+          description: Utilizador criado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Utilizador'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '422':
+          $ref: '#/components/schemas/ErrorValidacao'
+
+  /utilizadores/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: Ver utilizador (inclui inactivos; o próprio é sempre permitido)
+      tags: [Utilizador]
+      responses:
+        '200':
+          description: Utilizador encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Utilizador'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+
+    put:
+      summary: Actualizar utilizador (inclui inactivos)
+      tags: [Utilizador]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email]
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                email:
+                  type: string
+                  format: email
+                  maxLength: 255
+                password:
+                  type: string
+                  nullable: true
+                  description: "Opcional; se omitido a password não é alterada"
+                password_confirmation:
+                  type: string
+      responses:
+        '200':
+          description: Utilizador actualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Utilizador'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+        '422':
+          $ref: '#/components/schemas/ErrorValidacao'
+
+    delete:
+      summary: Eliminar utilizador (hard delete sem referências; soft delete se referenciado)
+      tags: [Utilizador]
+      responses:
+        '204':
+          description: Eliminado com sucesso (tokens revogados)
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+        '422':
+          description: Auto-eliminação não permitida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorValidacao'
+
   /utilizadores/{id}/role:
     put:
       summary: Atribuir role a um utilizador
@@ -1120,8 +1339,7 @@ paths:
           name: id
           required: true
           schema:
-            type: string
-            format: uuid
+            type: integer
       requestBody:
         required: true
         content:

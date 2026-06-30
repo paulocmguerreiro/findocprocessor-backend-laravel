@@ -105,8 +105,9 @@ enum FiltroEstadoRegisto: string
 
 - Valor por omissão: `SomenteAtivos` (comportamento pré-SoftDelete — sem regressão de API)
 - Valores na query string: `todos`, `somente_ativos`, `somente_inativos`
-- Validação no `FormRequest`: `Rule::enum(FiltroEstadoRegisto::class)`
-- Usado em: `ListarEntidadesAction`, `ListarCategoriasAction`, `ListarUtilizadoresAction`
+- Validação no `FormRequest`: `Rule::in(array_column(FiltroEstadoRegisto::cases(), 'value'))`
+- Aplicado pelo scope do trait `FiltravelPorEstadoRegisto` (`filtrarPorEstadoRegisto()`) — ver `02-shared/soft-delete.md`
+- Usado em: `ListarUtilizadoresAction` (#68). `ListarEntidadesAction` e `ListarCategoriasAction`: planeado (retrofit futuro)
 
 ---
 

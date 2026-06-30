@@ -22,37 +22,50 @@ dados históricos quando o registo "pai" é eliminado.
 
 ---
 
-## Padrão B — forceDelete com fallback para soft delete
+## Padrão B — hard delete com fallback para soft delete (pré-verificação)
 
-O comportamento padrão de eliminação em todas as tabelas com SoftDelete:
+O comportamento padrão de eliminação em todas as tabelas com SoftDelete: hard
+delete quando o registo **não** é referenciado; soft delete (fallback) quando é.
+A decisão é tomada por **pré-verificação determinística** das tabelas filhas —
+**não** por `try/catch` em torno de `forceDelete()`:
 
 ```php
-DB::transaction(function () use ($entidade): void {
-    try {
-        $entidade->forceDelete();           // tenta hard delete
-    } catch (\Illuminate\Database\QueryException) {
-        $entidade->delete();                // FK constraint → fallback soft delete
-    }
-    $this->cache->invalidarCache(TagCache::Entidades);
+DB::transaction(function () use ($registo): void {
+    $referenciado = Filho::where('id_pai', $registo->id)->exists() /* || ... outras FKs */;
+
+    $referenciado
+        ? $registo->delete()        // soft delete — preserva referência/histórico
+        : $registo->forceDelete();  // sem referências → hard delete
+
+    $this->cache->invalidarCache(TagCache::Xxx);
 });
 ```
+
+### Porquê pré-verificação e não `try/catch forceDelete`
+
+O `try/catch (QueryException)` em torno de `forceDelete()` **não é fiável**: no
+SQLite (testes, com a transação aninhada do `RefreshDatabase`) a violação de FK
+`RESTRICT` difere para o commit e escapa ao `catch` (mesmo `\Throwable`). No MySQL
+falha no statement, mas a pré-verificação é determinística e **cross-driver**, e
+testável nos dois ramos sem depender do momento da verificação de FK.
 
 ### Comportamento resultante
 
 | Situação | Resultado | Efeito |
 |---|---|---|
-| Entidade sem referências | `forceDelete()` bem-sucedido | Registo eliminado permanentemente |
-| Entidade com referências | `QueryException` → `delete()` | Registo soft-deleted (`deleted_at` preenchido) |
+| Sem referências | `forceDelete()` | Registo eliminado permanentemente |
+| Com referências | `delete()` | Registo soft-deleted (`deleted_at` preenchido) |
 
 ### Invariante obrigatória
 
 As FKs das tabelas filhas **devem** ser `restrictOnDelete` (nunca `nullOnDelete`,
-nunca `cascadeOnDelete`). Sem `restrictOnDelete`, o `forceDelete()` eliminaria
-o pai deixando filhos com FK a null — quebrando a integridade referencial.
+nunca `cascadeOnDelete`) — é a **salvaguarda ao nível da BD** que garante que um
+hard delete acidental de um pai referenciado é bloqueado, mesmo que a
+pré-verificação fique desactualizada quando uma nova FK é adicionada.
 
-> **Nota SQLite (testes):** SQLite não aplica `restrictOnDelete` em runtime.
-> Os testes devem cobrir os dois ramos (sem refs → hard, com refs → soft)
-> usando factories que criam ou não criam registos filhos.
+> **Implementado (#68):** `User` é o primeiro modelo a usar Padrão B completo —
+> ver `EliminarUtilizadorAction` (`estaReferenciado()` sobre `documentos.id_responsavel`
+> e `etapas_documento.id_utilizador`).
 
 ---
 
@@ -182,18 +195,19 @@ Sem `withTrashed()`, documentos que referenciam entidades inactivas retornam
 
 ---
 
-## User — padrão adicional (RGPD)
+## User — padrão adicional (RGPD) — **adiado (Issue #73)**
 
-O modelo `User` segue o Padrão B com um passo extra obrigatório antes da eliminação:
-**anonimização dos dados pessoais** quando o fallback para soft delete é activado.
+O modelo `User` deverá, no ramo soft delete, **anonimizar os dados pessoais**
+(`name`, `email`, `password`) — passo de conformidade RGPD.
 
 ```
-1. Tentar forceDelete()
-2. Se QueryException → anonimizar (name, email, password) + delete() (soft)
-3. Se forceDelete bem-sucedido → sem dados pessoais a tratar (registo desapareceu)
+1. Pré-verificar referências (estaReferenciado())
+2. Referenciado → [anonimizar (name, email, password)] + delete() (soft)   ← anonimização: #73
+3. Sem referências → forceDelete() (registo desaparece; sem dados a tratar)
 ```
 
-Ver detalhe em `01-features/utilizador.md` — `AnonimizarUtilizadorAction`.
+**Estado (#68):** o Padrão B (hard/soft) está implementado em `EliminarUtilizadorAction`;
+a **anonimização** do ramo soft delete fica **adiada para a Issue #73** (dívida técnica).
 
 ---
 
