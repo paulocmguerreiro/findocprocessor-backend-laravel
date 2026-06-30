@@ -24,6 +24,7 @@ describe('autenticado', function (): void {
                     ->where('nome', $categoria->nome)
                     ->where('slug', $categoria->slug)
                     ->where('tipo_movimento', $categoria->tipo_movimento->value)
+                    ->where('deleted_at', null)
                 )
             );
     });
