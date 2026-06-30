@@ -7,6 +7,16 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
+- **Issue #70** — CategoriaDocumento — SoftDeletes (Model Layer)
+  - Migration `add_softdeletes_to_categorias_documento_table` — coluna `deleted_at` nullable em `categorias_documento`
+  - Migration `update_fk_constraint_categoria_in_documentos` — `id_categoria` de `nullOnDelete` para `restrictOnDelete` (guarded para SQLite)
+  - Model `CategoriaDocumento` — trait `SoftDeletes`; `delete()` faz soft delete; `@property-read ?Carbon $deleted_at`
+  - Model `Documento` — `categoria()` usa `->withTrashed()` (integridade histórica de classificação)
+  - `CategoriaDocumentoFactory` — state `inativa()` com `deleted_at = now()`
+  - `CategoriaDocumentoResource` — campo `deleted_at` (5.º campo; ISO 8601 ou `null`)
+  - Testes actualizados: `assertDatabaseMissing` → `assertSoftDeleted` em `EliminarCategoria*`; `DocumentoTest` substitui `nullOnDelete` por `withTrashed`; `CategoriaDocumentoTest` com secção `SoftDeletes`; feature tests de Criar/Ver/Actualizar actualizados com `deleted_at`
+  - 609 testes totais, 100% cobertura, 100% type coverage, Larastan 9 zero erros
+
 - **Issue #69** — Entidade — SoftDeletes (Model Layer)
   - Migration `add_softdeletes_to_entidades_table` — coluna `deleted_at` nullable em `entidades`
   - Migration `update_fk_constraints_entidades_in_documentos` — `id_fornecedor` e `id_cliente` de `nullOnDelete` para `restrictOnDelete` (guarded para SQLite)

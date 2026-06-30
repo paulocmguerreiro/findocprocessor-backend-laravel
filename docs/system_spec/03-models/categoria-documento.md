@@ -18,6 +18,7 @@ Entidade de referência. Classifica documentos financeiros e define o tipo de mo
 | `tipo_movimento` | `string(50)` | `TipoMovimento` | Cast para enum |
 | `created_at` | `timestamp` | `Carbon` | Auto via `timestamps()` |
 | `updated_at` | `timestamp` | `Carbon` | Auto via `timestamps()` |
+| `deleted_at` | `timestamp` nullable | `?Carbon` | SoftDeletes — Issue #70 |
 
 ---
 
@@ -26,6 +27,7 @@ Entidade de referência. Classifica documentos financeiros e define o tipo de mo
 - `HasUuids` — UUID como PK, não autoincrement
 - `HasFactory` — `CategoriaDocumentoFactory`
 - `RegistaActividade` — audit trail (logFillable, logOnlyDirty); sem campos excluídos. Ver `04-infra/audit-trail.md`
+- `SoftDeletes` — `delete()` faz soft delete; `all()` exclui inactivas por defeito — Issue #70
 - `#[Table('categorias_documento')]` — nome explícito (não inferível pelo Eloquent)
 - `#[Fillable(['nome', 'slug', 'tipo_movimento'])]`
 - `#[UsePolicy(CategoriaDocumentoPolicy::class)]`
@@ -40,12 +42,27 @@ Entidade de referência. Classifica documentos financeiros e define o tipo de mo
 | `comMovimentoDebito()` | `tipo_movimento = TipoMovimento::Debito` |
 | `comMovimentoCredito()` | `tipo_movimento = TipoMovimento::Credito` |
 | `comMovimentoNeutro()` | `tipo_movimento = TipoMovimento::Neutro` |
+| `inativa()` | `deleted_at = now()` — categoria soft-deleted — Issue #70 |
 
 ---
 
 ## Relações
 
-`Documento` referencia `CategoriaDocumento` via `id_categoria` (lado `belongsTo` em `Documento`). Sem relação inversa `hasMany` definida neste Model.
+`Documento` referencia `CategoriaDocumento` via `id_categoria` (lado `belongsTo` em `Documento`). A relação usa `->withTrashed()` para carregar categorias inactivas (Issue #70). Sem relação inversa `hasMany` definida neste Model.
+
+---
+
+## Resource `CategoriaDocumentoResource`
+
+**Ficheiro:** `app/Features/CategoriaDocumento/CategoriaDocumentoResource.php`
+
+| Campo | Tipo | Fonte |
+|---|---|---|
+| `id` | `string` | directo |
+| `nome` | `string` | directo |
+| `slug` | `string` | directo |
+| `tipo_movimento` | `string` | `->value` |
+| `deleted_at` | `?string` | `?->toIso8601String()` — null quando activa — Issue #70 |
 
 ---
 

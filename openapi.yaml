@@ -86,6 +86,11 @@ components:
         tipo_movimento:
           type: string
           enum: [debito, credito, neutro]
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: "ISO 8601 se inactiva; null se activa"
 
     Entidade:
       type: object
