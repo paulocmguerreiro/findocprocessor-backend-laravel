@@ -12,7 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 final class CategoriaDocumentoResource extends JsonResource
 {
     /**
-     * @return array{id: string, nome: string, slug: string, tipo_movimento: string}
+     * @return array{id: string, nome: string, slug: string, tipo_movimento: string, deleted_at: ?string}
      */
     #[\Override]
     public function toArray(Request $request): array
@@ -22,6 +22,7 @@ final class CategoriaDocumentoResource extends JsonResource
             'nome' => $this->nome,
             'slug' => $this->slug,
             'tipo_movimento' => $this->tipo_movimento->value,
+            'deleted_at' => $this->deleted_at?->toIso8601String(),
         ];
     }
 }
