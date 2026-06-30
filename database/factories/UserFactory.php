@@ -34,4 +34,12 @@ final class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
+    /** Utilizador inactivo (soft-deleted) — para testes de SoftDelete. */
+    public function inativo(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'deleted_at' => now(),
+        ]);
+    }
 }
