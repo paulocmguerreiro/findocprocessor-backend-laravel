@@ -1,10 +1,9 @@
-issue_number: 69
-issue_title: "feat(laravel): Entidade — model layer (SoftDeletes + migration deleted_at + FK restrictOnDelete + relações withTrashed)"
-slug: entidade-softdeletes-modelo
-branch: feat/entidade-softdeletes-modelo
-fase: publica
-proximo_passo: /publica-implementacao #69
-debrief: docs/debriefs/2026-06-30-entidade-softdeletes-modelo.md
-brief: docs/briefs/2026-06-30-entidade-softdeletes-modelo.md
-spec: docs/specs/2026-06-30-entidade-softdeletes-modelo.md
-plan: docs/plans/2026-06-30-entidade-softdeletes-modelo.md
+issue_number: 70
+issue_title: "feat(laravel): CategoriaDocumento — model layer (SoftDeletes + migration deleted_at + FK restrictOnDelete + relação withTrashed)"
+slug: categoria-documento-softdeletes-modelo
+branch: feat/categoria-documento-softdeletes-modelo
+fase: implementa
+proximo_passo: /implementa-plano #70
+brief: docs/briefs/2026-06-30-categoria-documento-softdeletes-modelo.md
+spec: docs/specs/2026-06-30-categoria-documento-softdeletes-modelo.md
+plan: docs/plans/2026-06-30-categoria-documento-softdeletes-modelo.md
