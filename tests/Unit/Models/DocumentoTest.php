@@ -123,13 +123,14 @@ describe('Relações', function (): void {
             ->and($documento->fresh()->cliente->id)->toBe($cliente->id);
     });
 
-    it('coloca id_categoria a null quando a categoria é eliminada (nullOnDelete)', function (): void {
+    it('categoria() carrega categoria inactiva (withTrashed)', function (): void {
         $categoria = CategoriaDocumento::factory()->create();
         $documento = Documento::factory()->create(['id_categoria' => $categoria->id]);
 
         $categoria->delete();
 
-        expect($documento->fresh()->id_categoria)->toBeNull();
+        expect($documento->fresh()->categoria)->toBeInstanceOf(CategoriaDocumento::class)
+            ->and($documento->fresh()->categoria->id)->toBe($categoria->id);
     });
 });
 
