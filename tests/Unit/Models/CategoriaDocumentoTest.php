@@ -73,6 +73,31 @@ describe('Constraints BD', function (): void {
     });
 });
 
+describe('SoftDeletes', function (): void {
+    uses(RefreshDatabase::class);
+
+    it('soft-deleta (deleted_at preenchido, registo permanece na BD)', function (): void {
+        $categoria = CategoriaDocumento::factory()->create();
+
+        $categoria->delete();
+
+        $this->assertSoftDeleted('categorias_documento', ['id' => $categoria->id]);
+    });
+
+    it('exclui categorias inactivas por defeito das queries', function (): void {
+        CategoriaDocumento::factory()->inativa()->create();
+        CategoriaDocumento::factory()->create();
+
+        expect(CategoriaDocumento::count())->toBe(1);
+    });
+
+    it('state inativa define deleted_at', function (): void {
+        $categoria = CategoriaDocumento::factory()->inativa()->make();
+
+        expect($categoria->deleted_at)->not->toBeNull();
+    });
+});
+
 describe('Factory — states', function (): void {
     it('state comMovimentoDebito define tipo_movimento como Debito', function (): void {
         $categoria = CategoriaDocumento::factory()->comMovimentoDebito()->make();
@@ -90,5 +115,11 @@ describe('Factory — states', function (): void {
         $categoria = CategoriaDocumento::factory()->comMovimentoNeutro()->make();
 
         expect($categoria->tipo_movimento)->toBe(TipoMovimento::Neutro);
+    });
+
+    it('state inativa define deleted_at', function (): void {
+        $categoria = CategoriaDocumento::factory()->inativa()->make();
+
+        expect($categoria->deleted_at)->not->toBeNull();
     });
 });
