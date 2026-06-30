@@ -90,13 +90,13 @@ describe('Relações', function (): void {
         expect(EtapaDocumento::find($etapa->id))->toBeNull();
     });
 
-    it('coloca id_utilizador a null quando o utilizador é eliminado (nullOnDelete)', function (): void {
+    it('preserva id_utilizador quando o utilizador é soft-deleted (restrictOnDelete)', function (): void {
         $utilizador = User::factory()->create();
         $etapa = EtapaDocumento::factory()->create(['id_utilizador' => $utilizador->id]);
 
-        $utilizador->delete();
+        $utilizador->delete(); // soft delete — a autoria da etapa é preservada
 
-        expect($etapa->fresh()->id_utilizador)->toBeNull();
+        expect($etapa->fresh()->id_utilizador)->toBe($utilizador->id);
     });
 });
 

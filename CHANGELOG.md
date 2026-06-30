@@ -7,6 +7,19 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
+- **Issue #68** — Utilizador — feature slice (CRUD completo + filtro de estado + SoftDeletes)
+  - SoftDeletes no `User`: migration `add_softdeletes_to_users_table` (`deleted_at`); trait `SoftDeletes` + `@property-read ?Carbon $deleted_at`; `UserFactory::inativo()`
+  - Migration `seed_utilizadores_permissions` — `utilizadores.{ver,criar,actualizar,eliminar}` atribuídas ao role `admin`
+  - Migration `change_users_fks_to_restrict_on_delete` — `documentos.id_responsavel` e `etapas_documento.id_utilizador` de `nullOnDelete` → `restrictOnDelete`
+  - **5 Actions CRUD** (`Listar`, `Ver`, `Criar`, `Actualizar`, `Eliminar`) + FormRequests; 2 DTOs (`CriarUtilizadorDto`, `ActualizarUtilizadorDto`); `UtilizadorResource`; enum `CampoOrdenacaoUtilizadores`
+  - **Infra transversal de SoftDelete**: enum `FiltroEstadoRegisto` (`Todos`/`SomenteAtivos`/`SomenteInativos`) + trait `FiltravelPorEstadoRegisto` (scope `filtrarPorEstadoRegisto()`); listagem aceita `?estado=`
+  - `UtilizadorPolicy` — `viewAny`/`view` (auto-acesso)/`create`/`update`/`delete`; `TagCache::Utilizadores`
+  - `UtilizadorController` (5 métodos) + `apiResource('utilizadores')` com `->withTrashed(['show','update','destroy'])`
+  - **Eliminação Padrão B por pré-verificação** (hard delete sem referências; soft delete + revogação de tokens Sanctum quando referenciado); `restrictOnDelete` como salvaguarda; invariante de auto-eliminação (→ 422)
+  - `CriarUtilizadorRequest`/`ActualizarUtilizadorRequest` não-final (mockáveis); `Password::min(8)->letters()->mixedCase()->numbers()->symbols()` + `confirmed`
+  - Anonimização RGPD do ramo soft delete **adiada para Issue #73**
+  - 674 testes totais, 100% cobertura, 100% type coverage, Larastan 9 zero erros
+
 - **Issue #70** — CategoriaDocumento — SoftDeletes (Model Layer)
   - Migration `add_softdeletes_to_categorias_documento_table` — coluna `deleted_at` nullable em `categorias_documento`
   - Migration `update_fk_constraint_categoria_in_documentos` — `id_categoria` de `nullOnDelete` para `restrictOnDelete` (guarded para SQLite)

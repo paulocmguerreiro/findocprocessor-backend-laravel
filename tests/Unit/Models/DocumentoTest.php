@@ -78,13 +78,13 @@ describe('Relações', function (): void {
             ->and($documento->responsavel->id)->toBe($responsavel->id);
     });
 
-    it('coloca id_responsavel a null quando o utilizador é eliminado (nullOnDelete)', function (): void {
+    it('preserva id_responsavel quando o utilizador é soft-deleted (restrictOnDelete)', function (): void {
         $responsavel = User::factory()->create();
         $documento = Documento::factory()->create(['id_responsavel' => $responsavel->id]);
 
-        $responsavel->delete();
+        $responsavel->delete(); // soft delete — a autoria é preservada
 
-        expect($documento->fresh()->id_responsavel)->toBeNull();
+        expect($documento->fresh()->id_responsavel)->toBe($responsavel->id);
     });
 
     it('belongsTo cliente (Entidade)', function (): void {

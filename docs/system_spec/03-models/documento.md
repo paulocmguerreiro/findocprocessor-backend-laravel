@@ -10,7 +10,7 @@
 |---|---|---|---|
 | `id` | `uuid` PK | Não | UUIDv7 via `HasUuids` |
 | `status` | `string(50)` | Não | Default `'PENDENTE'`; índice simples; cast → `EstadoDocumento` |
-| `id_responsavel` | `bigint` FK | Sim | → `users.id`; `nullOnDelete()`; autor do registo/upload (sempre o utilizador autenticado); `null` = utilizador removido |
+| `id_responsavel` | `bigint` FK | Sim | → `users.id`; `restrictOnDelete()` (Issue #68 — era `nullOnDelete`); autor do registo/upload (sempre o utilizador autenticado) |
 | `id_fornecedor` | `uuid` FK | Sim | → `entidades.id`; `restrictOnDelete()` (Issue #69 — era `nullOnDelete`) |
 | `id_cliente` | `uuid` FK | Sim | → `entidades.id`; `restrictOnDelete()` (Issue #69 — era `nullOnDelete`) |
 | `id_categoria` | `uuid` FK | Sim | → `categorias_documento.id`; `restrictOnDelete()` (Issue #70 — era `nullOnDelete`) |
@@ -24,7 +24,7 @@
 
 **Nota:** FKs de domínio nullable por design — campos de domínio podem estar a `null` em `Pendente` (registo automático iniciado sem dados completos).
 
-**`id_responsavel`** (Issue #57 — revisão) — FK `bigint` para `users.id` (o PK de `users` é incremental, não UUID). É o autor da entrada: definido pela `RegistarDocumentoManualAction` e pela `ReceberUploadDocumentoAction` a partir de `Auth::id()` — **nunca vem do cliente** (campo derivado server-side, como o `hash_sha256`). Nullable só para tolerar a remoção do utilizador (`nullOnDelete()`); está sempre preenchido à criação. As transições de pipeline (`Marcar*`) **não** alteram o responsável.
+**`id_responsavel`** (Issue #57 — revisão) — FK `bigint` para `users.id` (o PK de `users` é incremental, não UUID). É o autor da entrada: definido pela `RegistarDocumentoManualAction` e pela `ReceberUploadDocumentoAction` a partir de `Auth::id()` — **nunca vem do cliente** (campo derivado server-side, como o `hash_sha256`); está sempre preenchido à criação. A FK é `restrictOnDelete()` (Issue #68): um utilizador responsável por documentos não pode ser hard-deleted — `EliminarUtilizadorAction` cai no soft delete, preservando a autoria. As transições de pipeline (`Marcar*`) **não** alteram o responsável.
 
 ---
 

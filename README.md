@@ -151,6 +151,11 @@ Todas as rotas exigem Bearer token (role `admin`).
 | Método | Path                              | Descrição                |
 | ------ | --------------------------------- | ------------------------ |
 | GET/POST/PUT/DELETE | `/api/roles`         | CRUD de roles            |
+| GET    | `/api/utilizadores`               | Listar (cursor; `?estado=todos\|somente_ativos\|somente_inativos`) |
+| POST   | `/api/utilizadores`               | Criar utilizador (com `role` opcional) |
+| GET    | `/api/utilizadores/{id}`          | Ver detalhe (próprio sempre permitido) |
+| PUT    | `/api/utilizadores/{id}`          | Actualizar (password opcional) |
+| DELETE | `/api/utilizadores/{id}`          | Eliminar (hard/soft conforme referências) |
 | PUT    | `/api/utilizadores/{id}/role`     | Atribuir role a utilizador |
 
 ## Qualidade

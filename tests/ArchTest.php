@@ -11,6 +11,9 @@ use App\Features\Entidade\ComFlagsEfectivosEmpresaMae;
 use App\Features\Entidade\Criar\CriarEntidadeRequest;
 use App\Features\Entidade\Listar\CampoOrdenacaoEntidades;
 use App\Features\Role\Listar\CampoOrdenacaoRoles;
+use App\Features\Utilizador\Actualizar\ActualizarUtilizadorRequest;
+use App\Features\Utilizador\Criar\CriarUtilizadorRequest;
+use App\Features\Utilizador\Listar\CampoOrdenacaoUtilizadores;
 use App\Http\Controllers\Controller;
 
 arch()->preset()->laravel()->ignoring(['App\Shared\Enums', 'App\Shared\Cache', 'App\Features', 'App\Shared\Exceptions']);
@@ -44,4 +47,7 @@ arch('actions are final')
         CampoOrdenacaoRoles::class,
         CampoOrdenacaoDocumentos::class,
         ModoReprocessamento::class,
+        CampoOrdenacaoUtilizadores::class,
+        CriarUtilizadorRequest::class,
+        ActualizarUtilizadorRequest::class,
     ]);

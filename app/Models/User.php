@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\FiltravelPorEstadoRegisto;
 use App\Policies\UtilizadorPolicy;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -29,6 +31,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read string|null $remember_token
  * @property-read Carbon $created_at
  * @property-read Carbon $updated_at
+ * @property-read Carbon|null $deleted_at
  * @property-read Collection<int, PersonalAccessToken> $tokens
  * @property-read Collection<int, Role> $roles
  * @property-read Collection<int, Permission> $permissions
@@ -39,7 +42,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, HasRoles, Notifiable;
+    use FiltravelPorEstadoRegisto, HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
 
     /** @return array<string, string> */
     #[\Override]
