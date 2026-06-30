@@ -102,3 +102,28 @@ Cada `03-models/<slug>.md` segue esta ordem de secções (modelo de referência:
 
 - Cast de coluna enum via `casts()` → `'coluna' => MeuEnum::class`.
 - Enums partilhados vivem em `app/Shared/Enums/` (ver `02-shared/enums.md`).
+
+---
+
+## SoftDelete — quando usar e padrão obrigatório
+
+SoftDelete **só se aplica a tabelas pai/transversais** — tabelas referenciadas por FK
+de outras tabelas. Nunca aplicar a tabelas folha.
+
+| Tabela | SoftDelete | Motivo |
+|---|---|---|
+| `entidades` | ✅ | Referenciada por `documentos.id_fornecedor` / `id_cliente` |
+| `categorias_documento` | ✅ | Referenciada por `documentos.id_categoria` |
+| `users` | ✅ | Referenciada por `documentos.id_responsavel` / `etapas_documento.id_utilizador` |
+| `documentos` | ❌ | Pai de `etapas_documento`, mas eliminação de documentos é hard (eliminação de negócio explícita) |
+| `etapas_documento` | ❌ | Tabela folha (histórico append-only) |
+
+**Padrão de implementação obrigatório:** Padrão B — ver `02-shared/soft-delete.md`.
+
+Quando um model tem `SoftDeletes`:
+- Usar trait `SoftDeletes` + `@property-read ?Carbon $deleted_at`
+- `EliminarAction` tenta `forceDelete()` com fallback para `delete()` soft
+- `RestaurarAction` exposta via `PATCH /<recurso>/{id}/restaurar`
+- `ListarAction` aceita `FiltroEstadoRegisto` (todos/somente_ativos/somente_inativos)
+- Relações nas tabelas filhas usam `->withTrashed()`
+- FKs das tabelas filhas: `restrictOnDelete` (nunca `nullOnDelete`)

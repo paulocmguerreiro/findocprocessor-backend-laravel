@@ -33,8 +33,14 @@ Selecciona os componentes a incluir nesta issue:
 [ ] DTOs             — Value Objects para criação e actualização (construtor
                        valida invariantes estruturais)
 [ ] Resource         — serialização JSON da resposta API (EntidadeResource)
+[ ] SoftDelete       — `deleted_at` + trait `SoftDeletes`; `EliminarAction` tenta
+                       `forceDelete()` com fallback para `delete()` (soft);
+                       enum `FiltroEstadoRegisto` na listagem (todos/somente_ativos/
+                       somente_inativos); `RestaurarAction` documentado para a
+                       issue de lógica — ver `02-shared/soft-delete.md`
 [ ] Testes           — model (casts, relações, fillable) + factory (states)
                        + policy + DTOs + resource
+                       [se SoftDelete: +hard-delete branch + soft-delete branch + restaurar]
 
 Todos seleccionados por omissão. Remove o que não se aplica.
 ```
@@ -80,16 +86,26 @@ Só avançar para o Passo 3 depois de o utilizador confirmar os componentes.
 - Os timestamps devem ser incluídos no Resource?
 - Há campos derivados ou formatados? (ex: enum → `->value`, carbon → format)
 
+**Se SoftDelete seleccionado — perguntar:**
+- Esta tabela é referenciada como FK por outras tabelas? Quais? (critério obrigatório — ver `02-shared/soft-delete.md`)
+- Que tabelas filhas têm FKs para esta tabela? Quais os campos FK?
+  (as migrations dessas tabelas precisam de `nullOnDelete` → `restrictOnDelete`)
+- Este modelo tem dados pessoais (RGPD)? (User: sim; Entidade/Categoria: não)
+  Se sim → documentar passo de anonimização antes do soft delete
+
 **Se Testes seleccionados — perguntar:**
 - Há regras de negócio no model que precisam de teste directo?
   (ex: accessors, mutators, scopes)
 - Se Policy incluída: `PolicyTest` cobre config-com-permissão (admin: todas as abilities) vs config-sem-permissão (utilizador: leituras permitidas, escritas negadas) — matriz de 3 estados em `07-testing.md`
 - Se DTOs incluídos: cobrir happy path + cada `\InvalidArgumentException`
 - Se Resource incluído: cobrir serialização (campos presentes e tipos correctos)
+- Se SoftDelete incluído: cobrir branch hard delete (sem refs) + branch soft delete (com refs)
 
 ### 4 — Verificação de invariantes
 
 Antes de finalizar a issue, verificar conformidade com `docs/system_spec/02-shared/contratos-por-camada.md` — secção "Camada de modelo" e `docs/system_spec/03-models/00-convencoes-models.md`.
+
+Se SoftDelete seleccionado: verificar conformidade com `docs/system_spec/02-shared/soft-delete.md`.
 
 ### 5 — Gerar e propor issue
 
@@ -113,6 +129,32 @@ Gerar body no formato padrão do `/cria-issue`:
 ## Factory states
 [Lista de states ou "apenas estado base"]
 
+[Se SoftDelete: incluir state `inativo` (deleted_at preenchido)]
+
+## SoftDelete (se seleccionado)
+
+**Justificação:** [porquê esta tabela precisa de SoftDelete — é referenciada por ...]
+
+**Padrão de eliminação (Padrão B):**
+`EliminarAction` (issue de lógica) tenta `forceDelete()` → se FK constraint falhar
+(`QueryException`) → fallback automático para `delete()` (soft).
+
+**FK constraints a alterar (tabelas filhas):**
+| Tabela filha | Campo FK | Constraint actual | Nova constraint |
+|---|---|---|---|
+| ... | ... | nullOnDelete | restrictOnDelete |
+
+**`FiltroEstadoRegisto`** (enum shared — `app/Shared/Enums/`):
+`ListarAction` (issue de lógica) aceita parâmetro `estado`:
+- `todos` — inclui soft-deleted
+- `somente_ativos` — default
+- `somente_inativos` — só soft-deleted
+
+**`RestaurarAction`** (issue de lógica): `PATCH /<recurso>/{id}/restaurar`
+— Policy `restore()` reutiliza permissão `<recurso>.eliminar`.
+
+[Omitir secção se SoftDelete não seleccionado]
+
 ## Contrato dos DTOs (se aplicável)
 
 | Campo | Tipo | Obrigatório | Notas |
@@ -133,6 +175,8 @@ Gerar body no formato padrão do `/cria-issue`:
 |-------|------|-------|-------|
 | ...   | ...  | ...   | ...   |
 
+[Se SoftDelete: incluir campo `deleted_at` — `?string`, ISO 8601 ou null]
+
 [Omitir se Resource não seleccionado]
 
 ## Policy de autorização
@@ -143,7 +187,9 @@ Gerar body no formato padrão do `/cria-issue`:
 | create()    | [utilizador auth] | [criar nova entidade]          |
 | update()    | [owner / admin]   | [só o criador ou admin]        |
 | delete()    | [owner / admin]   | [só o criador ou admin]        |
+| restore()   | [owner / admin]   | [reutiliza permissão eliminar] |
 
+[restore() só se SoftDelete seleccionado — a Policy é criada na issue de lógica]
 [Omitir se Policy não seleccionada]
 
 ## Critérios de aceitação
@@ -160,6 +206,15 @@ Gerar body no formato padrão do `/cria-issue`:
              tipos correctos
 - [ ] CA-09: Testes dos DTOs cobrem happy path + cada excepção do construtor
 - [ ] CA-10: Testes do Resource cobrem serialização (campos presentes e tipos)
+[Se SoftDelete:]
+- [ ] CA-X: Migration `add_softdeletes_to_<tabela>_table` adiciona `deleted_at` nullable
+- [ ] CA-X: Migration `update_fk_constraints_<entidade>_in_<tabela_filha>` altera FKs para `restrictOnDelete`
+- [ ] CA-X: Model usa trait `SoftDeletes` + `@property-read ?Carbon $deleted_at`
+- [ ] CA-X: Factory tem state `inativo` com `deleted_at` preenchido
+- [ ] CA-X: Resource expõe `deleted_at` (null ou ISO 8601)
+- [ ] CA-X: Testes de `EliminarAction` cobrem: sem refs → hard delete (registo ausente na BD); com refs → soft delete (`assertSoftDeleted`)
+- [ ] CA-X: Relações nas tabelas filhas usam `withTrashed()` — entidades inactivas carregam correctamente
+[fim SoftDelete]
 - [ ] CA-11: 100% code coverage e 100% type coverage (composer test)
 [adicionar CAs específicos com base na informação recolhida]
 [omitir CA-04/CA-05 se Policy não seleccionada]
@@ -171,6 +226,7 @@ Gerar body no formato padrão do `/cria-issue`:
 - SYSTEM_SPEC a actualizar: `docs/system_spec/03-models/<slug>.md`
   [+ `docs/system_spec/02-shared/enums.md` se novos enums shared]
   [+ `docs/system_spec/05-routes/<slug>.md` se Resource incluído]
+  [+ `docs/system_spec/02-shared/soft-delete.md` se SoftDelete — enum FiltroEstadoRegisto]
 - Dependências: [#N | "nenhuma"]
 
 ## Invariantes em risco
@@ -182,9 +238,16 @@ Gerar body no formato padrão do `/cria-issue`:
 - DTOs: `final readonly class`; `fromRequest()` não incluído — adicionado na issue de lógica
 - DTOs: campos com promoção condicional não usam constructor promotion
 - Resource: `final class`; localização em `app/Features/<Entidade>/`
+[Se SoftDelete:]
+- SoftDelete só válido em tabelas pai/transversais — ver `02-shared/soft-delete.md`
+- `restrictOnDelete` em SQLite não é aplicado em runtime — testes cobrem os dois branches
+- `withTrashed()` nas relações das tabelas filhas — obrigatório para não perder dados históricos
+- `FiltroEstadoRegisto` enum partilhado — verificar se já existe antes de criar
+[fim SoftDelete]
 
 ## Contrato OpenAPI
 - openapi.yaml afectado: não (camada de modelo — sem endpoints)
+  [Se SoftDelete: sim — Resource passa a expor `deleted_at`; campo adicionado ao schema de resposta]
 - Breaking change: não
 
 ## Verificação RGPD/NIS2
@@ -196,6 +259,10 @@ Gerar body no formato padrão do `/cria-issue`:
 - Actions, Controller e FormRequests com authorize() (issue separada: /cria-issue-logica)
 - `fromRequest()` nos DTOs (issue separada: /cria-issue-logica — quando FormRequests existirem)
 - Endpoints de API
+[Se SoftDelete:]
+- `EliminarAction` Padrão B + `RestaurarAction` + `ListarAction` com `FiltroEstadoRegisto`
+  (issue separada: /cria-issue-logica)
+[fim SoftDelete]
 ```
 
 Apresentar ao utilizador:
@@ -210,6 +277,7 @@ Criar? [s / edita / cancela]
 O título lista apenas os componentes seleccionados — ex:
 - `model layer (migration + model + factory + testes)`
 - `model layer (migration + model + factory + DTOs + resource + testes)`
+- `model layer (migration + model + SoftDelete + factory + resource + testes)`
 - `model layer (DTOs + resource + testes)`
 
 ### 6 — Criar no GitHub

@@ -40,6 +40,7 @@
 | Convenções de nomenclatura (PT/EN)               | `02-shared/convencoes-nomenclatura.md` |
 | Contratos por camada (checklist arquitectural)   | `02-shared/contratos-por-camada.md`    |
 | Regras de negócio (`Regra*`) — catálogo e padrão | `02-shared/regras-negocio.md`          |
+| SoftDelete — quando usar, Padrão B, FiltroEstadoRegisto, RestaurarAction | `02-shared/soft-delete.md` |
 
 ## Modelos Eloquent
 

@@ -89,6 +89,27 @@ enum ModoReprocessamento: string
 
 ---
 
+## `FiltroEstadoRegisto` — `App\Shared\Enums\FiltroEstadoRegisto`
+
+Filtro de estado para listagens de modelos com SoftDelete. Partilhado por todas
+as features que usam o Padrão B de eliminação (ver `02-shared/soft-delete.md`).
+
+```php
+enum FiltroEstadoRegisto: string
+{
+    case Todos           = 'todos';
+    case SomenteAtivos   = 'somente_ativos';
+    case SomenteInativos = 'somente_inativos';
+}
+```
+
+- Valor por omissão: `SomenteAtivos` (comportamento pré-SoftDelete — sem regressão de API)
+- Valores na query string: `todos`, `somente_ativos`, `somente_inativos`
+- Validação no `FormRequest`: `Rule::enum(FiltroEstadoRegisto::class)`
+- Usado em: `ListarEntidadesAction`, `ListarCategoriasAction`, `ListarUtilizadoresAction`
+
+---
+
 ## `CampoOrdenacaoDocumentos` — `App\Features\Documento\Listar\CampoOrdenacaoDocumentos`
 
 Campo de ordenação da listagem de documentos.
