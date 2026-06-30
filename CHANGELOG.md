@@ -7,6 +7,16 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
+- **Issue #69** — Entidade — SoftDeletes (Model Layer)
+  - Migration `add_softdeletes_to_entidades_table` — coluna `deleted_at` nullable em `entidades`
+  - Migration `update_fk_constraints_entidades_in_documentos` — `id_fornecedor` e `id_cliente` de `nullOnDelete` para `restrictOnDelete` (guarded para SQLite)
+  - Model `Entidade` — trait `SoftDeletes`; `delete()` faz soft delete; `@property-read ?Carbon $deleted_at`
+  - Model `Documento` — `fornecedor()` e `cliente()` usam `->withTrashed()` (integridade histórica)
+  - `EntidadeFactory` — state `inativa()` com `deleted_at = now()`
+  - `EntidadeResource` — campo `deleted_at` (7.º campo; ISO 8601 ou `null`)
+  - Testes actualizados: `assertDatabaseMissing` → `assertSoftDeleted` em `EliminarEntidade*`; `DocumentoTest` substitui `nullOnDelete` por `withTrashed`; `EntidadeTest` com secção `SoftDeletes`
+  - 603 testes totais, 100% cobertura, 100% type coverage, Larastan 9 zero erros
+
 - **Issue #57** — Documento — lógica (máquina de estados: Actions de transição + listagem + Regra* + Events)
   - **13 Actions**: 2 de criação (`RegistarDocumentoManualAction`, `ReceberUploadDocumentoAction`), 6 de pipeline programático (`MarcarAguardaEnvio`, `MarcarEnviado`, `MarcarAguardaResposta`, `TransicionarProcessado`, `MarcarErro`, `MarcarPerigoso`), 3 HTTP retidas (`Reprocessar`, `Corrigir`, `Eliminar`), 2 de leitura (`Listar`, `Ver`) + `DescarregarDocumentoAction`
   - **3 classes `Regra*`**: `RegraTransicaoEstado` (mapa central De→Para, match exaustivo sem `default`), `RegraMoverFicheiro` (cross-disk com compensação best-effort), `RegraNomearProcessado` (`yyyy-mm-dd-{slug-fornecedor}-{slug-categoria}.{ext}`)

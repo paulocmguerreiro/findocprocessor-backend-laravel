@@ -103,6 +103,11 @@ components:
           type: boolean
         e_empresa_aplicacao:
           type: boolean
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: "ISO 8601 se inactiva; null se activa"
 
     Role:
       type: object
