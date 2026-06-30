@@ -14,15 +14,17 @@ use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
- * @property-read string $id
- * @property-read string $nome
- * @property-read string $slug
+ * @property-read string       $id
+ * @property-read string       $nome
+ * @property-read string       $slug
  * @property-read TipoMovimento $tipo_movimento
- * @property-read Carbon $created_at
- * @property-read Carbon $updated_at
+ * @property-read Carbon       $created_at
+ * @property-read Carbon       $updated_at
+ * @property-read ?Carbon      $deleted_at
  */
 #[Table('categorias_documento')]
 #[Fillable(['nome', 'slug', 'tipo_movimento'])]
@@ -30,10 +32,7 @@ use Illuminate\Support\Carbon;
 class CategoriaDocumento extends Model
 {
     /** @use HasFactory<CategoriaDocumentoFactory> */
-    use HasFactory;
-
-    use HasUuids;
-    use RegistaActividade;
+    use HasFactory, HasUuids, RegistaActividade, SoftDeletes;
 
     #[\Override]
     protected function casts(): array
