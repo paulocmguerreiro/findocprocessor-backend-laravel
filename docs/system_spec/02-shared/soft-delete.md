@@ -110,26 +110,29 @@ User::with('roles')
 
 ## Acesso a `update`/`delete` em registos inactivos
 
-O acesso às operações de **actualização e eliminação tem de contemplar sempre todos os
-registos**, incluindo os já soft-deleted (caso contrário o route model binding devolveria
-404 para um registo inactivo, impedindo, por exemplo, a sua eliminação definitiva).
+O acesso às operações de **leitura individual, actualização e eliminação tem de contemplar
+sempre todos os registos**, incluindo os já soft-deleted (caso contrário o route model
+binding devolveria 404 para um registo inactivo, impedindo, por exemplo, abrir o seu
+detalhe ou a sua eliminação definitiva).
 
 O binding inclui os registos inactivos declarando-o na rota de recurso:
 
 ```php
 Route::apiResource('<recurso>', <Recurso>Controller::class)
-    ->withTrashed(['update', 'destroy']);
+    ->withTrashed(['show', 'update', 'destroy']);
 ```
 
 - `withTrashed()` sem argumentos cobre apenas `show`/`edit`/`update` — **`destroy` exige
-  o array explícito**. Daí `['update', 'destroy']`.
+  o array explícito**. Como não há `edit` numa API, fica `['show', 'update', 'destroy']`.
+- **`show` é incluído por coerência com `index`:** se a listagem expõe inactivos via
+  `?estado=somente_inativos|todos`, o detalhe desses registos tem de abrir (senão a lista
+  mostra-os mas o GET individual devolvia 404).
 - O `FormRequest` (`authorize()` via `$this->route('<recurso>')`) e a Action recebem o
   modelo já resolvido com o registo inactivo, mantendo a autorização dupla camada intacta.
 - Listagem (`index`) mantém o default `SomenteAtivos`; quem quiser inactivos usa `?estado=`.
 
-> Decisão (#68): `update`/`destroy` resolvem com registos inactivos incluídos; `index`
-> permanece activo-por-omissão e `show` segue o default do framework (activos), salvo
-> indicação em contrário por recurso.
+> Decisão (#68): `show`/`update`/`destroy` resolvem com registos inactivos incluídos;
+> `index` permanece activo-por-omissão (filtra via `?estado=`).
 
 ---
 
@@ -206,6 +209,6 @@ Para cada modelo com SoftDelete:
 - [ ] `EliminarAction` — Padrão B (`forceDelete` + `QueryException` catch + `delete`)
 - [ ] `RestaurarAction` + `RestaurarRequest` + Policy `restore()` + rota `PATCH /restaurar`
 - [ ] `ListarAction` aceita `FiltroEstadoRegisto $filtroEstado` (default `SomenteAtivos`) via scope `filtrarPorEstadoRegisto()`
-- [ ] Rota de recurso com `->withTrashed(['update', 'destroy'])` (acesso a inactivos)
+- [ ] Rota de recurso com `->withTrashed(['show', 'update', 'destroy'])` (acesso a inactivos)
 - [ ] Relações nas tabelas filhas usam `withTrashed()`
 - [ ] Testes: branch hard delete (sem refs) + branch soft delete (com refs) + restaurar
