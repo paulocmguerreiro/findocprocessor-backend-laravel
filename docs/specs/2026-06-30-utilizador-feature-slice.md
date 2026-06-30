@@ -272,16 +272,16 @@ final readonly class ActualizarUtilizadorDto
 ### CriarUtilizadorRequest
 - `name`: required, string, max:255
 - `email`: required, string, email, max:255, Rule::unique('users', 'email')
-- `password`: required, `Password::min(8)`, confirmed
+- `password`: required, `Password::min(8)->letters()->mixedCase()->numbers()->symbols()`, confirmed
 - `role`: sometimes, nullable, string, Rule::exists('roles', 'name')
 
 ### ActualizarUtilizadorRequest
 - `name`: required, string, max:255
 - `email`: required, string, email, max:255, Rule::unique('users', 'email')->ignore($this->route('utilizador'))
-- `password`: sometimes, nullable, `Password::min(8)`, confirmed
+- `password`: sometimes, nullable, `Password::min(8)->letters()->mixedCase()->numbers()->symbols()`, confirmed
 
-> `Password::min(8)` = `Illuminate\Validation\Rules\Password::min(8)`.
-> Pode ser enriquecido futuramente com `->letters()->mixedCase()->numbers()->symbols()` sem alterar os FormRequests.
+> `Password::min(8)->letters()->mixedCase()->numbers()->symbols()` = `Illuminate\Validation\Rules\Password`.
+> Exige: mínimo 8 caracteres, letras maiúsculas e minúsculas, pelo menos um número e um símbolo.
 > `confirmed` mantém-se como regra separada (valida `password_confirmation`).
 
 ### EliminarUtilizadorRequest

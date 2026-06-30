@@ -166,7 +166,7 @@ enum CampoOrdenacaoUtilizadores: string
 
 **Request** (`app/Features/Utilizador/Criar/CriarUtilizadorRequest.php`):
 - `authorize()`: `Gate::authorize('create', User::class)`
-- `rules()`: ver spec — usar `Password::min(8)` + `confirmed`
+- `rules()`: ver spec — usar `Password::min(8)->letters()->mixedCase()->numbers()->symbols()` + `confirmed`
 - `messages()`: PT
 
 **Action** (`app/Features/Utilizador/Criar/CriarUtilizadorAction.php`):
@@ -186,7 +186,7 @@ enum CampoOrdenacaoUtilizadores: string
 
 **Request** (`app/Features/Utilizador/Actualizar/ActualizarUtilizadorRequest.php`):
 - `authorize()`: `Gate::authorize('update', $this->route('utilizador'))`
-- `rules()`: ver spec — `password` com `Password::min(8)` + `confirmed`, `sometimes/nullable`
+- `rules()`: ver spec — `password` com `Password::min(8)->letters()->mixedCase()->numbers()->symbols()` + `confirmed`, `sometimes/nullable`
 - `messages()`: PT
 
 **Action** (`app/Features/Utilizador/Actualizar/ActualizarUtilizadorAction.php`):
@@ -341,7 +341,7 @@ T4+T5      → "feat(auth): TagCache::Utilizadores + UtilizadorPolicy CRUD — I
 T6+T7      → "feat(utilizador): UtilizadorResource + CampoOrdenacaoUtilizadores — Issue #68"
 T8         → "feat(utilizador): ListarUtilizadoresAction + Request — Issue #68"
 T9         → "feat(utilizador): VerUtilizadorAction + Request — Issue #68"
-T10        → "feat(utilizador): CriarUtilizadorDto + Action + Request — Issue #68"
+T10        → "feat(utilizador): CriarUtilizadorDto + Action + Request (Password rule) — Issue #68"
 T11        → "feat(utilizador): ActualizarUtilizadorDto + Action + Request — Issue #68"
 T12        → "feat(utilizador): EliminarUtilizadorAction + Request — Issue #68"
 T13+T14    → "feat(utilizador): UtilizadorController CRUD + rotas apiResource — Issue #68"
