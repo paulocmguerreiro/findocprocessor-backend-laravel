@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\FiltravelPorEstadoRegisto;
 use App\Policies\UtilizadorPolicy;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -41,7 +42,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
+    use FiltravelPorEstadoRegisto, HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
 
     /** @return array<string, string> */
     #[\Override]
