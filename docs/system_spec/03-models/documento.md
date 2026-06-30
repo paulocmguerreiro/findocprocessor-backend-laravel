@@ -13,7 +13,7 @@
 | `id_responsavel` | `bigint` FK | Sim | → `users.id`; `nullOnDelete()`; autor do registo/upload (sempre o utilizador autenticado); `null` = utilizador removido |
 | `id_fornecedor` | `uuid` FK | Sim | → `entidades.id`; `restrictOnDelete()` (Issue #69 — era `nullOnDelete`) |
 | `id_cliente` | `uuid` FK | Sim | → `entidades.id`; `restrictOnDelete()` (Issue #69 — era `nullOnDelete`) |
-| `id_categoria` | `uuid` FK | Sim | → `categorias_documento.id`; `nullOnDelete()` |
+| `id_categoria` | `uuid` FK | Sim | → `categorias_documento.id`; `restrictOnDelete()` (Issue #70 — era `nullOnDelete`) |
 | `valor` | `decimal(15,2)` | Sim | Cast `decimal:2` → devolve `string` em PHP (não `float`) |
 | `data_documento` | `date` | Sim | Índice simples; cast → `Carbon` |
 | `nome_ficheiro_original` | `string(500)` | Não | Nome original do ficheiro no upload |
@@ -123,11 +123,11 @@ public function estado(): ContratoEstadoDocumento
 public function responsavel(): BelongsTo // → User (id_responsavel)
 public function fornecedor(): BelongsTo  // → Entidade (id_fornecedor) — withTrashed() (Issue #69)
 public function cliente(): BelongsTo     // → Entidade (id_cliente) — withTrashed() (Issue #69)
-public function categoria(): BelongsTo   // → CategoriaDocumento (id_categoria)
+public function categoria(): BelongsTo   // → CategoriaDocumento (id_categoria) — withTrashed() (Issue #70)
 public function historico(): HasMany     // → EtapaDocumento (id_documento), orderBy created_at asc
 ```
 
-> **`withTrashed()` em `fornecedor()` e `cliente()`** — documentos históricos continuam a carregar a entidade mesmo após soft delete. Sem `withTrashed()`, a relação devolveria `null` quando a entidade está inactiva, apagando o registo histórico do interveniente.
+> **`withTrashed()` em `fornecedor()`, `cliente()` e `categoria()`** — documentos históricos continuam a carregar a entidade/categoria mesmo após soft delete. Sem `withTrashed()`, a relação devolveria `null` quando o registo está inactivo, apagando o histórico do interveniente/classificação.
 
 **`historico`** — adicionado na Issue #56. Relação `hasMany` com FK explícita `id_documento`; ordenada por `created_at` ascendente (linha temporal). Ver `03-models/etapa-documento.md` para detalhe do Model.
 

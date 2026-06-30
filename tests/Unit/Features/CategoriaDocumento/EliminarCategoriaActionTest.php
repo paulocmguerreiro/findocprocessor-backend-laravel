@@ -20,7 +20,7 @@ describe('como admin', function (): void {
 
         app(EliminarCategoriaAction::class)->handle($categoria);
 
-        $this->assertDatabaseMissing('categorias_documento', ['id' => $categoria->id]);
+        $this->assertSoftDeleted('categorias_documento', ['id' => $categoria->id]);
     });
 
     it('elimina quando recebe string UUID', function (): void {
@@ -28,7 +28,7 @@ describe('como admin', function (): void {
 
         app(EliminarCategoriaAction::class)->handle($categoria->id);
 
-        $this->assertDatabaseMissing('categorias_documento', ['id' => $categoria->id]);
+        $this->assertSoftDeleted('categorias_documento', ['id' => $categoria->id]);
     });
 
     it('faz rollback quando ocorre excepção durante eliminação', function (): void {

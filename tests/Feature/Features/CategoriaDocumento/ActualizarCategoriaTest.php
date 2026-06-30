@@ -43,6 +43,7 @@ describe('autenticado', function (): void {
                     ->where('nome', 'Nome Actualizado')
                     ->where('slug', 'nome-actualizado')
                     ->where('tipo_movimento', TipoMovimento::Credito->value)
+                    ->where('deleted_at', null)
                 )
             );
 

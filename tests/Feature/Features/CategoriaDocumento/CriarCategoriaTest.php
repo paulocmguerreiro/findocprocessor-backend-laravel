@@ -33,6 +33,7 @@ describe('autenticado', function (): void {
                     ->where('nome', 'Fatura de Fornecedor')
                     ->where('slug', 'fatura-de-fornecedor')
                     ->where('tipo_movimento', TipoMovimento::Debito->value)
+                    ->where('deleted_at', null)
                 )
             );
 

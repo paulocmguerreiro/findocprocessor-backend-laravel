@@ -23,7 +23,7 @@ describe('autenticado', function (): void {
         $this->deleteJson("/api/categorias-documento/{$categoria->id}")
             ->assertNoContent();
 
-        $this->assertDatabaseMissing('categorias_documento', ['id' => $categoria->id]);
+        $this->assertSoftDeleted('categorias_documento', ['id' => $categoria->id]);
 
         expect(Activity::count())->toBe(1)
             ->and(Activity::query()->first()->event)->toBe('deleted');

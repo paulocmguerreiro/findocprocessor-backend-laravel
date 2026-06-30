@@ -42,4 +42,9 @@ class CategoriaDocumentoFactory extends Factory
     {
         return $this->state(['tipo_movimento' => TipoMovimento::Neutro]);
     }
+
+    public function inativa(): static
+    {
+        return $this->state(['deleted_at' => now()]);
+    }
 }
