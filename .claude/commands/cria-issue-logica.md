@@ -40,7 +40,15 @@ Selecciona os componentes a incluir nesta issue:
 [ ] Testes de feature — endpoints HTTP (matriz de 3 estados: guest→401 / com-permissão→2xx / sem-permissão→403, ver `07-testing.md`) + 404 + Jobs + Observers
 ```
 
-Só avançar para o Passo 3 depois de o utilizador confirmar os componentes.
+Só avançar para o Passo 2b depois de o utilizador confirmar os componentes.
+
+### 2b — Ler spec obrigatório (se FormRequests ou Testes seleccionados)
+
+Antes de avançar para o Passo 3, ler obrigatoriamente:
+- `docs/system_spec/04-infra/autorizacao.md` — modelo de permissions, padrão de Policy (`hasPermissionTo`), nunca `hasRole`
+- `docs/system_spec/07-testing.md` — matriz de 3 estados; o que `admin`/`utilizador` representam nos testes (configs de permissão, não actores)
+
+Não rascunhar regras de autorização nem matriz de testes sem ter lido estes dois ficheiros.
 
 ### 3 — Recolha de informação (adaptar ao seleccionado)
 
@@ -98,7 +106,14 @@ Só avançar para o Passo 3 depois de o utilizador confirmar os componentes.
 
 **Se Testes seleccionados — perguntar:**
 > "Há endpoints que requerem autenticação?"
-> "Matriz de autorização (obrigatória por endpoint/Action protegido): admin (acesso total), utilizador (leituras → 200), utilizador sem permissão (→ 403 HTTP / `AuthorizationException` Action), guest (→ 401 HTTP / `AuthorizationException` Action) — ver `07-testing.md`."
+> "Matriz de 3 estados por endpoint/Action protegido (obrigatória — ver `07-testing.md`):
+> — Sem autenticação (guest): 401 HTTP / `AuthorizationException` na Action
+> — Autenticado COM a permissão: 2xx (happy path)
+> — Autenticado SEM a permissão: 403 HTTP / `AuthorizationException` na Action
+> `admin` e `utilizador` são configs de permissões, não actores.
+> Helpers que materializam cada estado: `criarAdmin()` → COM permissão (escritas);
+> `criarUtilizador()` → SEM permissão (escritas), COM permissão (leituras);
+> `criarEAutenticarSemRole()` → SEM permissão (até leituras)."
 > "Há cenários de erro específicos a testar (ex: entidade não encontrada, permissão negada)?"
 > "Se Jobs: testar dispatch (assertDispatched) e execução isolada do Job?"
 > "Se Observers: testar que o Observer reage correctamente a cada evento Eloquent?"
