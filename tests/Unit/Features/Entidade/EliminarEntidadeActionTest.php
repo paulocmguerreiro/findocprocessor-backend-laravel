@@ -20,7 +20,7 @@ describe('como admin', function (): void {
 
         app(EliminarEntidadeAction::class)->handle($entidade);
 
-        $this->assertDatabaseMissing('entidades', ['id' => $entidade->id]);
+        $this->assertSoftDeleted('entidades', ['id' => $entidade->id]);
     });
 
     it('elimina quando recebe string UUID', function (): void {
@@ -28,7 +28,7 @@ describe('como admin', function (): void {
 
         app(EliminarEntidadeAction::class)->handle($entidade->id);
 
-        $this->assertDatabaseMissing('entidades', ['id' => $entidade->id]);
+        $this->assertSoftDeleted('entidades', ['id' => $entidade->id]);
     });
 
     it('faz rollback quando ocorre excepção durante eliminação', function (): void {

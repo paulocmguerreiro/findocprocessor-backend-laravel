@@ -35,6 +35,7 @@ describe('autenticado', function (): void {
                     ->where('e_cliente', true)
                     ->where('e_fornecedor', false)
                     ->where('e_empresa_aplicacao', false)
+                    ->where('deleted_at', null)
                 )
             );
 

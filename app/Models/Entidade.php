@@ -14,17 +14,19 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
- * @property-read string $id
- * @property-read string $nome
- * @property-read string $nif
- * @property-read bool   $e_cliente
- * @property-read bool   $e_fornecedor
- * @property-read bool   $e_empresa_aplicacao
- * @property-read Carbon $created_at
- * @property-read Carbon $updated_at
+ * @property-read string  $id
+ * @property-read string  $nome
+ * @property-read string  $nif
+ * @property-read bool    $e_cliente
+ * @property-read bool    $e_fornecedor
+ * @property-read bool    $e_empresa_aplicacao
+ * @property-read Carbon  $created_at
+ * @property-read Carbon  $updated_at
+ * @property-read ?Carbon $deleted_at
  */
 #[Table('entidades')]
 #[Fillable(['nome', 'nif', 'e_cliente', 'e_fornecedor', 'e_empresa_aplicacao'])]
@@ -32,7 +34,7 @@ use Illuminate\Support\Carbon;
 class Entidade extends Model
 {
     /** @use HasFactory<EntidadeFactory> */
-    use HasFactory, HasUuids, RegistaActividade;
+    use HasFactory, HasUuids, RegistaActividade, SoftDeletes;
 
     /**
      * @return array{e_cliente: string, e_fornecedor: string, e_empresa_aplicacao: string}

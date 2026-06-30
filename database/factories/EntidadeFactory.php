@@ -48,4 +48,9 @@ class EntidadeFactory extends Factory
     {
         return $this->state(['e_cliente' => true, 'e_fornecedor' => true, 'e_empresa_aplicacao' => true]);
     }
+
+    public function inativa(): static
+    {
+        return $this->state(['deleted_at' => now()]);
+    }
 }

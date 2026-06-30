@@ -103,13 +103,13 @@ class Documento extends Model
     /** @return BelongsTo<Entidade, $this> */
     public function fornecedor(): BelongsTo
     {
-        return $this->belongsTo(Entidade::class, 'id_fornecedor');
+        return $this->belongsTo(Entidade::class, 'id_fornecedor')->withTrashed();
     }
 
     /** @return BelongsTo<Entidade, $this> */
     public function cliente(): BelongsTo
     {
-        return $this->belongsTo(Entidade::class, 'id_cliente');
+        return $this->belongsTo(Entidade::class, 'id_cliente')->withTrashed();
     }
 
     /** @return BelongsTo<CategoriaDocumento, $this> */

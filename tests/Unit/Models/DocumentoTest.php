@@ -103,13 +103,24 @@ describe('Relações', function (): void {
             ->and($documento->categoria->id)->toBe($categoria->id);
     });
 
-    it('coloca id_fornecedor a null quando a entidade é eliminada (nullOnDelete)', function (): void {
+    it('fornecedor() carrega entidade inactiva (withTrashed)', function (): void {
         $fornecedor = Entidade::factory()->fornecedor()->create();
         $documento = Documento::factory()->create(['id_fornecedor' => $fornecedor->id]);
 
         $fornecedor->delete();
 
-        expect($documento->fresh()->id_fornecedor)->toBeNull();
+        expect($documento->fresh()->fornecedor)->toBeInstanceOf(Entidade::class)
+            ->and($documento->fresh()->fornecedor->id)->toBe($fornecedor->id);
+    });
+
+    it('cliente() carrega entidade inactiva (withTrashed)', function (): void {
+        $cliente = Entidade::factory()->cliente()->create();
+        $documento = Documento::factory()->create(['id_cliente' => $cliente->id]);
+
+        $cliente->delete();
+
+        expect($documento->fresh()->cliente)->toBeInstanceOf(Entidade::class)
+            ->and($documento->fresh()->cliente->id)->toBe($cliente->id);
     });
 
     it('coloca id_categoria a null quando a categoria é eliminada (nullOnDelete)', function (): void {

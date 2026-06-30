@@ -73,6 +73,31 @@ describe('Scopes', function (): void {
     });
 });
 
+describe('SoftDeletes', function (): void {
+    uses(RefreshDatabase::class);
+
+    it('soft-deleta (deleted_at preenchido, registo permanece na BD)', function (): void {
+        $entidade = Entidade::factory()->create();
+
+        $entidade->delete();
+
+        $this->assertSoftDeleted('entidades', ['id' => $entidade->id]);
+    });
+
+    it('exclui entidades inactivas por defeito das queries', function (): void {
+        Entidade::factory()->inativa()->create();
+        Entidade::factory()->create();
+
+        expect(Entidade::count())->toBe(1);
+    });
+
+    it('state inativa define deleted_at', function (): void {
+        $entidade = Entidade::factory()->inativa()->make();
+
+        expect($entidade->deleted_at)->not->toBeNull();
+    });
+});
+
 describe('Factory — states', function (): void {
     it('state cliente define e_cliente=true', function (): void {
         $entidade = Entidade::factory()->cliente()->make();

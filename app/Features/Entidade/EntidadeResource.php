@@ -12,7 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 final class EntidadeResource extends JsonResource
 {
     /**
-     * @return array{id: string, nome: string, nif: string, e_cliente: bool, e_fornecedor: bool, e_empresa_aplicacao: bool}
+     * @return array{id: string, nome: string, nif: string, e_cliente: bool, e_fornecedor: bool, e_empresa_aplicacao: bool, deleted_at: ?string}
      */
     #[\Override]
     public function toArray(Request $request): array
@@ -24,6 +24,7 @@ final class EntidadeResource extends JsonResource
             'e_cliente' => $this->e_cliente,
             'e_fornecedor' => $this->e_fornecedor,
             'e_empresa_aplicacao' => $this->e_empresa_aplicacao,
+            'deleted_at' => $this->deleted_at?->toIso8601String(),
         ];
     }
 }
