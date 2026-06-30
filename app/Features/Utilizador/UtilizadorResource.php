@@ -12,7 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 final class UtilizadorResource extends JsonResource
 {
     /**
-     * @return array{id: int, name: string, email: string, roles: array<int, string>, deleted_at: ?string, created_at: string}
+     * @return array{id: int, name: string, email: string, roles: array<int, mixed>, deleted_at: ?string, created_at: string}
      */
     #[\Override]
     public function toArray(Request $request): array
@@ -21,7 +21,7 @@ final class UtilizadorResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
-            'roles' => $this->roles->pluck('name')->all(),
+            'roles' => $this->roles->pluck('name')->values()->all(),
             'deleted_at' => $this->deleted_at?->toIso8601String(),
             'created_at' => $this->created_at->toIso8601String(),
         ];
