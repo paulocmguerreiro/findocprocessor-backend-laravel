@@ -10,4 +10,5 @@ enum TagCache: string
     case CategoriasDocumento = 'categorias_documento';
     case Roles = 'roles';
     case Documentos = 'documentos';
+    case Utilizadores = 'utilizadores';
 }
