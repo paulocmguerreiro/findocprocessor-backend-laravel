@@ -31,12 +31,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->withTrashed(['show', 'update', 'destroy']);
     Route::put('utilizadores/{utilizador}/role', [UtilizadorController::class, 'atribuirRole']);
 
-    Route::get('documentos', [DocumentoController::class, 'index']);
-    Route::post('documentos', [DocumentoController::class, 'store']);
     Route::post('documentos/upload', [DocumentoController::class, 'upload']);
-    Route::get('documentos/{documento}', [DocumentoController::class, 'show']);
+    Route::apiResource('documentos', DocumentoController::class);
     Route::get('documentos/{documento}/ficheiro', [DocumentoController::class, 'descarregar']);
-    Route::patch('documentos/{documento}', [DocumentoController::class, 'update']);
     Route::post('documentos/{documento}/reprocessar', [DocumentoController::class, 'reprocessar']);
-    Route::delete('documentos/{documento}', [DocumentoController::class, 'destroy']);
 });
