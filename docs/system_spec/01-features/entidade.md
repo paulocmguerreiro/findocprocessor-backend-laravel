@@ -19,11 +19,12 @@ HTTP Request → FormRequest (autoriza + valida) → Controller (constrói DTO o
 
 | Classe | Namespace | Assinatura `handle()` | Descrição |
 |---|---|---|---|
-| `ListarEntidadesAction` | `App\Features\Entidade\Listar` | `handle(int $perPage, CampoOrdenacaoEntidades $campoOrdenacao, DirecaoOrdenacao $direcaoOrdenacao): CursorPaginator<int, Entidade>` | Devolve página via cursor pagination, ordenada pelo campo e direcção indicados |
+| `ListarEntidadesAction` | `App\Features\Entidade\Listar` | `handle(int $porPagina, CampoOrdenacaoEntidades $campoOrdenacao, DirecaoOrdenacao $direcaoOrdenacao, FiltroEstadoRegisto $filtroEstado): CursorPaginator<int, Entidade>` | Devolve página via cursor pagination, ordenada e filtrada por estado SoftDelete via scope `filtrarPorEstadoRegisto()`; `estado` na chave de cache |
 | `CriarEntidadeAction` | `App\Features\Entidade\Criar` | `handle(CriarEntidadeDto): Entidade` | Cria entidade; invoca `RegraUnicidadeEmpresaMae` se `eEmpresaAplicacao = true` |
 | `VerEntidadeAction` | `App\Features\Entidade\Ver` | `handle(Entidade\|string): Entidade` | Devolve entidade; resolve UUID com `findOrFail` se string |
 | `ActualizarEntidadeAction` | `App\Features\Entidade\Actualizar` | `handle(Entidade\|string, ActualizarEntidadeDto): Entidade` | Update completo (PUT semântico); invoca `RegraUnicidadeEmpresaMae`; devolve `refresh()` |
-| `EliminarEntidadeAction` | `App\Features\Entidade\Eliminar` | `handle(Entidade\|string): void` | Hard delete |
+| `EliminarEntidadeAction` | `App\Features\Entidade\Eliminar` | `handle(Entidade\|string): void` | **Padrão B** (#71): `forceDelete()` (hard delete) com fallback `fresh()?->delete()` (soft delete) quando FK `restrictOnDelete` bloqueia; ver `02-shared/soft-delete.md` |
+| `RestaurarEntidadeAction` | `App\Features\Entidade\Restaurar` | `handle(Entidade\|string): Entidade` | Reactiva entidade soft-deleted (#71); resolve com `withTrashed()->findOrFail`; `restore()` + invalida cache dentro da transação; `Gate::authorize('restore')` fora |
 | `ConverterEmEmpresaMaeAction` | `App\Features\Entidade\EmpresaMae` | `handle(Entidade\|string): Entidade` | Remove marcação anterior + força os 3 flags (`e_empresa_aplicacao`, `e_cliente`, `e_fornecedor`) |
 | `RemoverMarcacaoEmpresaMaeAction` | `App\Features\Entidade\EmpresaMae` | `handle(): void` | Action interna — `UPDATE entidades SET e_empresa_aplicacao = false WHERE e_empresa_aplicacao = true`; sem autorização própria; sempre chamada dentro da transação do caller |
 
@@ -63,6 +64,7 @@ Todos `final readonly` com `fromRequest()` (array shape `@var`, Larastan nível 
 | Classe | Namespace | Cases | Descrição |
 |---|---|---|---|
 | `CampoOrdenacaoEntidades` | `App\Features\Entidade\Listar` | `Nome = 'nome'` | Campo de ordenação da listagem de entidades; extensível com `Nif`, `CreatedAt` |
+| `FiltroEstadoRegisto` (partilhado) | `App\Shared\Enums` | `Todos`, `SomenteAtivos`, `SomenteInativos` | Filtro de estado SoftDelete na listagem (#71); traduzido para scope via trait `FiltravelPorEstadoRegisto` no model. Ver `02-shared/soft-delete.md` |
 
 ---
 
@@ -76,6 +78,7 @@ Todos `final readonly` com `fromRequest()` (array shape `@var`, Larastan nível 
 | `create` | `entidades.criar` |
 | `update` | `entidades.actualizar` |
 | `delete` | `entidades.eliminar` |
+| `restore` | `entidades.eliminar` (reutiliza — quem inactiva reactiva) (#71) |
 
 ---
 
@@ -83,11 +86,12 @@ Todos `final readonly` com `fromRequest()` (array shape `@var`, Larastan nível 
 
 | Classe | Namespace | `authorize()` chama | `rules()` |
 |---|---|---|---|
-| `ListarEntidadesRequest` | `Listar` | `Gate::authorize('viewAny', Entidade::class)` | `per_page`, `sort`, `direction`, `cursor` |
+| `ListarEntidadesRequest` | `Listar` | `Gate::authorize('viewAny', Entidade::class)` | `per_page`, `sort`, `direction`, `estado`, `cursor` |
 | `CriarEntidadeRequest` | `Criar` | `Gate::authorize('create', Entidade::class)` | `nome`, `nif`, `e_cliente`, `e_fornecedor`, `e_empresa_aplicacao` (required) |
 | `VerEntidadeRequest` | `Ver` | `Gate::authorize('view', $this->route('entidade'))` | `[]` |
 | `ActualizarEntidadeRequest` | `Actualizar` | `Gate::authorize('update', $this->route('entidade'))` | `nome`, `nif`, `e_cliente`, `e_fornecedor`, `e_empresa_aplicacao` (required) |
 | `EliminarEntidadeRequest` | `Eliminar` | `Gate::authorize('delete', $this->route('entidade'))` | `[]` |
+| `RestaurarEntidadeRequest` | `Restaurar` | `Gate::authorize('restore', $this->route('entidade'))` (modelo já ligado via RMB `withTrashed`) | `[]` |
 | `ConverterEmEmpresaMaeRequest` | `EmpresaMae` | `Gate::authorize('update', $this->route('entidade'))` | `[]` |
 
 `CriarEntidadeRequest` e `ActualizarEntidadeRequest` não são `final` (mockáveis em testes unitários de DTO).
@@ -100,11 +104,12 @@ Todos `final readonly` com `fromRequest()` (array shape `@var`, Larastan nível 
 
 | Método | FormRequest | Action invocada |
 |---|---|---|
-| `index` | `ListarEntidadesRequest` | `ListarEntidadesAction::handle()` — extrai `per_page` (cast `int`), `sort`, `direction`; devolve via `ApiResponse::devolverPaginado()` |
+| `index` | `ListarEntidadesRequest` | `ListarEntidadesAction::handle()` — extrai `per_page` (cast `int`), `sort`, `direction`, `estado` (`FiltroEstadoRegisto`, default `SomenteAtivos`); devolve via `ApiResponse::devolverPaginado()` |
 | `store` | `CriarEntidadeRequest` | `CriarEntidadeAction::handle(CriarEntidadeDto::fromRequest($pedido))` |
 | `show` | `VerEntidadeRequest` | `VerEntidadeAction::handle($entidade)` |
 | `update` | `ActualizarEntidadeRequest` | `ActualizarEntidadeAction::handle($entidade, ActualizarEntidadeDto::fromRequest($pedido))` |
 | `destroy` | `EliminarEntidadeRequest` | `EliminarEntidadeAction::handle($entidade)` |
+| `restaurar` | `RestaurarEntidadeRequest` | `RestaurarEntidadeAction::handle($entidade)` — `Entidade` via RMB `withTrashed` (#71) |
 | `converterEmEmpresaMae` | `ConverterEmEmpresaMaeRequest` | `ConverterEmEmpresaMaeAction::handle($entidade)` |
 
 ---
@@ -122,11 +127,12 @@ Formata a resposta JSON de todos os endpoints que retornem uma `Entidade`.
   "nif": "123456789",
   "e_cliente": true,
   "e_fornecedor": true,
-  "e_empresa_aplicacao": false
+  "e_empresa_aplicacao": false,
+  "deleted_at": null
 }
 ```
 
 - Booleans devolvidos como `bool` (cast Eloquent `'boolean'` garante o tipo)
-- Timestamps omitidos intencionalmente
-- PHPDoc `array{id: string, nome: string, nif: string, e_cliente: bool, e_fornecedor: bool, e_empresa_aplicacao: bool}` em `toArray()`
+- `deleted_at` (#69): `null` para entidades activas, ISO 8601 para soft-deleted — usado pelo endpoint `restaurar` para confirmar reactivação
+- Restantes timestamps (`created_at`/`updated_at`) omitidos intencionalmente
 - `@mixin Entidade` necessário para Larastan inferir as propriedades do model

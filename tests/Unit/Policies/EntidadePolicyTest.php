@@ -45,6 +45,12 @@ describe('Role admin', function (): void {
 
         expect(Gate::forUser($this->utilizador)->allows('delete', $entidade))->toBeTrue();
     });
+
+    it('pode restore', function (): void {
+        $entidade = Entidade::factory()->inativa()->create();
+
+        expect(Gate::forUser($this->utilizador)->allows('restore', $entidade))->toBeTrue();
+    });
 });
 
 describe('Role utilizador', function (): void {
@@ -77,5 +83,11 @@ describe('Role utilizador', function (): void {
         $entidade = Entidade::factory()->create();
 
         expect(Gate::forUser($this->utilizador)->allows('delete', $entidade))->toBeFalse();
+    });
+
+    it('não pode restore', function (): void {
+        $entidade = Entidade::factory()->inativa()->create();
+
+        expect(Gate::forUser($this->utilizador)->allows('restore', $entidade))->toBeFalse();
     });
 });

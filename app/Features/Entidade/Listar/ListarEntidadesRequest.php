@@ -6,6 +6,7 @@ namespace App\Features\Entidade\Listar;
 
 use App\Models\Entidade;
 use App\Shared\Enums\DirecaoOrdenacao;
+use App\Shared\Enums\FiltroEstadoRegisto;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
@@ -28,6 +29,7 @@ final class ListarEntidadesRequest extends FormRequest
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
             'sort' => ['sometimes', 'string', Rule::in(array_column(CampoOrdenacaoEntidades::cases(), 'value'))],
             'direction' => ['sometimes', 'string', Rule::in(array_column(DirecaoOrdenacao::cases(), 'value'))],
+            'estado' => ['sometimes', 'string', Rule::in(array_column(FiltroEstadoRegisto::cases(), 'value'))],
             'cursor' => ['sometimes', 'string'],
         ];
     }
@@ -46,6 +48,8 @@ final class ListarEntidadesRequest extends FormRequest
             'sort.in' => 'O campo de ordenação indicado não é válido.',
             'direction.string' => 'A direcção de ordenação deve ser texto.',
             'direction.in' => 'A direcção de ordenação indicada não é válida.',
+            'estado.string' => 'O filtro de estado deve ser texto.',
+            'estado.in' => 'O filtro de estado indicado não é válido.',
             'cursor.string' => 'O cursor de paginação deve ser texto.',
         ];
     }

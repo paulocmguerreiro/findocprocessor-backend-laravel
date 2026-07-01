@@ -33,4 +33,9 @@ final class EntidadePolicy
     {
         return $utilizador->hasPermissionTo('entidades.eliminar');
     }
+
+    public function restore(User $utilizador, Entidade $entidade): bool
+    {
+        return $utilizador->hasPermissionTo('entidades.eliminar');
+    }
 }

@@ -87,6 +87,39 @@ describe('autenticado', function (): void {
             ->assertJsonValidationErrors(['direction']);
     });
 
+    it('sem estado retorna apenas activas', function (): void {
+        Entidade::factory()->count(2)->create();
+        Entidade::factory()->inativa()->create();
+
+        $this->getJson('/api/entidades')
+            ->assertOk()
+            ->assertJsonCount(2, 'data');
+    });
+
+    it('estado=todos retorna activas e inativas', function (): void {
+        Entidade::factory()->count(2)->create();
+        Entidade::factory()->inativa()->create();
+
+        $this->getJson('/api/entidades?estado=todos')
+            ->assertOk()
+            ->assertJsonCount(3, 'data');
+    });
+
+    it('estado=somente_inativos retorna apenas inativas', function (): void {
+        Entidade::factory()->count(2)->create();
+        Entidade::factory()->inativa()->create();
+
+        $this->getJson('/api/entidades?estado=somente_inativos')
+            ->assertOk()
+            ->assertJsonCount(1, 'data');
+    });
+
+    it('rejeita estado inválido com erro de validação', function (): void {
+        $this->getJson('/api/entidades?estado=invalido')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['estado']);
+    });
+
     it('invalida cache após criar entidade — nova entidade aparece no GET seguinte', function (): void {
         $this->getJson('/api/entidades')->assertOk()->assertJsonCount(0, 'data');
 
