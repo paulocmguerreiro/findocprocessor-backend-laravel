@@ -158,6 +158,8 @@ Todas as rotas exigem Bearer token (role `admin`).
 | PUT    | `/api/utilizadores/{id}`          | Actualizar (password opcional) |
 | DELETE | `/api/utilizadores/{id}`          | Eliminar (hard/soft conforme referências) |
 | PUT    | `/api/utilizadores/{id}/role`     | Atribuir role a utilizador |
+| PATCH  | `/api/utilizadores/{id}/restaurar`  | Restaurar (reactivar soft-deleted) |
+| POST   | `/api/utilizadores/{id}/anonimizar` | Anonimizar (RGPD Art. 17.º — dados + soft delete + revoga tokens) |
 
 ## Qualidade
 
