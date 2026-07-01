@@ -30,6 +30,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->parameters(['utilizadores' => 'utilizador'])
         ->withTrashed(['show', 'update', 'destroy']);
     Route::put('utilizadores/{utilizador}/role', [UtilizadorController::class, 'atribuirRole']);
+    Route::patch('utilizadores/{utilizador}/restaurar', [UtilizadorController::class, 'restaurar'])
+        ->withTrashed();
+    Route::post('utilizadores/{utilizador}/anonimizar', [UtilizadorController::class, 'anonimizar']);
 
     Route::post('documentos/upload', [DocumentoController::class, 'upload']);
     Route::apiResource('documentos', DocumentoController::class);
