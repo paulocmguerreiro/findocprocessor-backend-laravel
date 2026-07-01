@@ -7,7 +7,19 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
-- **Issue #68** — Utilizador — feature slice (CRUD completo + filtro de estado + SoftDeletes)
+- **Issue #71** — Entidade — lógica de SoftDelete (restaurar + listagem filtrada + Padrão B)
+  - **`RestaurarEntidadeAction`** (`handle(Entidade|string): Entidade`) + `RestaurarEntidadeRequest` + `EntidadePolicy::restore()` (reutiliza `entidades.eliminar`)
+  - Rota `PATCH /api/entidades/{entidade}/restaurar` com `->withTrashed()` (RMB inclui soft-deleted); `apiResource` passa a `->withTrashed(['show','update','destroy'])`
+  - Trait `FiltravelPorEstadoRegisto` no model `Entidade`; `ListarEntidadesAction` aceita `FiltroEstadoRegisto` (4.º param) — `GET /api/entidades?estado=todos|somente_ativos|somente_inativos` (default `somente_ativos`); `estado` na chave de cache
+  - **Padrão B** em `EliminarEntidadeAction`: `forceDelete()` (hard delete) com fallback soft delete quando referenciado
+  - Migration `enforce_restrict_entidades_fk_in_documentos` — `documentos.id_fornecedor`/`id_cliente` → `restrictOnDelete` em **todos** os drivers (a de #70 saltava SQLite)
+  - **Convenção RMB (#71):** controllers/FormRequests usam Route Model Binding; só as Actions aceitam `Modelo|string` (`docs/system_spec/02-shared/soft-delete.md`)
+  - 696 testes, 100% cobertura, 100% type coverage, Larastan 9 — verde em SQLite **e** MySQL
+
+### Fixed
+- **Issue #71** — Padrão B (`try/catch forceDelete`) nunca fazia soft delete no `catch`: `SoftDeletes::forceDelete()` não repõe `forceDeleting=true` ao lançar, pelo que o `delete()` de fallback voltava a fazer hard delete e relançava (erro 500 em prod/MySQL quando a entidade estava referenciada). Corrigido com `fresh()?->delete()` em `EliminarEntidadeAction` **e** `EliminarUtilizadorAction` (#68)
+
+
   - SoftDeletes no `User`: migration `add_softdeletes_to_users_table` (`deleted_at`); trait `SoftDeletes` + `@property-read ?Carbon $deleted_at`; `UserFactory::inativo()`
   - Migration `seed_utilizadores_permissions` — `utilizadores.{ver,criar,actualizar,eliminar}` atribuídas ao role `admin`
   - Migration `change_users_fks_to_restrict_on_delete` — `documentos.id_responsavel` e `etapas_documento.id_utilizador` de `nullOnDelete` → `restrictOnDelete`

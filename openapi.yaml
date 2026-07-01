@@ -486,6 +486,13 @@ paths:
             type: string
             enum: [asc, desc]
         - in: query
+          name: estado
+          description: Filtro de estado SoftDelete
+          schema:
+            type: string
+            enum: [todos, somente_ativos, somente_inativos]
+            default: somente_ativos
+        - in: query
           name: cursor
           schema:
             type: string
@@ -630,6 +637,34 @@ paths:
       responses:
         '204':
           description: Eliminada com sucesso
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+
+  /entidades/{id}/restaurar:
+    patch:
+      summary: Restaurar entidade soft-deleted
+      tags: [Entidade]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Entidade reactivada (deleted_at a null)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Entidade'
         '401':
           $ref: '#/components/schemas/ErrorNaoAutenticado'
         '403':

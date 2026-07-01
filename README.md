@@ -122,11 +122,12 @@ Todas as rotas exigem Bearer token.
 
 | Método | Path                                    | Descrição                    |
 | ------ | --------------------------------------- | ---------------------------- |
-| GET    | `/api/entidades`                        | Listar (cursor)              |
+| GET    | `/api/entidades`                        | Listar (cursor; `?estado=todos\|somente_ativos\|somente_inativos`) |
 | POST   | `/api/entidades`                        | Criar                        |
 | GET    | `/api/entidades/{id}`                   | Ver detalhe                  |
 | PUT    | `/api/entidades/{id}`                   | Actualizar (completo)        |
-| DELETE | `/api/entidades/{id}`                   | Eliminar                     |
+| DELETE | `/api/entidades/{id}`                   | Eliminar (soft delete se referenciada) |
+| PATCH  | `/api/entidades/{id}/restaurar`         | Restaurar (reactivar soft-deleted) |
 | PATCH  | `/api/entidades/{id}/empresa-mae`       | Converter em empresa-mãe     |
 
 ### Documentos
