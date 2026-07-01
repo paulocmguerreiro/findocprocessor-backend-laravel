@@ -18,7 +18,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
     Route::apiResource('categorias-documento', CategoriaDocumentoController::class);
 
-    Route::apiResource('entidades', EntidadeController::class);
+    Route::apiResource('entidades', EntidadeController::class)
+        ->withTrashed(['show', 'update', 'destroy']);
+    Route::patch('entidades/{entidade}/restaurar', [EntidadeController::class, 'restaurar'])
+        ->withTrashed();
     Route::patch('entidades/{entidade}/empresa-mae', [EntidadeController::class, 'converterEmEmpresaMae']);
 
     Route::apiResource('roles', RoleController::class);

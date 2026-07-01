@@ -21,10 +21,12 @@ final readonly class RestaurarEntidadeAction
      * @throws AuthorizationException
      * @throws \Throwable
      */
-    public function handle(string $idEntidade): Entidade
+    public function handle(Entidade|string $idEntidade): Entidade
     {
         /** @var Entidade $entidade */
-        $entidade = Entidade::withTrashed()->findOrFail($idEntidade);
+        $entidade = is_string($idEntidade)
+            ? Entidade::withTrashed()->findOrFail($idEntidade)
+            : $idEntidade;
 
         Gate::authorize('restore', $entidade);
 

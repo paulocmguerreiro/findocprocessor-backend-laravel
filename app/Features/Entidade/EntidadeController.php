@@ -17,6 +17,8 @@ use App\Features\Entidade\EmpresaMae\ConverterEmEmpresaMaeRequest;
 use App\Features\Entidade\Listar\CampoOrdenacaoEntidades;
 use App\Features\Entidade\Listar\ListarEntidadesAction;
 use App\Features\Entidade\Listar\ListarEntidadesRequest;
+use App\Features\Entidade\Restaurar\RestaurarEntidadeAction;
+use App\Features\Entidade\Restaurar\RestaurarEntidadeRequest;
 use App\Features\Entidade\Ver\VerEntidadeAction;
 use App\Features\Entidade\Ver\VerEntidadeRequest;
 use App\Http\Controllers\Controller;
@@ -67,6 +69,11 @@ final class EntidadeController extends Controller
         $accao->handle($entidade);
 
         return ApiResponse::devolverVazio();
+    }
+
+    public function restaurar(RestaurarEntidadeRequest $pedido, Entidade $entidade, RestaurarEntidadeAction $accao): JsonResponse
+    {
+        return ApiResponse::devolverSucesso(new EntidadeResource($accao->handle($entidade)));
     }
 
     public function converterEmEmpresaMae(ConverterEmEmpresaMaeRequest $pedido, Entidade $entidade, ConverterEmEmpresaMaeAction $accao): JsonResponse
