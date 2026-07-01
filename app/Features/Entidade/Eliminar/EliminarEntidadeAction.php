@@ -9,6 +9,7 @@ use App\Shared\Cache\CacheServico;
 use App\Shared\Cache\TagCache;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -35,7 +36,12 @@ final readonly class EliminarEntidadeAction
         Log::info('entidade.eliminar.inicio', ['id_utilizador' => Auth::id()]);
 
         DB::transaction(function () use ($entidade): void {
-            $entidade->delete();
+            try {
+                $entidade->forceDelete();
+            } catch (QueryException) {
+                $entidade->delete();
+            }
+
             $this->cache->invalidarCache(TagCache::Entidades);
         });
 

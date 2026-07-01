@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Shared\Cache\CacheServico;
 use App\Shared\Cache\TagCache;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -37,7 +38,7 @@ final readonly class EliminarUtilizadorAction
 
             try {
                 $utilizador->forceDelete();
-            } catch (\Illuminate\Database\QueryException) {
+            } catch (QueryException) {
                 $utilizador->delete();
             }
 
