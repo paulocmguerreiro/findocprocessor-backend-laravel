@@ -7,6 +7,8 @@ namespace App\Features\Utilizador;
 use App\Features\Utilizador\Actualizar\ActualizarUtilizadorAction;
 use App\Features\Utilizador\Actualizar\ActualizarUtilizadorDto;
 use App\Features\Utilizador\Actualizar\ActualizarUtilizadorRequest;
+use App\Features\Utilizador\Anonimizar\AnonimizarUtilizadorAction;
+use App\Features\Utilizador\Anonimizar\AnonimizarUtilizadorRequest;
 use App\Features\Utilizador\AtribuirRole\AtribuirRoleAction;
 use App\Features\Utilizador\AtribuirRole\AtribuirRoleRequest;
 use App\Features\Utilizador\Criar\CriarUtilizadorAction;
@@ -17,6 +19,8 @@ use App\Features\Utilizador\Eliminar\EliminarUtilizadorRequest;
 use App\Features\Utilizador\Listar\CampoOrdenacaoUtilizadores;
 use App\Features\Utilizador\Listar\ListarUtilizadoresAction;
 use App\Features\Utilizador\Listar\ListarUtilizadoresRequest;
+use App\Features\Utilizador\Restaurar\RestaurarUtilizadorAction;
+use App\Features\Utilizador\Restaurar\RestaurarUtilizadorRequest;
 use App\Features\Utilizador\Ver\VerUtilizadorAction;
 use App\Features\Utilizador\Ver\VerUtilizadorRequest;
 use App\Http\Controllers\Controller;
@@ -79,6 +83,20 @@ final class UtilizadorController extends Controller
         $dadosValidados = $pedido->validated();
 
         $accao->handle($utilizador, $dadosValidados['role']);
+
+        return ApiResponse::devolverVazio();
+    }
+
+    public function restaurar(RestaurarUtilizadorRequest $pedido, User $utilizador, RestaurarUtilizadorAction $accao): JsonResponse
+    {
+        return ApiResponse::devolverSucesso(
+            new UtilizadorResource($accao->handle($utilizador)),
+        );
+    }
+
+    public function anonimizar(AnonimizarUtilizadorRequest $pedido, User $utilizador, AnonimizarUtilizadorAction $accao): JsonResponse
+    {
+        $accao->handle($utilizador);
 
         return ApiResponse::devolverVazio();
     }

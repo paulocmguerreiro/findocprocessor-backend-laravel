@@ -1396,3 +1396,72 @@ paths:
           $ref: '#/components/schemas/ErrorNaoEncontrado'
         '422':
           $ref: '#/components/schemas/ErrorValidacao'
+
+  /utilizadores/{id}/restaurar:
+    patch:
+      summary: Restaurar utilizador soft-deleted
+      description: >
+        Reactiva um utilizador soft-deleted. Requer a permissão
+        `utilizadores.eliminar`. Falha com 422 se o utilizador não estava
+        inactivo ou se está anonimizado (email `anonimizado+...`).
+      tags: [Utilizador]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Utilizador reactivado (deleted_at a null)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Utilizador'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+        '422':
+          description: Utilizador não estava inactivo, ou está anonimizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorValidacao'
+
+  /utilizadores/{id}/anonimizar:
+    post:
+      summary: Anonimizar utilizador (RGPD Art. 17.º)
+      description: >
+        Operação irreversível: substitui os dados pessoais (`name`, `email`,
+        `password`, `remember_token`, `email_verified_at`) por valores
+        não-identificativos, revoga os tokens Sanctum e faz soft delete, numa
+        única transação. Requer a permissão `utilizadores.anonimizar`. Falha com
+        422 na auto-anonimização ou se o utilizador já está anonimizado.
+      tags: [Utilizador]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Utilizador anonimizado (dados substituídos, soft-deleted, tokens revogados)
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+        '422':
+          description: Auto-anonimização não permitida, ou utilizador já anonimizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorValidacao'

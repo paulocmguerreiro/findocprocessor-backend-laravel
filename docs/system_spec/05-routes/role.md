@@ -1,6 +1,6 @@
 # System Spec — Rotas: Role + Utilizador
 
-> Issue #50 (Role + AtribuirRole) · Issue #68 (CRUD Utilizador)
+> Issue #50 (Role + AtribuirRole) · Issue #68 (CRUD Utilizador) · Issue #73 (Restaurar + Anonimizar)
 
 ```php
 Route::apiResource('roles', RoleController::class);
@@ -9,6 +9,9 @@ Route::apiResource('utilizadores', UtilizadorController::class)
     ->parameters(['utilizadores' => 'utilizador'])
     ->withTrashed(['show', 'update', 'destroy']);
 Route::put('utilizadores/{utilizador}/role', [UtilizadorController::class, 'atribuirRole']);
+Route::patch('utilizadores/{utilizador}/restaurar', [UtilizadorController::class, 'restaurar'])
+    ->withTrashed();
+Route::post('utilizadores/{utilizador}/anonimizar', [UtilizadorController::class, 'anonimizar']);
 ```
 
 Todas dentro do grupo `middleware('auth:sanctum')`.
@@ -42,8 +45,10 @@ Route Model Binding: `{role}` → `Spatie\Permission\Models\Role` (ID inteiro). 
 | PUT/PATCH | `/api/utilizadores/{utilizador}` | `UtilizadorController@update` | `utilizadores.actualizar` |
 | DELETE | `/api/utilizadores/{utilizador}` | `UtilizadorController@destroy` | `utilizadores.eliminar` |
 | PUT | `/api/utilizadores/{utilizador}/role` | `UtilizadorController@atribuirRole` | `utilizadores.atribuir-role` |
+| PATCH | `/api/utilizadores/{utilizador}/restaurar` | `UtilizadorController@restaurar` | `utilizadores.eliminar` |
+| POST | `/api/utilizadores/{utilizador}/anonimizar` | `UtilizadorController@anonimizar` | `utilizadores.anonimizar` |
 
-Route Model Binding: `{utilizador}` → `App\Models\User` (PK inteira — **não** UUID; é o modelo de autenticação). 404 automático se não existe. `show`/`update`/`destroy` resolvem **com** registos soft-deleted (`->withTrashed([...])`).
+Route Model Binding: `{utilizador}` → `App\Models\User` (PK inteira — **não** UUID; é o modelo de autenticação). 404 automático se não existe. `show`/`update`/`destroy`/`restaurar` resolvem **com** registos soft-deleted (`->withTrashed([...])`). `anonimizar` opera sobre utilizadores activos (sem `->withTrashed()`).
 
 ### Query params — `GET /api/utilizadores`
 
@@ -78,5 +83,9 @@ Route Model Binding: `{utilizador}` → `App\Models\User` (PK inteira — **não
 | Actualizar | 200 | `{ data: { id, nome, permissoes } }` |
 | Eliminar | 204 | — |
 | Atribuir role | 204 | — |
+| Restaurar utilizador | 200 | `{ data: UtilizadorResource }` (`deleted_at: null`) |
+| Restaurar (não inactivo / anonimizado) | 422 | `DomainException` |
+| Anonimizar utilizador | 204 | — |
+| Anonimizar (auto / já anonimizado) | 422 | `DomainException` |
 | Role de sistema (eliminar) | 422 | `{ status: 422, detail: "Não é possível eliminar um role de sistema." }` |
 | Auto-modificação de role | 422 | `{ status: 422, detail: "Não é possível alterar o próprio role." }` |

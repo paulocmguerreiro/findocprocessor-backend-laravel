@@ -7,6 +7,13 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
+- **Issue #73** — Utilizador — Restaurar soft-deleted + RGPD Anonimização
+  - **`RestaurarUtilizadorAction`** (`handle(User|int): User`) + `RestaurarUtilizadorRequest` + `UtilizadorPolicy::restore()` (reutiliza `utilizadores.eliminar`); invariantes `! trashed()` e email `anonimizado+` → `DomainException` (422)
+  - **`AnonimizarUtilizadorAction`** (`handle(User): void`) + `AnonimizarUtilizadorRequest` + `UtilizadorPolicy::anonimizar()` — RGPD Art. 17.º: substitui `name`/`email`/`password`/`remember_token`/`email_verified_at`, revoga tokens Sanctum e faz soft delete numa única transação; invariantes auto-anonimização e já-anonimizado → 422
+  - Rotas `PATCH /api/utilizadores/{id}/restaurar` (com `->withTrashed()`) e `POST /api/utilizadores/{id}/anonimizar` (204)
+  - Migration `seed_utilizadores_anonimizar_permission` — permissão `utilizadores.anonimizar` atribuída ao role `admin`
+  - **`User` passa a ser auditado** (trait `RegistaActividade`): CRUD normal regista `name`/`email`; `password`/`remember_token` excluídos. Anonimização usa `saveQuietly()` + evento manual `rgpd.anonimizacao` **sem PII** (o `saveQuietly()` suprime o `updated` automático que gravaria os valores antigos)
+  - 724 testes, 100% cobertura + type coverage, Larastan 9
 - **Issue #71** — Entidade — lógica de SoftDelete (restaurar + listagem filtrada + Padrão B)
   - **`RestaurarEntidadeAction`** (`handle(Entidade|string): Entidade`) + `RestaurarEntidadeRequest` + `EntidadePolicy::restore()` (reutiliza `entidades.eliminar`)
   - Rota `PATCH /api/entidades/{entidade}/restaurar` com `->withTrashed()` (RMB inclui soft-deleted); `apiResource` passa a `->withTrashed(['show','update','destroy'])`

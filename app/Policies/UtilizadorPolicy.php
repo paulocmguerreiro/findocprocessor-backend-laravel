@@ -38,4 +38,14 @@ final class UtilizadorPolicy
     {
         return $utilizador->hasPermissionTo('utilizadores.eliminar');
     }
+
+    public function restore(User $utilizador, User $alvo): bool
+    {
+        return $utilizador->hasPermissionTo('utilizadores.eliminar');
+    }
+
+    public function anonimizar(User $utilizador, User $alvo): bool
+    {
+        return $utilizador->hasPermissionTo('utilizadores.anonimizar');
+    }
 }

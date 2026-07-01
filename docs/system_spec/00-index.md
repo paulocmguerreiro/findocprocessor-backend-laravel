@@ -11,7 +11,7 @@
 | CategoriaDocumento | `01-features/categoria-documento.md` | 5 CRUD                                         | 5 REST              |
 | Entidade           | `01-features/entidade.md`            | 8 (5 CRUD + Restaurar + ConverterEmEmpresaMae + Remover) | 5 REST + 2 especiais |
 | Role               | `01-features/role.md`                | 5 CRUD                                         | 5 REST              |
-| Utilizador         | `01-features/utilizador.md`          | 6 (5 CRUD + AtribuirRole)                      | 5 REST + 1 especial |
+| Utilizador         | `01-features/utilizador.md`          | 8 (5 CRUD + AtribuirRole + Restaurar + Anonimizar) | 5 REST + 3 especiais |
 | Documento          | `01-features/documento.md`           | 13 (11 transição + Listar + Ver + Descarregar) | 8 REST              |
 
 ## Features planeadas
