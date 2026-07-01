@@ -60,11 +60,15 @@ public function restore(User $utilizador, Entidade $entidade): bool
 ### `RestaurarEntidadeAction` — nova
 
 **Namespace:** `App\Features\Entidade\Restaurar`
-**Assinatura:** `handle(string $idEntidade): Entidade`
+**Assinatura:** `handle(Entidade|string $idEntidade): Entidade`
+
+A Action aceita `Entidade|string` (padrão dual, igual a `EliminarEntidadeAction`): o modelo já resolvido via RMB no contexto HTTP, ou o UUID (string) em invocação programática. O ramo `string` resolve com `withTrashed()` porque o alvo do restore está soft-deleted.
 
 ```
-1. Entidade::withTrashed()->findOrFail($idEntidade)   → @throws ModelNotFoundException
-2. Gate::authorize('restore', $entidade)               → fora da transação
+1. is_string($idEntidade)
+     ? Entidade::withTrashed()->findOrFail($idEntidade)   → @throws ModelNotFoundException
+     : $idEntidade
+2. Gate::authorize('restore', $entidade)                   → fora da transação
 3. DB::transaction():
    a. $entidade->restore()
    b. cache->invalidarCache(TagCache::Entidades)
@@ -77,13 +81,12 @@ public function restore(User $utilizador, Entidade $entidade): bool
 
 **Namespace:** `App\Features\Entidade\Restaurar`
 
+O modelo é resolvido por Route Model Binding (a rota `/restaurar` usa `->withTrashed()`), pelo que `$this->route('entidade')` já devolve a `Entidade` ligada — igual a `EliminarEntidadeRequest`:
+
 ```php
 public function authorize(): bool
 {
-    /** @var string $idEntidade */
-    $idEntidade = $this->route('entidade');
-    $entidade = Entidade::withTrashed()->findOrFail($idEntidade);
-    Gate::authorize('restore', $entidade);
+    Gate::authorize('restore', $this->route('entidade'));
     return true;
 }
 
@@ -95,13 +98,13 @@ Sem `messages()` (sem campos a validar).
 ### `EntidadeController::restaurar()` — método novo
 
 ```php
-public function restaurar(RestaurarEntidadeRequest $pedido, string $entidade, RestaurarEntidadeAction $accao): JsonResponse
+public function restaurar(RestaurarEntidadeRequest $pedido, Entidade $entidade, RestaurarEntidadeAction $accao): JsonResponse
 {
     return ApiResponse::devolverSucesso(new EntidadeResource($accao->handle($entidade)));
 }
 ```
 
-O parâmetro chama-se `$entidade` (string UUID) para corresponder ao `{entidade}` da rota.
+O parâmetro `Entidade $entidade` é resolvido por RMB (rota com `->withTrashed()`), consistente com os restantes métodos do controller.
 
 ### `EntidadeController::index()` — extracção de `estado`
 
@@ -121,10 +124,11 @@ Route::apiResource('entidades', EntidadeController::class)
     ->withTrashed(['show', 'update', 'destroy']);
 
 // adicionar após o apiResource:
-Route::patch('entidades/{entidade}/restaurar', [EntidadeController::class, 'restaurar']);
+Route::patch('entidades/{entidade}/restaurar', [EntidadeController::class, 'restaurar'])
+    ->withTrashed();
 ```
 
-A rota `/restaurar` **não** usa `->withTrashed()` — o UUID é string; a Action resolve com `withTrashed()->findOrFail()`.
+A rota `/restaurar` usa `->withTrashed()` para que o RMB resolva a entidade soft-deleted (o RMB implícito exclui trashed por omissão). Assim o controller e o FormRequest recebem o modelo já ligado, sem resolução manual. Isto só se aplica a modelos com `SoftDeletes`.
 
 ---
 

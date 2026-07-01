@@ -158,11 +158,30 @@ Todos os modelos com SoftDelete têm um endpoint de restauro (reactivação):
 |---|---|---|
 | `PATCH` | `/api/<recurso>/{id}/restaurar` | `restore()` — reutiliza permissão `eliminar` |
 
-### Resolução no endpoint
+### Resolução no endpoint — **preferir sempre Route Model Binding**
 
-O parâmetro de rota `{id}` é passado como `string` ao controller — **não** como model
-type-hinted (route model binding exclui soft-deleted por defeito). A Action resolve
-com `Model::withTrashed()->findOrFail($id)`.
+O RMB implícito exclui soft-deleted por defeito, mas o alvo do restauro é precisamente
+um registo inactivo. A solução é marcar a **rota** `/restaurar` com `->withTrashed()` para
+o binding incluir soft-deleted — assim o controller e o `FormRequest` recebem o modelo
+já resolvido, sem resolução manual:
+
+```php
+Route::patch('<recurso>/{<recurso>}/restaurar', [<Recurso>Controller::class, 'restaurar'])
+    ->withTrashed();
+```
+
+```php
+// Controller — type-hint do modelo (consistente com show/update/destroy)
+public function restaurar(Restaurar<Recurso>Request $pedido, <Recurso> $<recurso>, Restaurar<Recurso>Action $accao): JsonResponse
+
+// FormRequest — reutiliza o modelo já ligado (igual a Eliminar<Recurso>Request)
+Gate::authorize('restore', $this->route('<recurso>'));
+```
+
+> **Convenção (#71):** preferir **sempre** RMB nos controllers/FormRequests. **Só as Actions**
+> aceitam `<Recurso>|string` (o modelo já ligado, ou o UUID em invocação programática) —
+> o ramo `string` resolve com `Model::withTrashed()->findOrFail($id)`. O `->withTrashed()`
+> na rota só se aplica a modelos com `SoftDeletes`.
 
 ### Policy `restore()`
 

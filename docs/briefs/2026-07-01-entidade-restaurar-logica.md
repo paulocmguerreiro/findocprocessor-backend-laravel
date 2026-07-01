@@ -66,23 +66,20 @@ public function restore(User $utilizador, Entidade $entidade): bool
 
 ### E — `RestaurarEntidadeAction` (nova)
 
-Assinatura: `handle(string $idEntidade): Entidade`
-- Resolve com `Entidade::withTrashed()->findOrFail($idEntidade)`
+Assinatura: `handle(Entidade|string $idEntidade): Entidade` (padrão dual, igual a `EliminarEntidadeAction`)
+- Ramo `string`: resolve com `Entidade::withTrashed()->findOrFail($idEntidade)`; ramo `Entidade`: usa o modelo directamente (já ligado via RMB)
 - `Gate::authorize('restore', $entidade)` fora da transação
 - Dentro de `DB::transaction()`: `$entidade->restore()` + `cache->invalidarCache(TagCache::Entidades)`
 - `@throws ModelNotFoundException`, `AuthorizationException`, `\Throwable`
 
 ### F — `RestaurarEntidadeRequest` (novo)
 
-Route `/restaurar` passa `{entidade}` como string (sem RMB — o RMB padrão exclui soft-deleted). O FormRequest resolve o modelo manualmente:
+A rota `/restaurar` usa `->withTrashed()`, pelo que o RMB resolve a entidade soft-deleted e `$this->route('entidade')` já devolve o modelo — igual a `EliminarEntidadeRequest`:
 
 ```php
 public function authorize(): bool
 {
-    /** @var string $idEntidade */
-    $idEntidade = $this->route('entidade');
-    $entidade = Entidade::withTrashed()->findOrFail($idEntidade);
-    Gate::authorize('restore', $entidade);
+    Gate::authorize('restore', $this->route('entidade'));
     return true;
 }
 ```
@@ -90,17 +87,19 @@ public function authorize(): bool
 ### G — `EntidadeController::restaurar()` (método novo)
 
 ```php
-public function restaurar(RestaurarEntidadeRequest $pedido, string $entidade, RestaurarEntidadeAction $accao): JsonResponse
+public function restaurar(RestaurarEntidadeRequest $pedido, Entidade $entidade, RestaurarEntidadeAction $accao): JsonResponse
 {
     return ApiResponse::devolverSucesso(new EntidadeResource($accao->handle($entidade)));
 }
 ```
 
+O parâmetro `Entidade $entidade` é resolvido por RMB, consistente com os restantes métodos do controller.
+
 ### H — `routes/api.php`
 
 Duas alterações:
 1. `Route::apiResource('entidades', ...)` → adicionar `->withTrashed(['show', 'update', 'destroy'])` (acesso a inactivos em show/update/destroy, igual ao padrão `utilizadores`)
-2. `Route::patch('entidades/{entidade}/restaurar', ...)` — nova rota (sem withTrashed; string passada à Action)
+2. `Route::patch('entidades/{entidade}/restaurar', ...)->withTrashed()` — nova rota; o `->withTrashed()` faz o RMB incluir soft-deleted. **Preferir sempre RMB**; só as Actions aceitam `Entidade|string` (modelo ou UUID). O `->withTrashed()` só se aplica a modelos com `SoftDeletes`.
 
 ### I — Testes
 
