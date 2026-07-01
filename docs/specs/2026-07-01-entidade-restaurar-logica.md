@@ -148,12 +148,20 @@ Os casos existentes (`assertSoftDeleted` simples sem documentos) são actualizad
 
 ```
 describe('autenticado'):
-  it('elimina permanentemente (sem docs) e devolve 204')  → assertDatabaseMissing + Activity::count 0 (forceDelete não dispara event)
+  it('elimina permanentemente (sem docs) e devolve 204')  → assertDatabaseMissing + Activity::count 1 event 'deleted'
   it('faz soft delete (com docs) e devolve 204')          → assertSoftDeleted + Activity event 'deleted'
 ```
 
-> **Nota:** `forceDelete()` no SQLite com `foreign_key_constraints = true` lança `QueryException`
-> quando há documentos com `id_fornecedor`/`id_cliente` a apontar para a entidade.
+> **Corrigido (#71, verificado empiricamente):** `forceDelete()` **dispara** o evento `deleted`
+> do audit trail (`Activity::count() === 1`, event `deleted`) — igual ao soft delete. O
+> discriminador entre os dois ramos é `assertDatabaseMissing` vs `assertSoftDeleted`, não a
+> contagem de actividade.
+>
+> **Requisitos do ramo soft-delete:** (1) FK `restrictOnDelete` activa em SQLite — garantida
+> pela migration `2026_07_01_..._enforce_restrict_entidades_fk_in_documentos` (a de #70 saltava
+> o SQLite); (2) o fallback no `catch` usa `fresh()?->delete()` — `forceDelete()` deixa
+> `forceDeleting=true` ao lançar, pelo que um `delete()` sobre a mesma instância voltaria a
+> fazer hard delete. Ver `docs/system_spec/02-shared/soft-delete.md`.
 
 ### `RestaurarEntidadeActionTest` — novo
 
