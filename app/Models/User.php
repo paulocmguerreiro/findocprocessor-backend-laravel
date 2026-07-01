@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Concerns\FiltravelPorEstadoRegisto;
+use App\Models\Concerns\RegistaActividade;
 use App\Policies\UtilizadorPolicy;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -42,7 +43,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use FiltravelPorEstadoRegisto, HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
+    use FiltravelPorEstadoRegisto, HasApiTokens, HasFactory, HasRoles, Notifiable, RegistaActividade, SoftDeletes;
 
     /** @return array<string, string> */
     #[\Override]
@@ -52,5 +53,13 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function atributosExcluidosDaActividade(): array
+    {
+        return ['password', 'remember_token'];
     }
 }
