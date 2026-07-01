@@ -39,7 +39,9 @@ final readonly class EliminarUtilizadorAction
             try {
                 $utilizador->forceDelete();
             } catch (QueryException) {
-                $utilizador->delete();
+                // forceDelete() deixa o modelo com forceDeleting=true ao lançar;
+                // uma instância fresca garante que o fallback é um soft delete real.
+                $utilizador->fresh()?->delete();
             }
 
             $this->cache->invalidarCache(TagCache::Utilizadores);

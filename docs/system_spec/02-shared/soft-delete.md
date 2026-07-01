@@ -34,11 +34,19 @@ DB::transaction(function () use ($registo): void {
     try {
         $registo->forceDelete();           // tenta hard delete
     } catch (\Illuminate\Database\QueryException) {
-        $registo->delete();                // FK constraint → fallback soft delete
+        // forceDelete() deixa o modelo com forceDeleting=true ao lançar; uma
+        // instância fresca garante que o fallback é um soft delete real.
+        $registo->fresh()?->delete();      // FK constraint → fallback soft delete
     }
     $this->cache->invalidarCache(TagCache::Xxx);
 });
 ```
+
+> **Armadilha (#71):** o fallback **tem de usar uma instância fresca** (`fresh()`).
+> Ao lançar, `forceDelete()` não repõe a flag interna `forceDeleting`, pelo que um
+> `$registo->delete()` no `catch` sobre a **mesma** instância voltaria a fazer hard
+> delete e relançaria a excepção — o soft delete nunca aconteceria (falha silenciosa
+> em testes SQLite e erro 500 em prod/MySQL).
 
 ### Porquê try/catch e não pré-verificação
 

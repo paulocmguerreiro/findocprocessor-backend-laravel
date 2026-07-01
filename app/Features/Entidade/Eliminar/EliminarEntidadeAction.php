@@ -39,7 +39,9 @@ final readonly class EliminarEntidadeAction
             try {
                 $entidade->forceDelete();
             } catch (QueryException) {
-                $entidade->delete();
+                // forceDelete() deixa o modelo com forceDeleting=true ao lançar;
+                // uma instância fresca garante que o fallback é um soft delete real.
+                $entidade->fresh()?->delete();
             }
 
             $this->cache->invalidarCache(TagCache::Entidades);
