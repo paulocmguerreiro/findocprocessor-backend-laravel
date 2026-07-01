@@ -42,6 +42,10 @@ Configuração publicada em `config/permission.php`. Guard: `web` (único guard 
 | `documentos.criar` | Registar manualmente e receber upload de documento | `seed_documentos_permissions` |
 | `documentos.actualizar` | Corrigir, reprocessar e transições de pipeline | `seed_documentos_permissions` |
 | `documentos.eliminar` | Eliminar documento | `seed_documentos_permissions` |
+| `utilizadores.{ver,criar,actualizar,eliminar}` | CRUD de utilizadores | `seed_utilizadores_permissions` |
+| `utilizadores.anonimizar` | Anonimizar utilizador (RGPD Art. 17.º) | `seed_utilizadores_anonimizar_permission` (Issue #73) |
+
+> A permissão `restore` de utilizador reutiliza `utilizadores.eliminar` — não há permissão dedicada.
 
 ### Matriz role → permissions
 
@@ -64,6 +68,7 @@ Configuração publicada em `config/permission.php`. Guard: `web` (único guard 
 | `documentos.criar` | ✅ | ❌ |
 | `documentos.actualizar` | ✅ | ❌ |
 | `documentos.eliminar` | ✅ | ❌ |
+| `utilizadores.anonimizar` | ✅ | ❌ |
 
 ---
 

@@ -1,7 +1,7 @@
 # System Spec — Feature: Utilizador
 
 > `App\Features\Utilizador\`
-> Issue #50 (AtribuirRole) · Issue #68 (CRUD completo + filtro de estado)
+> Issue #50 (AtribuirRole) · Issue #68 (CRUD completo + filtro de estado) · Issue #73 (Restaurar + RGPD Anonimização)
 
 Gestão de utilizadores em Vertical Slice sobre o modelo partilhado `User` (partilhado com a feature Auth). CRUD completo (Listar, Ver, Criar, Actualizar, Eliminar) mais a atribuição de role.
 
@@ -18,6 +18,8 @@ Gestão de utilizadores em Vertical Slice sobre o modelo partilhado `User` (part
 | `CriarUtilizadorAction` | `Criar` | `handle(CriarUtilizadorDto $dados): User` | Cria utilizador (password auto-hash), atribui `role` se fornecido; invalida cache |
 | `ActualizarUtilizadorAction` | `Actualizar` | `handle(User $utilizador, ActualizarUtilizadorDto $dados): User` | Actualiza nome/email; password só se fornecida; invalida cache |
 | `EliminarUtilizadorAction` | `Eliminar` | `handle(User $utilizador): void` | Padrão B (hard/soft); revoga tokens Sanctum; invalida cache |
+| `RestaurarUtilizadorAction` | `Restaurar` | `handle(User\|int $utilizador): User` | Reactiva utilizador soft-deleted; resolve `int` via `withTrashed()->findOrFail()`; invalida cache |
+| `AnonimizarUtilizadorAction` | `Anonimizar` | `handle(User $utilizador): void` | RGPD Art. 17.º: substitui dados pessoais + soft delete + revoga tokens + audit; invalida cache |
 | `AtribuirRoleAction` | `AtribuirRole` | `handle(User $utilizador, string $nomeRole): User` | Substitui role via `syncRoles()` |
 
 DTOs: `CriarUtilizadorDto` (`nome`, `email`, `password`, `?role`), `ActualizarUtilizadorDto` (`nome`, `email`, `?password`) — Value Objects com invariantes no construtor e `fromRequest()`. Os FormRequests `CriarUtilizadorRequest`/`ActualizarUtilizadorRequest` são **não-final** (mockáveis nos testes de `fromRequest`); os restantes são `final`.
@@ -44,6 +46,37 @@ A invariante "não eliminar o último utilizador com `utilizadores.eliminar`" fo
 
 ---
 
+## Restauro — inverso do Eliminar (Issue #73)
+
+`RestaurarUtilizadorAction`:
+
+1. Resolve o argumento: `User\|int` → ramo `int` faz `User::withTrashed()->findOrFail($id)` (o `User` usa PK `int`, não UUID).
+2. `Gate::authorize('restore', $utilizador)` (fora da transação).
+3. **Invariante 1:** `! trashed()` → `DomainException('Utilizador não está inactivo.')` (→ 422).
+4. **Invariante 2:** email começa por `anonimizado+` → `DomainException('Utilizador anonimizado não pode ser restaurado.')` (→ 422) — heurística sobre a convenção de email da anonimização, sem coluna dedicada.
+5. `DB::transaction`: `restore()` → invalida cache. Devolve `$utilizador->load('roles')`.
+
+Rota `PATCH /utilizadores/{utilizador}/restaurar` declarada com `->withTrashed()` explícito (fora do `apiResource`) para o RMB resolver o registo soft-deleted.
+
+---
+
+## Anonimização RGPD (Issue #73)
+
+`AnonimizarUtilizadorAction` — operação **irreversível** (Art. 17.º RGPD) que substitui dados pessoais em vez de hard delete, preservando as FKs `restrictOnDelete`:
+
+1. `Gate::authorize('anonimizar', $utilizador)` (fora da transação).
+2. **Invariante 1:** `Auth::id() === $utilizador->id` → `DomainException` (não anonimizar o próprio) (→ 422).
+3. **Invariante 2:** email já começa por `anonimizado+` → `DomainException` (já anonimizado) (→ 422).
+4. `DB::transaction`: `tokens()->delete()` → `forceFill([...])->saveQuietly()` → `activity()->event('rgpd.anonimizacao')->log()` → `delete()` (soft) → invalida cache.
+
+Dados substituídos: `name` = `Utilizador #{id}`, `email` = `anonimizado+{id}@removido.invalid`, `password` = `Hash::make(Str::random(64))`, `remember_token` = `null`, `email_verified_at` = `null`.
+
+**Audit sem PII:** o `saveQuietly()` suprime o evento `updated` automático do trait `RegistaActividade` (que registaria `old.name`/`old.email`); o evento `rgpd.anonimizacao` é registado manualmente **sem propriedades**. Ver `04-infra/audit-trail.md`.
+
+Rota `POST /utilizadores/{utilizador}/anonimizar` (não-idempotente, sem `->withTrashed()` — o soft delete é a saída da operação). Resposta 204.
+
+---
+
 ## Invariante de domínio — auto-modificação de role
 
 `AtribuirRoleAction` impede que um utilizador altere o próprio role (`auth()->id() === $utilizador->id` → `DomainException`). Aplicado na Action para cobrir todos os contextos de invocação. Handler converte `DomainException` → 422 (`bootstrap/app.php`).
@@ -62,8 +95,10 @@ A invariante "não eliminar o último utilizador com `utilizadores.eliminar`" fo
 | `create` | `hasPermissionTo('utilizadores.criar')` |
 | `update` | `hasPermissionTo('utilizadores.actualizar')` |
 | `delete` | `hasPermissionTo('utilizadores.eliminar')` |
+| `restore` | `hasPermissionTo('utilizadores.eliminar')` (reutiliza a permissão de eliminação) |
+| `anonimizar` | `hasPermissionTo('utilizadores.anonimizar')` |
 
-Permissions criadas por `seed_utilizadores_permissions` (atribuídas ao role `admin`). Detalhe: `04-infra/autorizacao.md`.
+Permissions criadas por `seed_utilizadores_permissions`; a permissão `utilizadores.anonimizar` por `seed_utilizadores_anonimizar_permission` (Issue #73). Todas atribuídas ao role `admin`. Detalhe: `04-infra/autorizacao.md`.
 
 ---
 

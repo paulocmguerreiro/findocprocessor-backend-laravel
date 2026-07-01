@@ -13,7 +13,12 @@ uses(RefreshDatabase::class);
 beforeEach(fn () => Activity::query()->delete());
 
 describe('autenticado como admin', function (): void {
-    beforeEach(fn (): User => criarEAutenticarAdmin());
+    beforeEach(function (): void {
+        criarEAutenticarAdmin();
+        // O User passou a registar actividade; limpar o evento 'created' do
+        // admin isola a contagem à actividade gerada pelo próprio pedido.
+        Activity::query()->delete();
+    });
 
     it('cria role e devolve 201 com o recurso', function (): void {
         $this->postJson('/api/roles', [
@@ -61,6 +66,7 @@ describe('autenticado como admin', function (): void {
 
 it('utilizador sem roles.criar recebe 403', function (): void {
     criarEAutenticarUtilizador();
+    Activity::query()->delete();
 
     $this->postJson('/api/roles', ['nome' => 'editor', 'permissoes' => []])
         ->assertForbidden();
