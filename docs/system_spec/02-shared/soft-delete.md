@@ -22,50 +22,51 @@ dados históricos quando o registo "pai" é eliminado.
 
 ---
 
-## Padrão B — hard delete com fallback para soft delete (pré-verificação)
+## Padrão B — hard delete com fallback para soft delete (try/catch)
 
-O comportamento padrão de eliminação em todas as tabelas com SoftDelete: hard
-delete quando o registo **não** é referenciado; soft delete (fallback) quando é.
-A decisão é tomada por **pré-verificação determinística** das tabelas filhas —
-**não** por `try/catch` em torno de `forceDelete()`:
+O comportamento padrão de eliminação em todas as tabelas com SoftDelete: tenta
+hard delete; se a BD rejeitar por violação de FK, faz soft delete (fallback).
+A decisão é tomada pela própria BD via `restrictOnDelete` — o código apenas
+reage ao `QueryException`:
 
 ```php
 DB::transaction(function () use ($registo): void {
-    $referenciado = Filho::where('id_pai', $registo->id)->exists() /* || ... outras FKs */;
-
-    $referenciado
-        ? $registo->delete()        // soft delete — preserva referência/histórico
-        : $registo->forceDelete();  // sem referências → hard delete
-
+    try {
+        $registo->forceDelete();           // tenta hard delete
+    } catch (\Illuminate\Database\QueryException) {
+        $registo->delete();                // FK constraint → fallback soft delete
+    }
     $this->cache->invalidarCache(TagCache::Xxx);
 });
 ```
 
-### Porquê pré-verificação e não `try/catch forceDelete`
+### Porquê try/catch e não pré-verificação
 
-O `try/catch (QueryException)` em torno de `forceDelete()` **não é fiável**: no
-SQLite (testes, com a transação aninhada do `RefreshDatabase`) a violação de FK
-`RESTRICT` difere para o commit e escapa ao `catch` (mesmo `\Throwable`). No MySQL
-falha no statement, mas a pré-verificação é determinística e **cross-driver**, e
-testável nos dois ramos sem depender do momento da verificação de FK.
+Uma abordagem alternativa seria pré-verificar com `Filho::where('id_pai', $id)->exists()`
+antes de decidir. O problema: o método `estaReferenciado()` tem de ser actualizado
+**manualmente** sempre que uma nova relação FK é adicionada ao modelo — é uma
+dependência implícita fácil de esquecer. Com try/catch, a própria restrição
+`restrictOnDelete` na BD actua como salvaguarda automática: qualquer FK nova que
+proteja o pai dispara o catch sem necessidade de alterar o código da Action.
+
+> **Requisito:** `foreign_key_constraints = true` (SQLite dev/testes) e FKs declaradas
+> `restrictOnDelete` (MySQL prod). O projecto já tem `DB_FOREIGN_KEYS=true` por omissão.
 
 ### Comportamento resultante
 
 | Situação | Resultado | Efeito |
 |---|---|---|
 | Sem referências | `forceDelete()` | Registo eliminado permanentemente |
-| Com referências | `delete()` | Registo soft-deleted (`deleted_at` preenchido) |
+| Com referências | `delete()` (catch) | Registo soft-deleted (`deleted_at` preenchido) |
 
 ### Invariante obrigatória
 
 As FKs das tabelas filhas **devem** ser `restrictOnDelete` (nunca `nullOnDelete`,
-nunca `cascadeOnDelete`) — é a **salvaguarda ao nível da BD** que garante que um
-hard delete acidental de um pai referenciado é bloqueado, mesmo que a
-pré-verificação fique desactualizada quando uma nova FK é adicionada.
+nunca `cascadeOnDelete`) — sem esta restrição o `forceDelete()` teria sucesso mesmo
+com referências, o catch nunca seria atingido e dados históricos seriam destruídos.
 
-> **Implementado (#68):** `User` é o primeiro modelo a usar Padrão B completo —
-> ver `EliminarUtilizadorAction` (`estaReferenciado()` sobre `documentos.id_responsavel`
-> e `etapas_documento.id_utilizador`).
+> **Actualizado (#71):** `Entidade` é o segundo modelo a usar Padrão B. `User` (#68)
+> actualizado para try/catch na mesma revisão.
 
 ---
 
@@ -197,17 +198,19 @@ Sem `withTrashed()`, documentos que referenciam entidades inactivas retornam
 
 ## User — padrão adicional (RGPD) — **adiado (Issue #73)**
 
-O modelo `User` deverá, no ramo soft delete, **anonimizar os dados pessoais**
+O modelo `User` deverá, no ramo soft delete (catch), **anonimizar os dados pessoais**
 (`name`, `email`, `password`) — passo de conformidade RGPD.
 
 ```
-1. Pré-verificar referências (estaReferenciado())
-2. Referenciado → [anonimizar (name, email, password)] + delete() (soft)   ← anonimização: #73
-3. Sem referências → forceDelete() (registo desaparece; sem dados a tratar)
+try { forceDelete() }           → sem referências: registo eliminado permanentemente
+catch (QueryException) {
+    [anonimizar]                ← anonimização: #73
+    delete()                    → com referências: soft-deleted
+}
 ```
 
-**Estado (#68):** o Padrão B (hard/soft) está implementado em `EliminarUtilizadorAction`;
-a **anonimização** do ramo soft delete fica **adiada para a Issue #73** (dívida técnica).
+**Estado (#71):** `EliminarUtilizadorAction` actualizada para try/catch (Padrão B);
+a **anonimização** do ramo catch fica **adiada para a Issue #73** (dívida técnica).
 
 ---
 
