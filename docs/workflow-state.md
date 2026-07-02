@@ -1,10 +1,9 @@
-issue_number: 77
-issue_title: "chore(laravel): migrar testes para MySQL exclusivo + preflight Docker/Redis/MySQL + collation"
-slug: testes-mysql-exclusivo
-branch: feat/testes-mysql-exclusivo
-fase: publica
-proximo_passo: /publica-implementacao #77
-brief: docs/briefs/2026-07-02-testes-mysql-exclusivo.md
-spec: docs/specs/2026-07-02-testes-mysql-exclusivo.md
-plan: docs/plans/2026-07-02-testes-mysql-exclusivo.md
-debrief: docs/debriefs/2026-07-02-testes-mysql-exclusivo.md
+issue_number: 72
+issue_title: "feat(laravel): CategoriaDocumento — logica layer (restaurar soft-deleted + ListarCategorias com inativas + testes revistos)"
+slug: categoria-documento-restaurar-logica
+branch: feat/categoria-documento-restaurar-logica
+fase: implementa
+proximo_passo: /implementa-plano #72
+brief: docs/briefs/2026-07-02-categoria-documento-restaurar-logica.md
+spec: docs/specs/2026-07-02-categoria-documento-restaurar-logica.md
+plan: docs/plans/2026-07-02-categoria-documento-restaurar-logica.md
