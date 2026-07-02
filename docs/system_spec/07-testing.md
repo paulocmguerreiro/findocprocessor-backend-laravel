@@ -185,4 +185,4 @@ Em `tests/ArchTest.php`, adicionar ao `ignoring` do `arch('actions are final')`:
 
 ## Pipeline de qualidade
 
-100% code coverage e 100% type coverage exigidos. Executar `composer test` (corre lint, arch, types, type-coverage e coverage) antes de finalizar qualquer alteração. Convenções de teste resumidas também em `CLAUDE.md` e em `docs/conventions/tests-dual-pattern.md`.
+100% code coverage e 100% type coverage exigidos. Executar `composer test` (corre preflight + lint + arch + types + type-coverage + coverage em MySQL) antes de finalizar qualquer alteração. A suite corre exclusivamente em MySQL (`findocprocessor_testing`) — requer Docker a correr (`docker compose up -d`). Convenções de teste resumidas também em `CLAUDE.md` e em `docs/conventions/tests-dual-pattern.md`.
