@@ -23,7 +23,7 @@
 - **Laravel Sanctum** — autenticação API via Bearer tokens
 - **Spatie Laravel Permission** — autorização por roles (`admin`, `utilizador`) e permissions granulares
 - **spatie/laravel-activitylog** — audit trail persistente (`activity_log`) com atomicidade garantida pela transação
-- **Eloquent ORM** — SQLite (dev/testes) / MySQL (Docker)
+- **Eloquent ORM** — MySQL (dev via Docker + testes)
 - **Redis + predis** — cache com invalidação por tags (`CacheServico`, `TagCache`, `TtlCache`)
 - **Pest 4 + Mockery** — padrão de testes dual (unit + HTTP)
 - **Larastan nível 9 + Rector + Laravel Pint** — qualidade e tipagem estática
@@ -66,19 +66,6 @@ docker compose up -d --build
 ```bash
 docker compose exec app composer test
 ```
-
-### Opção B — Local (SQLite)
-
-```bash
-# Pré-requisitos: PHP 8.5, Composer, Node.js
-composer install
-cp .env.example .env
-php artisan key:generate
-php artisan migrate --seed      # SQLite por omissão em dev
-php artisan serve
-```
-
-API disponível em `http://localhost:8000`.
 
 ### Acesso
 
