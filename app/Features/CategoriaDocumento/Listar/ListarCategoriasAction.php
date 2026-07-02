@@ -10,6 +10,7 @@ use App\Shared\Cache\TagCache;
 use App\Shared\Cache\TagOperacao;
 use App\Shared\Cache\TtlCache;
 use App\Shared\Enums\DirecaoOrdenacao;
+use App\Shared\Enums\FiltroEstadoRegisto;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Facades\Gate;
@@ -23,7 +24,7 @@ final readonly class ListarCategoriasAction
      *
      * @throws AuthorizationException
      */
-    public function handle(int $perPage, CampoOrdenacaoCategorias $campoOrdenacao, DirecaoOrdenacao $direcaoOrdenacao): CursorPaginator
+    public function handle(int $perPage, CampoOrdenacaoCategorias $campoOrdenacao, DirecaoOrdenacao $direcaoOrdenacao, FiltroEstadoRegisto $filtroEstado): CursorPaginator
     {
         Gate::authorize('viewAny', CategoriaDocumento::class);
 
@@ -32,7 +33,7 @@ final readonly class ListarCategoriasAction
         $chave = $this->cache->criarChave(
             TagCache::CategoriasDocumento,
             TagOperacao::Listar,
-            ['campo' => $campoOrdenacao->value, 'cursor' => $cursor, 'direcao' => $direcaoOrdenacao->value, 'por_pagina' => $perPage],
+            ['campo' => $campoOrdenacao->value, 'cursor' => $cursor, 'direcao' => $direcaoOrdenacao->value, 'estado' => $filtroEstado->value, 'por_pagina' => $perPage],
         );
 
         /** @var CursorPaginator<int, CategoriaDocumento> $resultado */
@@ -40,7 +41,7 @@ final readonly class ListarCategoriasAction
             TagCache::CategoriasDocumento,
             $chave,
             TtlCache::Curta,
-            fn (): CursorPaginator => CategoriaDocumento::orderBy($campoOrdenacao->value, $direcaoOrdenacao->value)->cursorPaginate($perPage),
+            fn (): CursorPaginator => CategoriaDocumento::filtrarPorEstadoRegisto($filtroEstado)->orderBy($campoOrdenacao->value, $direcaoOrdenacao->value)->cursorPaginate($perPage),
         );
 
         return $resultado;
