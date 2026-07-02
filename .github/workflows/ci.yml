@@ -21,6 +21,21 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: secret
+          MYSQL_DATABASE: findocprocessor_testing
+          MYSQL_USER: findoc
+          MYSQL_PASSWORD: secret
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -usecret || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - uses: actions/checkout@v4
 
@@ -28,7 +43,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.5'
-          extensions: pdo, pdo_sqlite, redis
+          extensions: pdo, pdo_mysql, redis
           coverage: xdebug
 
       - name: Create bootstrap/cache
@@ -43,17 +58,25 @@ jobs:
       - name: Generate key
         run: php artisan key:generate
 
+      - name: Setup MySQL grants (paralelo)
+        run: |
+          mysql -h 127.0.0.1 -uroot -psecret -e \
+            "GRANT ALL PRIVILEGES ON *.* TO 'findoc'@'%'; FLUSH PRIVILEGES;"
+
       - name: Quality pipeline
         run: composer test
         env:
-          DB_CONNECTION: sqlite
-          DB_DATABASE: ':memory:'
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: findocprocessor_testing
+          DB_USERNAME: findoc
+          DB_PASSWORD: secret
           REDIS_HOST: localhost
           REDIS_PORT: 6379
 
-  # Paridade de ambiente: valida que a imagem constrói e que a app arranca e
-  # corre as migrations contra MySQL real. NÃO corre a suite (essa fica em
-  # `build-and-test` em sqlite, e `composer test:mysql` localmente).
+  # Paridade de ambiente: valida que a imagem constrói e que a app arranca.
+  # A suite completa corre em build-and-test contra MySQL real.
   docker-parity:
     runs-on: ubuntu-latest
 
@@ -63,10 +86,11 @@ jobs:
       - name: Build and boot stack
         run: docker compose up -d --build
 
-      - name: Verificar migrations contra MySQL (app arranca e liga ao MySQL)
+      - name: Verificar arranque da app
         run: |
-          timeout 150 bash -c 'until docker compose exec -T app php artisan migrate:status > /dev/null 2>&1; do sleep 3; done'
-          docker compose exec -T app php artisan migrate:status
+          timeout 150 bash -c \
+            'until docker compose exec -T app php artisan about --only=Environment > /dev/null 2>&1; \
+             do sleep 3; done'
 
       - name: Logs em caso de falha
         if: failure()
