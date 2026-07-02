@@ -69,8 +69,9 @@
         "test:type-coverage": "pest --type-coverage --min=100",
         "test:types": "phpstan analyse --no-progress --memory-limit=512M",
         "test:coverage": "XDEBUG_MODE=coverage pest --parallel --coverage --min=100",
-        "test:mysql": "pest -c phpunit.mysql.xml",
+        "test:preflight": "bash bin/test-preflight.sh",
         "test": [
+            "@test:preflight",
             "@test:lint",
             "@test:arch",
             "@test:type-coverage",
@@ -89,7 +90,6 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi",
-            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
             "@php artisan migrate --graceful --ansi"
         ],
         "pre-package-uninstall": [

@@ -45,8 +45,7 @@ DB::transaction(function () use ($registo): void {
 > **Armadilha (#71):** o fallback **tem de usar uma instância fresca** (`fresh()`).
 > Ao lançar, `forceDelete()` não repõe a flag interna `forceDeleting`, pelo que um
 > `$registo->delete()` no `catch` sobre a **mesma** instância voltaria a fazer hard
-> delete e relançaria a excepção — o soft delete nunca aconteceria (falha silenciosa
-> em testes SQLite e erro 500 em prod/MySQL).
+> delete e relançaria a excepção — o soft delete nunca aconteceria (erro 500).
 
 ### Porquê try/catch e não pré-verificação
 
@@ -57,8 +56,7 @@ dependência implícita fácil de esquecer. Com try/catch, a própria restriçã
 `restrictOnDelete` na BD actua como salvaguarda automática: qualquer FK nova que
 proteja o pai dispara o catch sem necessidade de alterar o código da Action.
 
-> **Requisito:** `foreign_key_constraints = true` (SQLite dev/testes) e FKs declaradas
-> `restrictOnDelete` (MySQL prod). O projecto já tem `DB_FOREIGN_KEYS=true` por omissão.
+> **Requisito:** FKs declaradas `restrictOnDelete` em todas as tabelas filhas — a restrição na BD actua como salvaguarda automática.
 
 ### Comportamento resultante
 

@@ -11,13 +11,12 @@ APP_KEY=
 APP_DEBUG=true
 APP_URL=http://localhost:8000
 
-DB_CONNECTION=sqlite
-# DB_CONNECTION=mysql
-# DB_HOST=127.0.0.1
-# DB_PORT=3306
-# DB_DATABASE=findocprocessor
-# DB_USERNAME=root
-# DB_PASSWORD=
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=findocprocessor
+DB_USERNAME=findoc
+DB_PASSWORD=secret
 
 CACHE_STORE=redis
 REDIS_CLIENT=predis

@@ -16,7 +16,7 @@ A Action é a unidade de lógica de negócio da arquitectura Vertical Slice. Cad
 
 ### Interface vs classe concreta na injecção
 
-A regra "injectar interface" existe para **isolar pontos de substituição** — não é um fim em si. Extrair interface quando se prevê trocar a implementação (Repository SQLite↔MySQL, cliente de IA), ou quando o mock só é possível por dupla de teste.
+A regra "injectar interface" existe para **isolar pontos de substituição** — não é um fim em si. Extrair interface quando se prevê trocar a implementação (diferentes implementações de Repository, cliente de IA), ou quando o mock só é possível por dupla de teste.
 
 Classes concretas injectadas directamente são legítimas quando **não** se prevê substituição e o teste não precisa de interface:
 

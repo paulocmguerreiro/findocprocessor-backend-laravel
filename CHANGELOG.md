@@ -6,6 +6,18 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Changed (Infra)
+- **Issue #77** — Migração de testes para MySQL exclusivo + Preflight + Collation
+  - `phpunit.xml` passa a usar `DB_CONNECTION=mysql` / `DB_DATABASE=findocprocessor_testing`; `phpunit.mysql.xml` eliminado
+  - `bin/test-preflight.sh` — novo guard que valida MySQL e Redis via `/dev/tcp` antes de correr a suite; encadeado como primeiro passo de `composer test`
+  - `docker/mysql/init.sql` — collation `utf8mb4_unicode_ci` → `utf8mb4_0900_ai_ci`; GRANT alargado para `ALL ON *.*` (necessário para o paralelo criar `findocprocessor_testing_test_N`)
+  - `Dockerfile` — `pdo_sqlite` removido das extensões PHP
+  - CI `build-and-test` — adicionado serviço `mysql:8.4` com health check; `pdo_sqlite` → `pdo_mysql`; env vars MySQL; step `Setup MySQL grants (paralelo)` antes da suite
+  - CI `docker-parity` — simplificado: `migrate:status` substituído por `php artisan about --only=Environment`
+  - Migrations de FK correctivas (#70, #71, #72) eliminadas; `restrictOnDelete()` consolidado directamente em `create_documentos_table`
+  - `composer test:mysql` removido (redunda com `composer test`); `test:preflight` adicionado
+  - 724 testes, 100% coverage + type coverage, Larastan 9 — verde em MySQL (paralelo)
+
 ### Added
 - **Issue #73** — Utilizador — Restaurar soft-deleted + RGPD Anonimização
   - **`RestaurarUtilizadorAction`** (`handle(User|int): User`) + `RestaurarUtilizadorRequest` + `UtilizadorPolicy::restore()` (reutiliza `utilizadores.eliminar`); invariantes `! trashed()` e email `anonimizado+` → `DomainException` (422)
