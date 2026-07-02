@@ -13,6 +13,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -23,6 +24,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->throttleApi();
+
         $middleware->api(append: [
             InjectarContextoLog::class,
         ]);
@@ -78,6 +81,19 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return $problemDetails(Response::HTTP_UNPROCESSABLE_ENTITY, $e->getMessage());
+        });
+
+        $exceptions->render(function (HttpExceptionInterface $e, Request $request) use ($problemDetails): ?JsonResponse {
+            if (! $request->expectsJson()) {
+                return null;
+            }
+
+            $status = $e->getStatusCode();
+            $detalhe = $status === Response::HTTP_TOO_MANY_REQUESTS
+                ? 'Demasiados pedidos. Tente novamente mais tarde.'
+                : ($e->getMessage() !== '' ? $e->getMessage() : 'O pedido não pôde ser processado.');
+
+            return $problemDetails($status, $detalhe);
         });
 
         $exceptions->render(function (Throwable $_e, Request $request) use ($problemDetails): ?JsonResponse {

@@ -125,4 +125,19 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Administrador inicial (seed)
+    |--------------------------------------------------------------------------
+    |
+    | Credenciais do administrador criado pelo RolesPermissionsSeeder. Em
+    | produção, `ADMIN_INITIAL_PASSWORD` é obrigatória — sem ela o seed do
+    | admin é ignorado para não criar uma credencial fraca conhecida.
+    |
+    */
+
+    'admin_email' => env('ADMIN_EMAIL', 'admin@findocprocessor.test'),
+
+    'admin_initial_password' => env('ADMIN_INITIAL_PASSWORD'),
+
 ];
