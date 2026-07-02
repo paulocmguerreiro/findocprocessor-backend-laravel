@@ -15,11 +15,14 @@ use App\Features\CategoriaDocumento\Eliminar\EliminarCategoriaRequest;
 use App\Features\CategoriaDocumento\Listar\CampoOrdenacaoCategorias;
 use App\Features\CategoriaDocumento\Listar\ListarCategoriasAction;
 use App\Features\CategoriaDocumento\Listar\ListarCategoriasRequest;
+use App\Features\CategoriaDocumento\Restaurar\RestaurarCategoriaAction;
+use App\Features\CategoriaDocumento\Restaurar\RestaurarCategoriaRequest;
 use App\Features\CategoriaDocumento\Ver\VerCategoriaAction;
 use App\Features\CategoriaDocumento\Ver\VerCategoriaRequest;
 use App\Http\Controllers\Controller;
 use App\Models\CategoriaDocumento;
 use App\Shared\Enums\DirecaoOrdenacao;
+use App\Shared\Enums\FiltroEstadoRegisto;
 use App\Shared\Http\ApiResponse;
 use Illuminate\Http\JsonResponse;
 
@@ -27,14 +30,15 @@ final class CategoriaDocumentoController extends Controller
 {
     public function index(ListarCategoriasRequest $pedido, ListarCategoriasAction $accao): JsonResponse
     {
-        /** @var array{per_page?: string, sort?: string, direction?: string} $parametrosValidados */
+        /** @var array{per_page?: string, sort?: string, direction?: string, estado?: string} $parametrosValidados */
         $parametrosValidados = $pedido->validated();
 
         $porPagina = isset($parametrosValidados['per_page']) ? (int) $parametrosValidados['per_page'] : 15;
         $campoOrdenacao = CampoOrdenacaoCategorias::from($parametrosValidados['sort'] ?? CampoOrdenacaoCategorias::Nome->value);
         $direcaoOrdenacao = DirecaoOrdenacao::from($parametrosValidados['direction'] ?? DirecaoOrdenacao::Asc->value);
+        $filtroEstado = FiltroEstadoRegisto::from($parametrosValidados['estado'] ?? FiltroEstadoRegisto::SomenteAtivos->value);
 
-        $categorias = $accao->handle($porPagina, $campoOrdenacao, $direcaoOrdenacao);
+        $categorias = $accao->handle($porPagina, $campoOrdenacao, $direcaoOrdenacao, $filtroEstado);
 
         return ApiResponse::devolverPaginado(
             CategoriaDocumentoResource::collection($categorias),
@@ -67,5 +71,12 @@ final class CategoriaDocumentoController extends Controller
         $accao->handle($categorias_documento);
 
         return ApiResponse::devolverVazio();
+    }
+
+    public function restaurar(RestaurarCategoriaRequest $pedido, CategoriaDocumento $categorias_documento, RestaurarCategoriaAction $accao): JsonResponse
+    {
+        $categoria = $accao->handle($categorias_documento);
+
+        return ApiResponse::devolverSucesso(new CategoriaDocumentoResource($categoria));
     }
 }

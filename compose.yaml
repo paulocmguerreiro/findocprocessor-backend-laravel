@@ -43,6 +43,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      mysql-grants:
+        condition: service_completed_successfully
       redis:
         condition: service_started
     networks: [findoc]
@@ -76,6 +78,8 @@ services:
         condition: service_started
       mysql:
         condition: service_healthy
+      mysql-grants:
+        condition: service_completed_successfully
       redis:
         condition: service_started
     networks: [findoc]
@@ -96,6 +100,26 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    networks: [findoc]
+
+  # Serviço one-shot: aplica GRANT ALL em cada 'docker compose up', incluindo volumes
+  # pré-existentes onde o init.sql não volta a correr. Necessário para que findoc
+  # possa criar/eliminar findocprocessor_testing_test_N nos testes paralelos.
+  # Usa entrypoint directo para mysql (bypass do docker-entrypoint.sh do MySQL).
+  # restart: "no" garante que não reinicia após completar.
+  mysql-grants:
+    image: mysql:8.4
+    restart: "no"
+    entrypoint: ["mysql"]
+    command:
+      - "-hmysql"
+      - "-uroot"
+      - "-proot"
+      - "-e"
+      - "GRANT ALL PRIVILEGES ON *.* TO 'findoc'@'%'; FLUSH PRIVILEGES;"
+    depends_on:
+      mysql:
+        condition: service_healthy
     networks: [findoc]
 
   redis:

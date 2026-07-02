@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Features\CategoriaDocumento\Eliminar\EliminarCategoriaAction;
 use App\Models\CategoriaDocumento;
+use App\Models\Documento;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -15,18 +16,27 @@ beforeEach(fn () => Cache::tags(['categorias_documento'])->flush());
 describe('como admin', function (): void {
     beforeEach(fn () => $this->actingAs(criarAdmin()));
 
-    it('elimina quando recebe CategoriaDocumento directamente', function (): void {
+    it('elimina definitivamente quando categoria não tem documentos associados', function (): void {
         $categoria = CategoriaDocumento::factory()->create();
 
         app(EliminarCategoriaAction::class)->handle($categoria);
 
-        $this->assertSoftDeleted('categorias_documento', ['id' => $categoria->id]);
+        $this->assertDatabaseMissing('categorias_documento', ['id' => $categoria->id]);
     });
 
-    it('elimina quando recebe string UUID', function (): void {
+    it('elimina definitivamente quando recebe string UUID', function (): void {
         $categoria = CategoriaDocumento::factory()->create();
 
         app(EliminarCategoriaAction::class)->handle($categoria->id);
+
+        $this->assertDatabaseMissing('categorias_documento', ['id' => $categoria->id]);
+    });
+
+    it('faz soft delete quando categoria tem documentos associados', function (): void {
+        $categoria = CategoriaDocumento::factory()->create();
+        Documento::factory()->create(['id_categoria' => $categoria->id]);
+
+        app(EliminarCategoriaAction::class)->handle($categoria);
 
         $this->assertSoftDeleted('categorias_documento', ['id' => $categoria->id]);
     });

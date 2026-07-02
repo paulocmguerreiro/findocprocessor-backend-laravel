@@ -6,6 +6,7 @@ namespace App\Features\CategoriaDocumento\Listar;
 
 use App\Models\CategoriaDocumento;
 use App\Shared\Enums\DirecaoOrdenacao;
+use App\Shared\Enums\FiltroEstadoRegisto;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
@@ -29,6 +30,7 @@ final class ListarCategoriasRequest extends FormRequest
             'sort' => ['sometimes', 'string', Rule::in(array_column(CampoOrdenacaoCategorias::cases(), 'value'))],
             'direction' => ['sometimes', 'string', Rule::in(array_column(DirecaoOrdenacao::cases(), 'value'))],
             'cursor' => ['sometimes', 'string'],
+            'estado' => ['sometimes', 'string', Rule::in(array_column(FiltroEstadoRegisto::cases(), 'value'))],
         ];
     }
 
@@ -47,6 +49,7 @@ final class ListarCategoriasRequest extends FormRequest
             'direction.string' => 'A direcção de ordenação deve ser texto.',
             'direction.in' => 'A direcção de ordenação indicada não é válida.',
             'cursor.string' => 'O cursor de paginação deve ser texto.',
+            'estado.in' => 'O filtro de estado indicado não é válido.',
         ];
     }
 }

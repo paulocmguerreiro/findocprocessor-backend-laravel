@@ -321,6 +321,13 @@ paths:
             type: string
             enum: [asc, desc]
         - in: query
+          name: estado
+          description: Filtro de estado SoftDelete
+          schema:
+            type: string
+            enum: [todos, somente_ativos, somente_inativos]
+            default: somente_ativos
+        - in: query
           name: cursor
           schema:
             type: string
@@ -349,6 +356,8 @@ paths:
           $ref: '#/components/schemas/ErrorNaoAutenticado'
         '403':
           $ref: '#/components/schemas/ErrorSemPermissao'
+        '422':
+          $ref: '#/components/schemas/ErrorValidacao'
 
     post:
       summary: Criar categoria de documento
@@ -456,7 +465,35 @@ paths:
       tags: [CategoriaDocumento]
       responses:
         '204':
-          description: Eliminada com sucesso
+          description: Eliminada com sucesso (hard delete se sem referências; soft delete se referenciada)
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+
+  /categorias-documento/{id}/restaurar:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      summary: Restaurar categoria de documento soft-deleted
+      tags: [CategoriaDocumento]
+      responses:
+        '200':
+          description: Categoria restaurada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CategoriaDocumento'
         '401':
           $ref: '#/components/schemas/ErrorNaoAutenticado'
         '403':

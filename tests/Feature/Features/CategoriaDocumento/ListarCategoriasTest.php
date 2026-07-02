@@ -132,6 +132,41 @@ describe('autenticado', function (): void {
                 'meta' => ['per_page', 'next_cursor', 'prev_cursor', 'path'],
             ]);
     });
+
+    it('lista só activas por omissão (sem ?estado)', function (): void {
+        CategoriaDocumento::factory()->create(['nome' => 'Ativa']);
+        CategoriaDocumento::factory()->inativa()->create(['nome' => 'Inativa']);
+
+        $this->getJson('/api/categorias-documento?sort=nome')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.nome', 'Ativa');
+    });
+
+    it('lista só inactivas com ?estado=somente_inativos', function (): void {
+        CategoriaDocumento::factory()->create(['nome' => 'Ativa']);
+        CategoriaDocumento::factory()->inativa()->create(['nome' => 'Inativa']);
+
+        $this->getJson('/api/categorias-documento?sort=nome&estado=somente_inativos')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.nome', 'Inativa');
+    });
+
+    it('lista todas com ?estado=todos', function (): void {
+        CategoriaDocumento::factory()->create(['nome' => 'Ativa']);
+        CategoriaDocumento::factory()->inativa()->create(['nome' => 'Inativa']);
+
+        $this->getJson('/api/categorias-documento?sort=nome&estado=todos')
+            ->assertOk()
+            ->assertJsonCount(2, 'data');
+    });
+
+    it('devolve 422 com estado inválido', function (): void {
+        $this->getJson('/api/categorias-documento?estado=invalido')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['estado']);
+    });
 });
 
 it('utilizador com permissão de leitura devolve 200', function (): void {

@@ -33,4 +33,9 @@ final class CategoriaDocumentoPolicy
     {
         return $utilizador->hasPermissionTo('categorias-documento.eliminar');
     }
+
+    public function restore(User $utilizador, CategoriaDocumento $categoriaDocumento): bool
+    {
+        return $utilizador->hasPermissionTo('categorias-documento.eliminar');
+    }
 }

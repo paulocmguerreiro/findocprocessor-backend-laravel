@@ -16,7 +16,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('auth/logout', [AuthController::class, 'logout']);
     Route::post('auth/tokens', [AuthController::class, 'criarToken']);
 
-    Route::apiResource('categorias-documento', CategoriaDocumentoController::class);
+    Route::apiResource('categorias-documento', CategoriaDocumentoController::class)
+        ->withTrashed(['show', 'update', 'destroy']);
+    Route::patch('categorias-documento/{categorias_documento}/restaurar', [CategoriaDocumentoController::class, 'restaurar'])
+        ->withTrashed();
 
     Route::apiResource('entidades', EntidadeController::class)
         ->withTrashed(['show', 'update', 'destroy']);

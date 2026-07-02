@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\CategoriaDocumento;
+use App\Models\Documento;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Response;
@@ -16,17 +17,25 @@ beforeEach(fn () => Activity::query()->delete());
 describe('autenticado', function (): void {
     beforeEach(fn (): User => criarEAutenticarAdmin());
 
-    it('elimina categoria existente e devolve 204', function (): void {
+    it('elimina definitivamente sem documentos e devolve 204', function (): void {
         $categoria = CategoriaDocumento::factory()->create();
         Activity::query()->delete();
 
         $this->deleteJson("/api/categorias-documento/{$categoria->id}")
             ->assertNoContent();
 
-        $this->assertSoftDeleted('categorias_documento', ['id' => $categoria->id]);
+        $this->assertDatabaseMissing('categorias_documento', ['id' => $categoria->id]);
+    });
 
-        expect(Activity::count())->toBe(1)
-            ->and(Activity::query()->first()->event)->toBe('deleted');
+    it('faz soft delete com documentos e devolve 204', function (): void {
+        $categoria = CategoriaDocumento::factory()->create();
+        Documento::factory()->create(['id_categoria' => $categoria->id]);
+        Activity::query()->delete();
+
+        $this->deleteJson("/api/categorias-documento/{$categoria->id}")
+            ->assertNoContent();
+
+        $this->assertSoftDeleted('categorias_documento', ['id' => $categoria->id]);
     });
 
     it('devolve 404 quando a categoria não existe', function (): void {

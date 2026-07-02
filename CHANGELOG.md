@@ -19,6 +19,12 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
   - 724 testes, 100% coverage + type coverage, Larastan 9 — verde em MySQL (paralelo)
 
 ### Added
+- **Issue #72** — CategoriaDocumento — lógica de SoftDelete (restaurar + listagem filtrada + Padrão B)
+  - **`RestaurarCategoriaAction`** (`handle(CategoriaDocumento|string): CategoriaDocumento`) + `RestaurarCategoriaRequest` + `CategoriaDocumentoPolicy::restore()` (reutiliza `categorias-documento.eliminar`)
+  - Rota `PATCH /api/categorias-documento/{categorias_documento}/restaurar` com `->withTrashed()`; `apiResource` passa a `->withTrashed(['show','update','destroy'])`
+  - Trait `FiltravelPorEstadoRegisto` no model `CategoriaDocumento`; `ListarCategoriasAction` aceita `FiltroEstadoRegisto` (4.º param) — `GET /api/categorias-documento?estado=todos|somente_ativos|somente_inativos` (default `somente_ativos`); `estado` na chave de cache (evita cache poisoning)
+  - **Padrão B** em `EliminarCategoriaAction`: `forceDelete()` (hard delete quando sem referências) com fallback `fresh()?->delete()` (soft delete quando `documentos.id_categoria` impede FK)
+  - 742 testes, 100% cobertura, 100% type coverage, Larastan 9 — verde em MySQL
 - **Issue #73** — Utilizador — Restaurar soft-deleted + RGPD Anonimização
   - **`RestaurarUtilizadorAction`** (`handle(User|int): User`) + `RestaurarUtilizadorRequest` + `UtilizadorPolicy::restore()` (reutiliza `utilizadores.eliminar`); invariantes `! trashed()` e email `anonimizado+` → `DomainException` (422)
   - **`AnonimizarUtilizadorAction`** (`handle(User): void`) + `AnonimizarUtilizadorRequest` + `UtilizadorPolicy::anonimizar()` — RGPD Art. 17.º: substitui `name`/`email`/`password`/`remember_token`/`email_verified_at`, revoga tokens Sanctum e faz soft delete numa única transação; invariantes auto-anonimização e já-anonimizado → 422
