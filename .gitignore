@@ -53,3 +53,7 @@ coverage/
 
 # MCP config (pode conter tokens)
 .mcp.json
+
+# Workflow interno (ruído de sessão — não deve ir para o repo público)
+docs/process-warnings.md
+docs/workflow-state.md

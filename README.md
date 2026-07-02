@@ -73,6 +73,13 @@ docker compose exec app composer test
 
 **Autorização:** duas roles — `admin` (acesso total) e `utilizador` (só leitura). Após o seed, usar `admin@findocprocessor.test` / `password` (o seeder cria também o token de dev `dev-token`).
 
+### Notas para consumidores da API
+
+- **Soft delete e restauro:** `categorias-documento`, `entidades` e `utilizadores` usam soft delete — o `DELETE` desactiva (mantém o registo) e existe `PATCH .../restaurar`. **`documentos` não tem soft delete:** o `DELETE` é permanente e **não** há restauro.
+- **O parâmetro `?estado=` tem duas semânticas distintas** conforme o recurso:
+  - Em `categorias-documento`, `entidades` e `utilizadores` é um **filtro de soft delete**: `todos | somente_ativos | somente_inativos`.
+  - Em `documentos` é a **fase do ciclo de vida** (`EstadoDocumento`): `Pendente | AguardaEnvio | Enviado | AguardaResposta | Processado | Erro | Perigoso`.
+
 ## Testes
 
 ```bash

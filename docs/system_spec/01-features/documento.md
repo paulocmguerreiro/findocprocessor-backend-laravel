@@ -7,7 +7,9 @@
 
 ## Visão geral
 
-Feature com 13 Actions, 3 classes `Regra*`, 1 executor partilhado interno, 7 DTOs, 4 Events e camada
+Feature com 14 Actions (8 expostas via endpoint HTTP + 6 de transição de pipeline executadas apenas
+programaticamente — `Marcar*` e `TransicionarProcessadoDocumentoAction`, invocadas pelos Jobs de
+extracção, nunca por rota), 3 classes `Regra*`, 1 executor partilhado interno, 7 DTOs, 4 Events e camada
 HTTP completa. A máquina de estados é a peça central: cada transição passa obrigatoriamente pelo mapa
 central em `RegraTransicaoEstado` — nunca `if ($doc->status == ...)`.
 
