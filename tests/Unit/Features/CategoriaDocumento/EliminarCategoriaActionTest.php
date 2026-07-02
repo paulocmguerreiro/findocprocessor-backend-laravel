@@ -24,6 +24,14 @@ describe('como admin', function (): void {
         $this->assertDatabaseMissing('categorias_documento', ['id' => $categoria->id]);
     });
 
+    it('elimina definitivamente quando recebe string UUID', function (): void {
+        $categoria = CategoriaDocumento::factory()->create();
+
+        app(EliminarCategoriaAction::class)->handle($categoria->id);
+
+        $this->assertDatabaseMissing('categorias_documento', ['id' => $categoria->id]);
+    });
+
     it('faz soft delete quando categoria tem documentos associados', function (): void {
         $categoria = CategoriaDocumento::factory()->create();
         Documento::factory()->create(['id_categoria' => $categoria->id]);
