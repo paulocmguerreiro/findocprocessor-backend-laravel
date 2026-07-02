@@ -14,9 +14,9 @@ return new class extends Migration
             $table->uuid('id')->primary()->comment('Identificador unico UUID v7');
             $table->string('status', 50)->default('PENDENTE')->index()->comment('Estado de processamento do documento');
 
-            $table->foreignUuid('id_fornecedor')->nullable()->constrained('entidades')->nullOnDelete()->comment('FK para a entidade fornecedora');
-            $table->foreignUuid('id_cliente')->nullable()->constrained('entidades')->nullOnDelete()->comment('FK para a entidade cliente');
-            $table->foreignUuid('id_categoria')->nullable()->constrained('categorias_documento')->nullOnDelete()->comment('FK para a categoria do documento');
+            $table->foreignUuid('id_fornecedor')->nullable()->constrained('entidades')->restrictOnDelete()->comment('FK para a entidade fornecedora');
+            $table->foreignUuid('id_cliente')->nullable()->constrained('entidades')->restrictOnDelete()->comment('FK para a entidade cliente');
+            $table->foreignUuid('id_categoria')->nullable()->constrained('categorias_documento')->restrictOnDelete()->comment('FK para a categoria do documento');
 
             $table->decimal('valor', total: 15, places: 2)->nullable()->comment('Valor monetario do documento; >= 0');
             $table->date('data_documento')->nullable()->index()->comment('Data do documento');
