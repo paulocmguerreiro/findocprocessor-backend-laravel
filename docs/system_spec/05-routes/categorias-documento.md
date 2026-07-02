@@ -1,8 +1,16 @@
 # System Spec — Rotas: CategoriaDocumento
 
-> Issues #5, #9
+> Issues #5, #9, #72
 
-`Route::apiResource('categorias-documento', CategoriaDocumentoController::class)`
+```php
+Route::apiResource('categorias-documento', CategoriaDocumentoController::class)
+    ->withTrashed(['show', 'update', 'destroy']);
+Route::patch('categorias-documento/{categorias_documento}/restaurar', [CategoriaDocumentoController::class, 'restaurar'])
+    ->withTrashed();
+```
+
+`withTrashed(['show','update','destroy'])` — RMB resolve soft-deleted nessas rotas.
+`->withTrashed()` na rota `/restaurar` — o alvo do restauro está soft-deleted.
 
 ---
 
@@ -12,11 +20,12 @@
 |---|---|---|---|
 | GET | `/api/categorias-documento` | `CategoriaDocumentoController@index` | — (ver query params abaixo) |
 | POST | `/api/categorias-documento` | `CategoriaDocumentoController@store` | — |
-| GET | `/api/categorias-documento/{categorias_documento}` | `CategoriaDocumentoController@show` | UUID (RMB) |
-| PUT/PATCH | `/api/categorias-documento/{categorias_documento}` | `CategoriaDocumentoController@update` | UUID (RMB) |
-| DELETE | `/api/categorias-documento/{categorias_documento}` | `CategoriaDocumentoController@destroy` | UUID (RMB) |
+| GET | `/api/categorias-documento/{categorias_documento}` | `CategoriaDocumentoController@show` | UUID (RMB; inclui soft-deleted) |
+| PUT/PATCH | `/api/categorias-documento/{categorias_documento}` | `CategoriaDocumentoController@update` | UUID (RMB; inclui soft-deleted) |
+| DELETE | `/api/categorias-documento/{categorias_documento}` | `CategoriaDocumentoController@destroy` | UUID (RMB; inclui soft-deleted) |
+| PATCH | `/api/categorias-documento/{categorias_documento}/restaurar` | `CategoriaDocumentoController@restaurar` | UUID (RMB; inclui soft-deleted) |
 
-Route Model Binding: `{categorias_documento}` → `CategoriaDocumento` (resolvido via `HasUuids`). 404 automático se UUID não existe.
+Route Model Binding: `{categorias_documento}` → `CategoriaDocumento` (resolvido via `HasUuids`). 404 automático se UUID não existe nem em soft-deleted.
 
 ---
 
@@ -28,6 +37,7 @@ Route Model Binding: `{categorias_documento}` → `CategoriaDocumento` (resolvid
 | `sort` | string | `nome` | valores de `CampoOrdenacaoCategorias` | Campo de ordenação |
 | `direction` | string | `asc` | `asc`, `desc` | Direcção de ordenação |
 | `cursor` | string | — | opaco (base64) | Cursor gerado pelo Laravel; navegar via `links.next` / `links.prev` |
+| `estado` | string | `somente_ativos` | `somente_ativos`, `somente_inativos`, `todos` | Filtra por estado de registo; 422 se valor inválido |
 
 ---
 
