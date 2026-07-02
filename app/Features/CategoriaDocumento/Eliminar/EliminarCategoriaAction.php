@@ -40,7 +40,7 @@ final readonly class EliminarCategoriaAction
                 $categoria->forceDelete();
             } catch (QueryException) {
                 // forceDelete() deixa forceDeleting=true ao lançar; recarregar da BD garante soft delete real.
-                CategoriaDocumento::withTrashed()->whereKey($categoria->getKey())->firstOrFail()->delete();
+                $categoria->fresh()?->delete();
             }
             $this->cache->invalidarCache(TagCache::CategoriasDocumento);
         });
