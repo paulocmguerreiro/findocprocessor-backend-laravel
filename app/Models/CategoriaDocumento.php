@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\FiltravelPorEstadoRegisto;
 use App\Models\Concerns\RegistaActividade;
 use App\Policies\CategoriaDocumentoPolicy;
 use App\Shared\Enums\TipoMovimento;
@@ -32,7 +33,7 @@ use Illuminate\Support\Carbon;
 class CategoriaDocumento extends Model
 {
     /** @use HasFactory<CategoriaDocumentoFactory> */
-    use HasFactory, HasUuids, RegistaActividade, SoftDeletes;
+    use FiltravelPorEstadoRegisto, HasFactory, HasUuids, RegistaActividade, SoftDeletes;
 
     #[\Override]
     protected function casts(): array
