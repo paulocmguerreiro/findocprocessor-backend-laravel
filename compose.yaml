@@ -83,6 +83,10 @@ services:
   mysql:
     image: mysql:8.4
     restart: unless-stopped
+    # --init-file corre em cada arranque do mysqld (não só na 1.ª inicialização do volume),
+    # garantindo que findoc tem ALL PRIVILEGES para os testes paralelos criarem
+    # findocprocessor_testing_test_N mesmo em volumes pré-existentes.
+    command: --init-file=/etc/mysql/grants.sql
     environment:
       MYSQL_DATABASE: findocprocessor
       MYSQL_USER: findoc
@@ -91,6 +95,7 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
       - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/10-testing-db.sql:ro
+      - ./docker/mysql/grants.sql:/etc/mysql/grants.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
       interval: 10s
