@@ -4,7 +4,6 @@
 ![PHP 8.5](https://img.shields.io/badge/PHP-8.5-777BB4?logo=php&logoColor=white)
 ![Laravel 13](https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel&logoColor=white)
 ![Larastan](https://img.shields.io/badge/Larastan-nível%209-2D2D2D)
-![Coverage](https://img.shields.io/badge/cobertura-100%25-3FB950)
 ![License](https://img.shields.io/badge/licença-MIT-blue)
 
 > API REST para processamento de documentos financeiros, organizada em **Vertical Slice Architecture** em Laravel 13 / PHP 8.5.
@@ -90,6 +89,10 @@ composer test:coverage # Pest — cobertura 100%
 
 ## API — estado actual
 
+> **Documentação interactiva:** disponível em `/docs` (Swagger UI) **apenas fora de produção** —
+> em produção a rota não é registada, para não expor a superfície da API. O contrato portável é o
+> [`openapi.yaml`](openapi.yaml), importável no [Swagger Editor](https://editor.swagger.io) ou no Postman.
+
 ### Auth
 
 | Método | Path | Descrição | Auth |
@@ -159,7 +162,7 @@ Todas as rotas exigem Bearer token (role `admin`).
 
 - Larastan nível 9 (PHPStan com regras Laravel) — zero erros
 - 100% type-coverage (todos os tipos declarados)
-- Cobertura de testes 100% (Pest, padrão dual unit + HTTP)
+- Cobertura de testes 100% (Pest, padrão dual unit + HTTP) — imposta por `--min=100`: o CI **falha** se descer de 100%, logo o badge de CI verde é a prova da cobertura
 - `strict_types=1` em todos os ficheiros
 - Laravel Pint (PSR-12 + opinionated) + Rector (modernização PHP 8.5)
 - CI obrigatório: pint ✓ rector ✓ phpstan ✓ testes ✓

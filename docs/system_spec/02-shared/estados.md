@@ -16,25 +16,47 @@ PENDENTE → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → PROCESSADO
 
 ### Semântica dos estados
 
-| Estado (enum) | Value BD | Significado |
-|---|---|---|
-| `Pendente` | `PENDENTE` | Documento recebido; campos de domínio podem estar a null (registo automático iniciado) |
-| `AguardaEnvio` | `AGUARDA_ENVIO` | Pronto a ser enviado para o serviço de extracção |
-| `Enviado` | `ENVIADO` | Enviado para o serviço de extracção (IA / OCR) |
-| `AguardaResposta` | `AGUARDA_RESPOSTA` | À espera da resposta do serviço de extracção |
-| `Processado` | `PROCESSADO` | Processamento concluído com sucesso; todos os campos preenchidos |
-| `Erro` | `ERRO` | Falha no processamento — recuperável (permite reprocessar) |
-| `Perigoso` | `PERIGOSO` | Documento marcado como potencialmente malicioso/suspeito |
+| Estado (enum)     | Value BD           | Significado                                                                            |
+| ----------------- | ------------------ | -------------------------------------------------------------------------------------- |
+| `Pendente`        | `PENDENTE`         | Documento recebido; campos de domínio podem estar a null (registo automático iniciado) |
+| `AguardaEnvio`    | `AGUARDA_ENVIO`    | Pronto a ser enviado para o serviço de extracção                                       |
+| `Enviado`         | `ENVIADO`          | Enviado para o serviço de extracção (IA / OCR)                                         |
+| `AguardaResposta` | `AGUARDA_RESPOSTA` | À espera da resposta do serviço de extracção                                           |
+| `Processado`      | `PROCESSADO`       | Processamento concluído com sucesso; todos os campos preenchidos                       |
+| `Erro`            | `ERRO`             | Falha no processamento — recuperável (permite reprocessar)                             |
+| `Perigoso`        | `PERIGOSO`         | Documento marcado como potencialmente malicioso/suspeito                               |
 
 ### Mapeamento estado → disco de storage
 
-| Estado | `disco_storage` |
-|---|---|
-| `Pendente`, `AguardaEnvio` | `entrada` |
-| `Enviado`, `AguardaResposta` | `enviado` |
-| `Processado` | `processado` |
-| `Erro` | `erro` |
-| `Perigoso` | `perigoso` |
+| Estado                       | `disco_storage` |
+| ---------------------------- | --------------- |
+| `Pendente`, `AguardaEnvio`   | `entrada`       |
+| `Enviado`, `AguardaResposta` | `enviado`       |
+| `Processado`                 | `processado`    |
+| `Erro`                       | `erro`          |
+| `Perigoso`                   | `perigoso`      |
+
+---
+
+## Racional de design — porquê state objects (e não `if ($doc->status == ...)`)
+
+Os state objects (`app/Shared/States/`) **não são decoração**: são o andaime deliberado do
+pipeline de ingestão (OCR / análise de imagem / extracção por IA) que se pendura em cada estado.
+
+**Intenção:** cada estado expõe **apenas** os dados e as transições **válidos nessa fase**. Ao
+encapsular o comportamento por estado, restringido, por construção, operações que ainda não
+existem (ou que não fazem sentido) numa dada fase — em vez de as espalhar por condicionais
+`if ($doc->status == ...)` que crescem sem controlo à medida que o pipeline evolui.
+
+**Consequências que justificam o custo:**
+
+- **Superfície limitada por fase** — um `Documento` em `Pendente` não expõe operações de
+  `Processado`; o PHPStan garante-o.
+- **Extensível sem tocar no existente** — acrescentar comportamento a `Enviado` /
+  `AguardaResposta` (envio ao serviço de extracção, recepção da resposta) é adicionar a esse
+  state object, sem `switch` central.
+- **Transições explícitas e testáves** — o mapa de transições vive num só sítio; uma
+  transição inválida falha de forma previsível (`422`), não por omissão de um `if`.
 
 ---
 
@@ -64,11 +86,11 @@ Declara apenas os **4 getters comuns a todos os 7 estados**. Campos adicionais v
 
 ### Grupos de campos
 
-| Grupo | Classes | Getters específicos (além dos 4 comuns) |
-|---|---|---|
-| Parciais | `DocumentoPendente`, `DocumentoAguardaEnvio`, `DocumentoEnviado`, `DocumentoAguardaResposta` | `nomeFicheiroOriginal()`, `hashSha256()` |
-| Mínimos | `DocumentoErro`, `DocumentoPerigoso` | — (só os 4 da interface) |
-| Completo | `DocumentoProcessado` | `nomeFicheiroOriginal()`, `hashSha256()`, `idFornecedor()`, `idCliente()`, `idCategoria()`, `valor()`, `dataDocumento()` |
+| Grupo    | Classes                                                                                      | Getters específicos (além dos 4 comuns)                                                                                  |
+| -------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Parciais | `DocumentoPendente`, `DocumentoAguardaEnvio`, `DocumentoEnviado`, `DocumentoAguardaResposta` | `nomeFicheiroOriginal()`, `hashSha256()`                                                                                 |
+| Mínimos  | `DocumentoErro`, `DocumentoPerigoso`                                                         | — (só os 4 da interface)                                                                                                 |
+| Completo | `DocumentoProcessado`                                                                        | `nomeFicheiroOriginal()`, `hashSha256()`, `idFornecedor()`, `idCliente()`, `idCategoria()`, `valor()`, `dataDocumento()` |
 
 ### Padrão de implementação (exemplo `DocumentoPendente`)
 
@@ -120,17 +142,17 @@ O mapa central é validado por `RegraTransicaoEstado` (ver `02-shared/regras-neg
 
 ### Mapa De → Para (mapa central)
 
-| De | Para | Action | Via |
-|---|---|---|---|
-| `Pendente` | `AguardaEnvio` | `MarcarAguardaEnvioDocumentoAction` | pipeline |
-| `Pendente` | `Perigoso` | `MarcarPerigosoDocumentoAction` | pipeline (pré-scan) |
-| `AguardaEnvio` | `Enviado` | `MarcarEnviadoDocumentoAction` | pipeline |
-| `Enviado` | `AguardaResposta` | `MarcarAguardaRespostaDocumentoAction` | pipeline |
-| `AguardaResposta` | `Processado` | `TransicionarProcessadoDocumentoAction` | pipeline |
-| `AguardaResposta` | `Erro` | `MarcarErroDocumentoAction` | pipeline |
-| `AguardaResposta` | `Perigoso` | `MarcarPerigosoDocumentoAction` | pipeline (guardrail) |
-| `Erro` | `AguardaEnvio` | `ReprocessarDocumentoAction` | HTTP |
-| `Processado` | `Processado` | `CorrigirDocumentoAction` | HTTP (self-loop) |
+| De                | Para              | Action                                  | Via                  |
+| ----------------- | ----------------- | --------------------------------------- | -------------------- |
+| `Pendente`        | `AguardaEnvio`    | `MarcarAguardaEnvioDocumentoAction`     | pipeline             |
+| `Pendente`        | `Perigoso`        | `MarcarPerigosoDocumentoAction`         | pipeline (pré-scan)  |
+| `AguardaEnvio`    | `Enviado`         | `MarcarEnviadoDocumentoAction`          | pipeline             |
+| `Enviado`         | `AguardaResposta` | `MarcarAguardaRespostaDocumentoAction`  | pipeline             |
+| `AguardaResposta` | `Processado`      | `TransicionarProcessadoDocumentoAction` | pipeline             |
+| `AguardaResposta` | `Erro`            | `MarcarErroDocumentoAction`             | pipeline             |
+| `AguardaResposta` | `Perigoso`        | `MarcarPerigosoDocumentoAction`         | pipeline (guardrail) |
+| `Erro`            | `AguardaEnvio`    | `ReprocessarDocumentoAction`            | HTTP                 |
+| `Processado`      | `Processado`      | `CorrigirDocumentoAction`               | HTTP (self-loop)     |
 
 Qualquer par não listado lança `TransicaoInvalidaException` (→ 422).
 
