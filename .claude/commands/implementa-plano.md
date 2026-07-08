@@ -1,6 +1,7 @@
 ---
 description: Fase 2 — Implementação tarefa a tarefa com checkpoint e testes
 allowed-tools: [Bash, Read, Write, Edit]
+effort: high
 ---
 
 # /implementa-plano

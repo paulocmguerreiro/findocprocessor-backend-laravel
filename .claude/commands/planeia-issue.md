@@ -1,6 +1,7 @@
 ---
 description: Fase 1 — Brief + Branch + Spec + Plano para uma Issue
 allowed-tools: [Bash, Read, Write]
+effort: high
 ---
 
 # /planeia-issue
