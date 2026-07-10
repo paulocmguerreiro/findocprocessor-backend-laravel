@@ -37,4 +37,24 @@ final readonly class CriarTipoDocumentoDto
             throw new \InvalidArgumentException('Pelo menos um dos campos espera_* tem de ser true.');
         }
     }
+
+    /**
+     * @throws \InvalidArgumentException
+     */
+    public static function fromRequest(CriarTipoDocumentoRequest $request): self
+    {
+        /** @var array{nome: string, descricao: string, id_categoria: string, posicao_empresa_mae: string, espera_data_documento: bool, espera_fornecedor: bool, espera_cliente: bool, espera_valor: bool} $dadosValidados */
+        $dadosValidados = $request->validated();
+
+        return new self(
+            nome: $dadosValidados['nome'],
+            descricao: $dadosValidados['descricao'],
+            idCategoria: $dadosValidados['id_categoria'],
+            posicaoEmpresaMae: PosicaoEmpresaMae::from($dadosValidados['posicao_empresa_mae']),
+            esperaDataDocumento: $dadosValidados['espera_data_documento'],
+            esperaFornecedor: $dadosValidados['espera_fornecedor'],
+            esperaCliente: $dadosValidados['espera_cliente'],
+            esperaValor: $dadosValidados['espera_valor'],
+        );
+    }
 }

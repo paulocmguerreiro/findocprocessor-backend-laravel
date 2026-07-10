@@ -13,6 +13,7 @@
 | Role               | `01-features/role.md`                | 5 CRUD                                         | 5 REST              |
 | Utilizador         | `01-features/utilizador.md`          | 8 (5 CRUD + AtribuirRole + Restaurar + Anonimizar) | 5 REST + 3 especiais |
 | Documento          | `01-features/documento.md`           | 14 (8 expostas via endpoint + 6 de transição de pipeline, só programáticas) | 8 REST |
+| TipoDocumento      | `01-features/tipo-documento.md`      | 5 CRUD (sem SoftDelete)                        | 5 REST              |
 
 ## Features planeadas
 
@@ -78,6 +79,7 @@
 | Rotas Entidade           | `05-routes/entidades.md`            |
 | Rotas Role + Utilizador  | `05-routes/role.md`                 |
 | Rotas Documento          | `05-routes/documento.md`            |
+| Rotas TipoDocumento      | `05-routes/tipos-documento.md`      |
 | Rotas planeadas          | `05-routes/planeadas.md`            |
 | Configuração e .env      | `06-config.md`                      |
 
