@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\AI;
 
+use App\Models\Entidade;
+
 final class PromptBuilder
 {
     private ?string $instrucoesBase = null;
@@ -28,6 +30,28 @@ final class PromptBuilder
         }
 
         $this->instrucoesBase = $conteudo;
+
+        return $this;
+    }
+
+    /**
+     * @throws \RuntimeException
+     */
+    public function comEmpresaMae(): self
+    {
+        $empresaMae = Entidade::whereEmpresaAplicacao()->first();
+
+        if ($empresaMae === null) {
+            throw new \RuntimeException('Nenhuma Entidade está marcada como empresa aplicação (e_empresa_aplicacao).');
+        }
+
+        $this->segmentosAdicionais[] = <<<TEXTO
+            EMPRESA MÃE:
+            Nome: {$empresaMae->nome}
+            NIF: {$empresaMae->nif}
+
+            Esta é a empresa mãe da aplicação. Usa este nome e NIF para determinares, para cada documento, se a empresa mãe surge como cliente ou como fornecedor na transacção — não inventes nem assumas outro NIF como sendo o da empresa mãe.
+            TEXTO;
 
         return $this;
     }
