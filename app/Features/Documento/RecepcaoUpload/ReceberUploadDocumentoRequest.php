@@ -23,7 +23,7 @@ final class ReceberUploadDocumentoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ficheiro' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
+            'ficheiro' => ['required', 'file', 'mimetypes:application/pdf,image/jpeg,image/png', 'max:10240'],
         ];
     }
 
@@ -36,7 +36,7 @@ final class ReceberUploadDocumentoRequest extends FormRequest
         return [
             'ficheiro.required' => 'O ficheiro é obrigatório.',
             'ficheiro.file' => 'O ficheiro enviado é inválido.',
-            'ficheiro.mimes' => 'O ficheiro tem de ser PDF, JPG, JPEG ou PNG.',
+            'ficheiro.mimetypes' => 'O ficheiro tem de ser PDF, JPG, JPEG ou PNG.',
             'ficheiro.max' => 'O ficheiro não pode exceder 10 MB.',
         ];
     }

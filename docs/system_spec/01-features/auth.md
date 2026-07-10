@@ -26,6 +26,14 @@ Autenticação via Laravel Sanctum — API tokens Bearer. Base obrigatória para
 
 ---
 
+## Expiração de tokens
+
+- **Janela global: 8 horas** — `config/sanctum.php` → `'expiration' => (int) env('SANCTUM_TOKEN_EXPIRATION', 480)` (minutos). Antes era `null` (nunca expiravam).
+- **Limpeza:** `Schedule::command('sanctum:prune-expired --hours=24')->daily()` em `routes/console.php` remove os registos de tokens expirados há mais de 24h.
+- **Aplica-se a todos os tokens** (login e PATs de `POST /auth/tokens`) de forma uniforme. Se, no futuro, os PATs de integração precisarem de uma janela mais longa, o caminho é passar um `expires_at` por token via `createToken($nome, ['api'], $expiresAt)` e retirar a expiração global (o valor global sobrepõe-se ao `expires_at` do token) — não implementado por não haver necessidade actual.
+
+---
+
 ## FormRequests
 
 | Request | Campos validados |
