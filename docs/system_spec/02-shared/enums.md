@@ -111,6 +111,24 @@ enum FiltroEstadoRegisto: string
 
 ---
 
+## `PosicaoEmpresaMae` — `App\Shared\Enums\PosicaoEmpresaMae`
+
+Determina, para um `TipoDocumento`, se a entidade com `e_empresa_aplicacao = true` deve aparecer como fornecedor ou cliente.
+
+```php
+enum PosicaoEmpresaMae: string
+{
+    case Fornecedor = 'fornecedor';
+    case Cliente = 'cliente';
+}
+```
+
+- Valores na BD: `'fornecedor'`, `'cliente'` (lowercase)
+- Usado em: `TipoDocumento::$posicao_empresa_mae` (cast Eloquent)
+- Regra de leitura pela issue futura de extracção (IA/OCR) — sem lógica de validação na camada de modelo (RN-04, `03-models/tipo-documento.md`)
+
+---
+
 ## `CampoOrdenacaoDocumentos` — `App\Features\Documento\Listar\CampoOrdenacaoDocumentos`
 
 Campo de ordenação da listagem de documentos.

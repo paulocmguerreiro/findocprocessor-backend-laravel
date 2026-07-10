@@ -26,7 +26,7 @@
 
 | Componente                                                                                                                    | Ficheiro               |
 | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| Enums partilhados (`TipoMovimento`, `DirecaoOrdenacao`, `EstadoDocumento`, `ModoReprocessamento`, `FiltroEstadoRegisto`, `CampoOrdenacaoDocumentos`) | `02-shared/enums.md`   |
+| Enums partilhados (`TipoMovimento`, `DirecaoOrdenacao`, `EstadoDocumento`, `ModoReprocessamento`, `FiltroEstadoRegisto`, `CampoOrdenacaoDocumentos`, `PosicaoEmpresaMae`) | `02-shared/enums.md`   |
 | HTTP (`ApiResponse`, Exception Handler, cursor pagination, `TransicaoInvalidaException`)                                      | `02-shared/http.md`    |
 | Estados de documento + Interface `ContratoEstadoDocumento` + 7 state objects + mapa de transições                             | `02-shared/estados.md` |
 
@@ -53,6 +53,7 @@
 | `Role` (Spatie — audit via Observer)                             | `03-models/role.md`                 |
 | `Documento` (migration, Model, Factory, Policy, DTOs, Resource)  | `03-models/documento.md`            |
 | `EtapaDocumento` (histórico append-only de estados do documento) | `03-models/etapa-documento.md`      |
+| `TipoDocumento` (migration, Model, Factory, Policy, DTOs, Resource) | `03-models/tipo-documento.md`     |
 
 ## Infra
 

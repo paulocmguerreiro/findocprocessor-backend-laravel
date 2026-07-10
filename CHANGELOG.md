@@ -19,6 +19,17 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
   - 724 testes, 100% coverage + type coverage, Larastan 9 — verde em MySQL (paralelo)
 
 ### Added
+- **Issue #84** — TipoDocumento — camada de modelo (migration + model + factory + policy + DTOs + resource + testes)
+  - Enum `PosicaoEmpresaMae` (`Fornecedor`/`Cliente`)
+  - Tabela `tipos_documento`: `id_categoria` obrigatório com `restrictOnDelete()`, `posicao_empresa_mae`, 4 booleans `espera_*` (default `true`), sem `deleted_at`
+  - Migration `seed_tipos_documento_permissions` — `tipos-documento.{ver,criar,actualizar,eliminar}`; `admin` todas, `utilizador` só `.ver`
+  - **`TipoDocumentoPolicy`** — `viewAny`/`view`/`create`/`update`/`delete` via `hasPermissionTo`, sem `restore`
+  - **`TipoDocumento`** Model — casts (`PosicaoEmpresaMae` + 4 booleans), relação `categoria(): BelongsTo` (`withTrashed()`), `RegistaActividade`
+  - **`TipoDocumentoFactory`** — sem states adicionais, associa sempre `CategoriaDocumento::factory()`
+  - **`CriarTipoDocumentoDto`**/**`ActualizarTipoDocumentoDto`** (`final readonly class`) — construtor valida `nome`/`descricao`/`idCategoria` não-vazios e invariante cross-field "pelo menos um `espera_*` `true`"; sem `fromRequest()`
+  - **`TipoDocumentoResource`** — `tipo_movimento` derivado de `$this->categoria?->tipo_movimento?->value` (nunca coluna própria); `categoria` via `whenLoaded()`
+  - Sem Actions/Controller/rotas/Repository nesta issue (camada de modelo apenas)
+  - 784 testes, 100% cobertura + type coverage, Larastan 9 — verde em MySQL
 - **Issue #72** — CategoriaDocumento — lógica de SoftDelete (restaurar + listagem filtrada + Padrão B)
   - **`RestaurarCategoriaAction`** (`handle(CategoriaDocumento|string): CategoriaDocumento`) + `RestaurarCategoriaRequest` + `CategoriaDocumentoPolicy::restore()` (reutiliza `categorias-documento.eliminar`)
   - Rota `PATCH /api/categorias-documento/{categorias_documento}/restaurar` com `->withTrashed()`; `apiResource` passa a `->withTrashed(['show','update','destroy'])`

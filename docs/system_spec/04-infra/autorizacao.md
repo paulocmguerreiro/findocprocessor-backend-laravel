@@ -44,6 +44,7 @@ Configuração publicada em `config/permission.php`. Guard: `web` (único guard 
 | `documentos.eliminar` | Eliminar documento | `seed_documentos_permissions` |
 | `utilizadores.{ver,criar,actualizar,eliminar}` | CRUD de utilizadores | `seed_utilizadores_permissions` |
 | `utilizadores.anonimizar` | Anonimizar utilizador (RGPD Art. 17.º) | `seed_utilizadores_anonimizar_permission` (Issue #73) |
+| `tipos-documento.{ver,criar,actualizar,eliminar}` | CRUD de tipos de documento | `seed_tipos_documento_permissions` (Issue #84) |
 
 > A permissão `restore` de utilizador reutiliza `utilizadores.eliminar` — não há permissão dedicada.
 
@@ -69,6 +70,10 @@ Configuração publicada em `config/permission.php`. Guard: `web` (único guard 
 | `documentos.actualizar` | ✅ | ❌ |
 | `documentos.eliminar` | ✅ | ❌ |
 | `utilizadores.anonimizar` | ✅ | ❌ |
+| `tipos-documento.ver` | ✅ | ✅ |
+| `tipos-documento.criar` | ✅ | ❌ |
+| `tipos-documento.actualizar` | ✅ | ❌ |
+| `tipos-documento.eliminar` | ✅ | ❌ |
 
 ---
 
@@ -134,6 +139,7 @@ public function view(User $utilizador, Entidade $entidade): bool
 | `DocumentoPolicy` | `Documento` | `app/Policies/DocumentoPolicy.php` | Automático (convenção nome `ModelPolicy`) |
 | `RolePolicy` | `Spatie\Permission\Models\Role` | `app/Policies/RolePolicy.php` | `Gate::policy(Role::class, RolePolicy::class)` em `AppServiceProvider` |
 | `UtilizadorPolicy` | `User` | `app/Policies/UtilizadorPolicy.php` | `#[UsePolicy(UtilizadorPolicy::class)]` no modelo `User` |
+| `TipoDocumentoPolicy` | `TipoDocumento` | `app/Policies/TipoDocumentoPolicy.php` | Automático (convenção nome `ModelPolicy`) |
 
 > **Nota:** Modelos de terceiros (como `Spatie\Permission\Models\Role`) não suportam `#[UsePolicy]` — têm de ser registados via `Gate::policy()` no `AppServiceProvider`.
 
