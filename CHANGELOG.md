@@ -6,6 +6,17 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Added
+- **Issue #88** — PromptBuilder — construção do system prompt de extracção via IA
+  - `App\Infrastructure\AI\PromptBuilder` (`final`, `strict_types=1`, sem interface) — API fluente: `novo()`, `comInstrucoesBase()`, `comEmpresaMae()`, `filtrarPorCategoria()`, `comTiposDocumento()`, `construir(): string`
+  - `app/Shared/Prompts/base_instructions.txt` — texto-base estático (isolamento de conteúdo I-IV, regras absolutas 1-7, casos "desconhecido"/"perigoso")
+  - `comEmpresaMae()` injecta nome/NIF reais de `Entidade::whereEmpresaAplicacao()->first()`; lança `\RuntimeException` se nenhuma `Entidade` estiver marcada
+  - `comTiposDocumento()` gera "Passo 1 — Classificação" e "Passo 2 — Campos a extrair por tipo" a partir de `TipoDocumento::with('categoria')`, filtrável por `filtrarPorCategoria()` (só tem efeito se chamado antes)
+  - `construir()` lança `\LogicException` se `comInstrucoesBase()` nunca foi chamado; `comInstrucoesBase()` sempre âncora o primeiro segmento, independentemente da ordem de chamada
+  - Primeiro mecanismo do projecto sem par HTTP (sem Controller/rota/Resource) — desvio documentado
+  - Nova regra Arch `App\Infrastructure` `toBeFinal()`
+  - 864 testes, 100% cobertura + type coverage, Larastan 9 — verde em MySQL
+
 ### Changed (Infra)
 - **Issue #77** — Migração de testes para MySQL exclusivo + Preflight + Collation
   - `phpunit.xml` passa a usar `DB_CONNECTION=mysql` / `DB_DATABASE=findocprocessor_testing`; `phpunit.mysql.xml` eliminado
