@@ -7,7 +7,9 @@ namespace App\Infrastructure\AI;
 use App\Models\CategoriaDocumento;
 use App\Models\Entidade;
 use App\Models\TipoDocumento;
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\File;
 
 final class PromptBuilder
 {
@@ -28,13 +30,11 @@ final class PromptBuilder
      */
     public function comInstrucoesBase(): self
     {
-        $conteudo = file_get_contents(app_path('Shared/Prompts/base_instructions.txt'));
-
-        if ($conteudo === false) {
-            throw new \RuntimeException('Não foi possível ler app/Shared/Prompts/base_instructions.txt.');
+        try {
+            $this->instrucoesBase = File::get(app_path('Shared/Prompts/base_instructions.txt'));
+        } catch (FileNotFoundException $excepcao) {
+            throw new \RuntimeException('Não foi possível ler app/Shared/Prompts/base_instructions.txt.', $excepcao->getCode(), previous: $excepcao);
         }
-
-        $this->instrucoesBase = $conteudo;
 
         return $this;
     }

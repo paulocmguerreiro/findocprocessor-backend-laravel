@@ -6,7 +6,9 @@ use App\Infrastructure\AI\PromptBuilder;
 use App\Models\CategoriaDocumento;
 use App\Models\Entidade;
 use App\Models\TipoDocumento;
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 
 uses(RefreshDatabase::class);
 
@@ -28,6 +30,15 @@ describe('construir()', function (): void {
         $prompt = PromptBuilder::novo()->comInstrucoesBase()->construir();
 
         expect($prompt)->toBe($esperado);
+    });
+
+    it('lança RuntimeException se a leitura de base_instructions.txt falhar', function (): void {
+        File::shouldReceive('get')
+            ->once()
+            ->andThrow(new FileNotFoundException);
+
+        expect(fn (): PromptBuilder => PromptBuilder::novo()->comInstrucoesBase())
+            ->toThrow(RuntimeException::class, 'Não foi possível ler app/Shared/Prompts/base_instructions.txt.');
     });
 });
 
