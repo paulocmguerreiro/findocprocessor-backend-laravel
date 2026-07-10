@@ -44,6 +44,7 @@ describe('autenticado', function (): void {
                     ->where('id', $tipoDocumento->id)
                     ->where('nome', 'Nome Actualizado')
                     ->has('categoria')
+                    ->etc()
                 )
             );
 

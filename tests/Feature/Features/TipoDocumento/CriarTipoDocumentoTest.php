@@ -42,6 +42,7 @@ describe('autenticado', function (): void {
                     ->where('nome', 'Fatura Fornecedor')
                     ->where('posicao_empresa_mae', PosicaoEmpresaMae::Cliente->value)
                     ->where('categoria.id', $categoria->id)
+                    ->etc()
                 )
             );
 

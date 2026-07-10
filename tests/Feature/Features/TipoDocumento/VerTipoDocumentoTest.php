@@ -23,6 +23,7 @@ describe('autenticado', function (): void {
                     ->where('id', $tipoDocumento->id)
                     ->where('nome', $tipoDocumento->nome)
                     ->has('categoria')
+                    ->etc()
                 )
             );
     });

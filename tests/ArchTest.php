@@ -11,6 +11,9 @@ use App\Features\Entidade\ComFlagsEfectivosEmpresaMae;
 use App\Features\Entidade\Criar\CriarEntidadeRequest;
 use App\Features\Entidade\Listar\CampoOrdenacaoEntidades;
 use App\Features\Role\Listar\CampoOrdenacaoRoles;
+use App\Features\TipoDocumento\Actualizar\ActualizarTipoDocumentoRequest;
+use App\Features\TipoDocumento\Criar\CriarTipoDocumentoRequest;
+use App\Features\TipoDocumento\Listar\CampoOrdenacaoTiposDocumento;
 use App\Features\Utilizador\Actualizar\ActualizarUtilizadorRequest;
 use App\Features\Utilizador\Criar\CriarUtilizadorRequest;
 use App\Features\Utilizador\Listar\CampoOrdenacaoUtilizadores;
@@ -50,4 +53,7 @@ arch('actions are final')
         CampoOrdenacaoUtilizadores::class,
         CriarUtilizadorRequest::class,
         ActualizarUtilizadorRequest::class,
+        CriarTipoDocumentoRequest::class,
+        ActualizarTipoDocumentoRequest::class,
+        CampoOrdenacaoTiposDocumento::class,
     ]);
