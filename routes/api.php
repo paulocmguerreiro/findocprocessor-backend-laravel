@@ -7,6 +7,7 @@ use App\Features\CategoriaDocumento\CategoriaDocumentoController;
 use App\Features\Documento\DocumentoController;
 use App\Features\Entidade\EntidadeController;
 use App\Features\Role\RoleController;
+use App\Features\TipoDocumento\TipoDocumentoController;
 use App\Features\Utilizador\UtilizadorController;
 use Illuminate\Support\Facades\Route;
 
@@ -28,6 +29,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::patch('entidades/{entidade}/empresa-mae', [EntidadeController::class, 'converterEmEmpresaMae']);
 
     Route::apiResource('roles', RoleController::class);
+
+    Route::apiResource('tipos-documento', TipoDocumentoController::class)
+        ->only(['index', 'store', 'show', 'update', 'destroy']);
 
     Route::apiResource('utilizadores', UtilizadorController::class)
         ->parameters(['utilizadores' => 'utilizador'])
