@@ -19,6 +19,15 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
   - 724 testes, 100% coverage + type coverage, Larastan 9 — verde em MySQL (paralelo)
 
 ### Added
+- **Issue #85** — TipoDocumento — camada de lógica (Actions + Controller + FormRequests + rotas REST + testes)
+  - `CriarTipoDocumentoAction`, `ListarTiposDocumentoAction`, `VerTipoDocumentoAction`, `ActualizarTipoDocumentoAction`, `EliminarTipoDocumentoAction` — CRUD completo, sem Repository (mesmo desvio aceite em `CategoriaDocumento`); `EliminarTipoDocumentoAction` faz hard delete simples (sem Padrão B — `TipoDocumento` não tem `SoftDeletes`)
+  - `ListarTiposDocumentoAction` — `cursorPaginate()` via `CacheServico`, enum `CampoOrdenacaoTiposDocumento` (`Nome`), filtro opcional `id_categoria`
+  - `fromRequest()` implementado em `CriarTipoDocumentoDto`/`ActualizarTipoDocumentoDto` (DTOs criados em #84)
+  - **`withValidator()`** em `CriarTipoDocumentoRequest`/`ActualizarTipoDocumentoRequest` — primeiro uso deste mecanismo no projecto; valida RN-02 (pelo menos um `espera_*` `true`) e devolve 422 amigável, em vez de deixar propagar a `\InvalidArgumentException` do construtor do DTO
+  - `Rule::unique('tipos_documento', 'nome')` (`->ignore($uuid)` em `Actualizar`) e `Rule::exists('categorias_documento', 'id')` em `id_categoria`
+  - `TipoDocumentoController` + `Route::apiResource('tipos-documento', ...)->only(['index', 'store', 'show', 'update', 'destroy'])` — sem `withTrashed()`, sem `/restaurar`
+  - Teste de integração: eliminar `CategoriaDocumento` com `TipoDocumento` associado confirma o fallback de soft delete (Padrão B, já existente em `EliminarCategoriaAction`) — a nova FK `tipos_documento.id_categoria` activa o mesmo caminho
+  - 853 testes, 100% cobertura + type coverage, Larastan 9 — verde em MySQL
 - **Issue #84** — TipoDocumento — camada de modelo (migration + model + factory + policy + DTOs + resource + testes)
   - Enum `PosicaoEmpresaMae` (`Fornecedor`/`Cliente`)
   - Tabela `tipos_documento`: `id_categoria` obrigatório com `restrictOnDelete()`, `posicao_empresa_mae`, 4 booleans `espera_*` (default `true`), sem `deleted_at`

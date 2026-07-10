@@ -204,6 +204,40 @@ components:
           items:
             $ref: '#/components/schemas/EtapaDocumento'
 
+    TipoDocumento:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nome:
+          type: string
+        descricao:
+          type: string
+        categoria:
+          $ref: '#/components/schemas/CategoriaDocumento'
+        tipo_movimento:
+          type: ['string', 'null']
+          enum: [debito, credito, neutro]
+          description: "Derivado de categoria.tipo_movimento"
+        posicao_empresa_mae:
+          type: string
+          enum: [fornecedor, cliente]
+        espera_data_documento:
+          type: boolean
+        espera_fornecedor:
+          type: boolean
+        espera_cliente:
+          type: boolean
+        espera_valor:
+          type: boolean
+        criado_em:
+          type: string
+          format: date-time
+        actualizado_em:
+          type: string
+          format: date-time
+
     ErrorTransicaoInvalida:
       type: object
       properties:
@@ -494,6 +528,204 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/CategoriaDocumento'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+
+  /tipos-documento:
+    get:
+      summary: Listar tipos de documento (cursor pagination)
+      tags: [TipoDocumento]
+      parameters:
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            maximum: 100
+            default: 15
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [nome]
+        - in: query
+          name: direction
+          schema:
+            type: string
+            enum: [asc, desc]
+        - in: query
+          name: cursor
+          schema:
+            type: string
+        - in: query
+          name: id_categoria
+          description: Filtra por categoria; 422 se fornecido mas inexistente; sem filtro se omitido
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Lista paginada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TipoDocumento'
+                  links:
+                    type: object
+                    properties:
+                      prev:
+                        type: ['string', 'null']
+                      next:
+                        type: ['string', 'null']
+                  meta:
+                    type: object
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '422':
+          $ref: '#/components/schemas/ErrorValidacao'
+
+    post:
+      summary: Criar tipo de documento
+      description: "Pelo menos um dos campos espera_* tem de ser true (RN-02, validado via withValidator())"
+      tags: [TipoDocumento]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome, descricao, id_categoria, posicao_empresa_mae, espera_data_documento, espera_fornecedor, espera_cliente, espera_valor]
+              properties:
+                nome:
+                  type: string
+                descricao:
+                  type: string
+                id_categoria:
+                  type: string
+                  format: uuid
+                posicao_empresa_mae:
+                  type: string
+                  enum: [fornecedor, cliente]
+                espera_data_documento:
+                  type: boolean
+                espera_fornecedor:
+                  type: boolean
+                espera_cliente:
+                  type: boolean
+                espera_valor:
+                  type: boolean
+      responses:
+        '201':
+          description: Tipo de documento criado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TipoDocumento'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '422':
+          $ref: '#/components/schemas/ErrorValidacao'
+
+  /tipos-documento/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: Ver tipo de documento
+      tags: [TipoDocumento]
+      responses:
+        '200':
+          description: Tipo de documento encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TipoDocumento'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+
+    put:
+      summary: Actualizar tipo de documento
+      description: "Update completo (PUT semântico); pelo menos um espera_* tem de ser true (RN-02)"
+      tags: [TipoDocumento]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome, descricao, id_categoria, posicao_empresa_mae, espera_data_documento, espera_fornecedor, espera_cliente, espera_valor]
+              properties:
+                nome:
+                  type: string
+                descricao:
+                  type: string
+                id_categoria:
+                  type: string
+                  format: uuid
+                posicao_empresa_mae:
+                  type: string
+                  enum: [fornecedor, cliente]
+                espera_data_documento:
+                  type: boolean
+                espera_fornecedor:
+                  type: boolean
+                espera_cliente:
+                  type: boolean
+                espera_valor:
+                  type: boolean
+      responses:
+        '200':
+          description: Tipo de documento actualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TipoDocumento'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+        '422':
+          $ref: '#/components/schemas/ErrorValidacao'
+
+    delete:
+      summary: Eliminar tipo de documento
+      description: "Hard delete definitivo — TipoDocumento não tem SoftDelete"
+      tags: [TipoDocumento]
+      responses:
+        '204':
+          description: Eliminado com sucesso
         '401':
           $ref: '#/components/schemas/ErrorNaoAutenticado'
         '403':

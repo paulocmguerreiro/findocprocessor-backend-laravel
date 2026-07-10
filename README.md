@@ -127,6 +127,18 @@ Todas as rotas exigem Bearer token.
 | PATCH  | `/api/entidades/{id}/restaurar`         | Restaurar (reactivar soft-deleted) |
 | PATCH  | `/api/entidades/{id}/empresa-mae`       | Converter em empresa-mãe     |
 
+### Tipos de documento
+
+Todas as rotas exigem Bearer token. Sem soft delete (`DELETE` é definitivo).
+
+| Método | Path                              | Descrição                                     |
+| ------ | --------------------------------- | ---------------------------------------------- |
+| GET    | `/api/tipos-documento`            | Listar (cursor; `?id_categoria=` opcional)      |
+| POST   | `/api/tipos-documento`            | Criar (pelo menos um `espera_*` tem de ser `true`) |
+| GET    | `/api/tipos-documento/{id}`       | Ver detalhe                                     |
+| PUT    | `/api/tipos-documento/{id}`       | Actualizar (completo)                           |
+| DELETE | `/api/tipos-documento/{id}`       | Eliminar (hard delete)                          |
+
 ### Documentos
 
 Todas as rotas exigem Bearer token. Ciclo de estados `Pendente → AguardaEnvio → Enviado → AguardaResposta → Processado`, com ramos terminais `Erro` e `Perigoso`. As transições são validadas por `RegraTransicaoEstado` — uma transição inválida devolve `422`.
