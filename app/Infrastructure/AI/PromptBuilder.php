@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\AI;
 
+use App\Models\CategoriaDocumento;
 use App\Models\Entidade;
+use App\Models\TipoDocumento;
+use Illuminate\Database\Eloquent\Builder;
 
 final class PromptBuilder
 {
@@ -12,6 +15,8 @@ final class PromptBuilder
 
     /** @var list<string> */
     private array $segmentosAdicionais = [];
+
+    private ?string $filtroCategoria = null;
 
     public static function novo(): self
     {
@@ -52,6 +57,48 @@ final class PromptBuilder
 
             Esta é a empresa mãe da aplicação. Usa este nome e NIF para determinares, para cada documento, se a empresa mãe surge como cliente ou como fornecedor na transacção — não inventes nem assumas outro NIF como sendo o da empresa mãe.
             TEXTO;
+
+        return $this;
+    }
+
+    public function filtrarPorCategoria(CategoriaDocumento|string $idCategoria): self
+    {
+        $this->filtroCategoria = $idCategoria instanceof CategoriaDocumento ? $idCategoria->id : $idCategoria;
+
+        return $this;
+    }
+
+    public function comTiposDocumento(): self
+    {
+        $tiposDocumento = TipoDocumento::query()
+            ->with('categoria')
+            ->when($this->filtroCategoria, fn (Builder $query, string $idCategoria): Builder => $query->where('id_categoria', $idCategoria))
+            ->get();
+
+        $classificacao = $tiposDocumento
+            ->map(fn (TipoDocumento $tipo): string => sprintf(
+                '- "%s" → %s: %s',
+                $tipo->categoria === null ? 'sem-categoria' : $tipo->categoria->slug,
+                $tipo->nome,
+                $tipo->descricao,
+            ))
+            ->implode(PHP_EOL);
+
+        $camposPorTipo = $tiposDocumento
+            ->map(function (TipoDocumento $tipo): string {
+                $campos = array_filter([
+                    'data_documento' => $tipo->espera_data_documento,
+                    'fornecedor' => $tipo->espera_fornecedor,
+                    'cliente' => $tipo->espera_cliente,
+                    'valor' => $tipo->espera_valor,
+                ]);
+
+                return sprintf('- %s: %s', $tipo->nome, implode(', ', array_keys($campos)));
+            })
+            ->implode(PHP_EOL);
+
+        $this->segmentosAdicionais[] = "Passo 1 — Classificação:\n{$classificacao}";
+        $this->segmentosAdicionais[] = "Passo 2 — Campos a extrair por tipo:\n{$camposPorTipo}";
 
         return $this;
     }
