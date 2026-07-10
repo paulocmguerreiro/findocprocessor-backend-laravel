@@ -2,7 +2,7 @@
 
 > `app/Shared/Enums/`
 
-Enums partilhados entre features. Todos PHP 8.1 backed enums (string). Cases em TitleCase PT per convenção CLAUDE.md.
+Enums partilhados entre features. Todos PHP 8.5 backed enums (string). Cases em TitleCase PT per convenção CLAUDE.md.
 
 ---
 

@@ -11,7 +11,7 @@ A Action é a unidade de lógica de negócio da arquitectura Vertical Slice. Cad
 - Controllers **sem lógica** — apenas fazem dispatch para a Action.
 - Actions injectam **interface quando há substituição prevista** (ex.: Repository, cliente de API externa) — para trocar a implementação sem tocar na Action. Quando **não** se prevê substituição, injectar a classe concreta directamente é legítimo (ver abaixo).
 - Acesso directo ao Eloquent só em CRUD simples; caso contrário, via Repository (ver `04-infra/repositories.md`).
-- Transição de estado via objecto de estado — `$doc->state()->correct($data)`, nunca `if ($doc->status == ...)`.
+- Transição de estado via Actions de transição (`ExecutorTransicaoDocumento` + `RegraTransicaoEstado`), nunca `if ($doc->status == ...)`. Os state objects (`$documento->estado()`) são read-only — sem `correct()` (ver `02-shared/estados.md`).
 - Actions de escrita envolvem a persistência em `DB::transaction()` (ver `04-infra/transactions.md`).
 
 ### Interface vs classe concreta na injecção

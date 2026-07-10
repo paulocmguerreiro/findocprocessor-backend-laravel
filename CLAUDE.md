@@ -30,8 +30,9 @@ app/Features/<Feature>/<Action>/
 - Actions injectam interface quando há substituição prevista (Repository, API externa); classes concretas sem substituição prevista (CacheServico, Regra*, Executor) são injectadas directamente — ver `docs/system_spec/02-shared/padroes-acoes.md`
 - **Autorização dupla camada:** `Gate::authorize()` no FormRequest **e** na Action — cobre os dois contextos de invocação (HTTP e fora de HTTP: Jobs, Artisan, testes).
   > Detalhe: `docs/system_spec/02-shared/padroes-acoes.md`
-- `$doc->state()->correct($data)` — sem `if($doc->status ==)`
-- `DocumentStatus` é PHP 8.1 backed enum (string)
+- Transições de estado do `Documento` via Actions de transição (`ExecutorTransicaoDocumento` + `RegraTransicaoEstado`) — nunca `if($doc->status ==)`. Os state objects (`$documento->estado()`) são read-only (sem `correct()`).
+  > Detalhe: `docs/system_spec/02-shared/estados.md`
+- `EstadoDocumento` é PHP 8.5 backed enum (string)
 - `strict_types=1` em todos os ficheiros PHP
 - Jobs e Schedule são Laravel nativos — não reinventar
 - **Repositório entre Action e Eloquent Model:** obrigatório quando há lógica de query complexa, dispensável em CRUD simples — o critério completo (obrigatório/dispensável) e o desvio documentado no Brief.
@@ -71,10 +72,12 @@ Eliminar `mixed` anotando `@var` array shape em `validated()`; declarar `@throws
 ### Ciclo de estados
 
 ```
-PENDING → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → DONE
-                                                      ↘ ERROR
-                                                      ↘ PERIGOSO
+PENDENTE → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → PROCESSADO
+                                                       ↘ ERRO
+                                                       ↘ PERIGOSO
 ```
+
+> Mapa completo de transições (incl. `Erro → AguardaEnvio`, `Pendente → Perigoso`, self-loop `Processado → Processado`) e Action de cada uma: `docs/system_spec/02-shared/estados.md`
 
 ### Segurança e conformidade
 

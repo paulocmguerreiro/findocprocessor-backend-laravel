@@ -27,7 +27,7 @@
 
 | Componente                                                                                                                    | Ficheiro               |
 | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| Enums partilhados (`TipoMovimento`, `DirecaoOrdenacao`, `EstadoDocumento`, `ModoReprocessamento`, `FiltroEstadoRegisto`, `CampoOrdenacaoDocumentos`, `PosicaoEmpresaMae`) | `02-shared/enums.md`   |
+| Enums — partilhados (`TipoMovimento`, `DirecaoOrdenacao`, `EstadoDocumento`, `FiltroEstadoRegisto`, `PosicaoEmpresaMae`) + feature-local (`ModoReprocessamento`, `CampoOrdenacaoDocumentos`) | `02-shared/enums.md`   |
 | HTTP (`ApiResponse`, Exception Handler, cursor pagination, `TransicaoInvalidaException`)                                      | `02-shared/http.md`    |
 | Estados de documento + Interface `ContratoEstadoDocumento` + 7 state objects + mapa de transições                             | `02-shared/estados.md` |
 
