@@ -41,7 +41,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->withTrashed();
     Route::post('utilizadores/{utilizador}/anonimizar', [UtilizadorController::class, 'anonimizar']);
 
-    Route::post('documentos/upload', [DocumentoController::class, 'upload']);
+    Route::post('documentos/upload', [DocumentoController::class, 'upload'])->middleware('throttle:upload');
     Route::apiResource('documentos', DocumentoController::class);
     Route::get('documentos/{documento}/ficheiro', [DocumentoController::class, 'descarregar']);
     Route::post('documentos/{documento}/reprocessar', [DocumentoController::class, 'reprocessar']);

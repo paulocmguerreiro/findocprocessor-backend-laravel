@@ -29,8 +29,9 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Limites de pedidos: um limite global por utilizador/IP para toda a API e
-     * um limite estrito por email+IP no login (mitigação de brute-force).
+     * Limites de pedidos: um limite global por utilizador/IP para toda a API, um
+     * limite estrito por email+IP no login (mitigação de brute-force) e um limite
+     * dedicado ao upload (mais caro — `hash_file` sobre ficheiros até 10 MB).
      */
     private function configurarRateLimiters(): void
     {
@@ -42,5 +43,7 @@ class AppServiceProvider extends ServiceProvider
 
             return Limit::perMinute(5)->by($chave);
         });
+
+        RateLimiter::for('upload', fn (Request $pedido): Limit => Limit::perMinute(20)->by($pedido->user()?->getAuthIdentifier() ?? $pedido->ip()));
     }
 }

@@ -115,6 +115,28 @@ Stack traces nunca incluídos na resposta.
 
 ---
 
+## Rate limiting (named limiters)
+
+Limiters definidos em `App\Providers\AppServiceProvider::configurarRateLimiters()`. O grupo
+`api` aplica `throttle:api` a **todas** as rotas da API (`$middleware->throttleApi()` em
+`bootstrap/app.php`); limiters mais estritos são aplicados por rota.
+
+| Limiter | Limite | Chave | Aplicação |
+|---|---|---|---|
+| `api` | 60/min | utilizador (id) ou IP | grupo `api` (global) |
+| `login` | 5/min | email + IP | `POST /auth/login` (`throttle:login`) — anti brute-force |
+| `upload` | 20/min | utilizador (id) ou IP | `POST /documentos/upload` (`throttle:upload`) — protege o `hash_file` de ficheiros até 10 MB |
+
+Exceder qualquer limite devolve **429** com o payload Problem Details
+(`detail: "Demasiados pedidos. Tente novamente mais tarde."`), tratado pelo closure
+`HttpExceptionInterface` em `bootstrap/app.php`.
+
+> Nota de testes: `ThrottleRequests` está **desligado por omissão** na suite; um teste que
+> queira exercitar um limiter reactiva-o com `$this->withMiddleware(ThrottleRequests::class)`
+> (ver `LoginThrottleTest`, `ReceberUploadDocumentoTest`).
+
+---
+
 ## Exceptions (`app/Shared/Exceptions/`)
 
 ### `TransicaoInvalidaException`
