@@ -57,3 +57,7 @@ arch('actions are final')
         ActualizarTipoDocumentoRequest::class,
         CampoOrdenacaoTiposDocumento::class,
     ]);
+
+arch('infrastructure classes are final')
+    ->expect('App\Infrastructure')
+    ->toBeFinal();
