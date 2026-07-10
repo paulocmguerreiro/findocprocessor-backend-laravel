@@ -28,6 +28,14 @@ storage/app/temp/*
 !storage/app/temp/.gitkeep
 storage/app/entrada/*
 !storage/app/entrada/.gitkeep
+storage/app/enviado/*
+!storage/app/enviado/.gitkeep
+storage/app/processado/*
+!storage/app/processado/.gitkeep
+storage/app/erro/*
+!storage/app/erro/.gitkeep
+storage/app/perigoso/*
+!storage/app/perigoso/.gitkeep
 storage/app/private/*
 !storage/app/private/.gitkeep
 
