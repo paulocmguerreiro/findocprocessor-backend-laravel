@@ -39,6 +39,7 @@ PromptBuilder::novo()
 - **RN-03** — `filtrarPorCategoria()` só tem efeito se chamado **antes** de `comTiposDocumento()`; a query é resolvida no momento em que `comTiposDocumento()` executa, não em `construir()`. Chamado depois, não filtra retroactivamente o segmento já gerado.
 - **RN-04** — "Passo 2" lista, por `TipoDocumento`, os campos com `espera_* = true` mapeados para os nomes JSON esperados na resposta da IA (`espera_data_documento`→`data_documento`, `espera_fornecedor`→`fornecedor`, `espera_cliente`→`cliente`, `espera_valor`→`valor`); campos `espera_* = false` são omitidos.
 - **RN-05** — `construir()` sem `comInstrucoesBase()` chamado lança `\LogicException`.
+- **RN-06** — "Passo 1" inclui, por `TipoDocumento`, a posição da empresa mãe (`posicao_empresa_mae` — `fornecedor` ou `cliente`) — sem isto a IA não tem como saber em que papel a empresa mãe (nome/NIF injectados por `comEmpresaMae()`) surge em cada tipo de documento.
 
 ---
 
@@ -62,10 +63,10 @@ EMPRESA MÃE:
 Nome: Acme Lda
 NIF: 123456789
 
-Esta é a empresa mãe da aplicação. Usa este nome e NIF para determinares...
+Esta é a empresa mãe da aplicação. A posição em que este NIF surge em cada documento...
 
 Passo 1 — Classificação:
-- "receitas" → Fatura Simples: Fatura emitida a um cliente
+- "receitas" → Fatura Simples: Fatura emitida a um cliente (empresa mãe: fornecedor)
 
 Passo 2 — Campos a extrair por tipo:
 - Fatura Simples: data_documento, cliente, valor

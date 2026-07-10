@@ -55,7 +55,7 @@ final class PromptBuilder
             Nome: {$empresaMae->nome}
             NIF: {$empresaMae->nif}
 
-            Esta é a empresa mãe da aplicação. Usa este nome e NIF para determinares, para cada documento, se a empresa mãe surge como cliente ou como fornecedor na transacção — não inventes nem assumas outro NIF como sendo o da empresa mãe.
+            Esta é a empresa mãe da aplicação. A posição em que este NIF surge em cada documento (como cliente ou como fornecedor) está indicada por tipo de documento na secção "Passo 1 — Classificação" ("empresa mãe: fornecedor" ou "empresa mãe: cliente") — não inventes nem assumas outro NIF como sendo o da empresa mãe.
             TEXTO;
 
         return $this;
@@ -77,10 +77,11 @@ final class PromptBuilder
 
         $classificacao = $tiposDocumento
             ->map(fn (TipoDocumento $tipo): string => sprintf(
-                '- "%s" → %s: %s',
+                '- "%s" → %s: %s (empresa mãe: %s)',
                 $tipo->categoria === null ? 'sem-categoria' : $tipo->categoria->slug,
                 $tipo->nome,
                 $tipo->descricao,
+                $tipo->posicao_empresa_mae->value,
             ))
             ->implode(PHP_EOL);
 

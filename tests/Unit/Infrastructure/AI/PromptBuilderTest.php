@@ -6,6 +6,7 @@ use App\Infrastructure\AI\PromptBuilder;
 use App\Models\CategoriaDocumento;
 use App\Models\Entidade;
 use App\Models\TipoDocumento;
+use App\Shared\Enums\PosicaoEmpresaMae;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
@@ -77,6 +78,7 @@ describe('comTiposDocumento()', function (): void {
             'nome' => 'Fatura Simples',
             'descricao' => 'Fatura emitida a um cliente',
             'id_categoria' => $categoria->id,
+            'posicao_empresa_mae' => PosicaoEmpresaMae::Fornecedor,
             'espera_data_documento' => true,
             'espera_fornecedor' => false,
             'espera_cliente' => true,
@@ -87,7 +89,7 @@ describe('comTiposDocumento()', function (): void {
 
         expect($prompt)->toContain('Passo 1 — Classificação')
             ->toContain('Passo 2 — Campos a extrair por tipo')
-            ->toContain('"receitas" → Fatura Simples: Fatura emitida a um cliente')
+            ->toContain('"receitas" → Fatura Simples: Fatura emitida a um cliente (empresa mãe: fornecedor)')
             ->toContain('- Fatura Simples: data_documento, cliente, valor')
             ->not->toContain('- Fatura Simples: data_documento, fornecedor, cliente, valor');
 
