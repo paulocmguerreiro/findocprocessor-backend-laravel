@@ -26,6 +26,10 @@ storage/app/processed/*
 !storage/app/processed/.gitkeep
 storage/app/temp/*
 !storage/app/temp/.gitkeep
+storage/app/entrada/*
+!storage/app/entrada/.gitkeep
+storage/app/private/*
+!storage/app/private/.gitkeep
 
 # SQLite dev DB
 *.sqlite

@@ -28,6 +28,30 @@ it('regista tentativa e sucesso quando login é bem-sucedido', function (): void
         ->withArgs(fn (string $msg): bool => $msg === 'auth.login.sucesso');
 });
 
+it('regista o email mascarado, nunca em claro', function (): void {
+    Log::spy();
+
+    User::factory()->create([
+        'email' => 'utilizador@exemplo.pt',
+        'password' => bcrypt('password-correcta'),
+    ]);
+
+    $this->postJson('/api/auth/login', [
+        'email' => 'utilizador@exemplo.pt',
+        'password' => 'password-correcta',
+    ])->assertOk();
+
+    Log::shouldHaveReceived('info')->withArgs(
+        fn (string $mensagem, array $contexto): bool => $mensagem === 'auth.login.tentativa'
+            && $contexto['email'] === 'u***@exemplo.pt'
+    );
+
+    Log::shouldHaveReceived('info')->withArgs(
+        fn (string $mensagem, array $contexto): bool => $mensagem === 'auth.login.sucesso'
+            && $contexto['email'] === 'u***@exemplo.pt'
+    );
+});
+
 it('regista tentativa e falhou quando credenciais são inválidas', function (): void {
     Log::spy();
 

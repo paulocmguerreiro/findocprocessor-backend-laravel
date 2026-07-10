@@ -6,6 +6,7 @@ use App\Features\Auth\Login\LoginAction;
 use App\Features\Auth\Login\LoginDto;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 uses(RefreshDatabase::class);
@@ -34,6 +35,22 @@ it('lança ValidationException quando o email não existe', function (): void {
         ip: '127.0.0.1',
         agente: 'test',
     )))->toThrow(ValidationException::class);
+});
+
+it('mascara totalmente o email sem arroba nos logs', function (): void {
+    Log::spy();
+
+    expect(fn () => app(LoginAction::class)->handle(new LoginDto(
+        email: 'email-sem-arroba',
+        password: 'qualquer',
+        ip: '127.0.0.1',
+        agente: 'test',
+    )))->toThrow(ValidationException::class);
+
+    Log::shouldHaveReceived('info')->withArgs(
+        fn (string $mensagem, array $contexto): bool => $mensagem === 'auth.login.tentativa'
+            && $contexto['email'] === '***'
+    );
 });
 
 it('lança ValidationException quando a password está incorrecta', function (): void {
