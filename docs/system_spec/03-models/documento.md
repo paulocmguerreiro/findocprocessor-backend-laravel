@@ -223,3 +223,4 @@ Os DTOs do Documento pertencem à camada de lógica (#57) e estão documentados 
 - **Model não é `final`** — coerente com `Entidade`/`CategoriaDocumento`; o ArchTest "actions are final" não cobre Models.
 - **Sem Repository** — desvio aceite; listagem directa no Eloquent (sem queries complexas nesta camada). A issue de Lógica (#57) reavaliará se a `ListarDocumentosAction` justifica Repository.
 - **`#[UsePolicy(DocumentoPolicy::class)]`** registado no Model — auto-descoberta da Policy granular (`hasPermissionTo`).
+- **Hard-delete deliberado** — `Documento` não usa `SoftDeletes`; decisão documentada em `../02-shared/soft-delete.md`.

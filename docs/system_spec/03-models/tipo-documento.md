@@ -141,3 +141,4 @@ Serializa: `id`, `nome`, `descricao`, `categoria` (`CategoriaDocumentoResource::
 - **Sem Repository** — CRUD simples (critério de `04-infra/repositories.md`).
 - **Sem Actions/Controller/FormRequests/rotas** nesta issue — camada de modelo apenas; ficam para a issue de lógica (`/cria-issue-logica`).
 - **Sem relação inversa `hasMany`** em `CategoriaDocumento` — fora de âmbito.
+- **Hard-delete deliberado** — `TipoDocumento` não usa `SoftDeletes`; decisão documentada em `../02-shared/soft-delete.md`.
