@@ -19,6 +19,16 @@ dados históricos quando o registo "pai" é eliminado.
 - Tabelas folha sem FKs apontando para elas (ex: `etapas_documento` — ninguém referencia as etapas)
 - Registos de auditoria (append-only por natureza)
 - Tabelas pivot / associativas
+- `documentos` — **não** pelo critério genérico acima: `documentos` **é** referenciada por
+  `etapas_documento.id_documento` via `cascadeOnDelete()`. A exclusão é uma decisão de negócio
+  distinta: um documento incorrecto é eliminado directamente e re-submetido via re-upload —
+  nunca corrigido "in place" nem precisa de ficar visível como registo inactivo. O histórico
+  (`EtapaDocumento`) cai com o documento por design (cascade, não FK protegida); `EliminarDocumentoAction`
+  faz hard delete + apaga o ficheiro do disco pós-commit.
+- `tipos_documento` — critério genérico já existente (tabela sem FKs a apontar para ela,
+  confirmado por grep a `database/migrations/*.php`), registado aqui explicitamente para não
+  ser confundido com omissão: é um modelo de domínio com Policy CRUD completa, não um registo
+  de auditoria ou pivot como os outros exemplos desta lista.
 
 ---
 
