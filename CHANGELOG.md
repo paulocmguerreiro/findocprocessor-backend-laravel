@@ -6,6 +6,12 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Changed (Docs)
+- **Issue #92** — Documentar decisão de hard-delete de `Documento` e `TipoDocumento`
+  - `docs/system_spec/02-shared/soft-delete.md` — secção "Não usar SoftDelete" ganha entradas explícitas para `documentos` (referenciada por `etapas_documento` via `cascadeOnDelete()`, mas exclusão é decisão de negócio: documento incorrecto é eliminado e re-submetido via re-upload, não corrigido "in place") e `tipos_documento` (critério genérico "sem FKs a apontar para ela", registado explicitamente por ser modelo de domínio com Policy CRUD completa)
+  - `docs/system_spec/03-models/documento.md` e `docs/system_spec/03-models/tipo-documento.md` — nota curta em "Notas arquitecturais" com link para a decisão
+  - Sem alteração a código (`app/`, `database/migrations/`, `routes/`)
+
 ### Added
 - **Issue #88** — PromptBuilder — construção do system prompt de extracção via IA
   - `App\Infrastructure\AI\PromptBuilder` (`final`, `strict_types=1`, sem interface) — API fluente: `novo()`, `comInstrucoesBase()`, `comEmpresaMae()`, `filtrarPorCategoria()`, `comTiposDocumento()`, `construir(): string`
