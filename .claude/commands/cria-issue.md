@@ -1,6 +1,7 @@
 ---
 description: Cria Issue no GitHub com análise de impacto e verificação RGPD/NIS2
 allowed-tools: [Bash, Read]
+effort: high
 ---
 
 # /cria-issue

@@ -1,6 +1,7 @@
 ---
 description: Fase 3a — Debrief + SYSTEM_SPEC + Changelog (artefactos locais)
 allowed-tools: [Bash, Read, Write, Edit]
+effort: high
 ---
 
 # /documenta-implementacao
@@ -44,6 +45,3 @@ Produz apenas artefactos locais. Para criar o PR, usar `/publica-implementacao`.
    OpenAPI:    actualizado (ou sem alterações)
    Próximo:    /publica-implementacao #N
    ```
-
-## Execução isolada (opcional)
-Lançar `executa-agent-documentar-implementacao` para isolar o contexto de documentação da sessão principal.

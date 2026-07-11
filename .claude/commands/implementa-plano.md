@@ -1,7 +1,7 @@
 ---
 description: Fase 2 — Implementação tarefa a tarefa com checkpoint e testes
 allowed-tools: [Bash, Read, Write, Edit]
-effort: high
+effort: xhigh
 ---
 
 # /implementa-plano
@@ -10,8 +10,7 @@ effort: high
 
 ## Argumentos
 - `$ARGUMENTS`: número da issue (ex: `#5`) — opcional; se omitido, lê de `workflow-state.md`
-- `--stack`: `dotnet` | `laravel` | `angular` | `all` — opcional; se omitido, usa o repo activo
-  - `--stack all` → lança `executa-agent-multi-stack` (3 agents em paralelo)
+- `--stack`: `dotnet` | `laravel` | `angular` — opcional; se omitido, usa o repo activo
 
 ## Pré-condições
 1. Ler `docs/workflow-state.md` — confirmar `fase: implementa`
@@ -84,7 +83,3 @@ Skill `propoe-commit` — proposta formatada, aguarda confirmação antes de exe
    Tarefas: N/N  |  Testes: ✅  |  Scan: ✅ (ou 🔴 N FAILs confirmados)
    Próximo: /documenta-implementacao #N
    ```
-
-## Execução isolada (opcional)
-Para stack único: `executa-agent-implementar-plano`
-Para todos os stacks: `executa-agent-multi-stack` → delega para 3 agents em paralelo

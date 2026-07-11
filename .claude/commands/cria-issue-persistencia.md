@@ -1,6 +1,7 @@
 ---
 description: "Cria issue para a camada de persistência (Repository interface + Eloquent Repository + Services + Service Provider + testes)"
 allowed-tools: [Bash, Read]
+effort: high
 ---
 
 # /cria-issue-persistencia

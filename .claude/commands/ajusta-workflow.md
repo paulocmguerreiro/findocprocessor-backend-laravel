@@ -1,6 +1,7 @@
 ---
 description: "Classifica um ajuste de workflow/processo e aplica-o no local correcto (system_spec vs commands/skills vs CLAUDE.md)"
 allowed-tools: [Bash, Read, Edit, Write]
+effort: high
 ---
 
 # /ajusta-workflow

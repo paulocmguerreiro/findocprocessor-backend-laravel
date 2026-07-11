@@ -1,6 +1,7 @@
 ---
 description: Fase 1 — Brief + Branch + Spec + Plano para uma Issue
 allowed-tools: [Bash, Read, Write]
+model: opus
 effort: high
 ---
 
@@ -57,6 +58,3 @@ effort: high
     Plano:   docs/plans/YYYY-MM-DD-<slug>.md
     Próximo: /implementa-plano #N
     ```
-
-## Execução isolada (opcional)
-Lançar `executa-agent-planear-issue` com `isolation: worktree` para manter o contexto limpo e evitar acumulação de estado na sessão principal.
