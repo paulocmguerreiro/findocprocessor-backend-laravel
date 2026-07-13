@@ -159,4 +159,16 @@ class Documento extends Model
     {
         $query->where('status', EstadoDocumento::Erro);
     }
+
+    /**
+     * Documentos num dos `$estados` transitórios cujo `updated_at` é mais antigo
+     * que `$limiarMinutos` — candidatos a reconciliação ficheiro↔BD (`ReconciliarFicheirosJob`).
+     *
+     * @param  Builder<Documento>  $query
+     * @param  list<EstadoDocumento>  $estados
+     */
+    public function scopeDocumentosPresos(Builder $query, array $estados, int $limiarMinutos): void
+    {
+        $query->whereIn('status', $estados)->where('updated_at', '<', now()->subMinutes($limiarMinutos));
+    }
 }
