@@ -18,9 +18,11 @@ use App\Features\Utilizador\Actualizar\ActualizarUtilizadorRequest;
 use App\Features\Utilizador\Criar\CriarUtilizadorRequest;
 use App\Features\Utilizador\Listar\CampoOrdenacaoUtilizadores;
 use App\Http\Controllers\Controller;
+use App\Infrastructure\Malware\AnalisadorMalware;
+use App\Infrastructure\Malware\EstadoAnaliseMalware;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 
-arch()->preset()->laravel()->ignoring(['App\Shared\Enums', 'App\Shared\Cache', 'App\Features', 'App\Shared\Exceptions']);
+arch()->preset()->laravel()->ignoring(['App\Shared\Enums', 'App\Shared\Cache', 'App\Features', 'App\Shared\Exceptions', 'App\Infrastructure\Malware']);
 arch()->preset()->security();
 
 arch('strict types')
@@ -59,9 +61,11 @@ arch('actions are final')
         CampoOrdenacaoTiposDocumento::class,
     ]);
 
+// Enums em PHP são implicitamente final — `final enum` é syntax error.
 arch('infrastructure classes are final')
     ->expect('App\Infrastructure')
-    ->toBeFinal();
+    ->toBeFinal()
+    ->ignoring([AnalisadorMalware::class, EstadoAnaliseMalware::class]);
 
 // RN-01/CA-02 (#90): todo Job de pipeline disparado a partir de uma Action de
 // escrita implementa ShouldQueueAfterCommit — nunca ShouldDispatchAfterCommit

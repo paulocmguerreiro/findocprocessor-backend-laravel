@@ -10,8 +10,10 @@ use App\Models\Documento;
 use App\Shared\Enums\EstadoDocumento;
 
 /**
- * Transição `AguardaResposta → Erro` (pipeline). Move o ficheiro `enviado → erro`,
- * regista a `mensagem_erro` como motivo e emite `DocumentoMarcadoErro`.
+ * Transição para `Erro` (pipeline) — alcançável de `AguardaResposta` (falha de
+ * envio/resposta) e de `Pendente` (falha do scan de malware, issue #91). Move
+ * o ficheiro para o disco `erro`, regista a `mensagem_erro` como motivo e
+ * emite `DocumentoMarcadoErro`.
  *
  * Transição de sistema: corre sempre em background (Jobs de extracção), sem
  * utilizador autenticado — não tem `Gate::authorize` (ver `02-shared/padroes-acoes.md`).
