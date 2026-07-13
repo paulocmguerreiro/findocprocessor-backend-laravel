@@ -7,6 +7,14 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
+- **Issue #90** — Fundação de concorrência do pipeline (after_commit, locking, reconciliação)
+  - `ReivindicarDocumentoPendenteAction` (`app/Features/Documento/Reivindicar/`) — reivindicação de `Documento`s `Pendente` com `DB::transaction()` + `lockForUpdate()`, seguida de `MarcarAguardaEnvioDocumentoAction`; a `RegraTransicaoEstado` existente actua como último nível de validação. Sem `Gate::authorize()` (acção de sistema/pipeline). Testada com 2 conexões MySQL reais a competir pelo mesmo documento — primeiro teste de concorrência do projecto
+  - `ReconciliarFicheirosJob` (agendado, `Schedule::job(...)->everyFiveMinutes()->onOneServer()`) — detecta `Documento`s presos num estado transitório (`AguardaEnvio`/`Enviado`/`AguardaResposta`) há mais de `config('pipeline.reconciliacao_limiar_minutos')` (`.env` `PIPELINE_RECONCILIACAO_LIMIAR_MINUTOS`, default 15 min); `RegraReconciliarLocalizacaoFicheiro` (nova) localiza o ficheiro por `hash_sha256` nos discos conhecidos e repõe automaticamente `disco_storage`/`nome_ficheiro_storage` quando encontrado noutro disco, ou regista `Log::error` estruturado quando não encontrado em nenhum
+  - Índice composto `documentos_status_updated_at_index` (`status`, `updated_at`) — evita full-table-scan nas queries de reivindicação e reconciliação
+  - `ShouldQueueAfterCommit` imposto por ArchTest para todo `Job` de `app/Jobs/`; corrigido o nome errado da interface (`ShouldDispatchAfterCommit`, exclusiva de Events/Broadcasting) na documentação
+  - Sem Repository — critério de `04-infra/repositories.md` (reutilização **actual**, não projectada) não se aplicava a nenhum dos dois scopes com 1 único consumidor; usados scopes directos no `Documento` (`wherePendente()`, `documentosPresos()`)
+  - Sem Jobs de pipeline concretos nesta issue — pré-requisito da issue futura do orquestrador de IA
+  - 908 testes, 100% cobertura + type coverage, Larastan 9 — verde em MySQL
 - **Issue #95** — Infra de extração — Prism + pdfparser + Tesseract/imagick + config LLM (setup)
   - Pacotes: `prism-php/prism`, `smalot/pdfparser`, `thiagoalessio/tesseract_ocr`
   - `config/prism.php` (publicado via `vendor:publish --tag=prism-config`) — provider `ollama` ligado a `LLM_LOCAL_URL`/`LLM_LOCAL_MODEL` (camada local); provider `openai` (nativo, aceita `url` custom) ligado a `LLM_CLOUD_URL`/`LLM_CLOUD_MODEL`/`LLM_CLOUD_KEY` (camada cloud)
