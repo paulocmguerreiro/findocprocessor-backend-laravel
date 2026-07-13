@@ -16,8 +16,34 @@ ambiente de testes e o stack real (MySQL + Redis).
 | `redis` | `redis:7-alpine` | Cache e queue |
 
 A imagem (`Dockerfile`) instala extensões via `install-php-extensions`
-(inclui `pcov` para cobertura) e fixa `memory_limit=512M` (a análise estática
-excede os 128M por omissão). `app` e `queue` partilham a imagem `findocprocessor-app`.
+(inclui `pcov` para cobertura e `imagick`, para rasterização de PDF/PS do
+pipeline de extração, #95) e fixa `memory_limit=512M` (a análise estática
+excede os 128M por omissão). Via `apk add` instala também `tesseract-ocr`
+(+ dados `por`/`eng`) e `ghostscript` (delegate do ImageMagick para PDF).
+`app` e `queue` partilham a imagem `findocprocessor-app`.
+
+### `imagick` e `policy.xml` (#95)
+
+O `apk imagemagick` (base Alpine) instala um `policy.xml` **aberto** por
+omissão (`/etc/ImageMagick-7/policy.xml`) — ao contrário de imagens
+Debian/Ubuntu, **não restringe** a leitura/escrita de PDF/PS. Verificado
+empiricamente (rasterização de um PDF de teste via `Imagick::readImage()`
+dentro do container `app`, sem qualquer patch ao `policy.xml`). Por isso
+**não existe** `docker/imagemagick/policy.xml` neste repo — seria um ficheiro
+morto, idêntico ao default do pacote. Se no futuro se mudar a imagem base
+(ex.: Debian) ou o pacote `imagemagick` do Alpine passar a restringir PDF,
+revisitar esta secção.
+
+### Rede: LLM externo ao container (#95)
+
+As camadas LLM (`LLM_LOCAL_*`/`LLM_CLOUD_*`, ver `06-config.md`) apontam para
+serviços **fora** do container `app`/`queue` (Ollama local, provider cloud).
+As 5 env vars são injectadas no `x-app-env` do `compose.yaml` (vazias por
+omissão — fail-safe, camada inactiva). Alcançar um LLM local a correr no host
+requer `host.docker.internal` (nativo no Docker Desktop macOS/Windows; em
+Linux requer `extra_hosts: ["host.docker.internal:host-gateway"]` no
+serviço) — a configuração efectiva de rede/`extra_hosts` para o pipeline
+correr fica para a issue #98, fora do âmbito da #95 (que só injecta as vars).
 
 ## Entrypoint (`docker/entrypoint.sh`)
 
