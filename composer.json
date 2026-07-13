@@ -71,7 +71,7 @@
         "test:arch": "pest tests/ArchTest.php",
         "test:type-coverage": "pest --type-coverage --min=100",
         "test:types": "phpstan analyse --no-progress --memory-limit=512M",
-        "test:coverage": "XDEBUG_MODE=coverage pest --parallel --coverage --min=100",
+        "test:coverage": "XDEBUG_MODE=coverage pest --parallel --processes=4 --coverage --min=100",
         "test:preflight": "sh bin/test-preflight.sh",
         "test": [
             "@test:preflight",
