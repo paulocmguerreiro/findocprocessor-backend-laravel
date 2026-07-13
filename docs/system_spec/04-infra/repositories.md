@@ -22,7 +22,9 @@ O Repository fica **entre a Action e o Eloquent Model**. Não é obrigatório em
 ## Padrão de implementação
 
 - A Action injecta sempre a **interface** do repositório, nunca a implementação concreta.
-- A implementação Eloquent é `final class` — **não** `readonly` (o Eloquent não é imutável).
+- Nomenclatura: interface `Contrato<Nome>`; implementação `<Nome>` (sem prefixo `Eloquent` — não há outra
+  implementação prevista, o prefixo não acrescenta informação).
+- A implementação é `final class` — **não** `readonly` (o Eloquent não é imutável).
 - A implementação injecta o Model via construtor — nunca acede ao Facade nem instancia com `new Model()`.
 - Interface tipada com tipos nativos PHP 8.5 — sem `mixed`, sem `array` não tipado.
 - Binding `interface → implementação` registado em `AppServiceProvider`.
