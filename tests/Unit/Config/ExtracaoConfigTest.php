@@ -3,12 +3,17 @@
 declare(strict_types=1);
 
 /**
+ * Escreve directamente em $_ENV/$_SERVER (não putenv()): o Docker/compose já
+ * injecta as vars LLM_* vazias no ambiente do processo (x-app-env), e essas
+ * arrays têm prioridade sobre o process env no repositório do Env do Laravel.
+ *
  * @param  array<string, string>  $vars
  */
 function definirVarsExtracao(array $vars): void
 {
     foreach ($vars as $chave => $valor) {
-        putenv("{$chave}={$valor}");
+        $_ENV[$chave] = $valor;
+        $_SERVER[$chave] = $valor;
     }
 }
 
@@ -18,7 +23,7 @@ function definirVarsExtracao(array $vars): void
 function limparVarsExtracao(array $chaves): void
 {
     foreach ($chaves as $chave) {
-        putenv($chave);
+        unset($_ENV[$chave], $_SERVER[$chave]);
     }
 }
 
