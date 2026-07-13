@@ -26,6 +26,7 @@
 - **Redis + predis** — cache com invalidação por tags (`CacheServico`, `TagCache`, `TtlCache`)
 - **Prism** (`prism-php/prism`) — acesso unificado a LLM local (Ollama) e cloud, provider-agnóstico; camadas opcionais/desligáveis por presença das vars `LLM_LOCAL_*`/`LLM_CLOUD_*`
 - **smalot/pdfparser + Tesseract/imagick/Ghostscript** — extracção de texto nativo e OCR de PDF (pipeline de extracção por IA, em construção)
+- **ClamAV self-hosted** — scan de malware dos uploads (protocolo `clamd`/`INSTREAM` via socket, sem dependência Composer, sem partilha de ficheiros com terceiros); camada opcional/desligável por presença das vars `CLAMAV_HOST`/`CLAMAV_PORT`
 - **Pest 4 + Mockery** — padrão de testes dual (unit + HTTP)
 - **Larastan nível 9 + Rector + Laravel Pint** — qualidade e tipagem estática
 
