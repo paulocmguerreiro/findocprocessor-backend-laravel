@@ -1,17 +1,17 @@
 # System Spec — Feature: Documento (lógica — máquina de estados)
 
 > `app/Features/Documento/`
-> Issues: #45 (modelo), #56 (EtapaDocumento), #57 (lógica — esta spec)
+> Issues: #45 (modelo), #56 (EtapaDocumento), #57 (lógica), #90 (concorrência do pipeline — esta spec)
 
 ---
 
 ## Visão geral
 
-Feature com 14 Actions (8 expostas via endpoint HTTP + 6 de transição de pipeline executadas apenas
-programaticamente — `Marcar*` e `TransicionarProcessadoDocumentoAction`, invocadas pelos Jobs de
-extracção, nunca por rota), 3 classes `Regra*`, 1 executor partilhado interno, 7 DTOs, 4 Events e camada
-HTTP completa. A máquina de estados é a peça central: cada transição passa obrigatoriamente pelo mapa
-central em `RegraTransicaoEstado` — nunca `if ($doc->status == ...)`.
+Feature com 15 Actions (8 expostas via endpoint HTTP + 7 sem HTTP, invocadas apenas
+programaticamente: 6 de transição de pipeline — `Marcar*` e `TransicionarProcessadoDocumentoAction`
+— + `ReivindicarDocumentoPendenteAction`, #90), 4 classes `Regra*`, 1 executor partilhado interno,
+8 DTOs, 4 Events e camada HTTP completa. A máquina de estados é a peça central: cada transição passa
+obrigatoriamente pelo mapa central em `RegraTransicaoEstado` — nunca `if ($doc->status == ...)`.
 
 ---
 
@@ -57,6 +57,22 @@ valor/data); usa `RegraNomearProcessado` para gerar o nome canónico. DTO:
 
 `MarcarPerigosoDocumentoAction` — DTO `MarcarPerigosoDocumentoDto` (campo `motivo`). Alcançável de
 dois estados (`Pendente` pré-scan e `AguardaResposta` guardrail). Emite `DocumentoMarcadoPerigoso`.
+
+---
+
+### Action de reivindicação de pipeline (sem endpoint HTTP, #90)
+
+| Action | Ability | De | Para | Move ficheiro |
+|---|---|---|---|---|
+| `ReivindicarDocumentoPendenteAction` | — (sem Gate, sistema) | `Pendente` | `AguardaEnvio` | Não (fica em `entrada`) |
+
+`ReivindicarDocumentoPendenteAction` (`app/Features/Documento/Reivindicar/`) — componente reutilizável
+de reivindicação para o futuro orquestrador de IA: abre `DB::transaction()` (ponto de entrada, sem
+Action chamante), bloqueia (`lockForUpdate()`) o próximo `Documento` `Pendente` (scope
+`wherePendente()`) e delega em `MarcarAguardaEnvioDocumentoAction` (transação aninhada via
+`SAVEPOINT`). Evita que dois workers concorrentes reivindiquem o mesmo documento — ver
+`04-infra/transactions.md` para o padrão completo e `07-testing.md` para o teste de concorrência real
+(duas conexões MySQL).
 
 ---
 
@@ -149,8 +165,10 @@ chamante antes de invocar `executar()`.
 | `ReprocessarDocumentoDto` | `Reprocessar/` | `modo: ModoReprocessamento` |
 | `CorrigirDocumentoDto` | `Corrigir/` | campos de domínio (sem campos de storage) |
 | `FicheiroDocumentoDto` | `Descarregar/` | `disco: string`, `nome: string` (VO de vista, sem `fromRequest`) |
+| `ResultadoReconciliacaoFicheiro` | `Transicao/` | `coerente: bool`, `encontrado: bool`, `disco: ?string`, `nome: ?string` (VO interno, sem `fromRequest`, #90) |
 
-Todos `final readonly`. Todos com `fromRequest()` excepto `FicheiroDocumentoDto` (VO de vista).
+Todos `final readonly`. Todos com `fromRequest()` excepto `FicheiroDocumentoDto` e
+`ResultadoReconciliacaoFicheiro` (VOs internos/de vista, nunca originados de HTTP).
 Campos de storage (`hash_sha256`, `disco_storage`, `nome_ficheiro_storage`) nunca vêm do cliente —
 são derivados pela Action.
 
@@ -215,7 +233,7 @@ As Actions **com login** mapeiam abilities do `DocumentoPolicy` para permissões
 
 ### Transições de sistema (sem Gate)
 
-As 5 transições intermédias de pipeline **não têm `Gate::authorize`** — correm sempre em background (Jobs de extracção), sem utilizador autenticado: `MarcarAguardaEnvioDocumentoAction`, `MarcarEnviadoDocumentoAction`, `MarcarAguardaRespostaDocumentoAction`, `MarcarErroDocumentoAction`, `MarcarPerigosoDocumentoAction`. A `EtapaDocumento` que gravam fica como **passo de sistema** (`id_utilizador = null`).
+As 5 transições intermédias de pipeline **não têm `Gate::authorize`** — correm sempre em background (Jobs de extracção), sem utilizador autenticado: `MarcarAguardaEnvioDocumentoAction`, `MarcarEnviadoDocumentoAction`, `MarcarAguardaRespostaDocumentoAction`, `MarcarErroDocumentoAction`, `MarcarPerigosoDocumentoAction`. A `EtapaDocumento` que gravam fica como **passo de sistema** (`id_utilizador = null`). `ReivindicarDocumentoPendenteAction` (#90) segue o mesmo padrão — sem Gate.
 
 O `TransicionarProcessadoDocumentoAction` é a excepção: apesar de não ter endpoint, **mantém `Gate::authorize('update')`** porque escreve os dados de negócio extraídos (fornecedor, valor, categoria, nome canónico) — é um write significativo, não uma mera flag de estado. Ver padrão em `02-shared/padroes-acoes.md`.
 

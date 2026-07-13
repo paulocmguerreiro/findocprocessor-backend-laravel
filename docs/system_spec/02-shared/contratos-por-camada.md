@@ -26,7 +26,7 @@ As features são construídas em três camadas implementadas em issues separadas
 `interface + repository + services + service provider + testes`
 
 1. Interface do repositório declara todos os métodos com tipos completos (sem `mixed`, sem `array` não tipado).
-2. `EloquentRepository` é `final class` (não `readonly`) e satisfaz a interface (Larastan nível 9).
+2. Implementação (`Contrato<Nome>` / `<Nome>`, sem prefixo `Eloquent`) é `final class` (não `readonly`) e satisfaz a interface (Larastan nível 9).
 3. Implementação injecta o Model via construtor — nunca Facade nem `new Model()`.
 4. Paginação usa `cursorPaginate()` — nunca `paginate()` com OFFSET.
 5. Binding `interface → implementação` registado em `AppServiceProvider`.
@@ -49,7 +49,7 @@ As features são construídas em três camadas implementadas em issues separadas
 6. `fromRequest()` implementado nos DTOs correspondentes (quando existem FormRequests).
 7. Events disparados **dentro** das Actions — nunca no Controller nem no Model.
 8. Actions de escrita usam `DB::transaction()` com `@throws \Throwable` no `handle()` (ver `04-infra/transactions.md`).
-9. Jobs assíncronos: `final class implements ShouldQueue`; `$tries` e `$timeout` declarados; queue definida; `ShouldDispatchAfterCommit` se disparados dentro de transações.
+9. Jobs assíncronos: `final class implements ShouldQueue`; `$tries` e `$timeout` declarados; queue definida; `ShouldQueueAfterCommit` se disparados dentro de transações (ArchTest garante isto para todo `Job` em `app/Jobs/`, ver `04-infra/queue-jobs.md`).
 
 ---
 

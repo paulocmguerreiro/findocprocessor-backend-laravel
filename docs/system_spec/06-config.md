@@ -41,6 +41,10 @@ LLM_CLOUD_URL=
 LLM_CLOUD_MODEL=
 LLM_CLOUD_KEY=
 
+# Pipeline — limiar (minutos) para considerar um Documento "preso" num estado
+# transitório, varrido pelo ReconciliarFicheirosJob (#90).
+PIPELINE_RECONCILIACAO_LIMIAR_MINUTOS=15
+
 FILESYSTEM_INBOX_PATH=inbox/
 FILESYSTEM_PROCESSED_PATH=processed/
 FILESYSTEM_TEMP_PATH=temp/
@@ -100,6 +104,26 @@ providers do Prism ligados às mesmas vars: `providers.ollama.url` =
 > `config:cache`/`config:clear` automaticamente; alterar qualquer var `LLM_*`
 > exige `php artisan config:clear` manual (ou reiniciar o container, que não
 > tem config cacheada por omissão neste projecto).
+
+---
+
+## `config/pipeline.php` — concorrência do pipeline (#90)
+
+```php
+'reconciliacao_limiar_minutos' => (int) env('PIPELINE_RECONCILIACAO_LIMIAR_MINUTOS', 15),
+```
+
+Único parâmetro: limiar (minutos) usado pelo scope `Documento::documentosPresos()` para identificar
+documentos parados num estado transitório há mais tempo que uma transição normal demora — consumido
+por `ReconciliarFicheirosJob` (`04-infra/queue-jobs.md`).
+
+**Dependência de cache partilhado (`redis`):** `Schedule::job(...)->onOneServer()` (usado por
+`ReconciliarFicheirosJob`) e o futuro `WithoutOverlapping` por documento (issue do orquestrador, #90)
+dependem de um cache store com locks atómicos partilhados entre processos — `config/cache.php` já usa
+`redis` como default (`CACHE_STORE=redis`, `.env.example`). Em qualquer ambiente onde o cache não seja
+partilhado entre workers (ex.: `array`/`file` num único processo local), `onOneServer()`/
+`WithoutOverlapping` deixam de proteger entre processos reais — confirmar sempre `CACHE_STORE=redis`
+(ou outro store partilhado) em produção.
 
 ---
 

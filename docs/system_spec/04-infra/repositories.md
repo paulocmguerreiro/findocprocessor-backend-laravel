@@ -14,8 +14,14 @@ O Repository fica **entre a Action e o Eloquent Model**. Não é obrigatório em
 | Query partilhada entre ≥ 2 Actions | **Obrigatório** | Evita duplicação de lógica de leitura/escrita |
 | Filtros dinâmicos / paginação keyset complexa | **Obrigatório** | Encapsula a construção do query builder |
 | CRUD simples (≤ 1 query Eloquent por `handle()`, sem lógica partilhada) | **Dispensável** | Eloquent directo na Action é suficiente e idiomático |
+| Filtro simples (`WHERE`, `lockForUpdate()`, sem joins/aggregates) com um único consumidor **actual** | **Dispensável** | Expor como scope no Model é suficiente; `lockForUpdate()` não é, por si só, "lógica de query complexa" |
 
 **Regra:** quando uma Action de CRUD simples acede ao Eloquent directamente (sem Repository), o desvio é **sempre documentado no Brief da feature**.
+
+**Cuidado com "reutilização futura":** justificar um Repository por "vai ser reutilizado por ≥ 2
+consumidores" quando só existe 1 consumidor **hoje** é especulação, não o critério real da tabela
+acima (que exige reutilização **actual**, não projectada). Nesta arquitectura Vertical Slice +
+Actions, o scope no Model já cobre a maioria dos casos de filtro reutilizável — ver `Estado actual`.
 
 ---
 
@@ -35,3 +41,10 @@ O Repository fica **entre a Action e o Eloquent Model**. Não é obrigatório em
 ## Estado actual
 
 _Pendente — primeiro repository a implementar quando surgir lógica de query complexa ou partilhada. As Actions de CRUD actuais (`CategoriaDocumento`, `Entidade`) acedem ao Eloquent directamente por serem CRUD simples._
+
+**Precedente (#90):** a fundação de concorrência do pipeline (`ReivindicarDocumentoPendenteAction`
+com `lockForUpdate()`; `ReconciliarFicheirosJob` com filtro por `status`/`updated_at`) foi desenhada
+inicialmente com Repository (critério "Query partilhada entre ≥ 2 Actions" — mas com apenas 1
+consumidor real cada, a justificação real era "reutilização futura"). Revertido para scopes no
+`Documento` (`wherePendente()`, `documentosPresos()`) chamados directamente pela Action/Job — sem
+Repository. Mantém-se "Pendente" acima.

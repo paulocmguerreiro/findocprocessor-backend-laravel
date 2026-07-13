@@ -183,6 +183,52 @@ Em `tests/ArchTest.php`, adicionar ao `ignoring` do `arch('actions are final')`:
 
 ---
 
+## Testes de concorrência real (duas conexões MySQL) — #90
+
+Primeiro padrão do género no projecto (`tests/Feature/Features/Documento/ReivindicarDocumentoPendenteConcorrenciaTest.php`),
+usado para provar exclusão mútua de `lockForUpdate()` entre dois "workers" reais.
+
+**Problema:** a conexão de teste por omissão (`mysql`) é embrulhada numa transacção pelo
+`RefreshDatabase` (`connectionsToTransact()` só inclui `database.default`) que **nunca é commitada
+de facto** — é sempre revertida no fim do teste. Se se usar essa conexão como um dos dois "workers",
+`beginTransaction()`/`commit()` explícitos dentro do teste tornam-se `SAVEPOINT`s aninhados: o
+`commit()` não liberta o lock ao nível do motor, e o teste nunca observa a segunda conexão a
+desbloquear.
+
+**Padrão:** clonar a config da conexão `mysql` (já com o sufixo `_test_N` do paralelo aplicado) para
+duas conexões novas em runtime, **nenhuma delas `mysql`**:
+
+```php
+config([
+    'database.connections.mysql_teste_concorrente_a' => config('database.connections.mysql'),
+    'database.connections.mysql_teste_concorrente_b' => config('database.connections.mysql'),
+]);
+DB::purge('mysql_teste_concorrente_a');
+DB::purge('mysql_teste_concorrente_b');
+
+$conexaoA = DB::connection('mysql_teste_concorrente_a');
+$conexaoB = DB::connection('mysql_teste_concorrente_b');
+```
+
+Como nenhuma das duas está em `connectionsToTransact()`, `beginTransaction()`/`commit()` são reais.
+
+**Dados de teste:** o registo tem de ser criado numa das conexões não-embrulhadas (ex.:
+`$model->setConnection('mysql_teste_concorrente_a')->save()`), nunca via factory na conexão por
+omissão — um registo criado dentro da transacção nunca commitada de `mysql` é invisível a outras
+conexões (isolamento transaccional). Cuidado com FKs: relações resolvidas via `Model::factory()`
+(ex.: `id_responsavel: User::factory()`) resolvem sempre na conexão por omissão — se ficarem por
+commitar, bloqueiam o `FK check` da tabela dependente (`lock wait timeout`) na conexão isolada.
+Definir esses campos a `null` (se nullable) evita a dependência.
+
+**Limpeza:** dados criados fora do wrapper do `RefreshDatabase` não são revertidos automaticamente —
+apagar manualmente no fim do teste (`try`/`finally`).
+
+**Confirmar exclusão mútua:** `SET SESSION innodb_lock_wait_timeout = 1` na conexão B antes de
+tentar `lockForUpdate()` sobre a mesma linha que A já bloqueou (sem commit) — B lança
+`QueryException` (lock wait timeout). Depois do `commit()` de A, B consegue obter o lock.
+
+---
+
 ## Pipeline de qualidade
 
 100% code coverage e 100% type coverage exigidos. Executar `composer test` (corre preflight + lint + arch + types + type-coverage + coverage em MySQL) antes de finalizar qualquer alteração. A suite corre exclusivamente em MySQL (`findocprocessor_testing`) — requer Docker a correr (`docker compose up -d`). Convenções de teste resumidas também em `CLAUDE.md` e em `docs/conventions/tests-dual-pattern.md`.
