@@ -67,7 +67,7 @@
 | Logging estruturado                          | `04-infra/logging.md`         | implementado                                                                           |
 | Audit trail (spatie/laravel-activitylog)     | `04-infra/audit-trail.md`     | implementado                                                                           |
 | Jobs / Queue + Events de domínio             | `04-infra/queue-jobs.md`      | implementado (Events #57; Jobs pendentes)                                              |
-| APIs externas (IA)                           | `04-infra/external-apis.md`   | parcial (PromptBuilder implementado; cliente HTTP pendente)                           |
+| APIs externas (IA)                           | `04-infra/external-apis.md`   | parcial (PromptBuilder + Prism/config das camadas LLM implementados #95; cliente concreto pendente #97) |
 | PromptBuilder (system prompt de extracção)   | `04-infra/prompt-builder.md`  | implementado                                                                           |
 | Ambiente Docker + paridade de testes (MySQL) | `04-infra/ambiente-docker.md` | implementado                                                                           |
 

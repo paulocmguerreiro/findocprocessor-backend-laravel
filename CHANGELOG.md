@@ -6,6 +6,17 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Added
+- **Issue #95** — Infra de extração — Prism + pdfparser + Tesseract/imagick + config LLM (setup)
+  - Pacotes: `prism-php/prism`, `smalot/pdfparser`, `thiagoalessio/tesseract_ocr`
+  - `config/prism.php` (publicado via `vendor:publish --tag=prism-config`) — provider `ollama` ligado a `LLM_LOCAL_URL`/`LLM_LOCAL_MODEL` (camada local); provider `openai` (nativo, aceita `url` custom) ligado a `LLM_CLOUD_URL`/`LLM_CLOUD_MODEL`/`LLM_CLOUD_KEY` (camada cloud)
+  - `config/extracao.php` (novo) — `threshold_caracteres`, `ttl_lease`, `max_tentativas`, flags `camada_local_activa`/`camada_cloud_activa` derivadas de `filled(env(...))` (config incompleta ⇒ camada inactiva, fail-safe)
+  - `Dockerfile` — `tesseract-ocr` (+ dados `por`/`eng`), `ghostscript`, extensão `imagick`; sem `policy.xml` dedicado — o policy por omissão do Alpine já permite ler PDF/PS (verificado empiricamente, desvio documentado)
+  - `compose.yaml` — 5 vars `LLM_LOCAL_*`/`LLM_CLOUD_*` no `x-app-env` (`app`/`queue`)
+  - `.env.example` — secção nova com as 5 vars
+  - Setup apenas — sem lógica de pipeline, extractores, cliente IA nem Commands (issues #96/#97/#98)
+  - 891 testes, 100% cobertura + type coverage, Larastan 9 — verde em MySQL
+
 ### Fixed
 - **Issue #92** (gate de publicação) — `Dockerfile` não instalava a extensão PHP `gd`, fazendo `tests/Feature/Features/Documento/ReceberUploadDocumentoTest.php` falhar em Docker (`UploadedFile::fake()->image()` requer `gd`). Adicionado `gd` à lista `install-php-extensions`.
 

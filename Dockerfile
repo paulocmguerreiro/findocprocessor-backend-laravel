@@ -8,12 +8,15 @@ FROM php:8.5-fpm-alpine
 # - pdo_mysql → MySQL (dev/prod via Docker; testes correm também contra MySQL)
 # - redis     → cache/queue (cliente phpredis opcional; o projecto usa predis)
 # - gd        → geração de imagens de teste (UploadedFile::fake()->image(), Http\Testing\FileFactory)
-RUN apk add --no-cache git unzip \
+# - imagick   → rasterização de PDF/PS para OCR (pipeline de extração, #95/#96); o
+#               policy.xml do apk imagemagick já permite ler PDF por omissão (verificado
+#               manualmente), ao contrário do policy restritivo típico em bases Debian/Ubuntu.
+RUN apk add --no-cache git unzip tesseract-ocr tesseract-ocr-data-por tesseract-ocr-data-eng ghostscript \
     && curl -sSLf \
        https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions \
        -o /usr/local/bin/install-php-extensions \
     && chmod +x /usr/local/bin/install-php-extensions \
-    && install-php-extensions pdo_mysql bcmath intl zip opcache pcntl redis pcov gd
+    && install-php-extensions pdo_mysql bcmath intl zip opcache pcntl redis pcov gd imagick
 
 # memory_limit elevado: a análise estática (PHPStan / type-coverage) excede os
 # 128M por omissão. Aplica-se a CLI e FPM (conf.d partilhada nesta imagem).

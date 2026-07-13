@@ -33,6 +33,14 @@ SANCTUM_TOKEN_EXPIRATION=480
 ANTHROPIC_API_KEY=
 ANTHROPIC_MODEL=claude-opus-4-7
 
+# Extração por IA — pipeline PdfParser → OCR → LLM local → LLM cloud (#95-#98).
+# Comentar/esvaziar qualquer var de uma camada desliga essa camada (fail-safe).
+LLM_LOCAL_URL=
+LLM_LOCAL_MODEL=
+LLM_CLOUD_URL=
+LLM_CLOUD_MODEL=
+LLM_CLOUD_KEY=
+
 FILESYSTEM_INBOX_PATH=inbox/
 FILESYSTEM_PROCESSED_PATH=processed/
 FILESYSTEM_TEMP_PATH=temp/
@@ -62,6 +70,36 @@ Mapeamento estado → disco: `Pendente`/`AguardaEnvio` → `entrada`; `Enviado`/
 O campo `disco_storage` na tabela `documentos` armazena o nome do disco activo. A movimentação de ficheiros entre discos (ao transitar de estado) é responsabilidade das Actions de transição (Issue #57).
 
 Os 5 discos de ciclo de vida (e `storage/app/private/`) estão no `.gitignore` — documentos carregados nunca podem ser commitados.
+
+---
+
+## `config/extracao.php` e `config/prism.php` — pipeline de extração (#95)
+
+`config/extracao.php` (novo, #95) — parâmetros do pipeline e flags derivadas
+da presença das 5 env vars `LLM_*` (sem flags dedicados; config incompleta ⇒
+camada inactiva, fail-safe):
+
+```php
+'threshold_caracteres' => 50,
+'ttl_lease' => env('EXTRACAO_TTL_LEASE', 300), // segundos — afinado na #98
+'max_tentativas' => 3,
+'camada_local_activa' => filled(env('LLM_LOCAL_URL')) && filled(env('LLM_LOCAL_MODEL')),
+'camada_cloud_activa' => filled(env('LLM_CLOUD_URL')) && filled(env('LLM_CLOUD_MODEL')) && filled(env('LLM_CLOUD_KEY')),
+```
+
+`config/prism.php` (publicado via `vendor:publish --tag=prism-config`, #95) —
+providers do Prism ligados às mesmas vars: `providers.ollama.url` =
+`LLM_LOCAL_URL`; `providers.openai.url`/`api_key` = `LLM_CLOUD_URL`/`LLM_CLOUD_KEY`
+(provider OpenAI-compatible, cobre OpenRouter/gateways custom). Ver
+`04-infra/external-apis.md` para o detalhe das camadas.
+
+> **`config:cache` congela as flags no build.** `camada_local_activa`/
+> `camada_cloud_activa` derivam de `filled(env(...))` em tempo de load do
+> ficheiro de config — com `config:cache` activo, o valor fica fixo até ao
+> próximo `config:clear`. O `docker/entrypoint.sh` **não** corre
+> `config:cache`/`config:clear` automaticamente; alterar qualquer var `LLM_*`
+> exige `php artisan config:clear` manual (ou reiniciar o container, que não
+> tem config cacheada por omissão neste projecto).
 
 ---
 

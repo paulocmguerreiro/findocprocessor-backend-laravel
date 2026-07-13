@@ -24,6 +24,8 @@
 - **spatie/laravel-activitylog** — audit trail persistente (`activity_log`) com atomicidade garantida pela transação
 - **Eloquent ORM** — MySQL (dev via Docker + testes)
 - **Redis + predis** — cache com invalidação por tags (`CacheServico`, `TagCache`, `TtlCache`)
+- **Prism** (`prism-php/prism`) — acesso unificado a LLM local (Ollama) e cloud, provider-agnóstico; camadas opcionais/desligáveis por presença das vars `LLM_LOCAL_*`/`LLM_CLOUD_*`
+- **smalot/pdfparser + Tesseract/imagick/Ghostscript** — extracção de texto nativo e OCR de PDF (pipeline de extracção por IA, em construção)
 - **Pest 4 + Mockery** — padrão de testes dual (unit + HTTP)
 - **Larastan nível 9 + Rector + Laravel Pint** — qualidade e tipagem estática
 
