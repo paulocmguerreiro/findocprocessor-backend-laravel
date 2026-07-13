@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace App\Features\Documento\Criar;
 
+use App\Events\DocumentoMarcadoErro;
+use App\Events\DocumentoMarcadoPerigoso;
 use App\Events\DocumentoProcessado;
 use App\Features\Documento\RecepcaoUpload\DocumentoDuplicadoException;
 use App\Features\Documento\Transicao\RegraNomearProcessado;
+use App\Infrastructure\Malware\AnalisadorMalware;
+use App\Infrastructure\Malware\FalhaAnaliseMalwareException;
 use App\Models\CategoriaDocumento;
 use App\Models\Documento;
 use App\Models\Entidade;
@@ -23,17 +27,26 @@ use RuntimeException;
 
 /**
  * Registo manual: o utilizador envia o ficheiro já tratado + os dados de domínio.
- * Vai directo a `Processado` — a Action calcula o hash, gera o nome canónico
- * (`RegraNomearProcessado`), escreve no disco `processado`, grava uma única
- * `EtapaDocumento` e emite `DocumentoProcessado`.
+ * Corre o mesmo scan de malware do pipeline automático (`AnalisadorMalware`)
+ * antes de gravar — limpo/não configurado vai para `Processado` (disco
+ * `processado`, comportamento inalterado); infectado vai para `Perigoso`
+ * (disco `perigoso`, motivo = assinatura); falha do scan vai para `Erro`
+ * (disco `erro`, motivo = razão da falha). O `Documento` **é sempre criado**
+ * — nunca rejeitado sem registo (RN-04) — apenas o `status`/disco/evento
+ * variam conforme o resultado do scan.
  */
 final readonly class RegistarDocumentoManualAction
 {
     private const string DISCO_PROCESSADO = 'processado';
 
+    private const string DISCO_PERIGOSO = 'perigoso';
+
+    private const string DISCO_ERRO = 'erro';
+
     public function __construct(
         private RegraNomearProcessado $nomear,
         private CacheServico $cache,
+        private AnalisadorMalware $analisador,
     ) {}
 
     /**
@@ -61,18 +74,21 @@ final readonly class RegistarDocumentoManualAction
             $dados->ficheiro->getClientOriginalName(),
         );
 
-        $caminho = $dados->ficheiro->storeAs('', $nomeStorage, self::DISCO_PROCESSADO);
+        /** @var array{estado: EstadoDocumento, disco: string, motivo: string} $veredicto */
+        $veredicto = $this->avaliarScan((string) $dados->ficheiro->getRealPath());
+
+        $caminho = $dados->ficheiro->storeAs('', $nomeStorage, $veredicto['disco']);
 
         if ($caminho === false) {
-            throw new RuntimeException('Falha ao guardar o ficheiro no disco processado.');
+            throw new RuntimeException("Falha ao guardar o ficheiro no disco {$veredicto['disco']}.");
         }
 
         Log::info('documento.registar_manual.inicio', ['id_utilizador' => Auth::id()]);
 
         try {
-            $documento = DB::transaction(function () use ($dados, $hash, $nomeStorage): Documento {
+            $documento = DB::transaction(function () use ($dados, $hash, $nomeStorage, $veredicto): Documento {
                 $documento = Documento::create([
-                    'status' => EstadoDocumento::Processado,
+                    'status' => $veredicto['estado'],
                     'id_responsavel' => Auth::id(),
                     'id_fornecedor' => $dados->idFornecedor,
                     'id_cliente' => $dados->idCliente,
@@ -80,25 +96,29 @@ final readonly class RegistarDocumentoManualAction
                     'valor' => $dados->valor,
                     'data_documento' => $dados->dataDocumento,
                     'nome_ficheiro_original' => $dados->ficheiro->getClientOriginalName(),
-                    'disco_storage' => self::DISCO_PROCESSADO,
+                    'disco_storage' => $veredicto['disco'],
                     'nome_ficheiro_storage' => $nomeStorage,
                     'hash_sha256' => $hash,
                 ]);
 
                 $documento->historico()->create([
-                    'estado' => EstadoDocumento::Processado,
-                    'motivo' => 'registo manual',
+                    'estado' => $veredicto['estado'],
+                    'motivo' => $veredicto['motivo'],
                     'id_utilizador' => Auth::id(),
                 ]);
 
                 $this->cache->invalidarCache(TagCache::Documentos);
 
-                DocumentoProcessado::dispatch($documento);
+                match ($veredicto['estado']) {
+                    EstadoDocumento::Perigoso => DocumentoMarcadoPerigoso::dispatch($documento, $veredicto['motivo']),
+                    EstadoDocumento::Erro => DocumentoMarcadoErro::dispatch($documento, $veredicto['motivo']),
+                    default => DocumentoProcessado::dispatch($documento),
+                };
 
                 return $documento;
             });
         } catch (\Throwable $erro) {
-            Storage::disk(self::DISCO_PROCESSADO)->delete($nomeStorage);
+            Storage::disk($veredicto['disco'])->delete($nomeStorage);
 
             throw $erro;
         }
@@ -106,5 +126,27 @@ final readonly class RegistarDocumentoManualAction
         Log::info('documento.registar_manual.fim', ['id_utilizador' => Auth::id(), 'id_documento' => $documento->id]);
 
         return $documento;
+    }
+
+    /**
+     * @return array{estado: EstadoDocumento, disco: string, motivo: string}
+     */
+    private function avaliarScan(string $caminhoAbsoluto): array
+    {
+        try {
+            $resultado = $this->analisador->analisar($caminhoAbsoluto);
+        } catch (FalhaAnaliseMalwareException $erro) {
+            return ['estado' => EstadoDocumento::Erro, 'disco' => self::DISCO_ERRO, 'motivo' => $erro->getMessage()];
+        }
+
+        if ($resultado->estaInfectado()) {
+            return [
+                'estado' => EstadoDocumento::Perigoso,
+                'disco' => self::DISCO_PERIGOSO,
+                'motivo' => $resultado->assinatura() ?? 'assinatura desconhecida',
+            ];
+        }
+
+        return ['estado' => EstadoDocumento::Processado, 'disco' => self::DISCO_PROCESSADO, 'motivo' => 'registo manual'];
     }
 }

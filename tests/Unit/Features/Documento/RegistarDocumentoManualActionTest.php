@@ -2,10 +2,15 @@
 
 declare(strict_types=1);
 
+use App\Events\DocumentoMarcadoErro;
+use App\Events\DocumentoMarcadoPerigoso;
 use App\Events\DocumentoProcessado;
 use App\Features\Documento\Criar\RegistarDocumentoManualAction;
 use App\Features\Documento\Criar\RegistarDocumentoManualDto;
 use App\Features\Documento\RecepcaoUpload\DocumentoDuplicadoException;
+use App\Infrastructure\Malware\AnalisadorMalware;
+use App\Infrastructure\Malware\FalhaAnaliseMalwareException;
+use App\Infrastructure\Malware\ResultadoAnaliseMalware;
 use App\Models\CategoriaDocumento;
 use App\Models\Documento;
 use App\Models\Entidade;
@@ -68,6 +73,66 @@ it('regista directo em Processado: deriva hash + nome canónico, escreve no disc
     Event::assertDispatched(
         DocumentoProcessado::class,
         fn (DocumentoProcessado $evento): bool => $evento->documento->is($documento),
+    );
+});
+
+it('regista em Perigoso quando o ficheiro está infectado: disco perigoso + evento DocumentoMarcadoPerigoso', function (): void {
+    Storage::fake('perigoso');
+    $ficheiro = UploadedFile::fake()->create('fatura.pdf', 100);
+    $dados = dtoManual(['ficheiro' => $ficheiro]);
+
+    app()->instance(AnalisadorMalware::class, Mockery::mock(AnalisadorMalware::class, function ($mock): void {
+        $mock->shouldReceive('analisar')->once()->andReturn(ResultadoAnaliseMalware::infectado('Eicar-Signature'));
+    }));
+
+    Event::fake([DocumentoMarcadoPerigoso::class]);
+
+    $documento = app(RegistarDocumentoManualAction::class)->handle($dados);
+
+    expect($documento->status)->toBe(EstadoDocumento::Perigoso)
+        ->and($documento->disco_storage)->toBe('perigoso');
+
+    Storage::disk('perigoso')->assertExists('2026-06-25-fornecedor-lda-despesas.pdf');
+
+    $this->assertDatabaseHas('etapas_documento', [
+        'id_documento' => $documento->id,
+        'estado' => EstadoDocumento::Perigoso->value,
+        'motivo' => 'Eicar-Signature',
+    ]);
+
+    Event::assertDispatched(
+        DocumentoMarcadoPerigoso::class,
+        fn (DocumentoMarcadoPerigoso $evento): bool => $evento->documento->is($documento) && $evento->motivo === 'Eicar-Signature',
+    );
+});
+
+it('regista em Erro quando o scan falha: disco erro + evento DocumentoMarcadoErro', function (): void {
+    Storage::fake('erro');
+    $ficheiro = UploadedFile::fake()->create('fatura.pdf', 100);
+    $dados = dtoManual(['ficheiro' => $ficheiro]);
+
+    app()->instance(AnalisadorMalware::class, Mockery::mock(AnalisadorMalware::class, function ($mock): void {
+        $mock->shouldReceive('analisar')->once()->andThrow(new FalhaAnaliseMalwareException('timeout do clamd'));
+    }));
+
+    Event::fake([DocumentoMarcadoErro::class]);
+
+    $documento = app(RegistarDocumentoManualAction::class)->handle($dados);
+
+    expect($documento->status)->toBe(EstadoDocumento::Erro)
+        ->and($documento->disco_storage)->toBe('erro');
+
+    Storage::disk('erro')->assertExists('2026-06-25-fornecedor-lda-despesas.pdf');
+
+    $this->assertDatabaseHas('etapas_documento', [
+        'id_documento' => $documento->id,
+        'estado' => EstadoDocumento::Erro->value,
+        'motivo' => 'timeout do clamd',
+    ]);
+
+    Event::assertDispatched(
+        DocumentoMarcadoErro::class,
+        fn (DocumentoMarcadoErro $evento): bool => $evento->documento->is($documento) && $evento->mensagemErro === 'timeout do clamd',
     );
 });
 
