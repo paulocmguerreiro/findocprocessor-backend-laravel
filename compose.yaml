@@ -31,6 +31,8 @@ x-app-env: &app-env
   LLM_CLOUD_URL: ${LLM_CLOUD_URL:-}
   LLM_CLOUD_MODEL: ${LLM_CLOUD_MODEL:-}
   LLM_CLOUD_KEY: ${LLM_CLOUD_KEY:-}
+  CLAMAV_HOST: clamav
+  CLAMAV_PORT: "3310"
 
 services:
   app:
@@ -52,6 +54,8 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_started
+      clamav:
+        condition: service_healthy
     networks: [findoc]
 
   web:
@@ -87,6 +91,8 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_started
+      clamav:
+        condition: service_healthy
     networks: [findoc]
 
   mysql:
@@ -132,9 +138,27 @@ services:
     restart: unless-stopped
     networks: [findoc]
 
+  # Scan de malware (issue #91) — só acessível na rede interna (sem `ports:`).
+  # freshclam corre embutido na imagem oficial (autoupdate das assinaturas,
+  # sem intervenção da app). Arranque lento (minutos, carrega assinaturas em
+  # RAM) — start_period generoso no healthcheck evita falsos negativos.
+  clamav:
+    image: clamav/clamav-debian:1.4
+    restart: unless-stopped
+    volumes:
+      - clamav-data:/var/lib/clamav
+    healthcheck:
+      test: ["CMD", "clamdcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 300s
+    networks: [findoc]
+
 networks:
   findoc:
     driver: bridge
 
 volumes:
   mysql-data:
+  clamav-data:

@@ -47,7 +47,7 @@ it('transiciona AguardaResposta → Erro: move enviado → erro, regista o motiv
 });
 
 it('rejeita a transição a partir de um estado inválido', function (): void {
-    $documento = Documento::factory()->pendente()->create();
+    $documento = Documento::factory()->processado()->create();
 
     expect(fn (): Documento => app(MarcarErroDocumentoAction::class)->handle($documento, new MarcarErroDocumentoDto('erro')))
         ->toThrow(TransicaoInvalidaException::class);

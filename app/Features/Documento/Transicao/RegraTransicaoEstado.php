@@ -27,14 +27,16 @@ final readonly class RegraTransicaoEstado
     }
 
     /**
-     * Mapa central De → [Para permitidos]. Espelha o grafo da issue #57.
+     * Mapa central De → [Para permitidos]. Espelha o grafo da issue #57, com a
+     * aresta `Pendente → Erro` acrescentada pela issue #91 (falha do scan de
+     * malware, camada configurada).
      *
      * @return list<EstadoDocumento>
      */
     private function transicoesPermitidas(EstadoDocumento $de): array
     {
         return match ($de) {
-            EstadoDocumento::Pendente => [EstadoDocumento::AguardaEnvio, EstadoDocumento::Perigoso],
+            EstadoDocumento::Pendente => [EstadoDocumento::AguardaEnvio, EstadoDocumento::Perigoso, EstadoDocumento::Erro],
             EstadoDocumento::AguardaEnvio => [EstadoDocumento::Enviado],
             EstadoDocumento::Enviado => [EstadoDocumento::AguardaResposta],
             EstadoDocumento::AguardaResposta => [EstadoDocumento::Processado, EstadoDocumento::Erro, EstadoDocumento::Perigoso],

@@ -12,6 +12,7 @@ it('permite as transições do grafo', function (EstadoDocumento $de, EstadoDocu
 })->with([
     'pendente → aguarda envio' => [EstadoDocumento::Pendente, EstadoDocumento::AguardaEnvio],
     'pendente → perigoso (pré-scan)' => [EstadoDocumento::Pendente, EstadoDocumento::Perigoso],
+    'pendente → erro (falha do scan de malware)' => [EstadoDocumento::Pendente, EstadoDocumento::Erro],
     'aguarda envio → enviado' => [EstadoDocumento::AguardaEnvio, EstadoDocumento::Enviado],
     'enviado → aguarda resposta' => [EstadoDocumento::Enviado, EstadoDocumento::AguardaResposta],
     'aguarda resposta → processado' => [EstadoDocumento::AguardaResposta, EstadoDocumento::Processado],

@@ -14,6 +14,7 @@ ambiente de testes e o stack real (MySQL + Redis).
 | `queue` | mesma imagem que `app` | `php artisan queue:work` |
 | `mysql` | `mysql:8.4` | Base de dados (`findocprocessor` + `findocprocessor_testing`) |
 | `redis` | `redis:7-alpine` | Cache e queue |
+| `clamav` | `clamav/clamav-debian:1.4` | Scan de malware (`clamd`, protocolo INSTREAM) — issue #91 |
 
 A imagem (`Dockerfile`) instala extensões via `install-php-extensions`
 (inclui `pcov` para cobertura e `imagick`, para rasterização de PDF/PS do
@@ -44,6 +45,19 @@ requer `host.docker.internal` (nativo no Docker Desktop macOS/Windows; em
 Linux requer `extra_hosts: ["host.docker.internal:host-gateway"]` no
 serviço) — a configuração efectiva de rede/`extra_hosts` para o pipeline
 correr fica para a issue #98, fora do âmbito da #95 (que só injecta as vars).
+
+### `clamav` — scan de malware (#91)
+
+Imagem `clamav/clamav-debian:1.4` (multi-arch — inclui `arm64`; `clamav/clamav:1.4`, a imagem
+"oficial" mais divulgada, só publica `amd64` e falha em Macs Apple Silicon). Sem `ports:` — só
+acessível na rede `findoc` interna, via o alias de serviço `clamav` (`CLAMAV_HOST=clamav`,
+`CLAMAV_PORT=3310` em `x-app-env`). Volume nomeado `clamav-data:/var/lib/clamav` persiste as
+assinaturas entre reinícios (`freshclam` corre embutido, autoupdate sem intervenção da app).
+
+Healthcheck via `clamdcheck.sh` (script embutido na imagem) com `start_period: 300s` — o arranque
+carrega as assinaturas em RAM e pode demorar minutos na primeira vez; `app`/`queue` declaram
+`depends_on: clamav: condition: service_healthy`, só arrancando depois do `clamd` estar pronto a
+aceitar ligações.
 
 ## Entrypoint (`docker/entrypoint.sh`)
 

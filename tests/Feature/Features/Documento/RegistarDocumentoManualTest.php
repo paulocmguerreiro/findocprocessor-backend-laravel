@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Infrastructure\Malware\AnalisadorMalware;
+use App\Infrastructure\Malware\ResultadoAnaliseMalware;
 use App\Models\CategoriaDocumento;
 use App\Models\Entidade;
 use App\Shared\Enums\EstadoDocumento;
@@ -37,6 +39,21 @@ it('regista um documento manual e devolve 201 em Processado', function (): void 
     Storage::disk('processado')->assertExists('2026-06-25-fornecedor-lda-despesas.pdf');
     $this->assertDatabaseCount('documentos', 1);
     $this->assertDatabaseHas('documentos', ['id_responsavel' => $this->utilizador->id]);
+});
+
+it('regista um documento infectado em Perigoso (disco perigoso), sempre persistido', function (): void {
+    Storage::fake('perigoso');
+
+    app()->instance(AnalisadorMalware::class, Mockery::mock(AnalisadorMalware::class, function ($mock): void {
+        $mock->shouldReceive('analisar')->once()->andReturn(ResultadoAnaliseMalware::infectado('Eicar-Signature'));
+    }));
+
+    $this->post('/api/documentos', payloadManual())
+        ->assertCreated()
+        ->assertJsonPath('data.status', EstadoDocumento::Perigoso->value);
+
+    Storage::disk('perigoso')->assertExists('2026-06-25-fornecedor-lda-despesas.pdf');
+    $this->assertDatabaseCount('documentos', 1);
 });
 
 it('rejeita o registo sem ficheiro com 422', function (): void {

@@ -1,17 +1,18 @@
 # System Spec — Feature: Documento (lógica — máquina de estados)
 
 > `app/Features/Documento/`
-> Issues: #45 (modelo), #56 (EtapaDocumento), #57 (lógica), #90 (concorrência do pipeline — esta spec)
+> Issues: #45 (modelo), #56 (EtapaDocumento), #57 (lógica), #90 (concorrência do pipeline), #91 (scan de malware ClamAV — esta spec)
 
 ---
 
 ## Visão geral
 
-Feature com 15 Actions (8 expostas via endpoint HTTP + 7 sem HTTP, invocadas apenas
+Feature com 16 Actions (8 expostas via endpoint HTTP + 8 sem HTTP, invocadas apenas
 programaticamente: 6 de transição de pipeline — `Marcar*` e `TransicionarProcessadoDocumentoAction`
-— + `ReivindicarDocumentoPendenteAction`, #90), 4 classes `Regra*`, 1 executor partilhado interno,
-8 DTOs, 4 Events e camada HTTP completa. A máquina de estados é a peça central: cada transição passa
-obrigatoriamente pelo mapa central em `RegraTransicaoEstado` — nunca `if ($doc->status == ...)`.
+— + `ReivindicarDocumentoPendenteAction` (#90) + `TriarDocumentoPendenteAction` (#91)), 4 classes
+`Regra*`, 1 executor partilhado interno, 8 DTOs, 4 Events e camada HTTP completa. A máquina de
+estados é a peça central: cada transição passa obrigatoriamente pelo mapa central em
+`RegraTransicaoEstado` — nunca `if ($doc->status == ...)`.
 
 ---
 
@@ -24,10 +25,14 @@ obrigatoriamente pelo mapa central em `RegraTransicaoEstado` — nunca `if ($doc
 | `RegistarDocumentoManualAction` | `create` | `Processado` (directo) | ✅ `POST /documentos` |
 | `ReceberUploadDocumentoAction` | `create` | `Pendente` | ✅ `POST /documentos/upload` |
 
-**`RegistarDocumentoManualAction`** — Cria um `Documento` directamente em `Processado` com todos os
-campos de domínio preenchidos. Calcula `hash_sha256`, gera o nome canónico via `RegraNomearProcessado`,
-escreve o ficheiro no disco `processado`. Grava 1 `EtapaDocumento (Processado, "registo manual", id)`.
-Emite `DocumentoProcessado`. Não usa `RegraTransicaoEstado` (criação, não transição).
+**`RegistarDocumentoManualAction`** — Cria um `Documento` já correndo o scan de malware
+(`AnalisadorMalware`, #91) sobre o ficheiro antes de gravar. Calcula `hash_sha256`, gera o nome
+canónico via `RegraNomearProcessado`, escreve no disco decidido pelo scan: limpo/não configurado →
+`Processado`/disco `processado` (comportamento original, emite `DocumentoProcessado`); infectado →
+`Perigoso`/disco `perigoso` (motivo = assinatura, emite `DocumentoMarcadoPerigoso`); falha do scan →
+`Erro`/disco `erro` (motivo = razão da falha, emite `DocumentoMarcadoErro`). O `Documento` **é
+sempre criado** — nunca rejeitado sem registo. Não usa `RegraTransicaoEstado` (criação, não
+transição).
 
 **`ReceberUploadDocumentoAction`** — Recebe `UploadedFile`, calcula `hash_sha256`, escreve no disco
 `entrada`, cria em `Pendente`. Grava 1 `EtapaDocumento (Pendente, "upload recebido", id)`. Trata
@@ -43,7 +48,7 @@ colisão de hash com `DocumentoDuplicadoException` (→ 422).
 | `MarcarEnviadoDocumentoAction` | `update` | `AguardaEnvio` | `Enviado` | `entrada → enviado` |
 | `MarcarAguardaRespostaDocumentoAction` | `update` | `Enviado` | `AguardaResposta` | Não (fica em `enviado`) |
 | `TransicionarProcessadoDocumentoAction` | `update` | `AguardaResposta` | `Processado` | `enviado → processado` + rename |
-| `MarcarErroDocumentoAction` | `update` | `AguardaResposta` | `Erro` | `enviado → erro` |
+| `MarcarErroDocumentoAction` | `update` | `AguardaResposta` ou `Pendente` (#91) | `Erro` | origem → `erro` |
 | `MarcarPerigosoDocumentoAction` | `update` | `Pendente` ou `AguardaResposta` | `Perigoso` | origem → `perigoso` |
 
 Todas delegam em `ExecutorTransicaoDocumento::executar()`.
@@ -53,26 +58,36 @@ valor/data); usa `RegraNomearProcessado` para gerar o nome canónico. DTO:
 `TransicionarProcessadoDocumentoDto`. Emite `DocumentoProcessado`.
 
 `MarcarErroDocumentoAction` — DTO `MarcarErroDocumentoDto` (campo `mensagemErro`). Emite
-`DocumentoMarcadoErro`.
+`DocumentoMarcadoErro`. Alcançável de `AguardaResposta` (falha de envio/resposta) e de `Pendente`
+(falha do scan de malware, #91) — genérica, sem alteração de código entre os dois casos.
 
 `MarcarPerigosoDocumentoAction` — DTO `MarcarPerigosoDocumentoDto` (campo `motivo`). Alcançável de
 dois estados (`Pendente` pré-scan e `AguardaResposta` guardrail). Emite `DocumentoMarcadoPerigoso`.
 
 ---
 
-### Action de reivindicação de pipeline (sem endpoint HTTP, #90)
+### Actions de triagem e reivindicação de pipeline (sem endpoint HTTP, #90/#91)
 
 | Action | Ability | De | Para | Move ficheiro |
 |---|---|---|---|---|
-| `ReivindicarDocumentoPendenteAction` | — (sem Gate, sistema) | `Pendente` | `AguardaEnvio` | Não (fica em `entrada`) |
+| `ReivindicarDocumentoPendenteAction` | — (sem Gate, sistema) | `Pendente` | `AguardaEnvio`/`Perigoso`/`Erro` (via `TriarDocumentoPendenteAction`) | Não/origem → `perigoso`/`erro` |
+| `TriarDocumentoPendenteAction` | — (sem Gate, sistema) | `Pendente` | `AguardaEnvio`/`Perigoso`/`Erro` | conforme a Action delegada |
 
 `ReivindicarDocumentoPendenteAction` (`app/Features/Documento/Reivindicar/`) — componente reutilizável
 de reivindicação para o futuro orquestrador de IA: abre `DB::transaction()` (ponto de entrada, sem
 Action chamante), bloqueia (`lockForUpdate()`) o próximo `Documento` `Pendente` (scope
-`wherePendente()`) e delega em `MarcarAguardaEnvioDocumentoAction` (transação aninhada via
-`SAVEPOINT`). Evita que dois workers concorrentes reivindiquem o mesmo documento — ver
-`04-infra/transactions.md` para o padrão completo e `07-testing.md` para o teste de concorrência real
-(duas conexões MySQL).
+`wherePendente()`) e delega em `TriarDocumentoPendenteAction` (transação aninhada via `SAVEPOINT`,
+desde #91 — antes delegava directo em `MarcarAguardaEnvioDocumentoAction`). Evita que dois workers
+concorrentes reivindiquem o mesmo documento — ver `04-infra/transactions.md` para o padrão completo
+e `07-testing.md` para o teste de concorrência real (duas conexões MySQL).
+
+`TriarDocumentoPendenteAction` (`app/Features/Documento/Triar/`, #91) — corre o `AnalisadorMalware`
+sobre o ficheiro do `Documento` `Pendente`, **dentro da mesma transacção/lock** que o reivindica (não
+abre transacção própria), e ramifica: infectado → `MarcarPerigosoDocumentoAction` (motivo =
+assinatura); limpo → `MarcarAguardaEnvioDocumentoAction`; não configurado (camada `clamd`
+inactiva) → `MarcarAguardaEnvioDocumentoAction` com motivo "scan de malware desligado"; falha do
+scan (`FalhaAnaliseMalwareException`) → `MarcarErroDocumentoAction` com o motivo = razão da falha.
+Ver `04-infra/external-apis.md` para o contrato `AnalisadorMalware`.
 
 ---
 
@@ -180,9 +195,9 @@ Todos `final`, `implements ShouldDispatchAfterCommit`, `use Dispatchable, Serial
 
 | Event | Emitido por | Payload extra |
 |---|---|---|
-| `DocumentoProcessado` | `RegistarDocumentoManualAction`, `TransicionarProcessadoDocumentoAction` | — |
-| `DocumentoMarcadoErro` | `MarcarErroDocumentoAction` | `mensagemErro: string` |
-| `DocumentoMarcadoPerigoso` | `MarcarPerigosoDocumentoAction` | `motivo: string` |
+| `DocumentoProcessado` | `RegistarDocumentoManualAction` (limpo/não configurado), `TransicionarProcessadoDocumentoAction` | — |
+| `DocumentoMarcadoErro` | `MarcarErroDocumentoAction`, `RegistarDocumentoManualAction` (falha do scan, #91) | `mensagemErro: string` |
+| `DocumentoMarcadoPerigoso` | `MarcarPerigosoDocumentoAction`, `RegistarDocumentoManualAction` (infectado, #91) | `motivo: string` |
 | `DocumentoReprocessado` | `ReprocessarDocumentoAction` | `modo: ModoReprocessamento` |
 
 Transições intermédias (`AguardaEnvio`, `Enviado`, `AguardaResposta`) não emitem Event.
@@ -233,7 +248,7 @@ As Actions **com login** mapeiam abilities do `DocumentoPolicy` para permissões
 
 ### Transições de sistema (sem Gate)
 
-As 5 transições intermédias de pipeline **não têm `Gate::authorize`** — correm sempre em background (Jobs de extracção), sem utilizador autenticado: `MarcarAguardaEnvioDocumentoAction`, `MarcarEnviadoDocumentoAction`, `MarcarAguardaRespostaDocumentoAction`, `MarcarErroDocumentoAction`, `MarcarPerigosoDocumentoAction`. A `EtapaDocumento` que gravam fica como **passo de sistema** (`id_utilizador = null`). `ReivindicarDocumentoPendenteAction` (#90) segue o mesmo padrão — sem Gate.
+As 5 transições intermédias de pipeline **não têm `Gate::authorize`** — correm sempre em background (Jobs de extracção), sem utilizador autenticado: `MarcarAguardaEnvioDocumentoAction`, `MarcarEnviadoDocumentoAction`, `MarcarAguardaRespostaDocumentoAction`, `MarcarErroDocumentoAction`, `MarcarPerigosoDocumentoAction`. A `EtapaDocumento` que gravam fica como **passo de sistema** (`id_utilizador = null`). `ReivindicarDocumentoPendenteAction` (#90) e `TriarDocumentoPendenteAction` (#91) seguem o mesmo padrão — sem Gate.
 
 O `TransicionarProcessadoDocumentoAction` é a excepção: apesar de não ter endpoint, **mantém `Gate::authorize('update')`** porque escreve os dados de negócio extraídos (fornecedor, valor, categoria, nome canónico) — é um write significativo, não uma mera flag de estado. Ver padrão em `02-shared/padroes-acoes.md`.
 
