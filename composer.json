@@ -11,8 +11,11 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0.2",
         "predis/predis": "^3.5",
+        "prism-php/prism": "^0.100.1",
+        "smalot/pdfparser": "^2.12",
         "spatie/laravel-activitylog": "^4.0",
-        "spatie/laravel-permission": "^8.0"
+        "spatie/laravel-permission": "^8.0",
+        "thiagoalessio/tesseract_ocr": "^2.13"
     },
     "require-dev": {
         "andreapollastri/checkpoint": "^1.1.1",
