@@ -132,7 +132,11 @@ tenta mover de volta para a origem.
 - `Perigoso` → `perigoso`
 
 **Limitação:** em dupla falha (mover OK + compensação falha), o ficheiro fica no disco destino com a
-BD revertida para o estado anterior — inconsistência persistente; requer reconciliação manual.
+BD revertida para o estado anterior — reconciliada automaticamente por `ReconciliarFicheirosJob`,
+ver `RegraReconciliarLocalizacaoFicheiro` (#90).
+
+**Nota (#90):** `discoParaEstado(EstadoDocumento $estado): string` é `public` — reutilizado por
+`RegraReconciliarLocalizacaoFicheiro` para listar os discos conhecidos sem duplicar o mapa.
 
 ---
 
@@ -153,6 +157,33 @@ extensão preservada de `nome_ficheiro_original`.
 
 **Limitação:** dois documentos com o mesmo fornecedor, categoria e data terão o mesmo nome canónico
 — `Storage::put()` sobrepõe silenciosamente. Diferido.
+
+---
+
+### `RegraReconciliarLocalizacaoFicheiro`
+
+**Ficheiro:** `app/Features/Documento/Transicao/RegraReconciliarLocalizacaoFicheiro.php`
+
+**Invariante:** `disco_storage`/`nome_ficheiro_storage` de um `Documento` reflectem a localização
+real do ficheiro. Quando a compensação best-effort de `ExecutorTransicaoDocumento` falha, a BD pode
+ficar dessincronizada do filesystem — ver `02-shared/estados.md` (Contrato de atomicidade
+ficheiro↔BD).
+
+**Activação:** Chamada por `ReconciliarFicheirosJob`, agendado a cada 5 min, sobre `Documento`s
+presos num estado transitório há mais tempo que `config('pipeline.reconciliacao_limiar_minutos')`.
+
+**Invocada por:** `ReconciliarFicheirosJob`.
+
+**Implementação:** verifica primeiro `Storage::disk($documento->disco_storage)->exists($nome)`; se
+ausente, itera os 4 discos restantes (mapa de `RegraMoverFicheiro::discoParaEstado()`, sem
+duplicação), lê cada ficheiro candidato com o mesmo nome e compara `hash('sha256', $conteudo)` com
+`$documento->hash_sha256` para confirmar identidade. Devolve `ResultadoReconciliacaoFicheiro`
+(`coerente`, `encontrado`, `disco`, `nome`).
+
+**Limitação:** só verifica os 5 discos conhecidos com o nome persistido na BD — não cobre o caso
+de o ficheiro ter sido simultaneamente movido **e** renomeado (fora do âmbito desta issue; o único
+rename existente, `RegraNomearProcessado`, ocorre dentro da mesma transição que grava o novo nome
+na BD, não deixando janela de inconsistência de nome).
 
 ---
 

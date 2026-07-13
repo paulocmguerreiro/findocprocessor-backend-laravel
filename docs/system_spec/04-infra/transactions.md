@@ -61,7 +61,7 @@ Todas as Actions de escrita futuras seguem este padrão obrigatoriamente.
 
 ---
 
-## Nota Jobs — `ShouldDispatchAfterCommit`
+## Nota Jobs — `ShouldQueueAfterCommit`
 
 Jobs disparados **dentro** de uma transação não podem ser processados pelo worker antes de o commit concluir — caso contrário a queue processa o Job sobre dados ainda não persistidos (ou que sofrem rollback).
 
@@ -70,6 +70,46 @@ Duas formas de garantir o despacho só após commit:
 | Mecanismo | Âmbito | Como |
 |---|---|---|
 | `after_commit: true` | Global por connection de queue | `config/queue.php` → `'connections' => ['<conn>' => ['after_commit' => true]]` |
-| `ShouldDispatchAfterCommit` | Por Job individual | `final class XxxJob implements ShouldQueue, ShouldDispatchAfterCommit` |
+| `ShouldQueueAfterCommit` | Por Job individual | `final class XxxJob implements ShouldQueue, ShouldQueueAfterCommit` |
 
 A interface por Job tem precedência e é preferível quando só alguns Jobs precisam deste comportamento.
+**Nome correcto:** `Illuminate\Contracts\Queue\ShouldQueueAfterCommit` — não confundir com
+`Illuminate\Contracts\Broadcasting\ShouldBroadcast`/`Illuminate\Contracts\Events\ShouldDispatchAfterCommit`,
+exclusiva de Events/Broadcasting (usada pelos Events de domínio do `Documento`, ver `04-infra/queue-jobs.md`).
+ArchTest garante esta interface em todo `Job` de `app/Jobs/` (RN-01/CA-02, #90).
+
+---
+
+## Padrão de reivindicação com `lockForUpdate()` (#90)
+
+Componente reutilizável para varrer candidatos ao pipeline sem duplo processamento entre workers
+concorrentes (`ReivindicarDocumentoPendenteAction`, `app/Features/Documento/Reivindicar/`):
+
+```php
+/**
+ * @throws \Throwable
+ */
+public function handle(): ?Documento
+{
+    return DB::transaction(function (): ?Documento {
+        $documento = Documento::query()->wherePendente()->lockForUpdate()->first();
+
+        if (! $documento instanceof Documento) {
+            return null;
+        }
+
+        return $this->marcarAguardaEnvio->handle($documento);   // transação aninhada (savepoint)
+    });
+}
+```
+
+- A `DB::transaction()` abre-se **no ponto de entrada** (esta Action não tem chamador) — o
+  `lockForUpdate()` só faz sentido dentro de uma transacção já aberta, mantendo o lock até ao commit.
+- `wherePendente()` é o scope existente do Model — sem Repository (ver `04-infra/repositories.md`
+  para o critério de quando um se justifica).
+- A Action de transição chamada de seguida (`MarcarAguardaEnvioDocumentoAction`) abre a sua própria
+  `DB::transaction()` internamente (via `ExecutorTransicaoDocumento`) — Laravel resolve isto como
+  `SAVEPOINT` (transação aninhada), sem romper o lock da linha mantido pela transação exterior.
+- Sem `Gate::authorize()` — acção de sistema/pipeline (ver `02-shared/padroes-acoes.md`).
+- `RegraTransicaoEstado` actua como último nível de validação: se outro worker já mudou o `status`
+  antes deste obter o lock, a transição falha de forma previsível (`TransicaoInvalidaException`).
