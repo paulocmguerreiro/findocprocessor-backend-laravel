@@ -10,7 +10,7 @@ Fluxo feliz na horizontal; ramos de falha/risco em baixo:
 
 ```
 PENDENTE → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → PROCESSADO
-                                                       ↘ ERRO
+    ↘ ERRO (falha do scan de malware, #91)              ↘ ERRO
                                                        ↘ PERIGOSO
 ```
 
@@ -144,8 +144,9 @@ O mapa central é validado por `RegraTransicaoEstado` (ver `02-shared/regras-neg
 
 | De                | Para              | Action                                  | Via                  |
 | ----------------- | ----------------- | --------------------------------------- | -------------------- |
-| `Pendente`        | `AguardaEnvio`    | `MarcarAguardaEnvioDocumentoAction`     | pipeline             |
-| `Pendente`        | `Perigoso`        | `MarcarPerigosoDocumentoAction`         | pipeline (pré-scan)  |
+| `Pendente`        | `AguardaEnvio`    | `MarcarAguardaEnvioDocumentoAction` (via `TriarDocumentoPendenteAction`, #91) | pipeline |
+| `Pendente`        | `Perigoso`        | `MarcarPerigosoDocumentoAction` (via `TriarDocumentoPendenteAction`, #91)    | pipeline (pré-scan)  |
+| `Pendente`        | `Erro`            | `MarcarErroDocumentoAction` (via `TriarDocumentoPendenteAction`, #91)        | pipeline (falha do scan de malware) |
 | `AguardaEnvio`    | `Enviado`         | `MarcarEnviadoDocumentoAction`          | pipeline             |
 | `Enviado`         | `AguardaResposta` | `MarcarAguardaRespostaDocumentoAction`  | pipeline             |
 | `AguardaResposta` | `Processado`      | `TransicionarProcessadoDocumentoAction` | pipeline             |

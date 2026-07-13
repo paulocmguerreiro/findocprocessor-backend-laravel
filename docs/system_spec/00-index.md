@@ -12,7 +12,7 @@
 | Entidade           | `01-features/entidade.md`            | 8 (5 CRUD + Restaurar + ConverterEmEmpresaMae + Remover) | 5 REST + 2 especiais |
 | Role               | `01-features/role.md`                | 5 CRUD                                         | 5 REST              |
 | Utilizador         | `01-features/utilizador.md`          | 8 (5 CRUD + AtribuirRole + Restaurar + Anonimizar) | 5 REST + 3 especiais |
-| Documento          | `01-features/documento.md`           | 15 (8 expostas via endpoint + 7 sem HTTP, só programáticas — 6 de transição + reivindicação #90) | 8 REST |
+| Documento          | `01-features/documento.md`           | 16 (8 expostas via endpoint + 8 sem HTTP, só programáticas — 6 de transição + reivindicação #90 + triagem/scan malware #91) | 8 REST |
 | TipoDocumento      | `01-features/tipo-documento.md`      | 5 CRUD (sem SoftDelete)                        | 5 REST              |
 
 ## Features planeadas
@@ -68,6 +68,7 @@
 | Audit trail (spatie/laravel-activitylog)     | `04-infra/audit-trail.md`     | implementado                                                                           |
 | Jobs / Queue + Events de domínio             | `04-infra/queue-jobs.md`      | implementado (Events #57; `ReconciliarFicheirosJob` #90; Jobs de pipeline pendentes)    |
 | APIs externas (IA)                           | `04-infra/external-apis.md`   | parcial (PromptBuilder + Prism/config das camadas LLM implementados #95; cliente concreto pendente #97) |
+| Scan de malware (ClamAV self-hosted)          | `04-infra/external-apis.md`   | implementado (#91)                                                                     |
 | PromptBuilder (system prompt de extracção)   | `04-infra/prompt-builder.md`  | implementado                                                                           |
 | Ambiente Docker + paridade de testes (MySQL) | `04-infra/ambiente-docker.md` | implementado                                                                           |
 

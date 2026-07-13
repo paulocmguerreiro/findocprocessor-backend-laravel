@@ -45,6 +45,12 @@ LLM_CLOUD_KEY=
 # transitório, varrido pelo ReconciliarFicheirosJob (#90).
 PIPELINE_RECONCILIACAO_LIMIAR_MINUTOS=15
 
+# Scan de malware — ClamAV self-hosted (#91). Vazio desliga a camada
+# (fail-safe, mesmo padrão de LLM_LOCAL_*/LLM_CLOUD_*).
+CLAMAV_HOST=
+CLAMAV_PORT=
+CLAMAV_TIMEOUT_SEGUNDOS=5
+
 FILESYSTEM_INBOX_PATH=inbox/
 FILESYSTEM_PROCESSED_PATH=processed/
 FILESYSTEM_TEMP_PATH=temp/
@@ -107,15 +113,30 @@ providers do Prism ligados às mesmas vars: `providers.ollama.url` =
 
 ---
 
-## `config/pipeline.php` — concorrência do pipeline (#90)
+## `config/pipeline.php` — concorrência do pipeline (#90) e scan de malware (#91)
 
 ```php
 'reconciliacao_limiar_minutos' => (int) env('PIPELINE_RECONCILIACAO_LIMIAR_MINUTOS', 15),
+
+// 'host' vazio ou 'port' zero desligam a camada (fail-safe) — porta 0 nunca é válida.
+'malware' => [
+    'host' => env('CLAMAV_HOST', ''),
+    'port' => (int) env('CLAMAV_PORT', 0),
+    'timeout_segundos' => (int) env('CLAMAV_TIMEOUT_SEGUNDOS', 5),
+],
 ```
 
-Único parâmetro: limiar (minutos) usado pelo scope `Documento::documentosPresos()` para identificar
-documentos parados num estado transitório há mais tempo que uma transição normal demora — consumido
-por `ReconciliarFicheirosJob` (`04-infra/queue-jobs.md`).
+`reconciliacao_limiar_minutos` — limiar (minutos) usado pelo scope `Documento::documentosPresos()`
+para identificar documentos parados num estado transitório há mais tempo que uma transição normal
+demora — consumido por `ReconciliarFicheirosJob` (`04-infra/queue-jobs.md`).
+
+`malware` — parâmetros de `ClamAvAnalisadorMalware` (bind em `AppServiceProvider`, lidos via
+`config()->string()`/`config()->integer()`). `host` vazio ou `port` `0` são a sentinela de "camada
+desligada" — evita `?string`/`?int` (accessores tipados do Laravel exigem `string`/`int`, não
+`null`). `StreamMaxLength` do `clamd` (default 25 MB na imagem oficial) deve ser ≥ ao limite de
+upload actual (`FILESYSTEM_MAX_FILE_SIZE` = 10 MB) — sem configuração adicional necessária no lado
+da app; se excedido, o INSTREAM falha e conta como falha do scan (`FalhaAnaliseMalwareException`),
+nunca como "não configurado". Ver `04-infra/external-apis.md` para o contrato `AnalisadorMalware`.
 
 **Dependência de cache partilhado (`redis`):** `Schedule::job(...)->onOneServer()` (usado por
 `ReconciliarFicheirosJob`) e o futuro `WithoutOverlapping` por documento (issue do orquestrador, #90)

@@ -28,9 +28,9 @@ Events dispatched pelas Actions de transição do `Documento`. Todos implementam
 
 | Event                      | Ficheiro                                  | Emitido por                                                              | Payload                                             |
 | -------------------------- | ----------------------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------- |
-| `DocumentoProcessado`      | `app/Events/DocumentoProcessado.php`      | `RegistarDocumentoManualAction`, `TransicionarProcessadoDocumentoAction` | `Documento $documento`                              |
-| `DocumentoMarcadoErro`     | `app/Events/DocumentoMarcadoErro.php`     | `MarcarErroDocumentoAction`                                              | `Documento $documento`, `string $mensagemErro`      |
-| `DocumentoMarcadoPerigoso` | `app/Events/DocumentoMarcadoPerigoso.php` | `MarcarPerigosoDocumentoAction`                                          | `Documento $documento`, `string $motivo`            |
+| `DocumentoProcessado`      | `app/Events/DocumentoProcessado.php`      | `RegistarDocumentoManualAction` (limpo/não configurado), `TransicionarProcessadoDocumentoAction` | `Documento $documento`                              |
+| `DocumentoMarcadoErro`     | `app/Events/DocumentoMarcadoErro.php`     | `MarcarErroDocumentoAction`, `RegistarDocumentoManualAction` (falha do scan, #91)                | `Documento $documento`, `string $mensagemErro`      |
+| `DocumentoMarcadoPerigoso` | `app/Events/DocumentoMarcadoPerigoso.php` | `MarcarPerigosoDocumentoAction`, `RegistarDocumentoManualAction` (infectado, #91)                 | `Documento $documento`, `string $motivo`            |
 | `DocumentoReprocessado`    | `app/Events/DocumentoReprocessado.php`    | `ReprocessarDocumentoAction`                                             | `Documento $documento`, `ModoReprocessamento $modo` |
 
 Sem Listeners nesta issue. Os Listeners serão adicionados quando a issue de extracção (IA/OCR) for implementada.
@@ -42,6 +42,13 @@ As Actions de transição de pipeline (`MarcarAguardaEnvio`, `MarcarEnviado`, `M
 pelos Jobs da extracção. Os Jobs futuros correrão em nome do utilizador que fez o upload (autor da
 primeira `EtapaDocumento` do documento). Ver `03-models/etapa-documento.md` para detalhe de
 `id_utilizador`.
+
+`TriarDocumentoPendenteAction` (#91) é outro ponto de invocação programática sem Job concreto
+nesta issue — corre o scan de malware e decide a transição, invocada por
+`ReivindicarDocumentoPendenteAction` (mesma transacção/lock). Fica para a issue #98 (integração no
+pipeline de extracção) invocar `TriarDocumentoPendenteAction`/o Job que a envolver **antes** de
+iniciar o processamento — mesmo padrão de dependência a informar já usado por `Reivindicar`/
+`MarcarAguardaEnvio` (#90).
 
 ---
 
