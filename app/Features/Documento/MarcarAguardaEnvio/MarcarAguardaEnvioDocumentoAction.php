@@ -21,8 +21,8 @@ final readonly class MarcarAguardaEnvioDocumentoAction
     /**
      * @throws \Throwable
      */
-    public function handle(Documento $documento): Documento
+    public function handle(Documento $documento, string $motivo = 'pronto para envio'): Documento
     {
-        return $this->executor->executar($documento, EstadoDocumento::AguardaEnvio, 'pronto para envio');
+        return $this->executor->executar($documento, EstadoDocumento::AguardaEnvio, $motivo);
     }
 }
