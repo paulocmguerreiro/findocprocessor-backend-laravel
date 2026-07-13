@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Infrastructure\Malware\AnalisadorMalware;
+use App\Infrastructure\Malware\ClamAvAnalisadorMalware;
 use App\Observers\RoleObserver;
 use App\Policies\RolePolicy;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -17,7 +19,14 @@ use Spatie\Permission\Models\Role;
 class AppServiceProvider extends ServiceProvider
 {
     #[\Override]
-    public function register(): void {}
+    public function register(): void
+    {
+        $this->app->bind(AnalisadorMalware::class, fn (): ClamAvAnalisadorMalware => new ClamAvAnalisadorMalware(
+            host: config()->string('pipeline.malware.host'),
+            port: config()->integer('pipeline.malware.port'),
+            timeoutSegundos: config()->integer('pipeline.malware.timeout_segundos'),
+        ));
+    }
 
     public function boot(): void
     {
