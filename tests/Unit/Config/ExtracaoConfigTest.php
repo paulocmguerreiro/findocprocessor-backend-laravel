@@ -3,9 +3,12 @@
 declare(strict_types=1);
 
 /**
- * Escreve directamente em $_ENV/$_SERVER (não putenv()): o Docker/compose já
- * injecta as vars LLM_* vazias no ambiente do processo (x-app-env), e essas
- * arrays têm prioridade sobre o process env no repositório do Env do Laravel.
+ * Escreve em $_ENV/$_SERVER e no process env real (putenv()): o env() do
+ * Laravel cai para getenv() quando $_ENV/$_SERVER não têm a chave, pelo que
+ * limpar só os arrays não basta — se a var já existir no processo (ex: .env
+ * local do developer com valores reais para o Valet, herdado por engano no
+ * ambiente de testes), getenv() continua a devolvê-la. putenv() garante que
+ * o teste controla o estado real, independentemente do que estiver fora dele.
  *
  * @param  array<string, string>  $vars
  */
@@ -14,6 +17,7 @@ function definirVarsExtracao(array $vars): void
     foreach ($vars as $chave => $valor) {
         $_ENV[$chave] = $valor;
         $_SERVER[$chave] = $valor;
+        putenv("{$chave}={$valor}");
     }
 }
 
@@ -24,8 +28,13 @@ function limparVarsExtracao(array $chaves): void
 {
     foreach ($chaves as $chave) {
         unset($_ENV[$chave], $_SERVER[$chave]);
+        putenv($chave);
     }
 }
+
+beforeEach(function (): void {
+    limparVarsExtracao(['LLM_LOCAL_URL', 'LLM_LOCAL_MODEL', 'LLM_CLOUD_URL', 'LLM_CLOUD_MODEL', 'LLM_CLOUD_KEY']);
+});
 
 afterEach(function (): void {
     limparVarsExtracao(['LLM_LOCAL_URL', 'LLM_LOCAL_MODEL', 'LLM_CLOUD_URL', 'LLM_CLOUD_MODEL', 'LLM_CLOUD_KEY']);
