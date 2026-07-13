@@ -69,9 +69,11 @@ final readonly class RegraMoverFicheiro
     }
 
     /**
-     * Mapa estado → disco (espelha `02-shared/estados.md`).
+     * Mapa estado → disco (espelha `02-shared/estados.md`). Público — reutilizado
+     * por `RegraReconciliarLocalizacaoFicheiro` para listar os discos conhecidos
+     * sem duplicar o mapa.
      */
-    private function discoParaEstado(EstadoDocumento $estado): string
+    public function discoParaEstado(EstadoDocumento $estado): string
     {
         return match ($estado) {
             EstadoDocumento::Pendente, EstadoDocumento::AguardaEnvio => 'entrada',
