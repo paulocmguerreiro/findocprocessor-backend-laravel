@@ -1,7 +1,6 @@
 # System Spec — Feature: Utilizador
 
 > `App\Features\Utilizador\`
-> Issue #50 (AtribuirRole) · Issue #68 (CRUD completo + filtro de estado) · Issue #73 (Restaurar + RGPD Anonimização)
 
 Gestão de utilizadores em Vertical Slice sobre o modelo partilhado `User` (partilhado com a feature Auth). CRUD completo (Listar, Ver, Criar, Actualizar, Eliminar) mais a atribuição de role.
 
@@ -40,13 +39,13 @@ DTOs: `CriarUtilizadorDto` (`nome`, `email`, `password`, `?role`), `ActualizarUt
 2. **Invariante de domínio:** não eliminar o próprio utilizador → `DomainException` (→ 422).
 3. `DB::transaction`: revoga tokens (`tokens()->delete()`) → decide hard vs soft por **pré-verificação determinística** (`estaReferenciado()` consulta `documentos.id_responsavel` e `etapas_documento.id_utilizador`) → `forceDelete()` se sem referências, `delete()` (soft) se referenciado → invalida cache.
 
-> A pré-verificação substitui o `try/catch forceDelete` textual do Padrão B: com MySQL, a violação de FK `RESTRICT` seria deferida para o commit e escaparia ao `catch`. O `restrictOnDelete` das FKs filhas é a salvaguarda ao nível da BD. Anonimização RGPD do ramo soft delete: **Issue #73**.
+> A pré-verificação substitui o `try/catch forceDelete` textual do Padrão B: com MySQL, a violação de FK `RESTRICT` seria deferida para o commit e escaparia ao `catch`. O `restrictOnDelete` das FKs filhas é a salvaguarda ao nível da BD. Anonimização RGPD do ramo soft delete — ver secção "Anonimização RGPD" abaixo.
 
 A invariante "não eliminar o último utilizador com `utilizadores.eliminar`" foi **descartada** (recuperável via gestão de roles).
 
 ---
 
-## Restauro — inverso do Eliminar (Issue #73)
+## Restauro — inverso do Eliminar
 
 `RestaurarUtilizadorAction`:
 
@@ -60,7 +59,7 @@ Rota `PATCH /utilizadores/{utilizador}/restaurar` declarada com `->withTrashed()
 
 ---
 
-## Anonimização RGPD (Issue #73)
+## Anonimização RGPD
 
 `AnonimizarUtilizadorAction` — operação **irreversível** (Art. 17.º RGPD) que substitui dados pessoais em vez de hard delete, preservando as FKs `restrictOnDelete`:
 
@@ -98,7 +97,7 @@ Rota `POST /utilizadores/{utilizador}/anonimizar` (não-idempotente, sem `->with
 | `restore` | `hasPermissionTo('utilizadores.eliminar')` (reutiliza a permissão de eliminação) |
 | `anonimizar` | `hasPermissionTo('utilizadores.anonimizar')` |
 
-Permissions criadas por `seed_utilizadores_permissions`; a permissão `utilizadores.anonimizar` por `seed_utilizadores_anonimizar_permission` (Issue #73). Todas atribuídas ao role `admin`. Detalhe: `04-infra/autorizacao.md`.
+Permissions criadas por `seed_utilizadores_permissions`; a permissão `utilizadores.anonimizar` por `seed_utilizadores_anonimizar_permission`. Todas atribuídas ao role `admin`. Detalhe: `04-infra/autorizacao.md`.
 
 ---
 

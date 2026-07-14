@@ -90,7 +90,7 @@ enum FiltroEstadoRegisto: string
 - Valores na query string: `todos`, `somente_ativos`, `somente_inativos`
 - Validação no `FormRequest`: `Rule::in(array_column(FiltroEstadoRegisto::cases(), 'value'))`
 - Aplicado pelo scope do trait `FiltravelPorEstadoRegisto` (`filtrarPorEstadoRegisto()`) — ver `02-shared/soft-delete.md`
-- Usado em: `ListarUtilizadoresAction` (#68). `ListarEntidadesAction` e `ListarCategoriasAction`: planeado (retrofit futuro)
+- Usado em: `ListarUtilizadoresAction`. `ListarEntidadesAction` e `ListarCategoriasAction`: planeado (retrofit futuro)
 
 ---
 

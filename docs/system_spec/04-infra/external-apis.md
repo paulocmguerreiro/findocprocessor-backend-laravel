@@ -2,9 +2,9 @@
 
 > `app/Infrastructure/AI/`, `app/Infrastructure/Malware/`
 
-Construção do system prompt implementada (`PromptBuilder`, ver `04-infra/prompt-builder.md`). Acesso a LLM via **Prism** (`prism-php/prism`), provider-agnóstico, configurado (#95); cliente concreto do pipeline de extração (chamada + parsing da resposta) continua pendente — issue #97.
+Construção do system prompt implementada (`PromptBuilder`, ver `04-infra/prompt-builder.md`). Acesso a LLM via **Prism** (`prism-php/prism`), provider-agnóstico, configurado; cliente concreto do pipeline de extração (chamada + parsing da resposta) continua pendente.
 
-Scan de malware self-hosted (`ClamAvAnalisadorMalware`) implementado — issue #91, ver secção dedicada abaixo.
+Scan de malware self-hosted (`ClamAvAnalisadorMalware`) implementado, ver secção dedicada abaixo.
 
 ---
 
@@ -13,10 +13,10 @@ Scan de malware self-hosted (`ClamAvAnalisadorMalware`) implementado — issue #
 | Componente | Ficheiro | Estado |
 |---|---|---|
 | `PromptBuilder` — construção do system prompt | `04-infra/prompt-builder.md` | implementado |
-| `config/prism.php` — providers Prism (Ollama local + OpenAI-compatible cloud) | `config/prism.php` | implementado (#95) |
-| `AnalisadorMalware`/`ClamAvAnalisadorMalware` — scan de malware ClamAV | `app/Infrastructure/Malware/` | implementado (#91) |
+| `config/prism.php` — providers Prism (Ollama local + OpenAI-compatible cloud) | `config/prism.php` | implementado |
+| `AnalisadorMalware`/`ClamAvAnalisadorMalware` — scan de malware ClamAV | `app/Infrastructure/Malware/` | implementado |
 
-## Prism — camadas LLM opcionais (#95)
+## Prism — camadas LLM opcionais
 
 Os LLM correm **externos à app** (Ollama local, provider cloud), nunca embebidos no processo PHP. Duas camadas, cada uma **opcional/desligável**, aferida pela **presença das suas env vars** (sem flags dedicados) — config incompleta ⇒ camada inactiva (fail-safe). Ver `06-config.md` para o detalhe de `config/extracao.php`.
 
@@ -27,7 +27,7 @@ Os LLM correm **externos à app** (Ollama local, provider cloud), nunca embebido
 
 Não foi necessário `Prism::extend()` — o provider `openai` nativo aceita `url` custom nativamente (confirmado ao publicar `config/prism.php` via `vendor:publish --tag=prism-config`).
 
-## Malware — ClamAV self-hosted (#91)
+## Malware — ClamAV self-hosted
 
 Scan de malware sobre os ficheiros de `Documento` — **nunca** sai da infra própria (RGPD, sem
 serviço de scan de terceiros). Contrato puro em `app/Infrastructure/Malware/`:
@@ -50,7 +50,7 @@ Decisão confirmada com o utilizador: sem pacote Composer novo (evita aprovaçã
 
 ### Fail-safe: "não configurado" vs "falha do scan"
 
-Mesmo padrão de `LLM_LOCAL_*`/`LLM_CLOUD_*` (#95) — `CLAMAV_HOST`/`CLAMAV_PORT` vazios (sentinela:
+Mesmo padrão de `LLM_LOCAL_*`/`LLM_CLOUD_*` — `CLAMAV_HOST`/`CLAMAV_PORT` vazios (sentinela:
 `host` vazio ou `port` `0`, ver `06-config.md`) desligam a camada, sem tentativa de ligação
 (`ResultadoAnaliseMalware::naoConfigurado()`). **Distinção crítica:** só a ausência de configuração
 permite avançar sem veredicto — qualquer falha **estando configurado** (timeout, `clamd` em baixo,
@@ -80,11 +80,11 @@ interface (Mockery) para os 4 ramos de decisão.
 
 | Integração | Tipo | Uso |
 |---|---|---|
-| Cliente do pipeline de extração (chamada Prism + parsing da resposta) | API REST externa (via Prism) | Envio do prompt construído por `PromptBuilder`, chamada ao provider (local ou cloud), parsing da resposta estruturada — issue #97 |
+| Cliente do pipeline de extração (chamada Prism + parsing da resposta) | API REST externa (via Prism) | Envio do prompt construído por `PromptBuilder`, chamada ao provider (local ou cloud), parsing da resposta estruturada |
 
-Detalhes de autenticação, limites de rate e estrutura de pedido/resposta documentados quando a issue #97 for planeada.
+Detalhes de autenticação, limites de rate e estrutura de pedido/resposta documentados quando esta integração for planeada.
 
-**Modelo de destino do resultado (#94):** o cliente do pipeline de extração (#97) grava o resultado de
+**Modelo de destino do resultado:** o cliente do pipeline de extração grava o resultado de
 cada passo via `RegistarEtapaExtracaoAction` — upsert em `App\Models\ExtracaoDocumento`
 (`etapa_extracao`, `texto_extraido`, `dados_json`) + `EtapaDocumento` (`passo`/`resultado`). Ver
 `03-models/extracao-documento.md` e `01-features/documento.md`.

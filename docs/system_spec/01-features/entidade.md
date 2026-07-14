@@ -23,8 +23,8 @@ HTTP Request → FormRequest (autoriza + valida) → Controller (constrói DTO o
 | `CriarEntidadeAction` | `App\Features\Entidade\Criar` | `handle(CriarEntidadeDto): Entidade` | Cria entidade; invoca `RegraUnicidadeEmpresaMae` se `eEmpresaAplicacao = true` |
 | `VerEntidadeAction` | `App\Features\Entidade\Ver` | `handle(Entidade\|string): Entidade` | Devolve entidade; resolve UUID com `findOrFail` se string |
 | `ActualizarEntidadeAction` | `App\Features\Entidade\Actualizar` | `handle(Entidade\|string, ActualizarEntidadeDto): Entidade` | Update completo (PUT semântico); invoca `RegraUnicidadeEmpresaMae`; devolve `refresh()` |
-| `EliminarEntidadeAction` | `App\Features\Entidade\Eliminar` | `handle(Entidade\|string): void` | **Padrão B** (#71): `forceDelete()` (hard delete) com fallback `fresh()?->delete()` (soft delete) quando FK `restrictOnDelete` bloqueia; ver `02-shared/soft-delete.md` |
-| `RestaurarEntidadeAction` | `App\Features\Entidade\Restaurar` | `handle(Entidade\|string): Entidade` | Reactiva entidade soft-deleted (#71); resolve com `withTrashed()->findOrFail`; `restore()` + invalida cache dentro da transação; `Gate::authorize('restore')` fora |
+| `EliminarEntidadeAction` | `App\Features\Entidade\Eliminar` | `handle(Entidade\|string): void` | **Padrão B**: `forceDelete()` (hard delete) com fallback `fresh()?->delete()` (soft delete) quando FK `restrictOnDelete` bloqueia; ver `02-shared/soft-delete.md` |
+| `RestaurarEntidadeAction` | `App\Features\Entidade\Restaurar` | `handle(Entidade\|string): Entidade` | Reactiva entidade soft-deleted; resolve com `withTrashed()->findOrFail`; `restore()` + invalida cache dentro da transação; `Gate::authorize('restore')` fora |
 | `ConverterEmEmpresaMaeAction` | `App\Features\Entidade\EmpresaMae` | `handle(Entidade\|string): Entidade` | Remove marcação anterior + força os 3 flags (`e_empresa_aplicacao`, `e_cliente`, `e_fornecedor`) |
 | `RemoverMarcacaoEmpresaMaeAction` | `App\Features\Entidade\EmpresaMae` | `handle(): void` | Action interna — `UPDATE entidades SET e_empresa_aplicacao = false WHERE e_empresa_aplicacao = true`; sem autorização própria; sempre chamada dentro da transação do caller |
 
@@ -64,7 +64,7 @@ Todos `final readonly` com `fromRequest()` (array shape `@var`, Larastan nível 
 | Classe | Namespace | Cases | Descrição |
 |---|---|---|---|
 | `CampoOrdenacaoEntidades` | `App\Features\Entidade\Listar` | `Nome = 'nome'` | Campo de ordenação da listagem de entidades; extensível com `Nif`, `CreatedAt` |
-| `FiltroEstadoRegisto` (partilhado) | `App\Shared\Enums` | `Todos`, `SomenteAtivos`, `SomenteInativos` | Filtro de estado SoftDelete na listagem (#71); traduzido para scope via trait `FiltravelPorEstadoRegisto` no model. Ver `02-shared/soft-delete.md` |
+| `FiltroEstadoRegisto` (partilhado) | `App\Shared\Enums` | `Todos`, `SomenteAtivos`, `SomenteInativos` | Filtro de estado SoftDelete na listagem; traduzido para scope via trait `FiltravelPorEstadoRegisto` no model. Ver `02-shared/soft-delete.md` |
 
 ---
 
@@ -78,7 +78,7 @@ Todos `final readonly` com `fromRequest()` (array shape `@var`, Larastan nível 
 | `create` | `entidades.criar` |
 | `update` | `entidades.actualizar` |
 | `delete` | `entidades.eliminar` |
-| `restore` | `entidades.eliminar` (reutiliza — quem inactiva reactiva) (#71) |
+| `restore` | `entidades.eliminar` (reutiliza — quem inactiva reactiva) |
 
 ---
 
@@ -109,7 +109,7 @@ Todos `final readonly` com `fromRequest()` (array shape `@var`, Larastan nível 
 | `show` | `VerEntidadeRequest` | `VerEntidadeAction::handle($entidade)` |
 | `update` | `ActualizarEntidadeRequest` | `ActualizarEntidadeAction::handle($entidade, ActualizarEntidadeDto::fromRequest($pedido))` |
 | `destroy` | `EliminarEntidadeRequest` | `EliminarEntidadeAction::handle($entidade)` |
-| `restaurar` | `RestaurarEntidadeRequest` | `RestaurarEntidadeAction::handle($entidade)` — `Entidade` via RMB `withTrashed` (#71) |
+| `restaurar` | `RestaurarEntidadeRequest` | `RestaurarEntidadeAction::handle($entidade)` — `Entidade` via RMB `withTrashed` |
 | `converterEmEmpresaMae` | `ConverterEmEmpresaMaeRequest` | `ConverterEmEmpresaMaeAction::handle($entidade)` |
 
 ---
@@ -133,6 +133,6 @@ Formata a resposta JSON de todos os endpoints que retornem uma `Entidade`.
 ```
 
 - Booleans devolvidos como `bool` (cast Eloquent `'boolean'` garante o tipo)
-- `deleted_at` (#69): `null` para entidades activas, ISO 8601 para soft-deleted — usado pelo endpoint `restaurar` para confirmar reactivação
+- `deleted_at`: `null` para entidades activas, ISO 8601 para soft-deleted — usado pelo endpoint `restaurar` para confirmar reactivação
 - Restantes timestamps (`created_at`/`updated_at`) omitidos intencionalmente
 - `@mixin Entidade` necessário para Larastan inferir as propriedades do model

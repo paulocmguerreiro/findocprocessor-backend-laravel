@@ -67,9 +67,9 @@
 | Cache / Redis                                | `04-infra/cache.md`           | implementado                                                                           |
 | Logging estruturado                          | `04-infra/logging.md`         | implementado                                                                           |
 | Audit trail (spatie/laravel-activitylog)     | `04-infra/audit-trail.md`     | implementado                                                                           |
-| Jobs / Queue + Events de domínio             | `04-infra/queue-jobs.md`      | implementado (Events #57; `ReconciliarFicheirosJob` #90; Jobs de pipeline pendentes)    |
-| APIs externas (IA)                           | `04-infra/external-apis.md`   | parcial (PromptBuilder + Prism/config das camadas LLM implementados #95; cliente concreto pendente #97) |
-| Scan de malware (ClamAV self-hosted)          | `04-infra/external-apis.md`   | implementado (#91)                                                                     |
+| Jobs / Queue + Events de domínio             | `04-infra/queue-jobs.md`      | implementado (Events de transição + `ReconciliarFicheirosJob`; Jobs de pipeline pendentes) |
+| APIs externas (IA)                           | `04-infra/external-apis.md`   | parcial (PromptBuilder + Prism/config das camadas LLM implementados; cliente concreto pendente) |
+| Scan de malware (ClamAV self-hosted)          | `04-infra/external-apis.md`   | implementado                                                                           |
 | PromptBuilder (system prompt de extracção)   | `04-infra/prompt-builder.md`  | implementado                                                                           |
 | Ambiente Docker + paridade de testes (MySQL) | `04-infra/ambiente-docker.md` | implementado                                                                           |
 

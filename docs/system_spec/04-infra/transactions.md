@@ -1,6 +1,6 @@
 # System Spec — Infra: Transações de BD
 
-> Padrão obrigatório (Issue #34). Ver também `CLAUDE.md` — Padrões obrigatórios.
+> Padrão obrigatório. Ver também `CLAUDE.md` — Padrões obrigatórios.
 
 Todas as Actions de escrita (criar, actualizar, eliminar) envolvem a persistência em `DB::transaction()`. Autorização (`Gate::authorize()`) fica **fora** da transação — autorização não é operação de BD. A persistência fica **dentro**.
 
@@ -76,11 +76,11 @@ A interface por Job tem precedência e é preferível quando só alguns Jobs pre
 **Nome correcto:** `Illuminate\Contracts\Queue\ShouldQueueAfterCommit` — não confundir com
 `Illuminate\Contracts\Broadcasting\ShouldBroadcast`/`Illuminate\Contracts\Events\ShouldDispatchAfterCommit`,
 exclusiva de Events/Broadcasting (usada pelos Events de domínio do `Documento`, ver `04-infra/queue-jobs.md`).
-ArchTest garante esta interface em todo `Job` de `app/Jobs/` (RN-01/CA-02, #90).
+ArchTest garante esta interface em todo `Job` de `app/Jobs/` (RN-01/CA-02).
 
 ---
 
-## Padrão de reivindicação com `lockForUpdate()` (#90)
+## Padrão de reivindicação com `lockForUpdate()`
 
 Componente reutilizável para varrer candidatos ao pipeline sem duplo processamento entre workers
 concorrentes (`ReivindicarDocumentoPendenteAction`, `app/Features/Documento/Reivindicar/`):

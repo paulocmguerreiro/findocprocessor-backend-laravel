@@ -14,16 +14,16 @@ ambiente de testes e o stack real (MySQL + Redis).
 | `queue` | mesma imagem que `app` | `php artisan queue:work` |
 | `mysql` | `mysql:8.4` | Base de dados (`findocprocessor` + `findocprocessor_testing`) |
 | `redis` | `redis:7-alpine` | Cache e queue |
-| `clamav` | `clamav/clamav-debian:1.4` | Scan de malware (`clamd`, protocolo INSTREAM) — issue #91 |
+| `clamav` | `clamav/clamav-debian:1.4` | Scan de malware (`clamd`, protocolo INSTREAM) |
 
 A imagem (`Dockerfile`) instala extensões via `install-php-extensions`
 (inclui `pcov` para cobertura e `imagick`, para rasterização de PDF/PS do
-pipeline de extração, #95) e fixa `memory_limit=512M` (a análise estática
+pipeline de extração) e fixa `memory_limit=512M` (a análise estática
 excede os 128M por omissão). Via `apk add` instala também `tesseract-ocr`
 (+ dados `por`/`eng`) e `ghostscript` (delegate do ImageMagick para PDF).
 `app` e `queue` partilham a imagem `findocprocessor-app`.
 
-### `imagick` e `policy.xml` (#95)
+### `imagick` e `policy.xml`
 
 O `apk imagemagick` (base Alpine) instala um `policy.xml` **aberto** por
 omissão (`/etc/ImageMagick-7/policy.xml`) — ao contrário de imagens
@@ -35,7 +35,7 @@ morto, idêntico ao default do pacote. Se no futuro se mudar a imagem base
 (ex.: Debian) ou o pacote `imagemagick` do Alpine passar a restringir PDF,
 revisitar esta secção.
 
-### Rede: LLM externo ao container (#95)
+### Rede: LLM externo ao container
 
 As camadas LLM (`LLM_LOCAL_*`/`LLM_CLOUD_*`, ver `06-config.md`) apontam para
 serviços **fora** do container `app`/`queue` (Ollama local, provider cloud).
@@ -44,9 +44,9 @@ omissão — fail-safe, camada inactiva). Alcançar um LLM local a correr no hos
 requer `host.docker.internal` (nativo no Docker Desktop macOS/Windows; em
 Linux requer `extra_hosts: ["host.docker.internal:host-gateway"]` no
 serviço) — a configuração efectiva de rede/`extra_hosts` para o pipeline
-correr fica para a issue #98, fora do âmbito da #95 (que só injecta as vars).
+correr fica pendente; esta secção cobre apenas a injecção das vars.
 
-### `clamav` — scan de malware (#91)
+### `clamav` — scan de malware
 
 Imagem `clamav/clamav-debian:1.4` (multi-arch — inclui `arm64`; `clamav/clamav:1.4`, a imagem
 "oficial" mais divulgada, só publica `amd64` e falha em Macs Apple Silicon). Sem `ports:` — só

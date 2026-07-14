@@ -1,6 +1,6 @@
 # System Spec — Model: EtapaDocumento
 
-> `app/Models/EtapaDocumento.php` · Tabela: `etapas_documento` · Issue #56
+> `app/Models/EtapaDocumento.php` · Tabela: `etapas_documento`
 
 ---
 
@@ -11,17 +11,17 @@
 | `id` | `uuid` PK | Não | PK | UUIDv7 via `HasUuids` |
 | `id_documento` | `uuid` FK | Não | FK | → `documentos.id`; `cascadeOnDelete()` + `cascadeOnUpdate()` (histórico segue o documento) |
 | `estado` | `string(50)` | Não | simples | Cast → `EstadoDocumento`; a etapa atingida |
-| `passo` | `string(50)` | Sim | — | Cast → `EtapaExtracao`; `null` = linha de negócio, preenchido = linha de IA (#94) |
-| `resultado` | `string(20)` | Sim | — | Cast → `ResultadoEtapa`; `null` = linha de negócio, preenchido = linha de IA (#94) |
+| `passo` | `string(50)` | Sim | — | Cast → `EtapaExtracao`; `null` = linha de negócio, preenchido = linha de IA |
+| `resultado` | `string(20)` | Sim | — | Cast → `ResultadoEtapa`; `null` = linha de negócio, preenchido = linha de IA |
 | `motivo` | `text` | Sim | — | Motivo/resposta/nota; pode conter detalhe sensível |
-| `id_utilizador` | `bigint unsigned` FK | Sim | FK | → `users.id`; `restrictOnDelete()` (Issue #68 — era `nullOnDelete`) + `cascadeOnUpdate()`; `null` = passo automático (sistema) |
+| `id_utilizador` | `bigint unsigned` FK | Sim | FK | → `users.id`; `restrictOnDelete()` (era `nullOnDelete`) + `cascadeOnUpdate()`; `null` = passo automático (sistema) |
 | `created_at` | `timestamp` | Sim | — | Data+hora da etapa; **sem `updated_at`** (append-only) |
 
 **Notas:**
 - **Sem `updated_at`** — tabela append-only; cada transição de estado cria uma linha nova; nunca há updates.
-- `id_utilizador` é `bigint` (não UUID) porque `users.id` é `bigint auto_increment` (sem `HasUuids`). Desvio documentado no Brief/Debrief da Issue #56.
+- `id_utilizador` é `bigint` (não UUID) porque `users.id` é `bigint auto_increment` (sem `HasUuids`). Desvio documentado no Brief/Debrief.
 - `cascadeOnDelete()` em `id_documento` — histórico não existe sem o documento.
-- `restrictOnDelete()` em `id_utilizador` (Issue #68) — um utilizador que registou etapas não pode ser hard-deleted; `EliminarUtilizadorAction` cai no soft delete, preservando a autoria da etapa.
+- `restrictOnDelete()` em `id_utilizador` — um utilizador que registou etapas não pode ser hard-deleted; `EliminarUtilizadorAction` cai no soft delete, preservando a autoria da etapa.
 - `cascadeOnUpdate()` em ambas as FKs (migration `add_cascade_on_update_to_domain_fks`, 2026-07-14) — sem esta cascade, um `UPDATE` à PK do documento ou do utilizador falharia por violação de FK; prepara para uma futura reconciliação/agregação de bases de dados que precise de remapear UUIDs.
 - **`passo`/`resultado`** — colunas nullable acrescentadas por migration própria
   (`add_passo_resultado_to_etapas_documento_table`), sem migração de dados: linhas existentes ficam
@@ -120,7 +120,7 @@ Base (`definition()`) = `estado Pendente`, `id_utilizador = null`, `motivo = nul
 | `perigoso()` | `Perigoso` | `faker->sentence()` | `null` |
 | `manual()` | `Processado` | `null` | `User::factory()` |
 
-**`passoIa(EtapaExtracao $passo = NecessitaOcr, ResultadoEtapa $resultado = Sucesso)` (#94)** — não
+**`passoIa(EtapaExtracao $passo = NecessitaOcr, ResultadoEtapa $resultado = Sucesso)`** — não
 altera `estado`; só define `passo`/`resultado`, simulando uma linha de IA gravada por
 `RegistarEtapaExtracaoAction` sobre o estado de negócio actual.
 
@@ -128,7 +128,7 @@ altera `estado`; só define `passo`/`resultado`, simulando uma linha de IA grava
 
 ## Relação inversa — `Documento->historico`
 
-Ver `03-models/documento.md` para a relação `hasMany` adicionada ao `Documento` (Issue #56).
+Ver `03-models/documento.md` para a relação `hasMany` adicionada ao `Documento`.
 
 ---
 
@@ -144,4 +144,4 @@ Ver `03-models/documento.md` para a relação `hasMany` adicionada ao `Documento
 
 - **Model não-`final`** — coerente com os restantes Models (`Documento`, `Entidade`); o ArchTest "actions are final" não cobre Models.
 - **`id_utilizador` como `?int`** — desvio à convenção UUID do domínio; `users.id` é bigint. Migrar `users` para UUID está fora de âmbito (impacto em Sanctum/Spatie/auth).
-- **Resource e endpoint de leitura** ficam na issue de Lógica (#57 ou subsequente) — fora de âmbito desta camada de modelo.
+- **Resource e endpoint de leitura** ficam para a camada de Lógica — fora de âmbito desta camada de modelo.

@@ -4,7 +4,7 @@
 
 ---
 
-## Endpoints implementados (Issue #57)
+## Endpoints implementados
 
 | Método | Path | Action | Resposta |
 |---|---|---|---|

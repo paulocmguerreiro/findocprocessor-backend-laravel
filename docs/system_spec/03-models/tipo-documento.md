@@ -1,6 +1,6 @@
 # System Spec — Model: TipoDocumento
 
-> `app/Models/TipoDocumento.php` · Tabela: `tipos_documento` · Issue #84
+> `app/Models/TipoDocumento.php` · Tabela: `tipos_documento`
 
 ---
 

@@ -20,7 +20,7 @@ Representa os intervenientes do domínio financeiro: Clientes, Fornecedores e a 
 | `e_empresa_aplicacao` | `boolean` | `bool` | Default `false`; cast `'boolean'` |
 | `created_at` | `timestamp` | `Carbon` | Auto via `timestamps()` |
 | `updated_at` | `timestamp` | `Carbon` | Auto via `timestamps()` |
-| `deleted_at` | `timestamp` nullable | `?Carbon` | SoftDeletes — `null` = activa; preenchido = inactiva (Issue #69) |
+| `deleted_at` | `timestamp` nullable | `?Carbon` | SoftDeletes — `null` = activa; preenchido = inactiva |
 
 ---
 
@@ -28,7 +28,7 @@ Representa os intervenientes do domínio financeiro: Clientes, Fornecedores e a 
 
 - `HasUuids` — UUID como PK, não autoincrement (UUIDv7 por default)
 - `HasFactory` — `EntidadeFactory`
-- `SoftDeletes` — `delete()` faz soft delete (preenche `deleted_at`); queries excluem registos inactivos por defeito (Issue #69)
+- `SoftDeletes` — `delete()` faz soft delete (preenche `deleted_at`); queries excluem registos inactivos por defeito
 - `RegistaActividade` — audit trail; sobrepõe `atributosExcluidosDaActividade()` → `['nif']` (dado fiscal — RGPD). Ver `04-infra/audit-trail.md`
 - `#[Table('entidades')]`
 - `#[Fillable(['nome', 'nif', 'e_cliente', 'e_fornecedor', 'e_empresa_aplicacao'])]`
@@ -72,7 +72,7 @@ Representa os intervenientes do domínio financeiro: Clientes, Fornecedores e a 
 
 **Ficheiro:** `app/Features/Entidade/EntidadeResource.php`
 
-7 campos (Issue #69 adicionou `deleted_at`):
+7 campos (`deleted_at` adicionado com o SoftDelete):
 
 | Campo | Tipo JSON | Notas |
 |---|---|---|

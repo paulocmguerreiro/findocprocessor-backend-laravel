@@ -6,9 +6,9 @@
 
 ## Jobs implementados
 
-| Job                       | Tipo      | Schedule/Queue                                                                                                                        | Issue |
-| ------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| `ReconciliarFicheirosJob` | Scheduled | `Schedule::job(new ReconciliarFicheirosJob)->everyFiveMinutes()->onOneServer()->name('reconciliar-ficheiros')` (`routes/console.php`) | #90   |
+| Job                       | Tipo      | Schedule/Queue                                                                                                                        |
+| ------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `ReconciliarFicheirosJob` | Scheduled | `Schedule::job(new ReconciliarFicheirosJob)->everyFiveMinutes()->onOneServer()->name('reconciliar-ficheiros')` (`routes/console.php`) |
 
 `ReconciliarFicheirosJob` — reconciliação ficheiro↔BD: varre `Documento`s presos num estado
 transitório (`AguardaEnvio`/`Enviado`/`AguardaResposta`) há mais tempo que
@@ -21,7 +21,7 @@ atomicidade: `01-features/documento-pipeline.md`.
 
 ---
 
-## Events de domínio (Issue #57)
+## Events de domínio
 
 Events dispatched pelas Actions de transição do `Documento`. Todos implementam
 `ShouldDispatchAfterCommit` — só são emitidos após o commit da transação.
@@ -29,8 +29,8 @@ Events dispatched pelas Actions de transição do `Documento`. Todos implementam
 | Event                      | Ficheiro                                  | Emitido por                                                              | Payload                                             |
 | -------------------------- | ----------------------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------- |
 | `DocumentoProcessado`      | `app/Events/DocumentoProcessado.php`      | `RegistarDocumentoManualAction` (limpo/não configurado), `TransicionarProcessadoDocumentoAction` | `Documento $documento`                              |
-| `DocumentoMarcadoErro`     | `app/Events/DocumentoMarcadoErro.php`     | `MarcarErroDocumentoAction`, `RegistarDocumentoManualAction` (falha do scan, #91)                | `Documento $documento`, `string $mensagemErro`      |
-| `DocumentoMarcadoPerigoso` | `app/Events/DocumentoMarcadoPerigoso.php` | `MarcarPerigosoDocumentoAction`, `RegistarDocumentoManualAction` (infectado, #91)                 | `Documento $documento`, `string $motivo`            |
+| `DocumentoMarcadoErro`     | `app/Events/DocumentoMarcadoErro.php`     | `MarcarErroDocumentoAction`, `RegistarDocumentoManualAction` (falha do scan)                | `Documento $documento`, `string $mensagemErro`      |
+| `DocumentoMarcadoPerigoso` | `app/Events/DocumentoMarcadoPerigoso.php` | `MarcarPerigosoDocumentoAction`, `RegistarDocumentoManualAction` (infectado)                 | `Documento $documento`, `string $motivo`            |
 | `DocumentoReprocessado`    | `app/Events/DocumentoReprocessado.php`    | `ReprocessarDocumentoAction`                                             | `Documento $documento`, `ModoReprocessamento $modo` |
 
 Sem Listeners nesta issue. Os Listeners serão adicionados quando a issue de extracção (IA/OCR) for implementada.
@@ -43,15 +43,15 @@ pelos Jobs da extracção. Os Jobs futuros correrão em nome do utilizador que f
 primeira `EtapaDocumento` do documento). Ver `03-models/etapa-documento.md` para detalhe de
 `id_utilizador`.
 
-`TriarDocumentoPendenteAction` (#91) é outro ponto de invocação programática sem Job concreto
+`TriarDocumentoPendenteAction` é outro ponto de invocação programática sem Job concreto
 nesta issue — corre o scan de malware e decide a transição, invocada por
-`ReivindicarDocumentoPendenteAction` (mesma transacção/lock). Fica para a issue #98 (integração no
-pipeline de extracção) invocar `TriarDocumentoPendenteAction`/o Job que a envolver **antes** de
+`ReivindicarDocumentoPendenteAction` (mesma transacção/lock). Fica pendente integrar
+`TriarDocumentoPendenteAction`/o Job que a envolver no pipeline de extracção, invocando-o **antes** de
 iniciar o processamento — mesmo padrão de dependência a informar já usado por `Reivindicar`/
-`MarcarAguardaEnvio` (#90).
+`MarcarAguardaEnvio`.
 
-`RegistarEtapaExtracaoAction` (#94, `app/Features/Documento/RegistarEtapaExtracao/`) é o ponto de
-invocação programática que o futuro orquestrador de pipeline (#97/#98) vai chamar para registar cada
+`RegistarEtapaExtracaoAction` (`app/Features/Documento/RegistarEtapaExtracao/`) é o ponto de
+invocação programática que o futuro orquestrador de pipeline vai chamar para registar cada
 passo de IA (OCR/cloud) sobre um `Documento` — upsert em `extracoes_documento` + `EtapaDocumento`
 (`passo`/`resultado`). Sem Job concreto nesta issue: só o modelo de dados e o recorder existem; o
 Job/Schedule que varre `extracoes_documento` por `(etapa_extracao, extracao_reclamada_em)` e invoca
@@ -67,4 +67,4 @@ implementar `Illuminate\Contracts\Queue\ShouldQueueAfterCommit` (**não** `Shoul
 — essa interface é exclusiva de Events/Broadcasting, usada pelos 4 Events acima). ArchTest
 (`tests/ArchTest.php` — `jobs implementam ShouldQueueAfterCommit`) garante que qualquer `Job` em
 `app/Jobs/` que implemente `ShouldQueue` também implementa `ShouldQueueAfterCommit`, sem revisão
-manual por issue (RN-01/CA-02, #90). Ver `04-infra/transactions.md`.
+manual por issue (RN-01/CA-02). Ver `04-infra/transactions.md`.

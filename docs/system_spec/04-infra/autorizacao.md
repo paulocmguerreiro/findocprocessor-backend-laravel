@@ -43,8 +43,8 @@ Configuração publicada em `config/permission.php`. Guard: `web` (único guard 
 | `documentos.actualizar` | Corrigir, reprocessar e transições de pipeline | `seed_documentos_permissions` |
 | `documentos.eliminar` | Eliminar documento | `seed_documentos_permissions` |
 | `utilizadores.{ver,criar,actualizar,eliminar}` | CRUD de utilizadores | `seed_utilizadores_permissions` |
-| `utilizadores.anonimizar` | Anonimizar utilizador (RGPD Art. 17.º) | `seed_utilizadores_anonimizar_permission` (Issue #73) |
-| `tipos-documento.{ver,criar,actualizar,eliminar}` | CRUD de tipos de documento | `seed_tipos_documento_permissions` (Issue #84) |
+| `utilizadores.anonimizar` | Anonimizar utilizador (RGPD Art. 17.º) | `seed_utilizadores_anonimizar_permission` |
+| `tipos-documento.{ver,criar,actualizar,eliminar}` | CRUD de tipos de documento | `seed_tipos_documento_permissions` |
 
 > A permissão `restore` de utilizador reutiliza `utilizadores.eliminar` — não há permissão dedicada.
 

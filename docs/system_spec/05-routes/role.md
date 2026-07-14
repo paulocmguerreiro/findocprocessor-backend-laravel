@@ -1,7 +1,5 @@
 # System Spec — Rotas: Role + Utilizador
 
-> Issue #50 (Role + AtribuirRole) · Issue #68 (CRUD Utilizador) · Issue #73 (Restaurar + Anonimizar)
-
 ```php
 Route::apiResource('roles', RoleController::class);
 

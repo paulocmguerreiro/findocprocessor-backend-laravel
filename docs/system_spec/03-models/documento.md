@@ -1,6 +1,6 @@
 # System Spec — Model: Documento
 
-> `app/Models/Documento.php` · Tabela: `documentos` · Issue #45
+> `app/Models/Documento.php` · Tabela: `documentos`
 
 ---
 
@@ -10,10 +10,10 @@
 |---|---|---|---|
 | `id` | `uuid` PK | Não | UUIDv7 via `HasUuids` |
 | `status` | `string(50)` | Não | Default `'PENDENTE'`; índice simples; cast → `EstadoDocumento` |
-| `id_responsavel` | `bigint` FK | Sim | → `users.id`; `restrictOnDelete()` (Issue #68 — era `nullOnDelete`) + `cascadeOnUpdate()`; autor do registo/upload (sempre o utilizador autenticado) |
-| `id_fornecedor` | `uuid` FK | Sim | → `entidades.id`; `restrictOnDelete()` (Issue #69 — era `nullOnDelete`) + `cascadeOnUpdate()` |
-| `id_cliente` | `uuid` FK | Sim | → `entidades.id`; `restrictOnDelete()` (Issue #69 — era `nullOnDelete`) + `cascadeOnUpdate()` |
-| `id_categoria` | `uuid` FK | Sim | → `categorias_documento.id`; `restrictOnDelete()` (Issue #70 — era `nullOnDelete`) + `cascadeOnUpdate()` |
+| `id_responsavel` | `bigint` FK | Sim | → `users.id`; `restrictOnDelete()` (era `nullOnDelete`) + `cascadeOnUpdate()`; autor do registo/upload (sempre o utilizador autenticado) |
+| `id_fornecedor` | `uuid` FK | Sim | → `entidades.id`; `restrictOnDelete()` (era `nullOnDelete`) + `cascadeOnUpdate()` |
+| `id_cliente` | `uuid` FK | Sim | → `entidades.id`; `restrictOnDelete()` (era `nullOnDelete`) + `cascadeOnUpdate()` |
+| `id_categoria` | `uuid` FK | Sim | → `categorias_documento.id`; `restrictOnDelete()` (era `nullOnDelete`) + `cascadeOnUpdate()` |
 | `valor` | `decimal(15,2)` | Sim | Cast `decimal:2` → devolve `string` em PHP (não `float`) |
 | `data_documento` | `date` | Sim | Índice simples; cast → `Carbon` |
 | `nome_ficheiro_original` | `string(500)` | Não | Nome original do ficheiro no upload |
@@ -24,7 +24,7 @@
 
 **Nota:** FKs de domínio nullable por design — campos de domínio podem estar a `null` em `Pendente` (registo automático iniciado sem dados completos).
 
-**`id_responsavel`** (Issue #57 — revisão) — FK `bigint` para `users.id` (o PK de `users` é incremental, não UUID). É o autor da entrada: definido pela `RegistarDocumentoManualAction` e pela `ReceberUploadDocumentoAction` a partir de `Auth::id()` — **nunca vem do cliente** (campo derivado server-side, como o `hash_sha256`); está sempre preenchido à criação. A FK é `restrictOnDelete()` (Issue #68): um utilizador responsável por documentos não pode ser hard-deleted — `EliminarUtilizadorAction` cai no soft delete, preservando a autoria. As transições de pipeline (`Marcar*`) **não** alteram o responsável.
+**`id_responsavel`** — FK `bigint` para `users.id` (o PK de `users` é incremental, não UUID). É o autor da entrada: definido pela `RegistarDocumentoManualAction` e pela `ReceberUploadDocumentoAction` a partir de `Auth::id()` — **nunca vem do cliente** (campo derivado server-side, como o `hash_sha256`); está sempre preenchido à criação. A FK é `restrictOnDelete()`: um utilizador responsável por documentos não pode ser hard-deleted — `EliminarUtilizadorAction` cai no soft delete, preservando a autoria. As transições de pipeline (`Marcar*`) **não** alteram o responsável.
 
 **`cascadeOnUpdate()` em todas as FKs de domínio** — adicionado numa migration posterior (`add_cascade_on_update_to_domain_fks`, 2026-07-14). Mantém o `onDelete` já definido em cada FK; sem esta cascade, um `UPDATE` à PK de um registo pai (`entidades`, `categorias_documento`, `users`) falharia por violação de FK. Prepara para uma futura reconciliação/agregação de bases de dados que precise de remapear UUIDs.
 
@@ -114,7 +114,7 @@ public function estado(): ContratoEstadoDocumento
 
 `match` **sem `default`** — Larastan 9 valida a exaustividade dos 7 casos. Adicionar um 8.º estado ao enum sem tratar aqui produz erro em `composer test:types`.
 
-### PHPDoc `@property-read` — adição Issue #56
+### PHPDoc `@property-read` — adição
 
 ```php
  * @property-read \Illuminate\Database\Eloquent\Collection<int, EtapaDocumento> $historico
@@ -124,16 +124,16 @@ public function estado(): ContratoEstadoDocumento
 
 ```php
 public function responsavel(): BelongsTo // → User (id_responsavel)
-public function fornecedor(): BelongsTo  // → Entidade (id_fornecedor) — withTrashed() (Issue #69)
-public function cliente(): BelongsTo     // → Entidade (id_cliente) — withTrashed() (Issue #69)
-public function categoria(): BelongsTo   // → CategoriaDocumento (id_categoria) — withTrashed() (Issue #70)
+public function fornecedor(): BelongsTo  // → Entidade (id_fornecedor) — withTrashed()
+public function cliente(): BelongsTo     // → Entidade (id_cliente) — withTrashed()
+public function categoria(): BelongsTo   // → CategoriaDocumento (id_categoria) — withTrashed()
 public function historico(): HasMany     // → EtapaDocumento (id_documento), orderBy created_at asc
 public function extracao(): HasOne       // → ExtracaoDocumento (id_documento)
 ```
 
 > **`withTrashed()` em `fornecedor()`, `cliente()` e `categoria()`** — documentos históricos continuam a carregar a entidade/categoria mesmo após soft delete. Sem `withTrashed()`, a relação devolveria `null` quando o registo está inactivo, apagando o histórico do interveniente/classificação.
 
-**`historico`** — adicionado na Issue #56. Relação `hasMany` com FK explícita `id_documento`; ordenada por `created_at` ascendente (linha temporal). Ver `03-models/etapa-documento.md` para detalhe do Model.
+**`historico`** — relação `hasMany` com FK explícita `id_documento`; ordenada por `created_at` ascendente (linha temporal). Ver `03-models/etapa-documento.md` para detalhe do Model.
 
 **`extracao`** — relação `hasOne`, **sem `withDefault()`**: `null` é um valor legítimo (documento
 nunca entrou na dimensão de extracção, ex.: registo manual via `RegistarDocumentoManualAction`, que
@@ -192,7 +192,7 @@ final class DocumentoPolicy
 
 ## DTOs
 
-Os DTOs do Documento pertencem à camada de lógica (#57) e estão documentados — em forma tabular — em `01-features/documento.md` (secção DTOs). Os DTOs originais da #45 (`CriarDocumentoManualDto`, `ActualizarDocumentoDto`) foram **substituídos** na #57 por `RegistarDocumentoManualDto` e `CorrigirDocumentoDto` (os da #45 incluíam campos de storage que não devem vir do cliente).
+Os DTOs do Documento pertencem à camada de lógica e estão documentados — em forma tabular — em `01-features/documento.md` (secção DTOs). Os DTOs originais (`CriarDocumentoManualDto`, `ActualizarDocumentoDto`) foram **substituídos** por `RegistarDocumentoManualDto` e `CorrigirDocumentoDto` — os originais incluíam campos de storage que não devem vir do cliente.
 
 ---
 
@@ -232,6 +232,6 @@ Os DTOs do Documento pertencem à camada de lógica (#57) e estão documentados 
 
 - **Cast `decimal:2` devolve `string`** — `@property-read ?string $valor`. A conversão para `float` é responsabilidade do Resource (não do Model nem do DTO de input).
 - **Model não é `final`** — coerente com `Entidade`/`CategoriaDocumento`; o ArchTest "actions are final" não cobre Models.
-- **Sem Repository** — desvio aceite; listagem directa no Eloquent (sem queries complexas nesta camada). A issue de Lógica (#57) reavaliará se a `ListarDocumentosAction` justifica Repository.
+- **Sem Repository** — desvio aceite; listagem directa no Eloquent (sem queries complexas nesta camada). Uma futura revisão da camada de Lógica reavaliará se a `ListarDocumentosAction` justifica Repository.
 - **`#[UsePolicy(DocumentoPolicy::class)]`** registado no Model — auto-descoberta da Policy granular (`hasPermissionTo`).
 - **Hard-delete deliberado** — `Documento` não usa `SoftDeletes`; decisão documentada em `../02-shared/soft-delete.md`.

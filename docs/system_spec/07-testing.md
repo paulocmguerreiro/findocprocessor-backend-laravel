@@ -1,6 +1,6 @@
 # System Spec — Testing
 
-> Padrão dual obrigatório por feature slice. Stack: Pest 4 + Mockery. Estabelecido na Issue #40.
+> Padrão dual obrigatório por feature slice. Stack: Pest 4 + Mockery.
 
 Cada Action tem testes em **dois locais distintos** com responsabilidades separadas. Não são redundantes — cobrem dois contextos de invocação diferentes.
 
@@ -183,7 +183,7 @@ Em `tests/ArchTest.php`, adicionar ao `ignoring` do `arch('actions are final')`:
 
 ---
 
-## Testes de concorrência real (duas conexões MySQL) — #90
+## Testes de concorrência real (duas conexões MySQL)
 
 Primeiro padrão do género no projecto (`tests/Feature/Features/Documento/ReivindicarDocumentoPendenteConcorrenciaTest.php`),
 usado para provar exclusão mútua de `lockForUpdate()` entre dois "workers" reais.

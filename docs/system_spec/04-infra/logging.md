@@ -1,7 +1,5 @@
 # System Spec — Infra: Logging Estruturado
 
-> Issue #37 | Branch: `feat/logging-estruturado-actions-middleware`
-
 ## Visão geral
 
 Logging estruturado com `trace_id` por request, eventos de início/fim nas Actions de escrita, e logging de tentativas de autenticação. Contexto injectado via middleware; `trace_id` propagado automaticamente para Jobs via `Illuminate\Support\Facades\Context`.

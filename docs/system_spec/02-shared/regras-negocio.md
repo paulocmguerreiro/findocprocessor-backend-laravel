@@ -133,9 +133,9 @@ tenta mover de volta para a origem.
 
 **Limitação:** em dupla falha (mover OK + compensação falha), o ficheiro fica no disco destino com a
 BD revertida para o estado anterior — reconciliada automaticamente por `ReconciliarFicheirosJob`,
-ver `RegraReconciliarLocalizacaoFicheiro` (#90).
+ver `RegraReconciliarLocalizacaoFicheiro`.
 
-**Nota (#90):** `discoParaEstado(EstadoDocumento $estado): string` é `public` — reutilizado por
+**Nota:** `discoParaEstado(EstadoDocumento $estado): string` é `public` — reutilizado por
 `RegraReconciliarLocalizacaoFicheiro` para listar os discos conhecidos sem duplicar o mapa.
 
 ---

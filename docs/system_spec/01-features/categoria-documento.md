@@ -9,7 +9,7 @@ CRUD completo de categorias de documento com suporte a SoftDelete (restaurar, li
 HTTP Request → FormRequest (autoriza + valida) → Controller (constrói DTO) → Action (autoriza + acede Model) → Controller (formata com Resource) → ApiResponse
 ```
 
-**Decisão arquitectural:** Actions aceitam `CategoriaDocumento|string` — compatíveis com Route Model Binding (HTTP) e testes unitários (UUID directo). Sem Repository — Eloquent abstrai suficientemente a persistência para este CRUD simples (desvio explícito CLAUDE.md, aprovado na Issue #5). A listagem usa cursor pagination (keyset) em vez de OFFSET — padrão do sistema para todas as listagens futuras (Issue #9).
+**Decisão arquitectural:** Actions aceitam `CategoriaDocumento|string` — compatíveis com Route Model Binding (HTTP) e testes unitários (UUID directo). Sem Repository — Eloquent abstrai suficientemente a persistência para este CRUD simples (desvio explícito CLAUDE.md). A listagem usa cursor pagination (keyset) em vez de OFFSET — padrão do sistema para todas as listagens futuras.
 
 **Autorização:** dupla verificação intencional — FormRequest (`Gate::authorize()`) na camada HTTP + Action (`Gate::authorize()`) na camada de lógica. Garante que a Policy se aplica mesmo em invocações fora do contexto HTTP (Jobs, Artisan). Policy ligada por `#[UsePolicy(CategoriaDocumentoPolicy::class)]`; cada método verifica `hasPermissionTo('categorias-documento.<accao>')` (admin todas; utilizador só `.ver`; guests negados). Ver `04-infra/autorizacao.md`.
 
@@ -37,7 +37,7 @@ Todos `final readonly` com `fromRequest()` (array shape `@var`; `tipo_movimento`
 | `CriarCategoriaDto` | `CategoriaDocumento\Criar` | `nome:string`, `slug:string`, `tipoMovimento:TipoMovimento` | `nome`/`slug` não-vazios (`trim`) |
 | `ActualizarCategoriaDto` | `CategoriaDocumento\Actualizar` | idem (update completo — PUT) | idem (valida incondicionalmente) |
 
-> Array shape sem `?` — todos os campos são `required` no FormRequest. Estrutura idêntica entre os dois (Issue #30).
+> Array shape sem `?` — todos os campos são `required` no FormRequest. Estrutura idêntica entre os dois.
 
 ---
 
@@ -93,7 +93,7 @@ Todos `final readonly` com `fromRequest()` (array shape `@var`; `tipo_movimento`
 | `tipo_movimento` | `required`, `string`, `Rule::in(TipoMovimento::cases())` |
 
 - `$uuid` via `$this->route('categorias_documento')` — exclui o registo actual da validação de unicidade
-- Mensagens em português de Portugal via `messages()`; inclui entradas `*.required` para os 3 campos (Issue #30 — semântica PUT)
+- Mensagens em português de Portugal via `messages()`; inclui entradas `*.required` para os 3 campos — semântica PUT
 
 ---
 

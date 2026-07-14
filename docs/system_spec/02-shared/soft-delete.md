@@ -52,7 +52,7 @@ DB::transaction(function () use ($registo): void {
 });
 ```
 
-> **Armadilha (#71):** o fallback **tem de usar uma instância fresca** (`fresh()`).
+> **Armadilha:** o fallback **tem de usar uma instância fresca** (`fresh()`).
 > Ao lançar, `forceDelete()` não repõe a flag interna `forceDeleting`, pelo que um
 > `$registo->delete()` no `catch` sobre a **mesma** instância voltaria a fazer hard
 > delete e relançaria a excepção — o soft delete nunca aconteceria (erro 500).
@@ -81,7 +81,7 @@ As FKs das tabelas filhas **devem** ser `restrictOnDelete` (nunca `nullOnDelete`
 nunca `cascadeOnDelete`) — sem esta restrição o `forceDelete()` teria sucesso mesmo
 com referências, o catch nunca seria atingido e dados históricos seriam destruídos.
 
-> **Actualizado (#71):** `Entidade` é o segundo modelo a usar Padrão B. `User` (#68)
+> **Actualizado:** `Entidade` é o segundo modelo a usar Padrão B. `User`
 > actualizado para try/catch na mesma revisão.
 
 ---
@@ -133,7 +133,7 @@ User::with('roles')
     ->cursorPaginate($porPagina);
 ```
 
-> Decisão (#68): preferir sempre o scope do trait a chamadas dispersas de
+> Decisão: preferir sempre o scope do trait a chamadas dispersas de
 > `withTrashed()`/`onlyTrashed()`/`withoutTrashed()` no código de domínio.
 
 ---
@@ -161,7 +161,7 @@ Route::apiResource('<recurso>', <Recurso>Controller::class)
   modelo já resolvido com o registo inactivo, mantendo a autorização dupla camada intacta.
 - Listagem (`index`) mantém o default `SomenteAtivos`; quem quiser inactivos usa `?estado=`.
 
-> Decisão (#68): `show`/`update`/`destroy` resolvem com registos inactivos incluídos;
+> Decisão: `show`/`update`/`destroy` resolvem com registos inactivos incluídos;
 > `index` permanece activo-por-omissão (filtra via `?estado=`).
 
 ---
@@ -194,7 +194,7 @@ public function restaurar(Restaurar<Recurso>Request $pedido, <Recurso> $<recurso
 Gate::authorize('restore', $this->route('<recurso>'));
 ```
 
-> **Convenção (#71):** preferir **sempre** RMB nos controllers/FormRequests. **Só as Actions**
+> **Convenção:** preferir **sempre** RMB nos controllers/FormRequests. **Só as Actions**
 > aceitam `<Recurso>|string` (o modelo já ligado, ou o UUID em invocação programática) —
 > o ramo `string` resolve com `Model::withTrashed()->findOrFail($id)`. O `->withTrashed()`
 > na rota só se aplica a modelos com `SoftDeletes`.
@@ -231,7 +231,7 @@ Sem `withTrashed()`, documentos que referenciam entidades inactivas retornam
 
 ---
 
-## User — padrão adicional (RGPD) — **adiado (Issue #73)**
+## User — padrão adicional (RGPD) — **adiado**
 
 O modelo `User` deverá, no ramo soft delete (catch), **anonimizar os dados pessoais**
 (`name`, `email`, `password`) — passo de conformidade RGPD.
@@ -239,13 +239,13 @@ O modelo `User` deverá, no ramo soft delete (catch), **anonimizar os dados pess
 ```
 try { forceDelete() }           → sem referências: registo eliminado permanentemente
 catch (QueryException) {
-    [anonimizar]                ← anonimização: #73
+    [anonimizar]                ← anonimização (dívida técnica adiada)
     delete()                    → com referências: soft-deleted
 }
 ```
 
-**Estado (#71):** `EliminarUtilizadorAction` actualizada para try/catch (Padrão B);
-a **anonimização** do ramo catch fica **adiada para a Issue #73** (dívida técnica).
+**Estado:** `EliminarUtilizadorAction` actualizada para try/catch (Padrão B);
+a **anonimização** do ramo catch fica **adiada** (dívida técnica).
 
 ---
 

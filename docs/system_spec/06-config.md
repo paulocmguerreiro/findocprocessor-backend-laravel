@@ -33,7 +33,7 @@ SANCTUM_TOKEN_EXPIRATION=480
 ANTHROPIC_API_KEY=
 ANTHROPIC_MODEL=claude-opus-4-7
 
-# Extração por IA — pipeline PdfParser → OCR → LLM local → LLM cloud (#95-#98).
+# Extração por IA — pipeline PdfParser → OCR → LLM local → LLM cloud.
 # Comentar/esvaziar qualquer var de uma camada desliga essa camada (fail-safe).
 LLM_LOCAL_URL=
 LLM_LOCAL_MODEL=
@@ -42,10 +42,10 @@ LLM_CLOUD_MODEL=
 LLM_CLOUD_KEY=
 
 # Pipeline — limiar (minutos) para considerar um Documento "preso" num estado
-# transitório, varrido pelo ReconciliarFicheirosJob (#90).
+# transitório, varrido pelo ReconciliarFicheirosJob.
 PIPELINE_RECONCILIACAO_LIMIAR_MINUTOS=15
 
-# Scan de malware — ClamAV self-hosted (#91). Vazio desliga a camada
+# Scan de malware — ClamAV self-hosted. Vazio desliga a camada
 # (fail-safe, mesmo padrão de LLM_LOCAL_*/LLM_CLOUD_*).
 CLAMAV_HOST=
 CLAMAV_PORT=
@@ -65,7 +65,7 @@ _Valores definitivos pendentes de implementação._
 
 ## Storage — Discos de ficheiros (`config/filesystems.php`)
 
-5 discos `local` adicionados para o ciclo de vida dos documentos (Issue #45):
+5 discos `local` adicionados para o ciclo de vida dos documentos:
 
 ```php
 'entrada'    => ['driver' => 'local', 'root' => storage_path('app/entrada'),    'throw' => false],
@@ -77,15 +77,15 @@ _Valores definitivos pendentes de implementação._
 
 Mapeamento estado → disco: `Pendente`/`AguardaEnvio` → `entrada`; `Enviado`/`AguardaResposta` → `enviado`; `Processado` → `processado`; `Erro` → `erro`; `Perigoso` → `perigoso`.
 
-O campo `disco_storage` na tabela `documentos` armazena o nome do disco activo. A movimentação de ficheiros entre discos (ao transitar de estado) é responsabilidade das Actions de transição (Issue #57).
+O campo `disco_storage` na tabela `documentos` armazena o nome do disco activo. A movimentação de ficheiros entre discos (ao transitar de estado) é responsabilidade das Actions de transição.
 
 Os 5 discos de ciclo de vida (e `storage/app/private/`) estão no `.gitignore` — documentos carregados nunca podem ser commitados.
 
 ---
 
-## `config/extracao.php` e `config/prism.php` — pipeline de extração (#95)
+## `config/extracao.php` e `config/prism.php` — pipeline de extração
 
-`config/extracao.php` (novo, #95) — parâmetros do pipeline e flags derivadas
+`config/extracao.php` — parâmetros do pipeline e flags derivadas
 da presença das 5 env vars `LLM_*` (sem flags dedicados; config incompleta ⇒
 camada inactiva, fail-safe):
 
@@ -97,7 +97,7 @@ camada inactiva, fail-safe):
 'camada_cloud_activa' => filled(env('LLM_CLOUD_URL')) && filled(env('LLM_CLOUD_MODEL')) && filled(env('LLM_CLOUD_KEY')),
 ```
 
-`config/prism.php` (publicado via `vendor:publish --tag=prism-config`, #95) —
+`config/prism.php` (publicado via `vendor:publish --tag=prism-config`) —
 providers do Prism ligados às mesmas vars: `providers.ollama.url` =
 `LLM_LOCAL_URL`; `providers.openai.url`/`api_key` = `LLM_CLOUD_URL`/`LLM_CLOUD_KEY`
 (provider OpenAI-compatible, cobre OpenRouter/gateways custom). Ver
@@ -113,7 +113,7 @@ providers do Prism ligados às mesmas vars: `providers.ollama.url` =
 
 ---
 
-## `config/pipeline.php` — concorrência do pipeline (#90) e scan de malware (#91)
+## `config/pipeline.php` — concorrência do pipeline e scan de malware
 
 ```php
 'reconciliacao_limiar_minutos' => (int) env('PIPELINE_RECONCILIACAO_LIMIAR_MINUTOS', 15),
@@ -139,7 +139,7 @@ da app; se excedido, o INSTREAM falha e conta como falha do scan (`FalhaAnaliseM
 nunca como "não configurado". Ver `04-infra/external-apis.md` para o contrato `AnalisadorMalware`.
 
 **Dependência de cache partilhado (`redis`):** `Schedule::job(...)->onOneServer()` (usado por
-`ReconciliarFicheirosJob`) e o futuro `WithoutOverlapping` por documento (issue do orquestrador, #90)
+`ReconciliarFicheirosJob`) e o futuro `WithoutOverlapping` por documento (issue do orquestrador)
 dependem de um cache store com locks atómicos partilhados entre processos — `config/cache.php` já usa
 `redis` como default (`CACHE_STORE=redis`, `.env.example`). Em qualquer ambiente onde o cache não seja
 partilhado entre workers (ex.: `array`/`file` num único processo local), `onOneServer()`/

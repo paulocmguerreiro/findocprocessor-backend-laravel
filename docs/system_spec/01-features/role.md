@@ -1,7 +1,6 @@
 # System Spec — Feature: Role
 
 > `App\Features\Role\`
-> Issue #50
 
 CRUD completo de roles (gestão de roles do sistema via Spatie Permission). Permite listar, ver, criar, actualizar e eliminar roles, com protecção de roles de sistema.
 

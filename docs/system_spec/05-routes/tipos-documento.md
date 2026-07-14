@@ -1,7 +1,5 @@
 # System Spec — Rotas: TipoDocumento
 
-> Issues #84 (modelo), #85 (lógica)
-
 ```php
 Route::apiResource('tipos-documento', TipoDocumentoController::class)
     ->only(['index', 'store', 'show', 'update', 'destroy']);

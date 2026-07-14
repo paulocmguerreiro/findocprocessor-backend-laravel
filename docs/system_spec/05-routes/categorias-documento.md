@@ -1,7 +1,5 @@
 # System Spec — Rotas: CategoriaDocumento
 
-> Issues #5, #9, #72
-
 ```php
 Route::apiResource('categorias-documento', CategoriaDocumentoController::class)
     ->withTrashed(['show', 'update', 'destroy']);

@@ -1,7 +1,5 @@
 # System Spec — Infra: Audit Trail
 
-> Issue #54 | Branch: `feat/audit-trail-activitylog`
-
 ## Visão geral
 
 Rastreio persistente e consultável de alterações de dados de domínio (quem alterou o quê, valores antes/depois), com atomicidade garantida pela transação da Action. Implementado com `spatie/laravel-activitylog ^4.0`.
@@ -57,7 +55,7 @@ LogOptions::defaults()
 |---|---|---|
 | `CategoriaDocumento` | `RegistaActividade` | — |
 | `Entidade` | `RegistaActividade` | `['nif']` (dado fiscal — RGPD) |
-| `User` | `RegistaActividade` | `['password', 'remember_token']` (credenciais — nunca em audit) — Issue #73 |
+| `User` | `RegistaActividade` | `['password', 'remember_token']` (credenciais — nunca em audit) |
 
 ### Via Observer — `App\Observers\RoleObserver`
 
@@ -73,7 +71,7 @@ Role::observe(RoleObserver::class);
 
 ---
 
-### Evento custom — `rgpd.anonimizacao` (Issue #73)
+### Evento custom — `rgpd.anonimizacao`
 
 `AnonimizarUtilizadorAction` substitui os dados pessoais do `User` com
 `forceFill([...])->saveQuietly()`. O `saveQuietly()` **suprime** o evento `updated`
@@ -113,7 +111,7 @@ O `causer` é associado automaticamente ao `Auth::user()` pelo `ActivitylogServi
 | `Entidade` | `nif` | Dado fiscal — RGPD |
 | `User` | `password`, `remember_token` | Credenciais — nunca em audit |
 
-> **Actualização (Issue #73):** o `User` passou a ser **sujeito** de auditoria (além de
+> **Actualização:** o `User` passou a ser **sujeito** de auditoria (além de
 > causer). O CRUD normal audita `name`/`email` (rastreio de alterações administrativas);
 > as credenciais são excluídas. A anonimização usa o evento custom `rgpd.anonimizacao`
 > sem PII (ver acima).
@@ -131,4 +129,4 @@ NIS2 Art. 21 sugere retenção mínima de 12 meses. Não implementado nesta issu
 - **Unit** (`tests/Unit/Features/AuditTrail/`): `created`/`updated`/`deleted`, no-op (logOnlyDirty), rollback, e exclusão de `nif` (Entidade).
 - **Feature**: assertions `Activity::count()` adicionadas aos testes HTTP de escrita existentes de CategoriaDocumento, Entidade e Role (incl. causer não-null e 403 → 0).
 - Cada ficheiro limpa `activity_log` no `beforeEach` (os seeds deixam registos persistentes fora da transação do teste).
-- **Issue #73:** como o `User` passou a auditar, criar o utilizador autenticado gera um evento `created`. Os testes de `Criar{Entidade,Categoria,Role}` que contam `Activity` limpam o `activity_log` **após** a autenticação, isolando a contagem à actividade do próprio pedido.
+- Como o `User` passou a auditar, criar o utilizador autenticado gera um evento `created`. Os testes de `Criar{Entidade,Categoria,Role}` que contam `Activity` limpam o `activity_log` **após** a autenticação, isolando a contagem à actividade do próprio pedido.
