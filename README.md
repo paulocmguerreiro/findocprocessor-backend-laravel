@@ -6,15 +6,7 @@
 ![Larastan](https://img.shields.io/badge/Larastan-nível%209-2D2D2D)
 ![License](https://img.shields.io/badge/licença-MIT-blue)
 
-> API REST para processamento de documentos financeiros, organizada em **Vertical Slice Architecture** em Laravel 13 / PHP 8.5.
-
-**Regras estruturais/lógicas:**
-
-- **Vertical Slice Architecture** consistente — lógica organizada por caso de uso (`app/Features/`), não por camada técnica.
-- **Actions `final readonly`** como unidade de lógica, controllers magros (só fazem dispatch), DTOs como Value Objects.
-- **Autorização dupla camada** (`Gate::authorize()` no FormRequest **e** na Action) — cobre HTTP e não-HTTP (Jobs, Artisan, testes).
-- **Qualidade imposta por CI:** Larastan nível 9, 100% type-coverage, 100% cobertura de testes, Pint e Rector — zero excepções.
-- **Testes em padrão dual** por slice: invocação directa (unit) **e** via HTTP (feature).
+> API REST para processamento de documentos financeiros, organizada em **Vertical Slice Architecture** em Laravel 13 / PHP 8.5. Padrões de arquitectura em [Arquitectura](#arquitectura), garantias de qualidade em [Qualidade](#qualidade).
 
 ## Documentação
 
@@ -96,6 +88,8 @@ docker compose exec app composer test
   - Em `documentos` é a **fase do ciclo de vida** (`EstadoDocumento`): `Pendente | AguardaEnvio | Enviado | AguardaResposta | Processado | Erro | Perigoso`.
 
 ## Testes
+
+Padrão dual por feature slice: invocação directa (unit) **e** via HTTP (feature).
 
 ```bash
 composer test          # pipeline completa (lint + arquitectura + tipos + cobertura)
