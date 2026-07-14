@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Models\Documento;
 use App\Models\EtapaDocumento;
 use App\Models\User;
+use App\Shared\Enums\EtapaExtracao;
+use App\Shared\Enums\ResultadoEtapa;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -19,7 +21,19 @@ it('mostra o documento com o histórico e devolve 200', function (): void {
         ->assertOk()
         ->assertJsonPath('data.id', $documento->id)
         ->assertJsonCount(1, 'data.historico')
-        ->assertJsonPath('data.historico.0.estado', 'PROCESSADO');
+        ->assertJsonPath('data.historico.0.estado', 'PROCESSADO')
+        ->assertJsonPath('data.historico.0.passo', null)
+        ->assertJsonPath('data.historico.0.resultado', null);
+});
+
+it('mostra passo/resultado preenchidos numa linha de IA do histórico', function (): void {
+    $documento = Documento::factory()->processado()->create();
+    EtapaDocumento::factory()->passoIa(EtapaExtracao::NecessitaOcr, ResultadoEtapa::Sucesso)->for($documento, 'documento')->create();
+
+    $this->getJson("/api/documentos/{$documento->id}")
+        ->assertOk()
+        ->assertJsonPath('data.historico.0.passo', 'NECESSITA_OCR')
+        ->assertJsonPath('data.historico.0.resultado', 'SUCESSO');
 });
 
 it('devolve 404 para um documento inexistente', function (): void {

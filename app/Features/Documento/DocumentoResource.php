@@ -27,6 +27,7 @@ final class DocumentoResource extends JsonResource
      *     nome_ficheiro_original: string,
      *     hash_sha256: string,
      *     historico: AnonymousResourceCollection,
+     *     etapa_extracao: string|null,
      *     criado_em: string,
      *     actualizado_em: string
      * }
@@ -34,6 +35,9 @@ final class DocumentoResource extends JsonResource
     #[\Override]
     public function toArray(Request $request): array
     {
+        /** @var string|null $etapaExtracao */
+        $etapaExtracao = $this->whenLoaded('extracao', fn (): ?string => $this->extracao?->etapa_extracao->value);
+
         return [
             'id' => $this->id,
             'status' => $this->status->value,
@@ -46,6 +50,7 @@ final class DocumentoResource extends JsonResource
             'nome_ficheiro_original' => $this->nome_ficheiro_original,
             'hash_sha256' => $this->hash_sha256,
             'historico' => EtapaDocumentoResource::collection($this->whenLoaded('historico')),
+            'etapa_extracao' => $etapaExtracao,
             'criado_em' => $this->created_at->toIso8601String(),
             'actualizado_em' => $this->updated_at->toIso8601String(),
         ];
