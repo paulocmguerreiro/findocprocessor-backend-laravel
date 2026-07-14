@@ -72,6 +72,7 @@
 | Scan de malware (ClamAV self-hosted)          | `04-infra/external-apis.md`   | implementado                                                                           |
 | PromptBuilder (system prompt de extracção)   | `04-infra/prompt-builder.md`  | implementado                                                                           |
 | Ambiente Docker + paridade de testes (MySQL) | `04-infra/ambiente-docker.md` | implementado                                                                           |
+| CI/CD (GitHub Actions — jobs, gates de qualidade)  | `04-infra/ambiente-docker.md` (secção "CI") | implementado                                                             |
 
 ## Rotas e Configuração
 

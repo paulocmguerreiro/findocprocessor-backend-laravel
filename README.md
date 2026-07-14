@@ -20,8 +20,10 @@
 | [`docs/system_spec/05-routes/`](docs/system_spec/05-routes) | Rotas por feature |
 | [`docs/system_spec/06-config.md`](docs/system_spec/06-config.md) | Configuração e variáveis de ambiente |
 | [`docs/system_spec/07-testing.md`](docs/system_spec/07-testing.md) | Padrão dual de testes (Unit + Feature) + ArchTest |
+| [`docs/system_spec/04-infra/ambiente-docker.md`](docs/system_spec/04-infra/ambiente-docker.md) | Docker (dev/paridade) e CI/CD (GitHub Actions — jobs, gates de qualidade) |
 | [`openapi.yaml`](openapi.yaml) | Contrato REST completo — importável no [Swagger Editor](https://editor.swagger.io) |
-| [`docs/WORKFLOW.md`](docs/WORKFLOW.md) | Workflow de desenvolvimento (Commands → Skills → Agents) e grafo de sequência das fases |
+| [`docs/WORKFLOW.md`](docs/WORKFLOW.md) | Workflow de desenvolvimento assistido por IA (Commands → Skills → Agents), grafo de sequência das fases e checkpoints humanos |
+| [`CHANGELOG.md`](CHANGELOG.md) | Histórico de alterações por issue/versão |
 
 ## Stack
 
