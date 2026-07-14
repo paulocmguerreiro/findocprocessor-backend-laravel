@@ -6,6 +6,7 @@ use App\Models\CategoriaDocumento;
 use App\Models\Documento;
 use App\Models\Entidade;
 use App\Models\EtapaDocumento;
+use App\Models\ExtracaoDocumento;
 use App\Models\User;
 use App\Shared\Enums\EstadoDocumento;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -131,6 +132,20 @@ describe('Relações', function (): void {
 
         expect($documento->fresh()->categoria)->toBeInstanceOf(CategoriaDocumento::class)
             ->and($documento->fresh()->categoria->id)->toBe($categoria->id);
+    });
+
+    it('extracao é null quando o documento nunca entrou no pipeline de extracao', function (): void {
+        $documento = Documento::factory()->create();
+
+        expect($documento->extracao)->toBeNull();
+    });
+
+    it('hasOne extracao devolve a linha associada', function (): void {
+        $documento = Documento::factory()->create();
+        $extracao = ExtracaoDocumento::factory()->for($documento, 'documento')->create();
+
+        expect($documento->extracao)->toBeInstanceOf(ExtracaoDocumento::class)
+            ->and($documento->extracao->id)->toBe($extracao->id);
     });
 });
 

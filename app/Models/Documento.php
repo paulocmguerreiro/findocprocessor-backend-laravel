@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -48,6 +49,7 @@ use Illuminate\Support\Carbon;
  * @property-read ?CategoriaDocumento $categoria
  * @property-read ?User $responsavel
  * @property-read Collection<int, EtapaDocumento> $historico
+ * @property-read ?ExtracaoDocumento $extracao
  */
 #[Table('documentos')]
 #[Fillable([
@@ -128,6 +130,12 @@ class Documento extends Model
     public function historico(): HasMany
     {
         return $this->hasMany(EtapaDocumento::class, 'id_documento')->orderBy('created_at');
+    }
+
+    /** @return HasOne<ExtracaoDocumento, $this> */
+    public function extracao(): HasOne
+    {
+        return $this->hasOne(ExtracaoDocumento::class, 'id_documento');
     }
 
     /** @param Builder<Documento> $query */
