@@ -16,6 +16,21 @@
 - **Qualidade imposta por CI:** Larastan nível 9, 100% type-coverage, 100% cobertura de testes, Pint e Rector — zero excepções.
 - **Testes em padrão dual** por slice: invocação directa (unit) **e** via HTTP (feature).
 
+## Documentação
+
+| Documento | Conteúdo |
+| --- | --- |
+| [`docs/system_spec/00-index.md`](docs/system_spec/00-index.md) | Porta de entrada da spec de arquitectura — feature por feature |
+| [`docs/system_spec/01-features/`](docs/system_spec/01-features) | Actions, DTOs e regras de cada feature slice |
+| [`docs/system_spec/02-shared/`](docs/system_spec/02-shared) | Enums, HTTP, estados, padrões (Actions/DTOs/tipagem/nomenclatura), regras de negócio |
+| [`docs/system_spec/03-models/`](docs/system_spec/03-models) | Eloquent Models (migrations, factories, policies, resources) |
+| [`docs/system_spec/04-infra/`](docs/system_spec/04-infra) | Transações, cache, jobs/queue, APIs externas, autorização |
+| [`docs/system_spec/05-routes/`](docs/system_spec/05-routes) | Rotas por feature |
+| [`docs/system_spec/06-config.md`](docs/system_spec/06-config.md) | Configuração e variáveis de ambiente |
+| [`docs/system_spec/07-testing.md`](docs/system_spec/07-testing.md) | Padrão dual de testes (Unit + Feature) + ArchTest |
+| [`openapi.yaml`](openapi.yaml) | Contrato REST completo — importável no [Swagger Editor](https://editor.swagger.io) |
+| [`docs/WORKFLOW.md`](docs/WORKFLOW.md) | Workflow de desenvolvimento (Commands → Skills → Agents) e grafo de sequência das fases |
+
 ## Stack
 
 - **Laravel 13** / PHP 8.5 — Vertical Slice Architecture
@@ -47,9 +62,7 @@ app/Jobs/                  ← Processamento assíncrono       →  ver Roadmap 
 > de ingestão de documentos (OCR / análise de imagem / IA) descrito no
 > [Roadmap](#roadmap) — ainda não contêm implementação.
 
-Padrões aplicados: Actions `final readonly`, autorização dupla camada (`Gate::authorize()` no FormRequest **e** na Action), `DB::transaction()` em todas as escritas, DTOs como Value Objects, `strict_types=1` em todos os ficheiros, cursor pagination (keyset) nas listagens, cache Redis com invalidação por tags e logging estruturado com `trace_id` por request (propagado a Jobs).
-
-> Documentação de arquitectura detalhada em [`docs/system_spec/00-index.md`](docs/system_spec/00-index.md).
+Padrões aplicados: Actions `final readonly`, autorização dupla camada (`Gate::authorize()` no FormRequest **e** na Action), `DB::transaction()` em todas as escritas, DTOs como Value Objects, `strict_types=1` em todos os ficheiros, cursor pagination (keyset) nas listagens, cache Redis com invalidação por tags e logging estruturado com `trace_id` por request (propagado a Jobs). Detalhe em [Documentação](#documentação).
 
 ## Como correr
 
@@ -104,74 +117,17 @@ composer test:coverage # Pest — cobertura 100%
 | POST | `/api/auth/logout` | Revogar token actual | Bearer |
 | POST | `/api/auth/tokens` | Criar token adicional | Bearer |
 
-### Categorias de documento
+### Restantes recursos
 
-Todas as rotas exigem Bearer token.
+Todas as rotas exigem Bearer token. Lista completa de endpoints e parâmetros: [`openapi.yaml`](openapi.yaml) ou `docs/system_spec/05-routes/`.
 
-| Método | Path                             | Descrição          |
-| ------ | -------------------------------- | ------------------ |
-| GET    | `/api/categorias-documento`      | Listar (cursor)    |
-| POST   | `/api/categorias-documento`      | Criar              |
-| GET    | `/api/categorias-documento/{id}` | Ver detalhe        |
-| PUT    | `/api/categorias-documento/{id}` | Actualizar (completo) |
-| DELETE | `/api/categorias-documento/{id}` | Eliminar           |
-
-### Entidades
-
-Todas as rotas exigem Bearer token.
-
-| Método | Path                                    | Descrição                    |
-| ------ | --------------------------------------- | ---------------------------- |
-| GET    | `/api/entidades`                        | Listar (cursor; `?estado=todos\|somente_ativos\|somente_inativos`) |
-| POST   | `/api/entidades`                        | Criar                        |
-| GET    | `/api/entidades/{id}`                   | Ver detalhe                  |
-| PUT    | `/api/entidades/{id}`                   | Actualizar (completo)        |
-| DELETE | `/api/entidades/{id}`                   | Eliminar (soft delete se referenciada) |
-| PATCH  | `/api/entidades/{id}/restaurar`         | Restaurar (reactivar soft-deleted) |
-| PATCH  | `/api/entidades/{id}/empresa-mae`       | Converter em empresa-mãe     |
-
-### Tipos de documento
-
-Todas as rotas exigem Bearer token. Sem soft delete (`DELETE` é definitivo).
-
-| Método | Path                              | Descrição                                     |
-| ------ | --------------------------------- | ---------------------------------------------- |
-| GET    | `/api/tipos-documento`            | Listar (cursor; `?id_categoria=` opcional)      |
-| POST   | `/api/tipos-documento`            | Criar (pelo menos um `espera_*` tem de ser `true`) |
-| GET    | `/api/tipos-documento/{id}`       | Ver detalhe                                     |
-| PUT    | `/api/tipos-documento/{id}`       | Actualizar (completo)                           |
-| DELETE | `/api/tipos-documento/{id}`       | Eliminar (hard delete)                          |
-
-### Documentos
-
-Todas as rotas exigem Bearer token. Ciclo de estados `Pendente → AguardaEnvio → Enviado → AguardaResposta → Processado`, com ramos terminais `Erro` e `Perigoso`. As transições são validadas por `RegraTransicaoEstado` — uma transição inválida devolve `422`.
-
-| Método | Path                                       | Descrição                                  |
-| ------ | ------------------------------------------ | ------------------------------------------ |
-| GET    | `/api/documentos`                          | Listar (cursor)                            |
-| POST   | `/api/documentos`                          | Registar manualmente (`multipart/form-data`) |
-| POST   | `/api/documentos/upload`                   | Receber upload (`multipart/form-data`)     |
-| GET    | `/api/documentos/{id}`                      | Ver detalhe (com histórico de etapas)      |
-| PATCH  | `/api/documentos/{id}`                      | Corrigir metadados                         |
-| DELETE | `/api/documentos/{id}`                      | Eliminar                                   |
-| GET    | `/api/documentos/{id}/ficheiro`             | Descarregar ficheiro                       |
-| POST   | `/api/documentos/{id}/reprocessar`          | Reprocessar (volta a estado anterior)      |
-
-### Roles & Utilizadores
-
-Todas as rotas exigem Bearer token (role `admin`).
-
-| Método | Path                              | Descrição                |
-| ------ | --------------------------------- | ------------------------ |
-| GET/POST/PUT/DELETE | `/api/roles`         | CRUD de roles            |
-| GET    | `/api/utilizadores`               | Listar (cursor; `?estado=todos\|somente_ativos\|somente_inativos`) |
-| POST   | `/api/utilizadores`               | Criar utilizador (com `role` opcional) |
-| GET    | `/api/utilizadores/{id}`          | Ver detalhe (próprio sempre permitido) |
-| PUT    | `/api/utilizadores/{id}`          | Actualizar (password opcional) |
-| DELETE | `/api/utilizadores/{id}`          | Eliminar (hard/soft conforme referências) |
-| PUT    | `/api/utilizadores/{id}/role`     | Atribuir role a utilizador |
-| PATCH  | `/api/utilizadores/{id}/restaurar`  | Restaurar (reactivar soft-deleted) |
-| POST   | `/api/utilizadores/{id}/anonimizar` | Anonimizar (RGPD Art. 17.º — dados + soft delete + revoga tokens) |
+| Feature | Endpoints | Notas |
+| --- | --- | --- |
+| Categorias de documento ([spec](docs/system_spec/05-routes/categorias-documento.md)) | 5 (CRUD) | Soft delete + `PATCH .../restaurar` |
+| Entidades ([spec](docs/system_spec/05-routes/entidades.md)) | 7 (CRUD + restaurar + empresa-mãe) | Soft delete; `?estado=todos|somente_ativos|somente_inativos` |
+| Tipos de documento ([spec](docs/system_spec/05-routes/tipos-documento.md)) | 5 (CRUD) | Sem soft delete — `DELETE` é definitivo |
+| Documentos ([spec](docs/system_spec/05-routes/documento.md)) | 8 (CRUD + upload + ficheiro + reprocessar) | Sem soft delete; ciclo de estados `Pendente → AguardaEnvio → Enviado → AguardaResposta → Processado` (ramos `Erro`/`Perigoso`), transições validadas por `RegraTransicaoEstado` (`422` se inválida); `?estado=` filtra pela fase do ciclo de vida |
+| Roles & Utilizadores ([spec](docs/system_spec/05-routes/role.md)) | 5 + 8 | Role `admin`; utilizadores com soft delete, restauro e anonimização RGPD (Art. 17.º) |
 
 ## Qualidade
 

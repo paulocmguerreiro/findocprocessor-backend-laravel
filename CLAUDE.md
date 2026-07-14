@@ -144,6 +144,8 @@ Referência completa: `findocprocessor-workflow/.claude/CLAUDE.md`
 | `/publica-implementacao [#N]`              | Fase 3b | PR no GitHub                                       |
 | `/mostra-workflow`                         | —       | Estado actual do workflow                          |
 
+> Grafo de sequência completo e explicação de Commands → Skills → Agents: `docs/WORKFLOW.md`.
+
 ### Modo de trabalho
 
 **Sempre Modo SDD Activo** — checkpoints A, B, por tarefa, ②, D e E são obrigatórios.
