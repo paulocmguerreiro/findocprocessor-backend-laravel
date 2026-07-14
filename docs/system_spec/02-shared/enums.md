@@ -129,6 +129,49 @@ enum PosicaoEmpresaMae: string
 
 ---
 
+## `EtapaExtracao` — `App\Shared\Enums\EtapaExtracao`
+
+PHP 8.5 backed enum (string). Etapa da dimensão de extracção de um `Documento` — independente do
+`status` de negócio (Issue #94). Cases em TitleCase PT; values em UPPER_SNAKE.
+
+```php
+enum EtapaExtracao: string
+{
+    case Pendente       = 'PENDENTE';
+    case NecessitaOcr    = 'NECESSITA_OCR';
+    case TextoPronto     = 'TEXTO_PRONTO';
+    case NecessitaCloud  = 'NECESSITA_CLOUD';
+    case Concluido       = 'CONCLUIDO';
+    case Falhado         = 'FALHADO';
+}
+```
+
+- Valores na BD: `'PENDENTE'`, `'NECESSITA_OCR'`, `'TEXTO_PRONTO'`, `'NECESSITA_CLOUD'`, `'CONCLUIDO'`, `'FALHADO'`
+- Usado em: `ExtracaoDocumento::$etapa_extracao` e `EtapaDocumento::$passo` (cast Eloquent, ambos)
+- Ver `02-shared/estados.md` — "modelo de 2 dimensões" para a relação com `EstadoDocumento`
+
+---
+
+## `ResultadoEtapa` — `App\Shared\Enums\ResultadoEtapa`
+
+PHP 8.5 backed enum (string). Resultado de um passo de IA registado por `RegistarEtapaExtracaoAction`
+(Issue #94). Cases em TitleCase PT; values em UPPER_SNAKE.
+
+```php
+enum ResultadoEtapa: string
+{
+    case Sucesso = 'SUCESSO';
+    case Falha   = 'FALHA';
+    case EmCurso = 'EM_CURSO';
+}
+```
+
+- Valores na BD: `'SUCESSO'`, `'FALHA'`, `'EM_CURSO'`
+- Usado em: `EtapaDocumento::$resultado` (cast Eloquent, `null` numa linha de negócio)
+- `RegistarEtapaExtracaoDto` exige `motivo` não-vazio quando `resultado === Falha`
+
+---
+
 ## `CampoOrdenacaoDocumentos` — `App\Features\Documento\Listar\CampoOrdenacaoDocumentos`
 
 Campo de ordenação da listagem de documentos.

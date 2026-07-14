@@ -68,6 +68,7 @@ class Documento extends Model
  * @property-read ?Entidade $fornecedor
  * @property-read ?Entidade $cliente
  * @property-read ?CategoriaDocumento $categoria
+ * @property-read ?ExtracaoDocumento $extracao
  */
 ```
 
@@ -127,11 +128,16 @@ public function fornecedor(): BelongsTo  // → Entidade (id_fornecedor) — wit
 public function cliente(): BelongsTo     // → Entidade (id_cliente) — withTrashed() (Issue #69)
 public function categoria(): BelongsTo   // → CategoriaDocumento (id_categoria) — withTrashed() (Issue #70)
 public function historico(): HasMany     // → EtapaDocumento (id_documento), orderBy created_at asc
+public function extracao(): HasOne       // → ExtracaoDocumento (id_documento) (#94)
 ```
 
 > **`withTrashed()` em `fornecedor()`, `cliente()` e `categoria()`** — documentos históricos continuam a carregar a entidade/categoria mesmo após soft delete. Sem `withTrashed()`, a relação devolveria `null` quando o registo está inactivo, apagando o histórico do interveniente/classificação.
 
 **`historico`** — adicionado na Issue #56. Relação `hasMany` com FK explícita `id_documento`; ordenada por `created_at` ascendente (linha temporal). Ver `03-models/etapa-documento.md` para detalhe do Model.
+
+**`extracao` (#94)** — relação `hasOne`, **sem `withDefault()`**: `null` é um valor legítimo (documento
+nunca entrou na dimensão de extracção, ex.: registo manual via `RegistarDocumentoManualAction`, que
+vai directo a `Processado`/`Perigoso`/`Erro`). Ver `03-models/extracao-documento.md`.
 
 ### Scopes
 
@@ -206,6 +212,7 @@ Os DTOs do Documento pertencem à camada de lógica (#57) e estão documentados 
   "data_documento": "2026-06-25",
   "nome_ficheiro_original": "fatura.pdf",
   "hash_sha256": "abc123...64chars",
+  "etapa_extracao": "TEXTO_PRONTO",
   "criado_em": "2026-06-25T10:00:00.000000Z",
   "actualizado_em": "2026-06-25T10:00:00.000000Z"
 }
@@ -216,6 +223,8 @@ Os DTOs do Documento pertencem à camada de lógica (#57) e estão documentados 
 - `valor` → conversão explícita `(float)` (cast `decimal:2` devolve `string`)
 - Relações via `whenLoaded()` + `EntidadeResource` / `CategoriaDocumentoResource`
 - **Não expõe** `disco_storage` nem `nome_ficheiro_storage` (detalhes internos / PII indirecta)
+- **`etapa_extracao` (#94)** — string ou `null`, via `whenLoaded('extracao', ...)`; ausente da resposta
+  quando a relação não é carregada. **Nunca** expõe `texto_extraido`/`dados_json` (PII, RNF-01).
 
 ---
 

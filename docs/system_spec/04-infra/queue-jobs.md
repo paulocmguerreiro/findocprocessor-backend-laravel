@@ -50,6 +50,14 @@ pipeline de extracção) invocar `TriarDocumentoPendenteAction`/o Job que a envo
 iniciar o processamento — mesmo padrão de dependência a informar já usado por `Reivindicar`/
 `MarcarAguardaEnvio` (#90).
 
+`RegistarEtapaExtracaoAction` (#94, `app/Features/Documento/RegistarEtapaExtracao/`) é o ponto de
+invocação programática que o futuro orquestrador de pipeline (#97/#98) vai chamar para registar cada
+passo de IA (OCR/cloud) sobre um `Documento` — upsert em `extracoes_documento` + `EtapaDocumento`
+(`passo`/`resultado`). Sem Job concreto nesta issue: só o modelo de dados e o recorder existem; o
+Job/Schedule que varre `extracoes_documento` por `(etapa_extracao, extracao_reclamada_em)` e invoca
+esta Action fica para #97/#98. Ver `01-features/documento.md` e `02-shared/estados.md` ("modelo de 2
+dimensões").
+
 ---
 
 ## Nota transações

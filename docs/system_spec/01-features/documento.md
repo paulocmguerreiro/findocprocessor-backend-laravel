@@ -1,18 +1,18 @@
 # System Spec — Feature: Documento (lógica — máquina de estados)
 
 > `app/Features/Documento/`
-> Issues: #45 (modelo), #56 (EtapaDocumento), #57 (lógica), #90 (concorrência do pipeline), #91 (scan de malware ClamAV — esta spec)
+> Issues: #45 (modelo), #56 (EtapaDocumento), #57 (lógica), #90 (concorrência do pipeline), #91 (scan de malware ClamAV), #94 (extracção — model + recorder — esta spec)
 
 ---
 
 ## Visão geral
 
-Feature com 16 Actions (8 expostas via endpoint HTTP + 8 sem HTTP, invocadas apenas
+Feature com 17 Actions (8 expostas via endpoint HTTP + 9 sem HTTP, invocadas apenas
 programaticamente: 6 de transição de pipeline — `Marcar*` e `TransicionarProcessadoDocumentoAction`
-— + `ReivindicarDocumentoPendenteAction` (#90) + `TriarDocumentoPendenteAction` (#91)), 4 classes
-`Regra*`, 1 executor partilhado interno, 8 DTOs, 4 Events e camada HTTP completa. A máquina de
-estados é a peça central: cada transição passa obrigatoriamente pelo mapa central em
-`RegraTransicaoEstado` — nunca `if ($doc->status == ...)`.
+— + `ReivindicarDocumentoPendenteAction` (#90) + `TriarDocumentoPendenteAction` (#91) +
+`RegistarEtapaExtracaoAction` (#94)), 4 classes `Regra*`, 1 executor partilhado interno, 9 DTOs, 4
+Events e camada HTTP completa. A máquina de estados é a peça central: cada transição passa
+obrigatoriamente pelo mapa central em `RegraTransicaoEstado` — nunca `if ($doc->status == ...)`.
 
 ---
 
@@ -91,6 +91,24 @@ Ver `04-infra/external-apis.md` para o contrato `AnalisadorMalware`.
 
 ---
 
+### Recorder de extracção (sem endpoint HTTP, #94)
+
+| Action | Ability | Escreve | Move ficheiro |
+|---|---|---|---|
+| `RegistarEtapaExtracaoAction` | — (sem Gate, sistema) | `extracoes_documento` (upsert) + `EtapaDocumento` (`passo`/`resultado`) | Não |
+
+**`RegistarEtapaExtracaoAction`** (`app/Features/Documento/RegistarEtapaExtracao/`) — recorder do
+pipeline: dado um `Documento` e um `RegistarEtapaExtracaoDto`, faz upsert (por `id_documento`, chave
+única) da linha em `extracoes_documento` e grava uma `EtapaDocumento` com `estado` igual ao `status`
+actual do documento (não muda) e `passo`/`resultado` preenchidos — tudo na mesma `DB::transaction()`.
+Não altera `Documento.status` nem usa `RegraTransicaoEstado` (não é uma transição de negócio).
+Contrato "substituição total": cada chamada substitui inteiramente `texto_extraido`/`dados_json` — o
+chamador (futuro orquestrador, #97/#98) envia sempre o valor completo pretendido, nunca deltas. Sem
+`Gate::authorize` (acção de sistema, RNF-02) — `EtapaDocumento` gravada com `id_utilizador = null`.
+Ver `03-models/extracao-documento.md` e `02-shared/estados.md` ("modelo de 2 dimensões").
+
+---
+
 ### Actions HTTP retidas
 
 | Action | Ability | De | Para | Exposta HTTP |
@@ -101,6 +119,12 @@ Ver `04-infra/external-apis.md` para o contrato `AnalisadorMalware`.
 
 `ReprocessarDocumentoAction` — DTO `ReprocessarDocumentoDto` (enum `ModoReprocessamento`); move
 `erro → entrada`; grava `EtapaDocumento (AguardaEnvio, modo->value, id)`; emite `DocumentoReprocessado`.
+**Ripple #94:** abre a sua própria `DB::transaction()` (a transição via `ExecutorTransicaoDocumento`
+corre como transacção aninhada/`SAVEPOINT` dentro dela) e reseta a linha `extracoes_documento` desse
+documento **se existir** (`etapa_extracao = Pendente`, `extracao_reclamada_em = null`,
+`extracao_tentativas = 0`, `texto_extraido = null`, `dados_json = null`) via `update()` — nunca
+`create()`/`upsert()`, para não criar dimensão de extracção a documentos que nunca lá entraram (ex.:
+erro de scan de malware em `Pendente`).
 
 `CorrigirDocumentoAction` — DTO `CorrigirDocumentoDto` (só campos de domínio, sem campos de storage);
 renomeia via `RegraNomearProcessado` se o slug mudar; grava `EtapaDocumento (Processado, "correcção", id)`.
@@ -181,9 +205,11 @@ chamante antes de invocar `executar()`.
 | `CorrigirDocumentoDto` | `Corrigir/` | campos de domínio (sem campos de storage) |
 | `FicheiroDocumentoDto` | `Descarregar/` | `disco: string`, `nome: string` (VO de vista, sem `fromRequest`) |
 | `ResultadoReconciliacaoFicheiro` | `Transicao/` | `coerente: bool`, `encontrado: bool`, `disco: ?string`, `nome: ?string` (VO interno, sem `fromRequest`, #90) |
+| `RegistarEtapaExtracaoDto` | `RegistarEtapaExtracao/` | `etapaExtracao: EtapaExtracao`, `resultado: ResultadoEtapa`, `motivo: ?string`, `textoExtraido: ?string`, `dadosJson: ?array`, `reclamar: bool`, `incrementarTentativas: bool` (VO interno, sem `fromRequest`, #94) |
 
-Todos `final readonly`. Todos com `fromRequest()` excepto `FicheiroDocumentoDto` e
-`ResultadoReconciliacaoFicheiro` (VOs internos/de vista, nunca originados de HTTP).
+Todos `final readonly`. Todos com `fromRequest()` excepto `FicheiroDocumentoDto`,
+`ResultadoReconciliacaoFicheiro` e `RegistarEtapaExtracaoDto` (VOs internos/de vista, nunca
+originados de HTTP).
 Campos de storage (`hash_sha256`, `disco_storage`, `nome_ficheiro_storage`) nunca vêm do cliente —
 são derivados pela Action.
 
@@ -228,9 +254,10 @@ Todos com `messages()` em PT.
 ### Resources
 
 `DocumentoResource` — serializa campos do `Documento`; histórico via `whenLoaded('historico')` →
-`EtapaDocumentoResource`.
+`EtapaDocumentoResource`; `etapa_extracao` (string ou `null`) via `whenLoaded('extracao')` (#94) —
+**nunca** expõe `texto_extraido`/`dados_json` (PII, RNF-01).
 
-`EtapaDocumentoResource` — campos: `estado`, `motivo`, `id_utilizador`, `criado_em`.
+`EtapaDocumentoResource` — campos: `estado`, `passo`, `resultado` (#94, `null` numa linha de negócio), `motivo`, `id_utilizador`, `criado_em`.
 
 ---
 
@@ -248,7 +275,7 @@ As Actions **com login** mapeiam abilities do `DocumentoPolicy` para permissões
 
 ### Transições de sistema (sem Gate)
 
-As 5 transições intermédias de pipeline **não têm `Gate::authorize`** — correm sempre em background (Jobs de extracção), sem utilizador autenticado: `MarcarAguardaEnvioDocumentoAction`, `MarcarEnviadoDocumentoAction`, `MarcarAguardaRespostaDocumentoAction`, `MarcarErroDocumentoAction`, `MarcarPerigosoDocumentoAction`. A `EtapaDocumento` que gravam fica como **passo de sistema** (`id_utilizador = null`). `ReivindicarDocumentoPendenteAction` (#90) e `TriarDocumentoPendenteAction` (#91) seguem o mesmo padrão — sem Gate.
+As 5 transições intermédias de pipeline **não têm `Gate::authorize`** — correm sempre em background (Jobs de extracção), sem utilizador autenticado: `MarcarAguardaEnvioDocumentoAction`, `MarcarEnviadoDocumentoAction`, `MarcarAguardaRespostaDocumentoAction`, `MarcarErroDocumentoAction`, `MarcarPerigosoDocumentoAction`. A `EtapaDocumento` que gravam fica como **passo de sistema** (`id_utilizador = null`). `ReivindicarDocumentoPendenteAction` (#90), `TriarDocumentoPendenteAction` (#91) e `RegistarEtapaExtracaoAction` (#94) seguem o mesmo padrão — sem Gate.
 
 O `TransicionarProcessadoDocumentoAction` é a excepção: apesar de não ter endpoint, **mantém `Gate::authorize('update')`** porque escreve os dados de negócio extraídos (fornecedor, valor, categoria, nome canónico) — é um write significativo, não uma mera flag de estado. Ver padrão em `02-shared/padroes-acoes.md`.
 

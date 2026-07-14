@@ -162,6 +162,38 @@ ficheiro entre discos e o registo em `EtapaDocumento` (issue #56) são feitos pe
 
 ---
 
+## Modelo de 2 dimensões — estado de negócio × etapa de extracção (#94)
+
+`Documento.status` (`EstadoDocumento`) e `ExtracaoDocumento.etapa_extracao` (`EtapaExtracao`) são
+**duas dimensões independentes**: o estado de negócio segue o ciclo de vida do documento (ver acima);
+a etapa de extracção segue o progresso do pipeline de IA/OCR sobre o conteúdo do ficheiro. Um
+documento pode, por exemplo, estar em `AguardaResposta` (negócio) enquanto a sua extracção está em
+`NecessitaOcr` (IA) — os dois avançam a ritmos diferentes e são geridos por Actions distintas
+(`Marcar*`/`ExecutorTransicaoDocumento` vs. `RegistarEtapaExtracaoAction`).
+
+| Estado de negócio (`status`) | Etapa de extracção possível | Lock (`extracao_reclamada_em`) |
+|---|---|---|
+| `Pendente` | Sem linha `ExtracaoDocumento` (ainda não reivindicado) ou `Pendente` | `null` |
+| `AguardaEnvio`, `Enviado`, `AguardaResposta` | `Pendente` → `NecessitaOcr`/`TextoPronto`/`NecessitaCloud` → `Concluido`/`Falhado` | preenchido enquanto reivindicado pelo orquestrador (#97/#98); `null` fora da janela de lease |
+| `Processado` | Tipicamente `Concluido` (não enforçado por esta issue) | `null` |
+| `Erro` | Etapa congelada no valor anterior à transição — **resetada para `Pendente`** ao reprocessar (`ReprocessarDocumentoAction`, RN-03/RN-04) | `null` após reset |
+| `Perigoso` | Documento nunca chega a ter linha de extracção nesta transição (ficheiro nunca é enviado ao pipeline de IA) | — |
+
+- **`ExtracaoDocumento` é opcional** — `Documento::extracao()` devolve `null` para qualquer documento
+  que nunca tenha entrado na dimensão de extracção (registo manual via
+  `RegistarDocumentoManualAction`, ou erro de scan de malware em `Pendente` antes de qualquer
+  reivindicação). Ver `03-models/extracao-documento.md`.
+- **`etapas_documento` regista ambas as dimensões na mesma tabela** — uma linha de negócio (gravada
+  por `ExecutorTransicaoDocumento`) tem `passo`/`resultado` a `null`; uma linha de IA (gravada por
+  `RegistarEtapaExtracaoAction`) tem `estado` igual ao `status` **actual** do documento (não muda) e
+  `passo`/`resultado` preenchidos — permite reconstruir a história completa (negócio + IA) numa única
+  query ordenada por `created_at`.
+- **Enforcement fora desta issue (#94)**: reivindicação real com `lockForUpdate()`/libertação por TTL
+  sobre `extracao_reclamada_em`, e a transição automática ao esgotar `extracao_tentativas`, ficam
+  para o orquestrador de pipeline (#97/#98). Esta issue só define o modelo de dados e o recorder.
+
+---
+
 ## Contrato de atomicidade ficheiro↔BD (#90)
 
 `ExecutorTransicaoDocumento` move o ficheiro **antes** de abrir a `DB::transaction()` (ver

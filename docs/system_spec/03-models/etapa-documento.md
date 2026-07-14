@@ -11,6 +11,8 @@
 | `id` | `uuid` PK | Não | PK | UUIDv7 via `HasUuids` |
 | `id_documento` | `uuid` FK | Não | FK | → `documentos.id`; `cascadeOnDelete()` + `cascadeOnUpdate()` (histórico segue o documento) |
 | `estado` | `string(50)` | Não | simples | Cast → `EstadoDocumento`; a etapa atingida |
+| `passo` | `string(50)` | Sim | — | Cast → `EtapaExtracao`; `null` = linha de negócio, preenchido = linha de IA (#94) |
+| `resultado` | `string(20)` | Sim | — | Cast → `ResultadoEtapa`; `null` = linha de negócio, preenchido = linha de IA (#94) |
 | `motivo` | `text` | Sim | — | Motivo/resposta/nota; pode conter detalhe sensível |
 | `id_utilizador` | `bigint unsigned` FK | Sim | FK | → `users.id`; `restrictOnDelete()` (Issue #68 — era `nullOnDelete`) + `cascadeOnUpdate()`; `null` = passo automático (sistema) |
 | `created_at` | `timestamp` | Sim | — | Data+hora da etapa; **sem `updated_at`** (append-only) |
@@ -21,6 +23,12 @@
 - `cascadeOnDelete()` em `id_documento` — histórico não existe sem o documento.
 - `restrictOnDelete()` em `id_utilizador` (Issue #68) — um utilizador que registou etapas não pode ser hard-deleted; `EliminarUtilizadorAction` cai no soft delete, preservando a autoria da etapa.
 - `cascadeOnUpdate()` em ambas as FKs (migration `add_cascade_on_update_to_domain_fks`, 2026-07-14) — sem esta cascade, um `UPDATE` à PK do documento ou do utilizador falharia por violação de FK; prepara para uma futura reconciliação/agregação de bases de dados que precise de remapear UUIDs.
+- **`passo`/`resultado` (#94)** — colunas nullable acrescentadas por migration própria
+  (`add_passo_resultado_to_etapas_documento_table`), sem migração de dados: linhas existentes ficam
+  com ambas a `null` (linha de negócio, comportamento inalterado). Uma linha de IA (gravada por
+  `RegistarEtapaExtracaoAction`, ver `01-features/documento.md`) tem `estado` igual ao `status` actual
+  do `Documento` (não muda) e `passo`/`resultado` preenchidos. Ver `02-shared/estados.md` — "modelo
+  de 2 dimensões" para a distinção completa.
 
 ---
 
@@ -30,7 +38,7 @@
 
 ```php
 #[Table('etapas_documento')]
-#[Fillable(['id_documento', 'estado', 'motivo', 'id_utilizador'])]
+#[Fillable(['id_documento', 'estado', 'passo', 'resultado', 'motivo', 'id_utilizador'])]
 class EtapaDocumento extends Model
 {
     use HasFactory, HasUuids;
@@ -39,7 +47,11 @@ class EtapaDocumento extends Model
 
     protected function casts(): array
     {
-        return ['estado' => EstadoDocumento::class];
+        return [
+            'estado' => EstadoDocumento::class,
+            'passo' => EtapaExtracao::class,
+            'resultado' => ResultadoEtapa::class,
+        ];
     }
 }
 ```
@@ -51,6 +63,8 @@ class EtapaDocumento extends Model
  * @property-read string $id
  * @property-read string $id_documento
  * @property-read EstadoDocumento $estado
+ * @property-read ?EtapaExtracao $passo
+ * @property-read ?ResultadoEtapa $resultado
  * @property-read ?string $motivo
  * @property-read ?int $id_utilizador    // bigint → users.id
  * @property-read Carbon $created_at
@@ -58,6 +72,9 @@ class EtapaDocumento extends Model
  * @property-read ?User $utilizador
  */
 ```
+
+`passo`/`resultado` nullable — Eloquent resolve `null` sem exigir um caso "vazio" no enum (cast
+built-in do Laravel já trata `null` antes de instanciar o backed enum).
 
 ### Append-only — `const UPDATED_AT = null`
 
@@ -68,7 +85,11 @@ class EtapaDocumento extends Model
 ```php
 protected function casts(): array
 {
-    return ['estado' => EstadoDocumento::class];
+    return [
+        'estado' => EstadoDocumento::class,
+        'passo' => EtapaExtracao::class,
+        'resultado' => ResultadoEtapa::class,
+    ];
 }
 ```
 
@@ -98,6 +119,10 @@ Base (`definition()`) = `estado Pendente`, `id_utilizador = null`, `motivo = nul
 | `erro()` | `Erro` | `faker->sentence()` | `null` |
 | `perigoso()` | `Perigoso` | `faker->sentence()` | `null` |
 | `manual()` | `Processado` | `null` | `User::factory()` |
+
+**`passoIa(EtapaExtracao $passo = NecessitaOcr, ResultadoEtapa $resultado = Sucesso)` (#94)** — não
+altera `estado`; só define `passo`/`resultado`, simulando uma linha de IA gravada por
+`RegistarEtapaExtracaoAction` sobre o estado de negócio actual.
 
 ---
 
