@@ -17,7 +17,7 @@ a coerência `disco_storage`/`nome_ficheiro_storage` via `RegraReconciliarLocali
 automaticamente quando o ficheiro é localizado noutro disco conhecido, ou regista `Log::error`
 estruturado quando não é encontrado em nenhum. `$tries = 1`, `$timeout = 120`. Implementa
 `ShouldQueue` **e** `ShouldQueueAfterCommit` (ver secção seguinte). Detalhe do contrato de
-atomicidade: `02-shared/estados.md`.
+atomicidade: `01-features/documento-pipeline.md`.
 
 ---
 
@@ -49,6 +49,14 @@ nesta issue — corre o scan de malware e decide a transição, invocada por
 pipeline de extracção) invocar `TriarDocumentoPendenteAction`/o Job que a envolver **antes** de
 iniciar o processamento — mesmo padrão de dependência a informar já usado por `Reivindicar`/
 `MarcarAguardaEnvio` (#90).
+
+`RegistarEtapaExtracaoAction` (#94, `app/Features/Documento/RegistarEtapaExtracao/`) é o ponto de
+invocação programática que o futuro orquestrador de pipeline (#97/#98) vai chamar para registar cada
+passo de IA (OCR/cloud) sobre um `Documento` — upsert em `extracoes_documento` + `EtapaDocumento`
+(`passo`/`resultado`). Sem Job concreto nesta issue: só o modelo de dados e o recorder existem; o
+Job/Schedule que varre `extracoes_documento` por `(etapa_extracao, extracao_reclamada_em)` e invoca
+esta Action fica para o orquestrador de pipeline. Ver `01-features/documento-pipeline.md` ("Modelo de
+2 dimensões").
 
 ---
 

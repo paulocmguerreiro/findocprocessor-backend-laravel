@@ -14,6 +14,8 @@ final class EtapaDocumentoResource extends JsonResource
     /**
      * @return array{
      *     estado: string,
+     *     passo: string|null,
+     *     resultado: string|null,
      *     motivo: string|null,
      *     id_utilizador: int|null,
      *     criado_em: string
@@ -24,6 +26,8 @@ final class EtapaDocumentoResource extends JsonResource
     {
         return [
             'estado' => $this->estado->value,
+            'passo' => $this->passo?->value,
+            'resultado' => $this->resultado?->value,
             'motivo' => $this->motivo,
             'id_utilizador' => $this->id_utilizador,
             'criado_em' => $this->created_at->toIso8601String(),

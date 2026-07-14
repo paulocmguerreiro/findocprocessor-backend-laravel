@@ -20,7 +20,10 @@ Produz apenas artefactos locais. Para criar o PR, usar `/publica-implementacao`.
 
 1. Skill `escreve-debrief` → `docs/debriefs/YYYY-MM-DD-<slug>.md`
 2. Skill `pausa-checkpoint` tipo=D — mostrar secção "Decisões tomadas" e aguardar confirmação
-3. Skill `actualiza-spec` — actualizar `docs/system_spec/*.md` conforme `SYSTEM_SPEC_MAP` do `CLAUDE.md`
+3. Skill `actualiza-spec` — actualizar `docs/system_spec/*.md` conforme `SYSTEM_SPEC_MAP` do `CLAUDE.md`.
+   Esta é a **única** oportunidade de actualizar o system_spec (a Fase 2 não o faz — ver
+   `escreve-plan.md`) — correr sempre a checklist de verificação da própria skill antes de avançar
+   para o passo seguinte.
 4. Skill `actualiza-changelog` — adicionar entrada em `CHANGELOG.md`
 5. Skill `actualiza-readme` — actualizar `README.md` se afectado (novas rotas, stack, instruções)
 5b. **Contrato OpenAPI** — se a issue afectou endpoints ou schemas, actualizar `./openapi.yaml` (raiz) para reflectir o contrato real implementado; confirmar contra as rotas/Resources efectivas. Se a issue não tocou na API, não há alterações.

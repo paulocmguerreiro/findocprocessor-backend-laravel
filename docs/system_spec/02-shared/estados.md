@@ -1,6 +1,8 @@
 # System Spec — Shared: Estados e Contratos
 
-> `app/Shared/States/`
+> `app/Shared/States/` — o contrato partilhado (`ContratoEstadoDocumento`) e os 7 state objects.
+> O mapa de transições, o recorder de extracção e o contrato de atomicidade ficheiro↔BD vivem em
+> `01-features/documento-pipeline.md` (componentes de `app/Features/Documento/`, não de `app/Shared/`).
 
 ---
 
@@ -10,7 +12,7 @@ Fluxo feliz na horizontal; ramos de falha/risco em baixo:
 
 ```
 PENDENTE → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → PROCESSADO
-    ↘ ERRO (falha do scan de malware, #91)              ↘ ERRO
+    ↘ ERRO (falha do scan de malware em Pendente)        ↘ ERRO
                                                        ↘ PERIGOSO
 ```
 
@@ -82,7 +84,7 @@ Declara apenas os **4 getters comuns a todos os 7 estados**. Campos adicionais v
 
 7 classes `final readonly`, cada uma implementando `ContratoEstadoDocumento`. Construídas via `static deDocumento(Documento $documento): self` — nunca instanciadas directamente pelo consumidor.
 
-**Regra:** a mudança de estado é feita na issue de Lógica (#57) via Actions. Aqui os state objects são **read-only** — sem método `correct()`.
+**Regra:** a mudança de estado é feita por Actions de transição (`01-features/documento-pipeline.md`). Aqui os state objects são **read-only** — sem método `correct()`.
 
 ### Grupos de campos
 
@@ -135,60 +137,12 @@ O `match` em `Documento::estado()` cobre os 7 casos sem `default` — Larastan 9
 
 ---
 
-## Regras de transição (implementadas — Issue #57)
+## Onde encontrar as transições, o recorder e a atomicidade ficheiro↔BD
 
-A mudança de estado é sempre feita por Actions de transição, **nunca** com `if ($doc->status == ...)`.
-O mapa central é validado por `RegraTransicaoEstado` (ver `02-shared/regras-negocio.md`).
-
-### Mapa De → Para (mapa central)
-
-| De                | Para              | Action                                  | Via                  |
-| ----------------- | ----------------- | --------------------------------------- | -------------------- |
-| `Pendente`        | `AguardaEnvio`    | `MarcarAguardaEnvioDocumentoAction` (via `TriarDocumentoPendenteAction`, #91) | pipeline |
-| `Pendente`        | `Perigoso`        | `MarcarPerigosoDocumentoAction` (via `TriarDocumentoPendenteAction`, #91)    | pipeline (pré-scan)  |
-| `Pendente`        | `Erro`            | `MarcarErroDocumentoAction` (via `TriarDocumentoPendenteAction`, #91)        | pipeline (falha do scan de malware) |
-| `AguardaEnvio`    | `Enviado`         | `MarcarEnviadoDocumentoAction`          | pipeline             |
-| `Enviado`         | `AguardaResposta` | `MarcarAguardaRespostaDocumentoAction`  | pipeline             |
-| `AguardaResposta` | `Processado`      | `TransicionarProcessadoDocumentoAction` | pipeline             |
-| `AguardaResposta` | `Erro`            | `MarcarErroDocumentoAction`             | pipeline             |
-| `AguardaResposta` | `Perigoso`        | `MarcarPerigosoDocumentoAction`         | pipeline (guardrail) |
-| `Erro`            | `AguardaEnvio`    | `ReprocessarDocumentoAction`            | HTTP                 |
-| `Processado`      | `Processado`      | `CorrigirDocumentoAction`               | HTTP (self-loop)     |
-
-Qualquer par não listado lança `TransicaoInvalidaException` (→ 422).
-
-Os state objects da issue #45 são read-only — sem método `correct()`. A transição, o movimento de
-ficheiro entre discos e o registo em `EtapaDocumento` (issue #56) são feitos pelas Actions (#57).
-
----
-
-## Contrato de atomicidade ficheiro↔BD (#90)
-
-`ExecutorTransicaoDocumento` move o ficheiro **antes** de abrir a `DB::transaction()` (ver
-`04-infra/transactions.md`) — o filesystem não participa no rollback da BD. Se a compensação
-best-effort (repor o ficheiro na origem) também falhar, existe uma **janela de inconsistência**:
-a BD reflecte o estado anterior à transição, mas o ficheiro físico pode estar no disco de destino.
-
-Como o conjunto de discos é fixo (5: `entrada`, `enviado`, `processado`, `erro`, `perigoso`, mapa em
-`RegraMoverFicheiro::discoParaEstado()`), esta janela é **detectável e reversível**, não uma
-inconsistência permanente:
-
-- **Detecção:** `ReconciliarFicheirosJob` (agendado a cada 5 min, `onOneServer`) varre `Documento`s
-  presos num estado transitório (`AguardaEnvio`/`Enviado`/`AguardaResposta`) há mais tempo que
-  `config('pipeline.reconciliacao_limiar_minutos')` (default 15 min — não é uma janela de
-  recência, é um limiar de "parado há mais tempo que uma transição normal demora").
-- **Resolução:** `RegraReconciliarLocalizacaoFicheiro` verifica se o ficheiro existe no
-  `disco_storage` actual; se não, procura-o nos 4 discos restantes comparando `hash_sha256` (o
-  nome mantém-se igual entre discos, excepto no caso `Processado`/`RegraNomearProcessado`, fora do
-  âmbito desta reconciliação). Se localizado noutro disco, `ReconciliarFicheirosJob` **repõe
-  automaticamente** `disco_storage`/`nome_ficheiro_storage` na BD (decisão do Brief #90 — reposição
-  automática, não apenas sinalização).
-- **Caso irrecuperável:** se o ficheiro não existir em nenhum dos 5 discos, o Job regista
-  `Log::error` estruturado (id do documento, disco/nome esperados — sem dados sensíveis) e não
-  altera a BD; um ficheiro genuinamente perdido exige intervenção manual, fora do âmbito da
-  reconciliação automática.
-- **Custo:** proporcional ao nº de documentos presos (scan limitado pelo índice composto
-  `(status, updated_at)`, migration `2026_07_13_112928`), nunca à tabela `documentos` completa.
+O mapa De→Para das transições (`RegraTransicaoEstado`), o modelo de 2 dimensões (estado de negócio ×
+etapa de extracção) e o contrato de atomicidade ficheiro↔BD (`ExecutorTransicaoDocumento`,
+`ReconciliarFicheirosJob`) descrevem componentes de `app/Features/Documento/`, não de
+`app/Shared/States/` — documentados em `01-features/documento-pipeline.md`.
 
 ---
 

@@ -11,7 +11,7 @@
 | `id` | `uuid` PK | Não | PK | UUIDv7 via `HasUuids` |
 | `nome` | `string(255)` | Não | único | Nome legível do tipo de documento |
 | `descricao` | `text` | Não | — | Texto livre, guia a IA a categorizar correctamente |
-| `id_categoria` | `uuid` FK | Não | FK | → `categorias_documento.id`; `restrictOnDelete()`; **obrigatória** (ao contrário de `documentos.id_categoria`, que é nullable) |
+| `id_categoria` | `uuid` FK | Não | FK | → `categorias_documento.id`; `restrictOnDelete()` + `cascadeOnUpdate()`; **obrigatória** (ao contrário de `documentos.id_categoria`, que é nullable) |
 | `posicao_empresa_mae` | `string(50)` | Não | — | Cast → `PosicaoEmpresaMae` |
 | `espera_data_documento` | `boolean` | Não (default `true`) | — | Indica se a IA deve extrair a data do documento |
 | `espera_fornecedor` | `boolean` | Não (default `true`) | — | Indica se a IA deve extrair o fornecedor |
@@ -23,6 +23,7 @@
 - `id_categoria` **obrigatório** (não nullable) — um `TipoDocumento` só existe associado a uma categoria.
 - `restrictOnDelete()` — não é possível eliminar (hard delete) uma `CategoriaDocumento` referenciada por um `TipoDocumento`. Como `CategoriaDocumento` usa `SoftDeletes`, `delete()` normal (soft) nunca dispara esta constraint — só `forceDelete()`.
 - Sem `deleted_at` — a tabela ainda não é referenciada por FK de nenhuma tabela filha (coerente com `00-convencoes-models.md`).
+- `cascadeOnUpdate()` (migration `add_cascade_on_update_to_domain_fks`, 2026-07-14) — sem esta cascade, um `UPDATE` à PK da categoria falharia por violação de FK; prepara para uma futura reconciliação/agregação de bases de dados que precise de remapear UUIDs.
 - **RN-02 (invariante cross-field):** pelo menos um dos 4 `espera_*` tem de ser `true` — validado no construtor dos DTOs (`CriarTipoDocumentoDto`/`ActualizarTipoDocumentoDto`), não na BD.
 
 ---

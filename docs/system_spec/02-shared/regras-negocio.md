@@ -166,8 +166,8 @@ extensão preservada de `nome_ficheiro_original`.
 
 **Invariante:** `disco_storage`/`nome_ficheiro_storage` de um `Documento` reflectem a localização
 real do ficheiro. Quando a compensação best-effort de `ExecutorTransicaoDocumento` falha, a BD pode
-ficar dessincronizada do filesystem — ver `02-shared/estados.md` (Contrato de atomicidade
-ficheiro↔BD).
+ficar dessincronizada do filesystem — ver `01-features/documento-pipeline.md` (Contrato de
+atomicidade ficheiro↔BD).
 
 **Activação:** Chamada por `ReconciliarFicheirosJob`, agendado a cada 5 min, sobre `Documento`s
 presos num estado transitório há mais tempo que `config('pipeline.reconciliacao_limiar_minutos')`.

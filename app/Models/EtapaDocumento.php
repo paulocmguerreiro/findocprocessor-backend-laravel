@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Shared\Enums\EstadoDocumento;
+use App\Shared\Enums\EtapaExtracao;
+use App\Shared\Enums\ResultadoEtapa;
 use Database\Factories\EtapaDocumentoFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -18,6 +20,8 @@ use Illuminate\Support\Carbon;
  * @property-read string $id
  * @property-read string $id_documento
  * @property-read EstadoDocumento $estado
+ * @property-read ?EtapaExtracao $passo
+ * @property-read ?ResultadoEtapa $resultado
  * @property-read ?string $motivo
  * @property-read ?int $id_utilizador
  * @property-read Carbon $created_at
@@ -25,7 +29,7 @@ use Illuminate\Support\Carbon;
  * @property-read ?User $utilizador
  */
 #[Table('etapas_documento')]
-#[Fillable(['id_documento', 'estado', 'motivo', 'id_utilizador'])]
+#[Fillable(['id_documento', 'estado', 'passo', 'resultado', 'motivo', 'id_utilizador'])]
 class EtapaDocumento extends Model
 {
     /** @use HasFactory<EtapaDocumentoFactory> */
@@ -36,11 +40,21 @@ class EtapaDocumento extends Model
     /** Append-only: sem updated_at. */
     public const UPDATED_AT = null;
 
-    /** @return array{estado: class-string<EstadoDocumento>} */
+    /**
+     * @return array{
+     *     estado: class-string<EstadoDocumento>,
+     *     passo: class-string<EtapaExtracao>,
+     *     resultado: class-string<ResultadoEtapa>
+     * }
+     */
     #[\Override]
     protected function casts(): array
     {
-        return ['estado' => EstadoDocumento::class];
+        return [
+            'estado' => EstadoDocumento::class,
+            'passo' => EtapaExtracao::class,
+            'resultado' => ResultadoEtapa::class,
+        ];
     }
 
     /** @return BelongsTo<Documento, $this> */

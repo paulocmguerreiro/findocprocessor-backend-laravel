@@ -83,3 +83,8 @@ interface (Mockery) para os 4 ramos de decisão.
 | Cliente do pipeline de extração (chamada Prism + parsing da resposta) | API REST externa (via Prism) | Envio do prompt construído por `PromptBuilder`, chamada ao provider (local ou cloud), parsing da resposta estruturada — issue #97 |
 
 Detalhes de autenticação, limites de rate e estrutura de pedido/resposta documentados quando a issue #97 for planeada.
+
+**Modelo de destino do resultado (#94):** o cliente do pipeline de extração (#97) grava o resultado de
+cada passo via `RegistarEtapaExtracaoAction` — upsert em `App\Models\ExtracaoDocumento`
+(`etapa_extracao`, `texto_extraido`, `dados_json`) + `EtapaDocumento` (`passo`/`resultado`). Ver
+`03-models/extracao-documento.md` e `01-features/documento.md`.

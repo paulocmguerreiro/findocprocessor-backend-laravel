@@ -69,3 +69,9 @@ Decompõe a Spec em tarefas concretas, ordenadas e commitáveis individualmente.
 - A ordem respeita dependências entre camadas: `domain → application → infra → api`
 - Testes escritos na mesma tarefa que o código (não numa tarefa separada "adicionar testes")
 - Nunca antecipar tarefas de issues futuras
+- **Nunca incluir uma tarefa de "Documentação `system_spec`"** (nem como última tarefa, nem noutra
+  posição). Actualizar `docs/system_spec/*.md` é responsabilidade exclusiva da Fase 3a
+  (`/documenta-implementacao` → skill `actualiza-spec`), informada pelo Debrief — que só existe
+  depois da implementação e captura decisões/aprendizagens que o Plano não pode prever (ex.: desvios
+  de tipagem, ajustes a convenções descobertos durante o código). Documentar o system_spec já na
+  Fase 2 antecipa esse trabalho com informação incompleta e esvazia o propósito da Fase 3a.

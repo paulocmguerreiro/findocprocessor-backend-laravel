@@ -6,7 +6,9 @@ use App\Features\CategoriaDocumento\CategoriaDocumentoResource;
 use App\Features\Documento\DocumentoResource;
 use App\Features\Entidade\EntidadeResource;
 use App\Models\Documento;
+use App\Models\ExtracaoDocumento;
 use App\Shared\Enums\EstadoDocumento;
+use App\Shared\Enums\EtapaExtracao;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 describe('Campos escalares', function (): void {
@@ -89,5 +91,35 @@ describe('Relações', function (): void {
             ->and($resultado['fornecedor'])->toBeInstanceOf(EntidadeResource::class)
             ->and($resultado['cliente'])->toBeInstanceOf(EntidadeResource::class)
             ->and($resultado['categoria'])->toBeInstanceOf(CategoriaDocumentoResource::class);
+    });
+
+    it('omite etapa_extracao quando a relação extracao não está carregada', function (): void {
+        $documento = Documento::factory()->create();
+
+        $resultado = new DocumentoResource($documento)->resolve(request());
+
+        expect($resultado)->not->toHaveKey('etapa_extracao');
+    });
+
+    it('inclui etapa_extracao quando a relação extracao está carregada', function (): void {
+        $documento = Documento::factory()->create();
+        ExtracaoDocumento::factory()->necessitaCloud()->for($documento, 'documento')->create();
+        $documento->load('extracao');
+
+        $resultado = new DocumentoResource($documento)->resolve(request());
+
+        expect($resultado['etapa_extracao'])->toBe(EtapaExtracao::NecessitaCloud->value);
+    });
+
+    it('nunca expõe texto_extraido/dados_json, mesmo com a relação extracao carregada e preenchida (RNF-01)', function (): void {
+        $documento = Documento::factory()->create();
+        ExtracaoDocumento::factory()->concluido()->for($documento, 'documento')->create();
+        $documento->load('extracao');
+
+        $resultado = new DocumentoResource($documento)->resolve(request());
+
+        expect(json_encode($resultado))
+            ->not->toContain('texto_extraido')
+            ->not->toContain('dados_json');
     });
 });

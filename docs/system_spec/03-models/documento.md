@@ -10,10 +10,10 @@
 |---|---|---|---|
 | `id` | `uuid` PK | Não | UUIDv7 via `HasUuids` |
 | `status` | `string(50)` | Não | Default `'PENDENTE'`; índice simples; cast → `EstadoDocumento` |
-| `id_responsavel` | `bigint` FK | Sim | → `users.id`; `restrictOnDelete()` (Issue #68 — era `nullOnDelete`); autor do registo/upload (sempre o utilizador autenticado) |
-| `id_fornecedor` | `uuid` FK | Sim | → `entidades.id`; `restrictOnDelete()` (Issue #69 — era `nullOnDelete`) |
-| `id_cliente` | `uuid` FK | Sim | → `entidades.id`; `restrictOnDelete()` (Issue #69 — era `nullOnDelete`) |
-| `id_categoria` | `uuid` FK | Sim | → `categorias_documento.id`; `restrictOnDelete()` (Issue #70 — era `nullOnDelete`) |
+| `id_responsavel` | `bigint` FK | Sim | → `users.id`; `restrictOnDelete()` (Issue #68 — era `nullOnDelete`) + `cascadeOnUpdate()`; autor do registo/upload (sempre o utilizador autenticado) |
+| `id_fornecedor` | `uuid` FK | Sim | → `entidades.id`; `restrictOnDelete()` (Issue #69 — era `nullOnDelete`) + `cascadeOnUpdate()` |
+| `id_cliente` | `uuid` FK | Sim | → `entidades.id`; `restrictOnDelete()` (Issue #69 — era `nullOnDelete`) + `cascadeOnUpdate()` |
+| `id_categoria` | `uuid` FK | Sim | → `categorias_documento.id`; `restrictOnDelete()` (Issue #70 — era `nullOnDelete`) + `cascadeOnUpdate()` |
 | `valor` | `decimal(15,2)` | Sim | Cast `decimal:2` → devolve `string` em PHP (não `float`) |
 | `data_documento` | `date` | Sim | Índice simples; cast → `Carbon` |
 | `nome_ficheiro_original` | `string(500)` | Não | Nome original do ficheiro no upload |
@@ -25,6 +25,8 @@
 **Nota:** FKs de domínio nullable por design — campos de domínio podem estar a `null` em `Pendente` (registo automático iniciado sem dados completos).
 
 **`id_responsavel`** (Issue #57 — revisão) — FK `bigint` para `users.id` (o PK de `users` é incremental, não UUID). É o autor da entrada: definido pela `RegistarDocumentoManualAction` e pela `ReceberUploadDocumentoAction` a partir de `Auth::id()` — **nunca vem do cliente** (campo derivado server-side, como o `hash_sha256`); está sempre preenchido à criação. A FK é `restrictOnDelete()` (Issue #68): um utilizador responsável por documentos não pode ser hard-deleted — `EliminarUtilizadorAction` cai no soft delete, preservando a autoria. As transições de pipeline (`Marcar*`) **não** alteram o responsável.
+
+**`cascadeOnUpdate()` em todas as FKs de domínio** — adicionado numa migration posterior (`add_cascade_on_update_to_domain_fks`, 2026-07-14). Mantém o `onDelete` já definido em cada FK; sem esta cascade, um `UPDATE` à PK de um registo pai (`entidades`, `categorias_documento`, `users`) falharia por violação de FK. Prepara para uma futura reconciliação/agregação de bases de dados que precise de remapear UUIDs.
 
 ---
 
@@ -66,6 +68,7 @@ class Documento extends Model
  * @property-read ?Entidade $fornecedor
  * @property-read ?Entidade $cliente
  * @property-read ?CategoriaDocumento $categoria
+ * @property-read ?ExtracaoDocumento $extracao
  */
 ```
 
@@ -125,11 +128,16 @@ public function fornecedor(): BelongsTo  // → Entidade (id_fornecedor) — wit
 public function cliente(): BelongsTo     // → Entidade (id_cliente) — withTrashed() (Issue #69)
 public function categoria(): BelongsTo   // → CategoriaDocumento (id_categoria) — withTrashed() (Issue #70)
 public function historico(): HasMany     // → EtapaDocumento (id_documento), orderBy created_at asc
+public function extracao(): HasOne       // → ExtracaoDocumento (id_documento)
 ```
 
 > **`withTrashed()` em `fornecedor()`, `cliente()` e `categoria()`** — documentos históricos continuam a carregar a entidade/categoria mesmo após soft delete. Sem `withTrashed()`, a relação devolveria `null` quando o registo está inactivo, apagando o histórico do interveniente/classificação.
 
 **`historico`** — adicionado na Issue #56. Relação `hasMany` com FK explícita `id_documento`; ordenada por `created_at` ascendente (linha temporal). Ver `03-models/etapa-documento.md` para detalhe do Model.
+
+**`extracao`** — relação `hasOne`, **sem `withDefault()`**: `null` é um valor legítimo (documento
+nunca entrou na dimensão de extracção, ex.: registo manual via `RegistarDocumentoManualAction`, que
+vai directo a `Processado`/`Perigoso`/`Erro`). Ver `03-models/extracao-documento.md`.
 
 ### Scopes
 
@@ -204,6 +212,7 @@ Os DTOs do Documento pertencem à camada de lógica (#57) e estão documentados 
   "data_documento": "2026-06-25",
   "nome_ficheiro_original": "fatura.pdf",
   "hash_sha256": "abc123...64chars",
+  "etapa_extracao": "TEXTO_PRONTO",
   "criado_em": "2026-06-25T10:00:00.000000Z",
   "actualizado_em": "2026-06-25T10:00:00.000000Z"
 }
@@ -214,6 +223,8 @@ Os DTOs do Documento pertencem à camada de lógica (#57) e estão documentados 
 - `valor` → conversão explícita `(float)` (cast `decimal:2` devolve `string`)
 - Relações via `whenLoaded()` + `EntidadeResource` / `CategoriaDocumentoResource`
 - **Não expõe** `disco_storage` nem `nome_ficheiro_storage` (detalhes internos / PII indirecta)
+- **`etapa_extracao`** — string ou `null`, via `whenLoaded('extracao', ...)`; ausente da resposta
+  quando a relação não é carregada. **Nunca** expõe `texto_extraido`/`dados_json` (PII).
 
 ---
 
