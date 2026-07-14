@@ -39,11 +39,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Instalar dependências de sistema (OCR/rasterização — #95/#96)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ghostscript tesseract-ocr tesseract-ocr-por tesseract-ocr-eng
+
       - name: Setup PHP 8.5
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.5'
-          extensions: pdo, pdo_mysql, redis
+          extensions: pdo, pdo_mysql, redis, imagick
           coverage: xdebug
 
       - name: Create bootstrap/cache
