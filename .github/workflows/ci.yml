@@ -43,7 +43,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            ghostscript tesseract-ocr tesseract-ocr-por tesseract-ocr-eng
+            ghostscript tesseract-ocr tesseract-ocr-por tesseract-ocr-eng redis-tools
 
       - name: Setup PHP 8.5
         uses: shivammathur/setup-php@v2
@@ -68,6 +68,9 @@ jobs:
         run: |
           mysql -h 127.0.0.1 -uroot -psecret -e \
             "GRANT ALL PRIVILEGES ON *.* TO 'findoc'@'%'; FLUSH PRIVILEGES;"
+
+      - name: Flush Redis (evita cache de modelos serializados de runs anteriores)
+        run: redis-cli -h 127.0.0.1 -p 6379 FLUSHALL
 
       - name: Quality pipeline
         run: composer test
