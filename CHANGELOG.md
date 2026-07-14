@@ -7,6 +7,17 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
+- **Issue #94** — Extração: registo de passos de IA + histórico unificado (model + recorder)
+  - 2 enums novos em `App\Shared\Enums`: `EtapaExtracao` (6 casos — `Pendente`, `NecessitaOcr`, `TextoPronto`, `NecessitaCloud`, `Concluido`, `Falhado`) e `ResultadoEtapa` (`Sucesso`, `Falha`, `EmCurso`)
+  - Tabela + Model + Factory `ExtracaoDocumento` — relação 1-1 com `Documento` (`id_documento` único, `cascadeOnDelete`), índice composto `(etapa_extracao, extracao_reclamada_em)` para o futuro `Schedule` de orquestração; sem `RegistaActividade` (dados operacionais/PII)
+  - `etapas_documento` ganha colunas nullable `passo`/`resultado` — a dimensão de extracção (passo da IA) é ortogonal ao `EstadoDocumento` de negócio, que fica inalterado; `NULL` em ambas continua a significar linha de negócio
+  - `Documento::extracao(): HasOne`
+  - Recorder `RegistarEtapaExtracaoAction` (+ `RegistarEtapaExtracaoDto`, VO com invariante `motivo` obrigatório quando `resultado === Falha`) — upsert em `extracoes_documento` + `EtapaDocumento` com `passo`/`resultado`, dentro de `DB::transaction()`, sem `Gate::authorize` (acção de sistema, sem par HTTP) e sem passar pelo `ExecutorTransicaoDocumento` (nunca muda `EstadoDocumento`)
+  - `EtapaDocumentoResource` expõe `passo`/`resultado`; `DocumentoResource` expõe `etapa_extracao` via `whenLoaded('extracao')`; `texto_extraido`/`dados_json` nunca saem de nenhum Resource (RGPD)
+  - `ReprocessarDocumentoAction` (`Erro → AguardaEnvio`) reseta `extracoes_documento` (`Pendente`, tentativas a 0, texto/dados a `null`) na mesma transacção da transição — atomicidade preservada; documentos sem linha de extracção não geram uma nova
+  - `cascadeOnUpdate()` em todas as FKs de domínio (preparação para remapear UUIDs numa futura reconciliação/agregação de bases de dados)
+  - Sem orquestrador, Jobs ou comandos `Schedule` de pipeline nesta issue — fica para a issue seguinte (#97/#98)
+  - 974 testes, 100% cobertura + type coverage, Larastan 9 — verde em MySQL
 - **Issue #91** — Scan de malware com ClamAV no ramo `Pendente→Perigoso`
   - `App\Infrastructure\Malware\AnalisadorMalware` (interface) + `ResultadoAnaliseMalware` (Value Object: `limpo()`/`infectado($assinatura)`/`naoConfigurado()`) + `FalhaAnaliseMalwareException` — contrato de scan, sem dependência de infra
   - `ClamAvAnalisadorMalware` — cliente `clamd` via protocolo `INSTREAM` sobre socket TCP (`stream_socket_client`), sem dependência Composer nova; `host`/`port` vazios → `naoConfigurado()` (fail-safe, scan salta); qualquer falha de socket/timeout/resposta inesperada → `FalhaAnaliseMalwareException`, nunca confundida com "não configurado"
