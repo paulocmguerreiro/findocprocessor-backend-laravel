@@ -8,6 +8,8 @@ use App\Models\Documento;
 use App\Models\EtapaDocumento;
 use App\Models\User;
 use App\Shared\Enums\EstadoDocumento;
+use App\Shared\Enums\EtapaExtracao;
+use App\Shared\Enums\ResultadoEtapa;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -66,5 +68,13 @@ class EtapaDocumentoFactory extends Factory
             'estado' => EstadoDocumento::Processado,
             'id_utilizador' => User::factory(),
         ]);
+    }
+
+    /** Linha de IA (passo automático da extracao) — estado de negócio não muda. */
+    public function passoIa(
+        EtapaExtracao $passo = EtapaExtracao::NecessitaOcr,
+        ResultadoEtapa $resultado = ResultadoEtapa::Sucesso,
+    ): static {
+        return $this->state(['passo' => $passo, 'resultado' => $resultado]);
     }
 }

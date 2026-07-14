@@ -6,6 +6,8 @@ use App\Models\Documento;
 use App\Models\EtapaDocumento;
 use App\Models\User;
 use App\Shared\Enums\EstadoDocumento;
+use App\Shared\Enums\EtapaExtracao;
+use App\Shared\Enums\ResultadoEtapa;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Schema;
@@ -20,7 +22,7 @@ describe('Model', function (): void {
 
     it('tem fillable correcto', function (): void {
         expect((new EtapaDocumento)->getFillable())->toBe([
-            'id_documento', 'estado', 'motivo', 'id_utilizador',
+            'id_documento', 'estado', 'passo', 'resultado', 'motivo', 'id_utilizador',
         ]);
     });
 
@@ -54,6 +56,22 @@ describe('Casts', function (): void {
         expect($etapa->estado)->toBeInstanceOf(EstadoDocumento::class)
             ->and($etapa->estado)->toBe(EstadoDocumento::Erro);
     });
+
+    it('passo e resultado são null numa linha de negócio', function (): void {
+        $etapa = EtapaDocumento::factory()->create();
+
+        expect($etapa->passo)->toBeNull()
+            ->and($etapa->resultado)->toBeNull();
+    })->uses(RefreshDatabase::class);
+
+    it('cast passo/resultado para enum numa linha de IA', function (): void {
+        $etapa = EtapaDocumento::factory()->passoIa(EtapaExtracao::NecessitaCloud, ResultadoEtapa::Falha)->create();
+
+        expect($etapa->passo)->toBeInstanceOf(EtapaExtracao::class)
+            ->and($etapa->passo)->toBe(EtapaExtracao::NecessitaCloud)
+            ->and($etapa->resultado)->toBeInstanceOf(ResultadoEtapa::class)
+            ->and($etapa->resultado)->toBe(ResultadoEtapa::Falha);
+    })->uses(RefreshDatabase::class);
 });
 
 describe('Relações', function (): void {
