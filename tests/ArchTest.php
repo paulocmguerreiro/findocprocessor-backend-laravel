@@ -22,7 +22,7 @@ use App\Infrastructure\Malware\AnalisadorMalware;
 use App\Infrastructure\Malware\EstadoAnaliseMalware;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 
-arch()->preset()->laravel()->ignoring(['App\Shared\Enums', 'App\Shared\Cache', 'App\Features', 'App\Shared\Exceptions', 'App\Infrastructure\Malware']);
+arch()->preset()->laravel()->ignoring(['App\Shared\Enums', 'App\Shared\Cache', 'App\Features', 'App\Shared\Exceptions', 'App\Infrastructure\Malware', 'App\Infrastructure\Extracao']);
 arch()->preset()->security();
 
 arch('strict types')
