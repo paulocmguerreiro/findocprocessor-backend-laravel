@@ -95,7 +95,16 @@ camada inactiva, fail-safe):
 'max_tentativas' => 3,
 'camada_local_activa' => filled(env('LLM_LOCAL_URL')) && filled(env('LLM_LOCAL_MODEL')),
 'camada_cloud_activa' => filled(env('LLM_CLOUD_URL')) && filled(env('LLM_CLOUD_MODEL')) && filled(env('LLM_CLOUD_KEY')),
+'ocr' => [
+    'dpi' => 300,
+    'linguas' => ['por', 'eng'],
+],
 ```
+
+`ocr.dpi`/`ocr.linguas` — parâmetros de `ExtractorOcr` (rasterização `imagick` + reconhecimento
+`thiagoalessio/tesseract_ocr`), sem env var própria (valores fixos, não esperados como
+configuráveis por ambiente). Ver `04-infra/external-apis.md` para o contrato dos extractores de
+texto.
 
 `config/prism.php` (publicado via `vendor:publish --tag=prism-config`) —
 providers do Prism ligados às mesmas vars: `providers.ollama.url` =
