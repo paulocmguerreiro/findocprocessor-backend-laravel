@@ -127,3 +127,4 @@ Quando um model tem `SoftDeletes`:
 - `ListarAction` aceita `FiltroEstadoRegisto` (todos/somente_ativos/somente_inativos)
 - Relações nas tabelas filhas usam `->withTrashed()`
 - FKs das tabelas filhas: `restrictOnDelete` (nunca `nullOnDelete`)
+- Todas as FKs de domínio: `cascadeOnUpdate()` — PKs são UUID v7 geradas pela aplicação; o cascade em UPDATE prepara para uma futura reconciliação/agregação de bases de dados que precise de remapear UUIDs sem violar a FK

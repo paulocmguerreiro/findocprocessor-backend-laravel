@@ -10,10 +10,10 @@
 |---|---|---|---|
 | `id` | `uuid` PK | Não | UUIDv7 via `HasUuids` |
 | `status` | `string(50)` | Não | Default `'PENDENTE'`; índice simples; cast → `EstadoDocumento` |
-| `id_responsavel` | `bigint` FK | Sim | → `users.id`; `restrictOnDelete()` (Issue #68 — era `nullOnDelete`); autor do registo/upload (sempre o utilizador autenticado) |
-| `id_fornecedor` | `uuid` FK | Sim | → `entidades.id`; `restrictOnDelete()` (Issue #69 — era `nullOnDelete`) |
-| `id_cliente` | `uuid` FK | Sim | → `entidades.id`; `restrictOnDelete()` (Issue #69 — era `nullOnDelete`) |
-| `id_categoria` | `uuid` FK | Sim | → `categorias_documento.id`; `restrictOnDelete()` (Issue #70 — era `nullOnDelete`) |
+| `id_responsavel` | `bigint` FK | Sim | → `users.id`; `restrictOnDelete()` (Issue #68 — era `nullOnDelete`) + `cascadeOnUpdate()`; autor do registo/upload (sempre o utilizador autenticado) |
+| `id_fornecedor` | `uuid` FK | Sim | → `entidades.id`; `restrictOnDelete()` (Issue #69 — era `nullOnDelete`) + `cascadeOnUpdate()` |
+| `id_cliente` | `uuid` FK | Sim | → `entidades.id`; `restrictOnDelete()` (Issue #69 — era `nullOnDelete`) + `cascadeOnUpdate()` |
+| `id_categoria` | `uuid` FK | Sim | → `categorias_documento.id`; `restrictOnDelete()` (Issue #70 — era `nullOnDelete`) + `cascadeOnUpdate()` |
 | `valor` | `decimal(15,2)` | Sim | Cast `decimal:2` → devolve `string` em PHP (não `float`) |
 | `data_documento` | `date` | Sim | Índice simples; cast → `Carbon` |
 | `nome_ficheiro_original` | `string(500)` | Não | Nome original do ficheiro no upload |
@@ -25,6 +25,8 @@
 **Nota:** FKs de domínio nullable por design — campos de domínio podem estar a `null` em `Pendente` (registo automático iniciado sem dados completos).
 
 **`id_responsavel`** (Issue #57 — revisão) — FK `bigint` para `users.id` (o PK de `users` é incremental, não UUID). É o autor da entrada: definido pela `RegistarDocumentoManualAction` e pela `ReceberUploadDocumentoAction` a partir de `Auth::id()` — **nunca vem do cliente** (campo derivado server-side, como o `hash_sha256`); está sempre preenchido à criação. A FK é `restrictOnDelete()` (Issue #68): um utilizador responsável por documentos não pode ser hard-deleted — `EliminarUtilizadorAction` cai no soft delete, preservando a autoria. As transições de pipeline (`Marcar*`) **não** alteram o responsável.
+
+**`cascadeOnUpdate()` em todas as FKs de domínio** — adicionado numa migration posterior (`add_cascade_on_update_to_domain_fks`, 2026-07-14). Mantém o `onDelete` já definido em cada FK; sem esta cascade, um `UPDATE` à PK de um registo pai (`entidades`, `categorias_documento`, `users`) falharia por violação de FK. Prepara para uma futura reconciliação/agregação de bases de dados que precise de remapear UUIDs.
 
 ---
 

@@ -9,10 +9,10 @@
 | Coluna | Tipo BD | Nullable | Índice | Notas |
 |---|---|---|---|---|
 | `id` | `uuid` PK | Não | PK | UUIDv7 via `HasUuids` |
-| `id_documento` | `uuid` FK | Não | FK | → `documentos.id`; `cascadeOnDelete()` (histórico segue o documento) |
+| `id_documento` | `uuid` FK | Não | FK | → `documentos.id`; `cascadeOnDelete()` + `cascadeOnUpdate()` (histórico segue o documento) |
 | `estado` | `string(50)` | Não | simples | Cast → `EstadoDocumento`; a etapa atingida |
 | `motivo` | `text` | Sim | — | Motivo/resposta/nota; pode conter detalhe sensível |
-| `id_utilizador` | `bigint unsigned` FK | Sim | FK | → `users.id`; `restrictOnDelete()` (Issue #68 — era `nullOnDelete`); `null` = passo automático (sistema) |
+| `id_utilizador` | `bigint unsigned` FK | Sim | FK | → `users.id`; `restrictOnDelete()` (Issue #68 — era `nullOnDelete`) + `cascadeOnUpdate()`; `null` = passo automático (sistema) |
 | `created_at` | `timestamp` | Sim | — | Data+hora da etapa; **sem `updated_at`** (append-only) |
 
 **Notas:**
@@ -20,6 +20,7 @@
 - `id_utilizador` é `bigint` (não UUID) porque `users.id` é `bigint auto_increment` (sem `HasUuids`). Desvio documentado no Brief/Debrief da Issue #56.
 - `cascadeOnDelete()` em `id_documento` — histórico não existe sem o documento.
 - `restrictOnDelete()` em `id_utilizador` (Issue #68) — um utilizador que registou etapas não pode ser hard-deleted; `EliminarUtilizadorAction` cai no soft delete, preservando a autoria da etapa.
+- `cascadeOnUpdate()` em ambas as FKs (migration `add_cascade_on_update_to_domain_fks`, 2026-07-14) — sem esta cascade, um `UPDATE` à PK do documento ou do utilizador falharia por violação de FK; prepara para uma futura reconciliação/agregação de bases de dados que precise de remapear UUIDs.
 
 ---
 
