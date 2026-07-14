@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
 
 /**
@@ -12,6 +13,9 @@ use Illuminate\Support\Str;
  * fixture do `ExtractorOcrTest` para não commitar um binário frágil/
  * dependente do motor de renderização; o texto desenhado é conhecido e
  * permite asserção por substring/palavra-chave (RNF-05/CA-07).
+ *
+ * `gs` é invocado via `Process::run()` com argumentos em array (sem shell) —
+ * nenhuma string de comando é interpolada/montada.
  *
  * @param  list<string>  $textosPorPagina
  */
@@ -33,15 +37,13 @@ function gera_pdf_imagem(string $caminhoDestino, array $textosPorPagina): void
     file_put_contents($caminhoPs, $ps);
 
     try {
-        $comando = sprintf(
-            'gs -q -dNOPAUSE -dBATCH -sDEVICE=png16m -r150 -o %s-%%d.png %s',
-            escapeshellarg($prefixoPng),
-            escapeshellarg($caminhoPs),
-        );
-        exec($comando, result_code: $codigo);
+        $resultado = Process::run([
+            'gs', '-q', '-dNOPAUSE', '-dBATCH', '-sDEVICE=png16m', '-r150',
+            '-o', "{$prefixoPng}-%d.png", $caminhoPs,
+        ]);
 
-        if ($codigo !== 0) {
-            throw new RuntimeException("Falha ao rasterizar fixture PS→PNG via ghostscript (código {$codigo}).");
+        if ($resultado->failed()) {
+            throw new RuntimeException("Falha ao rasterizar fixture PS→PNG via ghostscript (código {$resultado->exitCode()}).");
         }
 
         $documento = new Imagick;
