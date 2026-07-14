@@ -6,6 +6,8 @@ parameters:
     paths:
         - app
         - database/factories
+    stubFiles:
+        - stubs/TesseractOCR.stub.php
     parallel:
         maximumNumberOfProcesses: 1
     treatPhpDocTypesAsCertain: false

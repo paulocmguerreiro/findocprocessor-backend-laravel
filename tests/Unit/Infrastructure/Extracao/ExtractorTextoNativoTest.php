@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Infrastructure\Extracao\ExtractorTextoNativo;
 use App\Infrastructure\Extracao\FalhaExtracaoTextoException;
+use App\Infrastructure\Extracao\ResultadoExtracao;
 
 it('extrai o texto de um pdf digital e ultrapassa o threshold', function (): void {
     $resultado = (new ExtractorTextoNativo)->extrair(base_path('tests/Fixtures/Extracao/pdf-digital.pdf'));
@@ -20,6 +21,6 @@ it('não ultrapassa o threshold quando o texto é curto', function (): void {
 });
 
 it('lança FalhaExtracaoTextoException quando o ficheiro está corrompido', function (): void {
-    expect(fn (): \App\Infrastructure\Extracao\ResultadoExtracao => (new ExtractorTextoNativo)->extrair(base_path('tests/Fixtures/Extracao/pdf-corrompido.pdf')))
+    expect(fn (): ResultadoExtracao => (new ExtractorTextoNativo)->extrair(base_path('tests/Fixtures/Extracao/pdf-corrompido.pdf')))
         ->toThrow(FalhaExtracaoTextoException::class);
 });
