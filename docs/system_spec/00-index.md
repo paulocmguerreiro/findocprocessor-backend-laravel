@@ -70,6 +70,7 @@
 | Jobs / Queue + Events de domínio             | `04-infra/queue-jobs.md`      | implementado (Events de transição + `ReconciliarFicheirosJob`; Jobs de pipeline pendentes) |
 | APIs externas (IA)                           | `04-infra/external-apis.md`   | parcial (PromptBuilder + Prism/config das camadas LLM implementados; cliente concreto pendente) |
 | Scan de malware (ClamAV self-hosted)          | `04-infra/external-apis.md`   | implementado                                                                           |
+| Extractores de texto (pdfparser nativo + Tesseract OCR) | `04-infra/external-apis.md` | implementado                                                                 |
 | PromptBuilder (system prompt de extracção)   | `04-infra/prompt-builder.md`  | implementado                                                                           |
 | Ambiente Docker + paridade de testes (MySQL) | `04-infra/ambiente-docker.md` | implementado                                                                           |
 | CI/CD (GitHub Actions — jobs, gates de qualidade)  | `04-infra/ambiente-docker.md` (secção "CI") | implementado                                                             |

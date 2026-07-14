@@ -7,6 +7,19 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
+- **Issue #96** — Extração: extractores de texto (pdfparser nativo + Tesseract OCR)
+  - `App\Infrastructure\Extracao\ExtractorTextoNativo` — texto de PDF digital via `smalot/pdfparser`; aplica o threshold de 50 caracteres (`config('extracao.threshold_caracteres')`) e devolve o veredicto no `ResultadoExtracao`, sem decidir transição de estado
+  - `App\Infrastructure\Extracao\ExtractorOcr` — rasteriza cada página via `imagick` a `config('extracao.ocr.dpi')` DPI (300) e reconhece com `thiagoalessio/tesseract_ocr` (`config('extracao.ocr.linguas')`, `por`+`eng`); liberta a memória do `Imagick` por página e garante em `finally` a limpeza de todos os temporários de `storage/app/temp/`, mesmo em falha a meio
+  - `ResultadoExtracao` (Value Object, construtor privado) — `comVeredictoThreshold()`/`semVeredicto()`; `FalhaExtracaoTextoException` — excepção única partilhada pelos dois extractores, sem subclasses por origem
+  - Sem interface comum entre os dois extractores (sem substituição prevista — o orquestrador da issue seguinte invoca sempre os dois, em sequência condicional); sem escrita em BD, sem chamada a LLM, sem dependência de `Documento`/`ExtracaoDocumento` nesta issue
+  - `config/extracao.php` ganha `ocr.dpi`/`ocr.linguas`; stub Larastan próprio (`stubs/TesseractOCR.stub.php`) para a API fluente do pacote de terceiros
+  - Testes sem mock do motor OCR/Ghostscript (binários reais, mesma decisão de `ClamAvAnalisadorMalwareTest`); fixture de PDF-imagem gerada em runtime via PostScript + Ghostscript (`Process::run()`, sem shell) + `imagick`
+  - 987 testes, 100% cobertura + type coverage, Larastan 9 — verde em MySQL
+
+### Security
+- **Issue #96** — `tests/Support/gera_pdf_imagem.php` substitui `exec()` por `Illuminate\Support\Facades\Process::run()` (array de argumentos, sem shell) para invocar o Ghostscript — elimina o padrão `exec()` sinalizado pelo `checkpoint:scan` (achado sem exploração prática, valores já escapados e sem input externo, mas eliminado por decisão do utilizador)
+
+### Added
 - **Issue #94** — Extração: registo de passos de IA + histórico unificado (model + recorder)
   - 2 enums novos em `App\Shared\Enums`: `EtapaExtracao` (6 casos — `Pendente`, `NecessitaOcr`, `TextoPronto`, `NecessitaCloud`, `Concluido`, `Falhado`) e `ResultadoEtapa` (`Sucesso`, `Falha`, `EmCurso`)
   - Tabela + Model + Factory `ExtracaoDocumento` — relação 1-1 com `Documento` (`id_documento` único, `cascadeOnDelete`), índice composto `(etapa_extracao, extracao_reclamada_em)` para o futuro `Schedule` de orquestração; sem `RegistaActividade` (dados operacionais/PII)
