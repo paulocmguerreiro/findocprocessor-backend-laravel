@@ -57,8 +57,12 @@ modelos e ficheiros de infra existentes. Depois abrir apenas o ficheiro relevant
   `casts()`, esqueleto de uma classe) — descrever a semântica/valores em prosa ou tabela e apontar
   para o ficheiro (`ver app/Shared/Enums/X.php`). Um bloco de código no spec e o ficheiro real podem
   divergir silenciosamente; o ficheiro é sempre a fonte da verdade.
-  **Excepção:** `02-shared/padroes-*.md` — aí o código É o produto (um template a copiar em código
-  novo), não a documentação de uma instância já existente.
+  **Excepção — ficheiros de padrão** (o código É o produto, um template a copiar em código novo, não
+  a documentação de uma instância já existente): `02-shared/padroes-*.md`, `02-shared/soft-delete.md`
+  (Padrão B — try/catch, checklist de implementação), e a secção "State objects" de
+  `02-shared/estados.md`. O critério é **funcional** (o ficheiro/secção existe para ser copiado),
+  não o nome do ficheiro — se um novo ficheiro de padrão for criado sem o prefixo `padroes-`,
+  acrescentá-lo a esta lista explicitamente.
 - Actualizar apenas as secções afectadas — não reescrever o ficheiro completo.
 - Cada actualização é um commit separado: `📝 docs: actualizar system_spec após #N`.
 - A system_spec regista o que **existe**, não o que está planeado nem o histórico de como lá chegou.
