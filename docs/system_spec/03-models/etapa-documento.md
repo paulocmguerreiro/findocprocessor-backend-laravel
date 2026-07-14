@@ -23,12 +23,12 @@
 - `cascadeOnDelete()` em `id_documento` — histórico não existe sem o documento.
 - `restrictOnDelete()` em `id_utilizador` (Issue #68) — um utilizador que registou etapas não pode ser hard-deleted; `EliminarUtilizadorAction` cai no soft delete, preservando a autoria da etapa.
 - `cascadeOnUpdate()` em ambas as FKs (migration `add_cascade_on_update_to_domain_fks`, 2026-07-14) — sem esta cascade, um `UPDATE` à PK do documento ou do utilizador falharia por violação de FK; prepara para uma futura reconciliação/agregação de bases de dados que precise de remapear UUIDs.
-- **`passo`/`resultado` (#94)** — colunas nullable acrescentadas por migration própria
+- **`passo`/`resultado`** — colunas nullable acrescentadas por migration própria
   (`add_passo_resultado_to_etapas_documento_table`), sem migração de dados: linhas existentes ficam
   com ambas a `null` (linha de negócio, comportamento inalterado). Uma linha de IA (gravada por
-  `RegistarEtapaExtracaoAction`, ver `01-features/documento.md`) tem `estado` igual ao `status` actual
-  do `Documento` (não muda) e `passo`/`resultado` preenchidos. Ver `02-shared/estados.md` — "modelo
-  de 2 dimensões" para a distinção completa.
+  `RegistarEtapaExtracaoAction`, ver `01-features/documento-pipeline.md`) tem `estado` igual ao
+  `status` actual do `Documento` (não muda) e `passo`/`resultado` preenchidos. Ver
+  `01-features/documento-pipeline.md` — "Modelo de 2 dimensões" para a distinção completa.
 
 ---
 

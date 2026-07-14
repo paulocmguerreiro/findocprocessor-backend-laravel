@@ -1,6 +1,6 @@
 # System Spec — Model: ExtracaoDocumento
 
-> `app/Models/ExtracaoDocumento.php` · Tabela: `extracoes_documento` · Issue #94
+> `app/Models/ExtracaoDocumento.php` · Tabela: `extracoes_documento`
 
 ---
 
@@ -11,14 +11,14 @@
 | `id` | `uuid` PK | Não | — | UUIDv7 via `HasUuids` |
 | `id_documento` | `uuid` FK | Não | — | **UNIQUE** (1-1 com `documentos`); `cascadeOnDelete()` + `cascadeOnUpdate()` |
 | `etapa_extracao` | `string(50)` | Não | `'PENDENTE'` | Cast → `EtapaExtracao`; etapa actual da extracção |
-| `extracao_reclamada_em` | `timestamp` | Sim | `null` | Lease de reivindicação; TTL = `config('extracao.ttl_lease')` (300s, #95) — **libertado pelo orquestrador (#97/#98)**, esta issue só grava/limpa o valor |
-| `extracao_tentativas` | `unsignedTinyInteger` | Não | `0` | Tecto = `config('extracao.max_tentativas')` (3, #95) — **enforcement fora desta issue** |
+| `extracao_reclamada_em` | `timestamp` | Sim | `null` | Lease de reivindicação; TTL = `config('extracao.ttl_lease')` (300s) — **libertado pelo orquestrador de pipeline**; o Model só grava/limpa o valor |
+| `extracao_tentativas` | `unsignedTinyInteger` | Não | `0` | Tecto = `config('extracao.max_tentativas')` (3) — **enforcement fica no orquestrador de pipeline** |
 | `texto_extraido` | `longText` | Sim | `null` | PII — nunca em Resource |
 | `dados_json` | `json` | Sim | `null` | PII — nunca em Resource; cast `array` (`array<string, mixed>`, chaves não previsíveis) |
 | `created_at` / `updated_at` | `timestamp` | — | — | `timestamps()` — tabela **mutável** (ao contrário de `etapas_documento`, que é append-only) |
 
 Índice composto `(etapa_extracao, extracao_reclamada_em)` — preparação para o `SELECT` do futuro
-Schedule (#97/#98); sem consumidor nesta issue.
+Schedule do orquestrador de pipeline; sem consumidor por agora.
 
 **1-1 com `Documento`** — `id_documento` é `unique()`; nunca existem duas linhas para o mesmo documento
 (upsert por esta chave, ver `RegistarEtapaExtracaoAction` abaixo).
@@ -104,8 +104,8 @@ Base (`definition()`) = `etapa_extracao Pendente`, `extracao_tentativas: 0`, res
 **Ficheiro:** `app/Features/Documento/RegistarEtapaExtracao/RegistarEtapaExtracaoAction.php`
 
 Único ponto de escrita em `extracoes_documento` fora do reset de `ReprocessarDocumentoAction`. Ver
-`01-features/documento.md` para o detalhe completo (DTO, contrato "substituição total", ausência de
-`Gate::authorize`).
+`01-features/documento-pipeline.md` para o detalhe completo (DTO, contrato "substituição total",
+ausência de `Gate::authorize`).
 
 ---
 
@@ -118,5 +118,5 @@ Base (`definition()`) = `etapa_extracao Pendente`, `extracao_tentativas: 0`, res
 - **`dados_json` tipado `array<string, mixed>`** — as chaves são dados extraídos livres (NIF, nomes,
   valores), não previsíveis estaticamente; `array<string, T>` em vez de `array{...}` (Regra A,
   `02-shared/padroes-tipagem.md`, adaptada — aqui as chaves não são conhecidas à partida).
-- **Índice composto sem consumidor** — aceite, mesmo padrão do índice `(status, updated_at)` de
-  `Documento` antes do #90 (preparação para uso futuro documentado, não especulação sem plano).
+- **Índice composto sem consumidor** — aceite, mesmo padrão já usado no índice `(status, updated_at)`
+  de `Documento` (preparação para uso futuro documentado, não especulação sem plano).

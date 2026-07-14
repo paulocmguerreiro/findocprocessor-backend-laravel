@@ -66,26 +66,9 @@ PENDENTE → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → PROCESSADO
 ```
 
 - Valores na BD: `'PENDENTE'`, `'AGUARDA_ENVIO'`, `'ENVIADO'`, `'AGUARDA_RESPOSTA'`, `'PROCESSADO'`, `'ERRO'`, `'PERIGOSO'`
-- Detalhe das transições, state objects e mapeamento estado→disco em `02-shared/estados.md`
+- State objects e mapeamento estado→disco em `02-shared/estados.md`; mapa de transições em
+  `01-features/documento-pipeline.md`
 - Usado em: `Documento::$status` (cast Eloquent), `Documento::estado()` (match exaustivo)
-
----
-
-## `ModoReprocessamento` — `App\Features\Documento\Reprocessar\ModoReprocessamento`
-
-Classifica o modo de reprocessamento de um documento em `Erro`.
-
-```php
-enum ModoReprocessamento: string
-{
-    case Modelo     = 'MODELO';
-    case Ferramenta = 'FERRAMENTA';
-}
-```
-
-- Valores na BD/histórico: `'MODELO'`, `'FERRAMENTA'` (registados como `motivo` na `EtapaDocumento`)
-- A semântica de fallback entre modelos/ferramentas é diferida para a issue de extracção (IA/OCR)
-- Usado em: `ReprocessarDocumentoDto::$modo`, `ReprocessarDocumentoAction`, `DocumentoReprocessado`
 
 ---
 
@@ -132,7 +115,7 @@ enum PosicaoEmpresaMae: string
 ## `EtapaExtracao` — `App\Shared\Enums\EtapaExtracao`
 
 PHP 8.5 backed enum (string). Etapa da dimensão de extracção de um `Documento` — independente do
-`status` de negócio (Issue #94). Cases em TitleCase PT; values em UPPER_SNAKE.
+`status` de negócio. Cases em TitleCase PT; values em UPPER_SNAKE.
 
 ```php
 enum EtapaExtracao: string
@@ -148,14 +131,14 @@ enum EtapaExtracao: string
 
 - Valores na BD: `'PENDENTE'`, `'NECESSITA_OCR'`, `'TEXTO_PRONTO'`, `'NECESSITA_CLOUD'`, `'CONCLUIDO'`, `'FALHADO'`
 - Usado em: `ExtracaoDocumento::$etapa_extracao` e `EtapaDocumento::$passo` (cast Eloquent, ambos)
-- Ver `02-shared/estados.md` — "modelo de 2 dimensões" para a relação com `EstadoDocumento`
+- Ver `01-features/documento-pipeline.md` — "Modelo de 2 dimensões" para a relação com `EstadoDocumento`
 
 ---
 
 ## `ResultadoEtapa` — `App\Shared\Enums\ResultadoEtapa`
 
-PHP 8.5 backed enum (string). Resultado de um passo de IA registado por `RegistarEtapaExtracaoAction`
-(Issue #94). Cases em TitleCase PT; values em UPPER_SNAKE.
+PHP 8.5 backed enum (string). Resultado de um passo de IA registado por `RegistarEtapaExtracaoAction`.
+Cases em TitleCase PT; values em UPPER_SNAKE.
 
 ```php
 enum ResultadoEtapa: string
@@ -170,19 +153,6 @@ enum ResultadoEtapa: string
 - Usado em: `EtapaDocumento::$resultado` (cast Eloquent, `null` numa linha de negócio)
 - `RegistarEtapaExtracaoDto` exige `motivo` não-vazio quando `resultado === Falha`
 
----
-
-## `CampoOrdenacaoDocumentos` — `App\Features\Documento\Listar\CampoOrdenacaoDocumentos`
-
-Campo de ordenação da listagem de documentos.
-
-```php
-enum CampoOrdenacaoDocumentos: string
-{
-    case DataDocumento = 'data_documento';
-    case CriadoEm     = 'created_at';
-}
-```
-
-- Valores na query string: `'data_documento'`, `'created_at'`
-- Usado em: `ListarDocumentosAction::handle()`, `ListarDocumentosRequest`
+Enums feature-specific de `Documento` (`ModoReprocessamento`, `CampoOrdenacaoDocumentos`) estão
+documentados em `01-features/documento.md` ("Enums da feature"), não aqui — este ficheiro cobre
+apenas enums de `app/Shared/Enums/`.
