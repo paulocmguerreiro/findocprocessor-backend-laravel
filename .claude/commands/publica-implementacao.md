@@ -23,7 +23,7 @@ Requer `/documenta-implementacao` completo antes de executar.
 4. **Gate de paridade Docker/MySQL (local, falha fecha)** — só para stack Laravel:
    ```bash
    docker compose up -d --build
-   docker compose exec -T app composer test:mysql   # suite contra MySQL (findocprocessor_testing)
+   docker compose exec -T app composer test         # suite contra MySQL (findocprocessor_testing)
    docker compose down
    ```
    Corre a mesma suite contra MySQL real, o mais próximo do stack de produção.
