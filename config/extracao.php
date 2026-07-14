@@ -8,4 +8,8 @@ return [
     'max_tentativas' => 3,
     'camada_local_activa' => filled(env('LLM_LOCAL_URL')) && filled(env('LLM_LOCAL_MODEL')),
     'camada_cloud_activa' => filled(env('LLM_CLOUD_URL')) && filled(env('LLM_CLOUD_MODEL')) && filled(env('LLM_CLOUD_KEY')),
+    'ocr' => [
+        'dpi' => 300,
+        'linguas' => ['por', 'eng'],
+    ],
 ];

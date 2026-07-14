@@ -92,3 +92,10 @@ it('define os valores fixos de threshold, ttl e tentativas', function (): void {
         ->and($config['max_tentativas'])->toBe(3)
         ->and($config['ttl_lease'])->toBe(300);
 });
+
+it('define os valores fixos de dpi e línguas do ocr', function (): void {
+    $config = require config_path('extracao.php');
+
+    expect($config['ocr']['dpi'])->toBe(300)
+        ->and($config['ocr']['linguas'])->toBe(['por', 'eng']);
+});
