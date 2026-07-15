@@ -37,6 +37,16 @@ WRN-NNN | YYYY-MM-DDTHH:MM:SSZ | <fase> | <categoria> | STATUS: PENDENTE
 
 Quando resolvido, actualizar para `STATUS: RESOLVIDO | YYYY-MM-DDTHH:MM:SSZ`.
 
+### Arquivo de concluídos
+
+`docs/process-warnings.md` mantém só entradas **accionáveis** — `PENDENTE` ou
+`PARCIALMENTE RESOLVIDO`. Assim que uma entrada transita para `RESOLVIDO` ou `IGNORADO` (estado
+final, sem seguimento pendente), o bloco inteiro é **cortado** de `docs/process-warnings.md` e
+**colado** no fim de `docs/process-warnings-concluidos.md` (ID e conteúdo inalterados — só muda o
+ficheiro). `PARCIALMENTE RESOLVIDO` fica em `process-warnings.md` até fechar por completo (mesmo
+critério que `/mostra-workflow` já usa para listar avisos activos). `docs/process-warnings-concluidos.md`
+é só histórico — não é lido no início de sessão nem por `/mostra-workflow`.
+
 ### Exemplo — categoria accionável por `/ajusta-workflow`
 
 ```

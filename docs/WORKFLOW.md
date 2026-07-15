@@ -21,7 +21,9 @@ Agents    → subagentes lançados por commands/skills quando a tarefa justifica
   de investigação paralela ou isolamento de contexto.
 
 O estado entre fases persiste em `docs/workflow-state.md` (existe só enquanto uma issue está
-em curso) e avisos de processo em `docs/process-warnings.md`.
+em curso) e avisos de processo em `docs/process-warnings.md` (só entradas activas —
+`PENDENTE`/`PARCIALMENTE RESOLVIDO`; histórico de `RESOLVIDO`/`IGNORADO` em
+`docs/process-warnings-concluidos.md`).
 
 ## Comandos por fase
 

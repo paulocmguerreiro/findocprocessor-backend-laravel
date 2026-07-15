@@ -39,7 +39,9 @@ Nenhum.
    **individualmente, uma linha por entrada**, todas as que tenham `STATUS: PENDENTE` ou
    `STATUS: PARCIALMENTE RESOLVIDO` (excluir `RESOLVIDO` e `IGNORADO`). Nunca agrupar, resumir ou
    omitir entradas por pertencerem à mesma issue/sessão — cada `WRN-NNN` conta por si, mesmo que haja
-   5 entradas da mesma issue:
+   5 entradas da mesma issue. O ficheiro só contém entradas accionáveis — `RESOLVIDO`/`IGNORADO` vivem
+   em `docs/process-warnings-concluidos.md` (histórico, não lido aqui — ver
+   `.claude/skills/regista-aviso.md`):
    ```
    ⚠️ Avisos de processo activos:
    - WRN-001 (PARCIALMENTE RESOLVIDO): <descrição curta>

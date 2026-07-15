@@ -68,4 +68,5 @@ coverage/
 
 # Workflow interno (ruído de sessão — não deve ir para o repo público)
 docs/process-warnings.md
+docs/process-warnings-concluidos.md
 docs/workflow-state.md

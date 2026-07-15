@@ -109,7 +109,9 @@ Sempre que um ficheiro **novo** é criado em `docs/system_spec/` (qualquer tipo 
 ### 8 — Output final
 
 Se o ajuste resolveu uma entrada de `docs/process-warnings.md`, actualizá-la para
-`STATUS: RESOLVIDO | YYYY-MM-DDTHH:MM:SSZ` no mesmo passo.
+`STATUS: RESOLVIDO | YYYY-MM-DDTHH:MM:SSZ` e, no mesmo passo, mover o bloco inteiro para
+`docs/process-warnings-concluidos.md` (regra de arquivo em `.claude/skills/regista-aviso.md`) —
+`process-warnings.md` fica sem essa entrada.
 
 ```
 ✅ Ajuste aplicado
@@ -117,7 +119,7 @@ Tipo: [A / B / C / D]
 Alterados:
   - <caminho>
 [Índice actualizado: 00-index.md]  (se aplicável)
-[WRN-NNN → RESOLVIDO]  (se aplicável)
+[WRN-NNN → RESOLVIDO, movido para process-warnings-concluidos.md]  (se aplicável)
 ```
 
 ## Exemplos de uso
