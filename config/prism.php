@@ -10,11 +10,9 @@ return [
     ],
     'request_timeout' => env('PRISM_REQUEST_TIMEOUT', 30), // The timeout for requests in seconds.
     'providers' => [
-        // Camada cloud do pipeline de extração (#95/#96/#97) — provider OpenAI-compatible
-        // apontado a LLM_CLOUD_URL (cobre OpenRouter/gateways custom), sem valor por omissão.
         'openai' => [
-            'url' => env('LLM_CLOUD_URL'),
-            'api_key' => env('LLM_CLOUD_KEY', ''),
+            'url' => env('OPENAI_URL', 'https://api.openai.com/v1'),
+            'api_key' => env('OPENAI_API_KEY', ''),
             'organization' => env('OPENAI_ORGANIZATION', null),
             'project' => env('OPENAI_PROJECT', null),
         ],
@@ -26,10 +24,8 @@ return [
             // Include beta strings as a comma separated list.
             'anthropic_beta' => env('ANTHROPIC_BETA', null),
         ],
-        // Camada local do pipeline de extração (#95/#96/#97) — Ollama externo à app,
-        // sem api_key. Camada inactiva (ver config/extracao.php) se LLM_LOCAL_URL vazia.
         'ollama' => [
-            'url' => env('LLM_LOCAL_URL', 'http://localhost:11434/v1'),
+            'url' => env('OLLAMA_URL', 'http://localhost:11434/v1'),
         ],
         'mistral' => [
             'api_key' => env('MISTRAL_API_KEY', ''),

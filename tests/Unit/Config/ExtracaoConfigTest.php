@@ -32,12 +32,17 @@ function limparVarsExtracao(array $chaves): void
     }
 }
 
+const VARS_EXTRACAO = [
+    'LLM_LOCAL_URL', 'LLM_LOCAL_MODEL', 'LLM_LOCAL_PROVIDER',
+    'LLM_CLOUD_URL', 'LLM_CLOUD_MODEL', 'LLM_CLOUD_KEY', 'LLM_CLOUD_PROVIDER',
+];
+
 beforeEach(function (): void {
-    limparVarsExtracao(['LLM_LOCAL_URL', 'LLM_LOCAL_MODEL', 'LLM_CLOUD_URL', 'LLM_CLOUD_MODEL', 'LLM_CLOUD_KEY']);
+    limparVarsExtracao(VARS_EXTRACAO);
 });
 
 afterEach(function (): void {
-    limparVarsExtracao(['LLM_LOCAL_URL', 'LLM_LOCAL_MODEL', 'LLM_CLOUD_URL', 'LLM_CLOUD_MODEL', 'LLM_CLOUD_KEY']);
+    limparVarsExtracao(VARS_EXTRACAO);
 });
 
 it('activa a camada local quando url e modelo estão preenchidos', function (): void {
@@ -45,7 +50,93 @@ it('activa a camada local quando url e modelo estão preenchidos', function (): 
 
     $config = require config_path('extracao.php');
 
-    expect($config['camada_local_activa'])->toBeTrue();
+    expect($config['local']['activa'])->toBeTrue();
+});
+
+it('expõe o modelo local a partir de LLM_LOCAL_MODEL', function (): void {
+    definirVarsExtracao(['LLM_LOCAL_MODEL' => 'llama3']);
+
+    $config = require config_path('extracao.php');
+
+    expect($config['local']['modelo'])->toBe('llama3');
+});
+
+it('expõe o modelo local como null quando LLM_LOCAL_MODEL não está preenchida', function (): void {
+    $config = require config_path('extracao.php');
+
+    expect($config['local']['modelo'])->toBeNull();
+});
+
+it('expõe o modelo cloud a partir de LLM_CLOUD_MODEL', function (): void {
+    definirVarsExtracao(['LLM_CLOUD_MODEL' => 'gpt-4o']);
+
+    $config = require config_path('extracao.php');
+
+    expect($config['cloud']['modelo'])->toBe('gpt-4o');
+});
+
+it('expõe o modelo cloud como null quando LLM_CLOUD_MODEL não está preenchida', function (): void {
+    $config = require config_path('extracao.php');
+
+    expect($config['cloud']['modelo'])->toBeNull();
+});
+
+it('assume ollama como provider local por omissão', function (): void {
+    $config = require config_path('extracao.php');
+
+    expect($config['local']['provider'])->toBe('ollama');
+});
+
+it('permite substituir o provider local via LLM_LOCAL_PROVIDER', function (): void {
+    definirVarsExtracao(['LLM_LOCAL_PROVIDER' => 'openrouter']);
+
+    $config = require config_path('extracao.php');
+
+    expect($config['local']['provider'])->toBe('openrouter');
+});
+
+it('assume anthropic como provider cloud por omissão', function (): void {
+    $config = require config_path('extracao.php');
+
+    expect($config['cloud']['provider'])->toBe('anthropic');
+});
+
+it('permite substituir o provider cloud via LLM_CLOUD_PROVIDER', function (): void {
+    definirVarsExtracao(['LLM_CLOUD_PROVIDER' => 'openrouter']);
+
+    $config = require config_path('extracao.php');
+
+    expect($config['cloud']['provider'])->toBe('openrouter');
+});
+
+it('expõe a url local com omissão para o Ollama por defeito', function (): void {
+    $config = require config_path('extracao.php');
+
+    expect($config['local']['url'])->toBe('http://localhost:11434/v1');
+});
+
+it('expõe a url local a partir de LLM_LOCAL_URL', function (): void {
+    definirVarsExtracao(['LLM_LOCAL_URL' => 'http://ollama.interno:11434/v1']);
+
+    $config = require config_path('extracao.php');
+
+    expect($config['local']['url'])->toBe('http://ollama.interno:11434/v1');
+});
+
+it('expõe a url e a key cloud a partir de LLM_CLOUD_URL/LLM_CLOUD_KEY', function (): void {
+    definirVarsExtracao(['LLM_CLOUD_URL' => 'https://api.anthropic.com/v1', 'LLM_CLOUD_KEY' => 'segredo']);
+
+    $config = require config_path('extracao.php');
+
+    expect($config['cloud']['url'])->toBe('https://api.anthropic.com/v1')
+        ->and($config['cloud']['key'])->toBe('segredo');
+});
+
+it('expõe a url cloud como null e a key como string vazia quando não preenchidas', function (): void {
+    $config = require config_path('extracao.php');
+
+    expect($config['cloud']['url'])->toBeNull()
+        ->and($config['cloud']['key'])->toBe('');
 });
 
 it('desactiva a camada local quando falta o modelo', function (): void {
@@ -53,13 +144,13 @@ it('desactiva a camada local quando falta o modelo', function (): void {
 
     $config = require config_path('extracao.php');
 
-    expect($config['camada_local_activa'])->toBeFalse();
+    expect($config['local']['activa'])->toBeFalse();
 });
 
 it('desactiva a camada local quando nenhuma var está preenchida', function (): void {
     $config = require config_path('extracao.php');
 
-    expect($config['camada_local_activa'])->toBeFalse();
+    expect($config['local']['activa'])->toBeFalse();
 });
 
 it('activa a camada cloud quando url, modelo e key estão preenchidos', function (): void {
@@ -71,7 +162,7 @@ it('activa a camada cloud quando url, modelo e key estão preenchidos', function
 
     $config = require config_path('extracao.php');
 
-    expect($config['camada_cloud_activa'])->toBeTrue();
+    expect($config['cloud']['activa'])->toBeTrue();
 });
 
 it('desactiva a camada cloud quando falta a key', function (): void {
@@ -82,7 +173,7 @@ it('desactiva a camada cloud quando falta a key', function (): void {
 
     $config = require config_path('extracao.php');
 
-    expect($config['camada_cloud_activa'])->toBeFalse();
+    expect($config['cloud']['activa'])->toBeFalse();
 });
 
 it('define os valores fixos de threshold, ttl e tentativas', function (): void {

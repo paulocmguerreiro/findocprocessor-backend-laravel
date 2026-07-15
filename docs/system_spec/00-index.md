@@ -68,7 +68,7 @@
 | Logging estruturado                          | `04-infra/logging.md`         | implementado                                                                           |
 | Audit trail (spatie/laravel-activitylog)     | `04-infra/audit-trail.md`     | implementado                                                                           |
 | Jobs / Queue + Events de domínio             | `04-infra/queue-jobs.md`      | implementado (Events de transição + `ReconciliarFicheirosJob`; Jobs de pipeline pendentes) |
-| APIs externas (IA)                           | `04-infra/external-apis.md`   | parcial (PromptBuilder + Prism/config das camadas LLM implementados; cliente concreto pendente) |
+| APIs externas (IA)                           | `04-infra/external-apis.md`   | implementado (`PromptBuilder` + `ClienteExtracaoIAPrism`; orquestração do pipeline pendente) |
 | Scan de malware (ClamAV self-hosted)          | `04-infra/external-apis.md`   | implementado                                                                           |
 | Extractores de texto (pdfparser nativo + Tesseract OCR) | `04-infra/external-apis.md` | implementado                                                                 |
 | PromptBuilder (system prompt de extracção)   | `04-infra/prompt-builder.md`  | implementado                                                                           |
