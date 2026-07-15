@@ -15,6 +15,7 @@
 | Sufixos de padrão estrutural | `Builder`, `Interface`, `Controller`, `Factory`, `Provider`, `Job` |
 | Métodos Eloquent / Query Builder | `->where()`, `->create()`, `->find()`, `->get()` |
 | Atributos PHP nativos | `#[Override]`, `#[Fillable]`, `#[Hidden]` |
+| Propriedades/atributos de Model reconhecidos pelo Eloquent | `#[Table]`, `#[Fillable]`, `#[Casts]` (ou `$table`/`$fillable`/`$casts` sem o atributo PHP 8) |
 
 ---
 
@@ -35,19 +36,36 @@ Excepção: métodos impostos pelo framework (ver tabela acima) — não traduzi
 
 ---
 
-## Métodos booleanos — prefixo `eh`/`esta`/`validar`
+## Métodos booleanos — prefixo `e`/`esta`/`validar`
 
-Métodos que devolvem `bool` usam sempre prefixo `eh`, `esta` ou `validar` — nunca a forma
+Métodos que devolvem `bool` usam sempre prefixo `e`, `esta` ou `validar` — nunca a forma
 Substantivo+Adjectivo (`nifValido()`, `dataValida()`). Substantivo+Adjectivo é ambíguo: não fica claro,
 só pelo nome, se o método é booleano ou se devolve o próprio valor interpretado/validado.
+
+> Nota: uma versão anterior deste documento usava `eh` em vez de `e` — foi um erro de escrita do
+> próprio spec (o código de domínio já usava `e` de forma consistente: `eCliente`, `eFornecedor`,
+> `eEmpresaAplicacao`). `e` é o prefixo canónico, não `eh`.
+
+Critério de escolha entre os três prefixos, pelo tipo de pergunta que o método responde:
+
+| Prefixo | Quando usar | Exemplo |
+|---|---|---|
+| `e` | Classificação/natureza da entidade — "é isto?" | `eCliente()`, `eFornecedorEfectivo()` |
+| `esta` | Estado/condição transitória — "está assim agora?" | `estaConfigurado()`, `estaLimpo()`, `estaEmFalhaTecnica()` |
+| `validar` | Acção de validação activa | `validarNif()` |
 
 ```php
 // correcto
 public function validarNif(string $nif): bool {}
-public function ehDocumentoValido(Documento $documento): bool {}
+public function eDocumentoValido(Documento $documento): bool {}
+public function estaConfigurado(): bool {}
 
 // incorrecto — encontrado em ClienteExtracaoIAPrism (WRN-021, #97): parecia boolean pelo nome
 public function nifValido(string $nif): bool {}
+
+// incorrecto — prefixo no passado, fora do conjunto prescrito (WRN-028, varrimento pós-#97)
+public function foiConfigurado(): bool {}     // correcto: estaConfigurado()
+public function falhouTecnicamente(): bool {} // correcto: estaEmFalhaTecnica()
 ```
 
 O inverso também é violação: um método que **não** devolve `bool` mas usa a forma
@@ -80,6 +98,16 @@ $totalDocumentos    = $categorias->sum('contadorDocumentos');
 ```
 
 Nomes genéricos como `$data`, `$result`, `$validated`, `$campos`, `$response` são **violação** — substituir por `$dadosValidados`, `$camposParaActualizar`, etc.
+
+**O critério é o conceito, não a língua.** As traduções PT directas destes termos são a mesma
+violação: `$dados` e `$resultado` são tão genéricos quanto `$data` e `$result` — o problema nunca foi
+a palavra ser inglesa, foi não dizer nada sobre o conteúdo. `$dados` → `$dadosValidados`,
+`$resultado` → nome que descreva o que contém (`$categoria`, `$paginaDocumentos`, etc.), consoante o
+contexto (achado no varrimento pós-WRN-023: WRN-027, WRN-030, WRN-031).
+
+Isto **não** se aplica a nomes impostos pelo framework — `$table`, `$fillable`, `$casts` (ou os
+atributos equivalentes `#[Table]`/`#[Fillable]`) ficam em inglês porque é o Eloquent que os reconhece
+pelo nome, tal como a tabela "Fica em inglês" acima já estabelece para métodos.
 
 ---
 
