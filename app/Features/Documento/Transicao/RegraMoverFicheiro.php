@@ -11,7 +11,7 @@ use RuntimeException;
 /**
  * Invariante de domínio: garante que o ficheiro reside no disco correspondente
  * ao estado do Documento, deixando `disco_storage`/`nome_ficheiro_storage`
- * consistentes com o novo `status`.
+ * consistentes com o novo `estado`.
  *
  * Os discos estão configurados com `throw => false`, por isso cada operação
  * verifica o valor de retorno e lança em falha. Movimento entre discos distintos

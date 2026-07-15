@@ -28,7 +28,7 @@ it('regista o primeiro passo: cria extracoes_documento + EtapaDocumento com pass
     $this->assertDatabaseCount('extracoes_documento', 1);
     $this->assertDatabaseHas('etapas_documento', [
         'id_documento' => $documento->id,
-        'estado' => $documento->status->value,
+        'estado' => $documento->estado->value,
         'passo' => EtapaExtracao::TextoPronto->value,
         'resultado' => ResultadoEtapa::Sucesso->value,
         'id_utilizador' => null,

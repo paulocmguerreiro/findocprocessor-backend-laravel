@@ -40,7 +40,7 @@ PENDENTE → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → PROCESSADO
 
 ---
 
-## Racional de design — porquê state objects (e não `if ($doc->status == ...)`)
+## Racional de design — porquê state objects (e não `if ($doc->estado == ...)`)
 
 Os state objects (`app/Shared/States/`) **não são decoração**: são o andaime deliberado do
 pipeline de ingestão (OCR / análise de imagem / extracção por IA) que se pendura em cada estado.
@@ -48,7 +48,7 @@ pipeline de ingestão (OCR / análise de imagem / extracção por IA) que se pen
 **Intenção:** cada estado expõe **apenas** os dados e as transições **válidos nessa fase**. Ao
 encapsular o comportamento por estado, restringido, por construção, operações que ainda não
 existem (ou que não fazem sentido) numa dada fase — em vez de as espalhar por condicionais
-`if ($doc->status == ...)` que crescem sem controlo à medida que o pipeline evolui.
+`if ($doc->estado == ...)` que crescem sem controlo à medida que o pipeline evolui.
 
 **Consequências que justificam o custo:**
 

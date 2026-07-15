@@ -61,7 +61,7 @@ describe('autenticado', function (): void {
             ->handle(15, CampoOrdenacaoDocumentos::CriadoEm, DirecaoOrdenacao::Desc, EstadoDocumento::Pendente);
 
         expect($resultado->count())->toBe(2)
-            ->and($resultado->getCollection()->every(fn (Documento $d): bool => $d->status === EstadoDocumento::Pendente))->toBeTrue();
+            ->and($resultado->getCollection()->every(fn (Documento $d): bool => $d->estado === EstadoDocumento::Pendente))->toBeTrue();
     });
 
     it('cacheia o resultado após a primeira chamada', function (): void {

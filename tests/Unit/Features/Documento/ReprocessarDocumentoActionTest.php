@@ -34,7 +34,7 @@ it('transiciona Erro → AguardaEnvio: move erro → entrada, regista o modo e e
 
     $resultado = app(ReprocessarDocumentoAction::class)->handle($documento, new ReprocessarDocumentoDto(ModoReprocessamento::Modelo));
 
-    expect($resultado->status)->toBe(EstadoDocumento::AguardaEnvio)
+    expect($resultado->estado)->toBe(EstadoDocumento::AguardaEnvio)
         ->and($resultado->disco_storage)->toBe('entrada');
 
     Storage::disk('entrada')->assertExists($documento->nome_ficheiro_storage);
@@ -127,7 +127,7 @@ describe('Reset de extracoes_documento (ripple #94)', function (): void {
         expect(fn (): Documento => app(ReprocessarDocumentoAction::class)->handle($documento, new ReprocessarDocumentoDto(ModoReprocessamento::Modelo)))
             ->toThrow(RuntimeException::class, 'falha simulada no reset da extracoes_documento');
 
-        expect($documento->fresh()->status)->toBe(EstadoDocumento::Erro);
+        expect($documento->fresh()->estado)->toBe(EstadoDocumento::Erro);
         $this->assertDatabaseCount('etapas_documento', 0);
     });
 });

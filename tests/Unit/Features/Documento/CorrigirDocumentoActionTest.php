@@ -41,7 +41,7 @@ it('corrige o domínio e renomeia o ficheiro quando o nome canónico muda', func
 
     $resultado = app(CorrigirDocumentoAction::class)->handle($documento, $dados);
 
-    expect($resultado->status)->toBe(EstadoDocumento::Processado)
+    expect($resultado->estado)->toBe(EstadoDocumento::Processado)
         ->and($resultado->nome_ficheiro_storage)->toBe('2026-06-25-novo-fornecedor-nova-categoria.pdf')
         ->and($resultado->id_fornecedor)->toBe($dados->idFornecedor);
 

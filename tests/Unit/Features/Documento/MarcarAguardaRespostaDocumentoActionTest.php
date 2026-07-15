@@ -22,7 +22,7 @@ it('transiciona Enviado → AguardaResposta sem mover o ficheiro (passo de siste
 
     $resultado = app(MarcarAguardaRespostaDocumentoAction::class)->handle($documento);
 
-    expect($resultado->status)->toBe(EstadoDocumento::AguardaResposta)
+    expect($resultado->estado)->toBe(EstadoDocumento::AguardaResposta)
         ->and($resultado->disco_storage)->toBe('enviado');
 
     Storage::disk('enviado')->assertExists($documento->nome_ficheiro_storage);

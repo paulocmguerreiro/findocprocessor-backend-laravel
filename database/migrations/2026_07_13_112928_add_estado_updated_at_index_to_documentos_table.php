@@ -11,14 +11,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('documentos', function (Blueprint $table): void {
-            $table->index(['status', 'updated_at'], 'documentos_status_updated_at_index');
+            $table->index(['estado', 'updated_at'], 'documentos_estado_updated_at_index');
         });
     }
 
     public function down(): void
     {
         Schema::table('documentos', function (Blueprint $table): void {
-            $table->dropIndex('documentos_status_updated_at_index');
+            $table->dropIndex('documentos_estado_updated_at_index');
         });
     }
 };

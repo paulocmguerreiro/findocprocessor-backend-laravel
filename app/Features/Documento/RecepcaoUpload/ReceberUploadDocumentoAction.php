@@ -55,7 +55,7 @@ final readonly class ReceberUploadDocumentoAction
         try {
             return DB::transaction(function () use ($dados, $hash, $nomeStorage): Documento {
                 $documento = Documento::create([
-                    'status' => EstadoDocumento::Pendente,
+                    'estado' => EstadoDocumento::Pendente,
                     'id_responsavel' => Auth::id(),
                     'nome_ficheiro_original' => $dados->ficheiro->getClientOriginalName(),
                     'disco_storage' => self::DISCO_ENTRADA,

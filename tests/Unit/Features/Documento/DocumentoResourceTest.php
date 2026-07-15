@@ -14,7 +14,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 describe('Campos escalares', function (): void {
     it('serializa os campos com os tipos correctos', function (): void {
         $documento = Documento::factory()->make([
-            'status' => EstadoDocumento::Processado,
+            'estado' => EstadoDocumento::Processado,
             'id_fornecedor' => null,
             'id_cliente' => null,
             'id_categoria' => null,
@@ -28,7 +28,7 @@ describe('Campos escalares', function (): void {
         $resultado = new DocumentoResource($documento)->resolve(request());
 
         expect($resultado['id'])->toBe($documento->id)
-            ->and($resultado['status'])->toBe('PROCESSADO')
+            ->and($resultado['estado'])->toBe('PROCESSADO')
             ->and($resultado['valor'])->toBe(250.5)
             ->and($resultado['valor'])->toBeFloat()
             ->and($resultado['data_documento'])->toBe('2026-01-15')

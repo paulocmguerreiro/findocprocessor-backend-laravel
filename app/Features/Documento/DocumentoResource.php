@@ -17,7 +17,7 @@ final class DocumentoResource extends JsonResource
     /**
      * @return array{
      *     id: string,
-     *     status: string,
+     *     estado: string,
      *     id_responsavel: int|null,
      *     fornecedor: EntidadeResource,
      *     cliente: EntidadeResource,
@@ -40,7 +40,7 @@ final class DocumentoResource extends JsonResource
 
         return [
             'id' => $this->id,
-            'status' => $this->status->value,
+            'estado' => $this->estado->value,
             'id_responsavel' => $this->id_responsavel,
             'fornecedor' => EntidadeResource::make($this->whenLoaded('fornecedor')),
             'cliente' => EntidadeResource::make($this->whenLoaded('cliente')),

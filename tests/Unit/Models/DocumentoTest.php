@@ -24,7 +24,7 @@ describe('Model', function (): void {
         $modelo = new Documento;
 
         expect($modelo->getFillable())->toBe([
-            'status', 'id_responsavel', 'id_fornecedor', 'id_cliente', 'id_categoria', 'valor',
+            'estado', 'id_responsavel', 'id_fornecedor', 'id_cliente', 'id_categoria', 'valor',
             'data_documento', 'nome_ficheiro_original', 'disco_storage',
             'nome_ficheiro_storage', 'hash_sha256',
         ]);
@@ -40,11 +40,11 @@ describe('Model', function (): void {
 });
 
 describe('Casts', function (): void {
-    it('cast status para EstadoDocumento enum', function (): void {
-        $documento = Documento::factory()->make(['status' => EstadoDocumento::Enviado]);
+    it('cast estado para EstadoDocumento enum', function (): void {
+        $documento = Documento::factory()->make(['estado' => EstadoDocumento::Enviado]);
 
-        expect($documento->status)->toBeInstanceOf(EstadoDocumento::class)
-            ->and($documento->status)->toBe(EstadoDocumento::Enviado);
+        expect($documento->estado)->toBeInstanceOf(EstadoDocumento::class)
+            ->and($documento->estado)->toBe(EstadoDocumento::Enviado);
     });
 
     it('cast valor para string decimal com 2 casas', function (): void {
@@ -218,14 +218,14 @@ describe('Scopes', function (): void {
 });
 
 describe('Factory — states', function (): void {
-    it('cada state define o disco_storage e o status correctos', function (
+    it('cada state define o disco_storage e o estado correctos', function (
         string $state,
         EstadoDocumento $estado,
         string $disco,
     ): void {
         $documento = Documento::factory()->{$state}()->make();
 
-        expect($documento->status)->toBe($estado)
+        expect($documento->estado)->toBe($estado)
             ->and($documento->disco_storage)->toBe($disco);
     })->with([
         'pendente' => ['pendente', EstadoDocumento::Pendente, 'entrada'],

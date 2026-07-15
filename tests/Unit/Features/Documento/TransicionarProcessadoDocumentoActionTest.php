@@ -46,7 +46,7 @@ it('transiciona AguardaResposta → Processado: preenche domínio, move+renomeia
 
     $resultado = app(TransicionarProcessadoDocumentoAction::class)->handle($documento, $dados);
 
-    expect($resultado->status)->toBe(EstadoDocumento::Processado)
+    expect($resultado->estado)->toBe(EstadoDocumento::Processado)
         ->and($resultado->disco_storage)->toBe('processado')
         ->and($resultado->nome_ficheiro_storage)->toBe('2026-06-25-fornecedor-lda-despesas.pdf')
         ->and($resultado->id_fornecedor)->toBe($dados->idFornecedor);

@@ -27,7 +27,7 @@
   (`add_passo_resultado_to_etapas_documento_table`), sem migração de dados: linhas existentes ficam
   com ambas a `null` (linha de negócio, comportamento inalterado). Uma linha de IA (gravada por
   `RegistarEtapaExtracaoAction`, ver `01-features/documento-pipeline.md`) tem `estado` igual ao
-  `status` actual do `Documento` (não muda) e `passo`/`resultado` preenchidos. Ver
+  estado actual do `Documento` (não muda) e `passo`/`resultado` preenchidos. Ver
   `01-features/documento-pipeline.md` — "Modelo de 2 dimensões" para a distinção completa.
 
 ---
@@ -134,7 +134,7 @@ Ver `03-models/documento.md` para a relação `hasMany` adicionada ao `Documento
 
 ## Invariantes de domínio
 
-- **Append-only:** nunca fazer `update()` numa `EtapaDocumento`. As Actions de transição criam uma linha nova por transição, **dentro da mesma `DB::transaction()`** da mudança de `Documento.status`.
+- **Append-only:** nunca fazer `update()` numa `EtapaDocumento`. As Actions de transição criam uma linha nova por transição, **dentro da mesma `DB::transaction()`** da mudança de `Documento.estado`.
 - `estado` nunca é `null` — a etapa atingida é sempre conhecida.
 - `motivo` só é relevante nos estados `Erro` e `Perigoso` (convencional, não enforçado no Model).
 

@@ -28,7 +28,7 @@ it('calcula o hash, escreve em entrada e cria o documento em Pendente', function
 
     $documento = app(ReceberUploadDocumentoAction::class)->handle(new ReceberUploadDocumentoDto($ficheiro));
 
-    expect($documento->status)->toBe(EstadoDocumento::Pendente)
+    expect($documento->estado)->toBe(EstadoDocumento::Pendente)
         ->and($documento->disco_storage)->toBe('entrada')
         ->and($documento->hash_sha256)->toBe($hashEsperado)
         ->and($documento->nome_ficheiro_original)->toBe('fatura.pdf')

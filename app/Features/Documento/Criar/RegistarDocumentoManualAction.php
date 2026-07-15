@@ -32,7 +32,7 @@ use RuntimeException;
  * `processado`, comportamento inalterado); infectado vai para `Perigoso`
  * (disco `perigoso`, motivo = assinatura); falha do scan vai para `Erro`
  * (disco `erro`, motivo = razão da falha). O `Documento` **é sempre criado**
- * — nunca rejeitado sem registo (RN-04) — apenas o `status`/disco/evento
+ * — nunca rejeitado sem registo (RN-04) — apenas o `estado`/disco/evento
  * variam conforme o resultado do scan.
  */
 final readonly class RegistarDocumentoManualAction
@@ -88,7 +88,7 @@ final readonly class RegistarDocumentoManualAction
         try {
             $documento = DB::transaction(function () use ($dados, $hash, $nomeStorage, $veredicto): Documento {
                 $documento = Documento::create([
-                    'status' => $veredicto['estado'],
+                    'estado' => $veredicto['estado'],
                     'id_responsavel' => Auth::id(),
                     'id_fornecedor' => $dados->idFornecedor,
                     'id_cliente' => $dados->idCliente,

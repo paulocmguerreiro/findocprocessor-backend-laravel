@@ -30,7 +30,7 @@ app/Features/<Feature>/<Action>/
 - Actions injectam interface quando há substituição prevista (Repository, API externa); classes concretas sem substituição prevista (CacheServico, Regra*, Executor) são injectadas directamente — ver `docs/system_spec/02-shared/padroes-acoes.md`
 - **Autorização dupla camada:** `Gate::authorize()` no FormRequest **e** na Action — cobre os dois contextos de invocação (HTTP e fora de HTTP: Jobs, Artisan, testes).
   > Detalhe: `docs/system_spec/02-shared/padroes-acoes.md`
-- Transições de estado do `Documento` via Actions de transição (`ExecutorTransicaoDocumento` + `RegraTransicaoEstado`) — nunca `if($doc->status ==)`. Os state objects (`$documento->estado()`) são read-only (sem `correct()`).
+- Transições de estado do `Documento` via Actions de transição (`ExecutorTransicaoDocumento` + `RegraTransicaoEstado`) — nunca `if($doc->estado ==)`. Os state objects (`$documento->estado()`) são read-only (sem `correct()`).
   > Detalhe: `docs/system_spec/02-shared/estados.md`
 - `EstadoDocumento` é PHP 8.5 backed enum (string)
 - `strict_types=1` em todos os ficheiros PHP
@@ -67,7 +67,7 @@ Eliminar `mixed` anotando `@var` array shape em `validated()`; declarar `@throws
 - Não aceder directamente ao Eloquent Model nas Actions sem Repository, excepto em CRUD simples (ver critérios em "Padrões obrigatórios")
 - Não duplicar lógica entre Actions
 - Não omitir `strict_types=1`
-- Não usar `if($doc->status == ...)` nas Actions
+- Não usar `if($doc->estado == ...)` nas Actions
 
 ### Ciclo de estados
 

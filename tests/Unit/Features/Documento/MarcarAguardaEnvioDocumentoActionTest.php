@@ -22,7 +22,7 @@ it('transiciona Pendente → AguardaEnvio sem mover o ficheiro (passo de sistema
 
     $resultado = app(MarcarAguardaEnvioDocumentoAction::class)->handle($documento);
 
-    expect($resultado->status)->toBe(EstadoDocumento::AguardaEnvio)
+    expect($resultado->estado)->toBe(EstadoDocumento::AguardaEnvio)
         ->and($resultado->disco_storage)->toBe('entrada');
 
     Storage::disk('entrada')->assertExists($documento->nome_ficheiro_storage);

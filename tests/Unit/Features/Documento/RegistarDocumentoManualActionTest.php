@@ -53,7 +53,7 @@ it('regista directo em Processado: deriva hash + nome canónico, escreve no disc
 
     $documento = app(RegistarDocumentoManualAction::class)->handle($dados);
 
-    expect($documento->status)->toBe(EstadoDocumento::Processado)
+    expect($documento->estado)->toBe(EstadoDocumento::Processado)
         ->and($documento->disco_storage)->toBe('processado')
         ->and($documento->nome_ficheiro_storage)->toBe('2026-06-25-fornecedor-lda-despesas.pdf')
         ->and($documento->hash_sha256)->toBe($hashEsperado)
@@ -89,7 +89,7 @@ it('regista em Perigoso quando o ficheiro está infectado: disco perigoso + even
 
     $documento = app(RegistarDocumentoManualAction::class)->handle($dados);
 
-    expect($documento->status)->toBe(EstadoDocumento::Perigoso)
+    expect($documento->estado)->toBe(EstadoDocumento::Perigoso)
         ->and($documento->disco_storage)->toBe('perigoso');
 
     Storage::disk('perigoso')->assertExists('2026-06-25-fornecedor-lda-despesas.pdf');
@@ -119,7 +119,7 @@ it('regista em Erro quando o scan falha: disco erro + evento DocumentoMarcadoErr
 
     $documento = app(RegistarDocumentoManualAction::class)->handle($dados);
 
-    expect($documento->status)->toBe(EstadoDocumento::Erro)
+    expect($documento->estado)->toBe(EstadoDocumento::Erro)
         ->and($documento->disco_storage)->toBe('erro');
 
     Storage::disk('erro')->assertExists('2026-06-25-fornecedor-lda-despesas.pdf');

@@ -9,7 +9,7 @@
 | Coluna | Tipo BD | Nullable | Notas |
 |---|---|---|---|
 | `id` | `uuid` PK | Não | UUIDv7 via `HasUuids` |
-| `status` | `string(50)` | Não | Default `'PENDENTE'`; índice simples; cast → `EstadoDocumento` |
+| `estado` | `string(50)` | Não | Default `'PENDENTE'`; índice simples; cast → `EstadoDocumento` |
 | `id_responsavel` | `bigint` FK | Sim | → `users.id`; `restrictOnDelete()` (era `nullOnDelete`) + `cascadeOnUpdate()`; autor do registo/upload (sempre o utilizador autenticado) |
 | `id_fornecedor` | `uuid` FK | Sim | → `entidades.id`; `restrictOnDelete()` (era `nullOnDelete`) + `cascadeOnUpdate()` |
 | `id_cliente` | `uuid` FK | Sim | → `entidades.id`; `restrictOnDelete()` (era `nullOnDelete`) + `cascadeOnUpdate()` |
@@ -36,7 +36,7 @@
 
 ```php
 #[Table('documentos')]
-#[Fillable(['status', 'id_responsavel', 'id_fornecedor', 'id_cliente', 'id_categoria', 'valor',
+#[Fillable(['estado', 'id_responsavel', 'id_fornecedor', 'id_cliente', 'id_categoria', 'valor',
     'data_documento', 'nome_ficheiro_original', 'disco_storage',
     'nome_ficheiro_storage', 'hash_sha256'])]
 #[UsePolicy(DocumentoPolicy::class)]
@@ -51,7 +51,7 @@ class Documento extends Model
 ```php
 /**
  * @property-read string $id
- * @property-read EstadoDocumento $status
+ * @property-read EstadoDocumento $estado
  * @property-read ?int $id_responsavel
  * @property-read ?string $id_fornecedor
  * @property-read ?string $id_cliente
@@ -78,7 +78,7 @@ class Documento extends Model
 protected function casts(): array
 {
     return [
-        'status'         => EstadoDocumento::class,
+        'estado'         => EstadoDocumento::class,
         'valor'          => 'decimal:2',    // devolve string, não float
         'data_documento' => 'date',
     ];
@@ -100,7 +100,7 @@ protected function atributosExcluidosDaActividade(): array
 ```php
 public function estado(): ContratoEstadoDocumento
 {
-    return match ($this->status) {
+    return match ($this->estado) {
         EstadoDocumento::Pendente        => DocumentoPendente::deDocumento($this),
         EstadoDocumento::AguardaEnvio    => DocumentoAguardaEnvio::deDocumento($this),
         EstadoDocumento::Enviado         => DocumentoEnviado::deDocumento($this),
@@ -157,7 +157,7 @@ vai directo a `Processado`/`Perigoso`/`Erro`). Ver `03-models/extracao-documento
 
 Base (`definition()`) = estado `Processado` com todos os campos preenchidos. 7 states disponíveis:
 
-| State | `status` | `disco_storage` | FKs/valor/data |
+| State | `estado` | `disco_storage` | FKs/valor/data |
 |---|---|---|---|
 | `pendente()` | `Pendente` | `entrada` | null |
 | `aguardaEnvio()` | `AguardaEnvio` | `entrada` | null |
@@ -203,7 +203,7 @@ Os DTOs do Documento pertencem à camada de lógica e estão documentados — em
 ```json
 {
   "id": "uuid",
-  "status": "PROCESSADO",
+  "estado": "PROCESSADO",
   "id_responsavel": 1,
   "fornecedor": { ... },
   "cliente": { ... },
@@ -218,7 +218,7 @@ Os DTOs do Documento pertencem à camada de lógica e estão documentados — em
 }
 ```
 
-- `status` → `->value` (string UPPER_SNAKE)
+- `estado` → `->value` (string UPPER_SNAKE)
 - `id_responsavel` → `int|null` (id do utilizador autor; não expõe nome/email — só o id)
 - `valor` → conversão explícita `(float)` (cast `decimal:2` devolve `string`)
 - Relações via `whenLoaded()` + `EntidadeResource` / `CategoriaDocumentoResource`

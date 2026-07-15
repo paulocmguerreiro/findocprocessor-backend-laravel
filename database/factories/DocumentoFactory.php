@@ -23,7 +23,7 @@ class DocumentoFactory extends Factory
      * Estado base: documento Processado (registo manual — todos os campos preenchidos).
      *
      * @return array{
-     *     status: EstadoDocumento,
+     *     estado: EstadoDocumento,
      *     id_responsavel: Factory<User>,
      *     id_fornecedor: Factory<Entidade>,
      *     id_cliente: Factory<Entidade>,
@@ -39,7 +39,7 @@ class DocumentoFactory extends Factory
     public function definition(): array
     {
         return [
-            'status' => EstadoDocumento::Processado,
+            'estado' => EstadoDocumento::Processado,
             'id_responsavel' => User::factory(),
             'id_fornecedor' => Entidade::factory()->fornecedor(),
             'id_cliente' => Entidade::factory()->cliente(),
@@ -76,7 +76,7 @@ class DocumentoFactory extends Factory
     public function processado(): static
     {
         return $this->state([
-            'status' => EstadoDocumento::Processado,
+            'estado' => EstadoDocumento::Processado,
             'disco_storage' => 'processado',
         ]);
     }
@@ -98,7 +98,7 @@ class DocumentoFactory extends Factory
     private function semDadosDeDominio(EstadoDocumento $estado, string $disco): static
     {
         return $this->state([
-            'status' => $estado,
+            'estado' => $estado,
             'disco_storage' => $disco,
             'id_fornecedor' => null,
             'id_cliente' => null,

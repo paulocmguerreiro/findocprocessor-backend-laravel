@@ -85,7 +85,7 @@ Action chamante
 **Ficheiro:** `app/Features/Documento/Transicao/RegraTransicaoEstado.php`
 
 **Invariante:** Toda a mudança de estado do `Documento` tem de constar do mapa central De→Para. Transições
-inválidas lançam `TransicaoInvalidaException` (→ 422). Nunca `if ($doc->status == ...)`.
+inválidas lançam `TransicaoInvalidaException` (→ 422). Nunca `if ($doc->estado == ...)`.
 
 **Activação:** Chamada por `ExecutorTransicaoDocumento` antes de qualquer persistência.
 

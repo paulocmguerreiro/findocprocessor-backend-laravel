@@ -29,7 +29,7 @@ it('marca Perigoso a partir de Pendente (pré-scan) e move para o disco perigoso
 
     $resultado = app(MarcarPerigosoDocumentoAction::class)->handle($documento, new MarcarPerigosoDocumentoDto('injecção detectada'));
 
-    expect($resultado->status)->toBe(EstadoDocumento::Perigoso)
+    expect($resultado->estado)->toBe(EstadoDocumento::Perigoso)
         ->and($resultado->disco_storage)->toBe('perigoso');
 
     Storage::disk('perigoso')->assertExists($documento->nome_ficheiro_storage);
@@ -50,7 +50,7 @@ it('marca Perigoso a partir de AguardaResposta (guardrail)', function (): void {
 
     $resultado = app(MarcarPerigosoDocumentoAction::class)->handle($documento, new MarcarPerigosoDocumentoDto('conteúdo suspeito'));
 
-    expect($resultado->status)->toBe(EstadoDocumento::Perigoso);
+    expect($resultado->estado)->toBe(EstadoDocumento::Perigoso);
     Storage::disk('perigoso')->assertExists($documento->nome_ficheiro_storage);
 });
 

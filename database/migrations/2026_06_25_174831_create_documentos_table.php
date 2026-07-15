@@ -12,7 +12,7 @@ return new class extends Migration
     {
         Schema::create('documentos', function (Blueprint $table) {
             $table->uuid('id')->primary()->comment('Identificador unico UUID v7');
-            $table->string('status', 50)->default('PENDENTE')->index()->comment('Estado de processamento do documento');
+            $table->string('estado', 50)->default('PENDENTE')->index()->comment('Estado de processamento do documento');
 
             $table->foreignUuid('id_fornecedor')->nullable()->constrained('entidades')->restrictOnDelete()->comment('FK para a entidade fornecedora');
             $table->foreignUuid('id_cliente')->nullable()->constrained('entidades')->restrictOnDelete()->comment('FK para a entidade cliente');

@@ -111,5 +111,5 @@ public function handle(): ?Documento
   `DB::transaction()` internamente (via `ExecutorTransicaoDocumento`) — Laravel resolve isto como
   `SAVEPOINT` (transação aninhada), sem romper o lock da linha mantido pela transação exterior.
 - Sem `Gate::authorize()` — acção de sistema/pipeline (ver `02-shared/padroes-acoes.md`).
-- `RegraTransicaoEstado` actua como último nível de validação: se outro worker já mudou o `status`
+- `RegraTransicaoEstado` actua como último nível de validação: se outro worker já mudou o `estado`
   antes deste obter o lock, a transição falha de forma previsível (`TransicaoInvalidaException`).

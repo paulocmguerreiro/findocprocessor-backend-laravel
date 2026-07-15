@@ -68,7 +68,7 @@ PENDENTE → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → PROCESSADO
 - Valores na BD: `'PENDENTE'`, `'AGUARDA_ENVIO'`, `'ENVIADO'`, `'AGUARDA_RESPOSTA'`, `'PROCESSADO'`, `'ERRO'`, `'PERIGOSO'`
 - State objects e mapeamento estado→disco em `02-shared/estados.md`; mapa de transições em
   `01-features/documento-pipeline.md`
-- Usado em: `Documento::$status` (cast Eloquent), `Documento::estado()` (match exaustivo)
+- Usado em: `Documento::$estado` (cast Eloquent), `Documento::estado()` (match exaustivo)
 
 ---
 
@@ -115,7 +115,7 @@ enum PosicaoEmpresaMae: string
 ## `EtapaExtracao` — `App\Shared\Enums\EtapaExtracao`
 
 PHP 8.5 backed enum (string). Etapa da dimensão de extracção de um `Documento` — independente do
-`status` de negócio. Cases em TitleCase PT; values em UPPER_SNAKE.
+`estado` de negócio. Cases em TitleCase PT; values em UPPER_SNAKE.
 
 ```php
 enum EtapaExtracao: string

@@ -31,7 +31,7 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property-read string $id
- * @property-read EstadoDocumento $status
+ * @property-read EstadoDocumento $estado
  * @property-read ?int $id_responsavel
  * @property-read ?string $id_fornecedor
  * @property-read ?string $id_cliente
@@ -53,7 +53,7 @@ use Illuminate\Support\Carbon;
  */
 #[Table('documentos')]
 #[Fillable([
-    'status', 'id_responsavel', 'id_fornecedor', 'id_cliente', 'id_categoria', 'valor',
+    'estado', 'id_responsavel', 'id_fornecedor', 'id_cliente', 'id_categoria', 'valor',
     'data_documento', 'nome_ficheiro_original', 'disco_storage',
     'nome_ficheiro_storage', 'hash_sha256',
 ])]
@@ -67,13 +67,13 @@ class Documento extends Model
     use RegistaActividade;
 
     /**
-     * @return array{status: class-string<EstadoDocumento>, valor: string, data_documento: string}
+     * @return array{estado: class-string<EstadoDocumento>, valor: string, data_documento: string}
      */
     #[\Override]
     protected function casts(): array
     {
         return [
-            'status' => EstadoDocumento::class,
+            'estado' => EstadoDocumento::class,
             'valor' => 'decimal:2',
             'data_documento' => 'date',
         ];
@@ -91,7 +91,7 @@ class Documento extends Model
 
     public function estado(): ContratoEstadoDocumento
     {
-        return match ($this->status) {
+        return match ($this->estado) {
             EstadoDocumento::Pendente => DocumentoPendente::deDocumento($this),
             EstadoDocumento::AguardaEnvio => DocumentoAguardaEnvio::deDocumento($this),
             EstadoDocumento::Enviado => DocumentoEnviado::deDocumento($this),
@@ -141,31 +141,31 @@ class Documento extends Model
     /** @param Builder<Documento> $query */
     public function scopeWhereEstado(Builder $query, EstadoDocumento $estado): void
     {
-        $query->where('status', $estado);
+        $query->where('estado', $estado);
     }
 
     /** @param Builder<Documento> $query */
     public function scopeWhereProcessado(Builder $query): void
     {
-        $query->where('status', EstadoDocumento::Processado);
+        $query->where('estado', EstadoDocumento::Processado);
     }
 
     /** @param Builder<Documento> $query */
     public function scopeWherePendente(Builder $query): void
     {
-        $query->where('status', EstadoDocumento::Pendente);
+        $query->where('estado', EstadoDocumento::Pendente);
     }
 
     /** @param Builder<Documento> $query */
     public function scopeWherePerigoso(Builder $query): void
     {
-        $query->where('status', EstadoDocumento::Perigoso);
+        $query->where('estado', EstadoDocumento::Perigoso);
     }
 
     /** @param Builder<Documento> $query */
     public function scopeWhereErro(Builder $query): void
     {
-        $query->where('status', EstadoDocumento::Erro);
+        $query->where('estado', EstadoDocumento::Erro);
     }
 
     /**
@@ -177,6 +177,6 @@ class Documento extends Model
      */
     public function scopeWherePresos(Builder $query, array $estados, int $limiarMinutos): void
     {
-        $query->whereIn('status', $estados)->where('updated_at', '<', now()->subMinutes($limiarMinutos));
+        $query->whereIn('estado', $estados)->where('updated_at', '<', now()->subMinutes($limiarMinutos));
     }
 }

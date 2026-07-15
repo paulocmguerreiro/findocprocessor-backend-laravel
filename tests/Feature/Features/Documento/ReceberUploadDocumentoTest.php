@@ -20,7 +20,7 @@ it('recebe um upload e devolve 201 em Pendente', function (): void {
         'ficheiro' => UploadedFile::fake()->create('fatura.pdf', 100, 'application/pdf'),
     ])
         ->assertCreated()
-        ->assertJsonPath('data.status', EstadoDocumento::Pendente->value);
+        ->assertJsonPath('data.estado', EstadoDocumento::Pendente->value);
 
     $documento = Documento::query()->firstOrFail();
     Storage::disk('entrada')->assertExists($documento->nome_ficheiro_storage);

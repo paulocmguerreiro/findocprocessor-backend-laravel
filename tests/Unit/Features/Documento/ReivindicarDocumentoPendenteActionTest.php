@@ -22,7 +22,7 @@ it('reivindica um Documento Pendente, transicionando-o para AguardaEnvio', funct
 
     expect($resultado)->not->toBeNull()
         ->and($resultado->id)->toBe($documento->id)
-        ->and($resultado->status)->toBe(EstadoDocumento::AguardaEnvio);
+        ->and($resultado->estado)->toBe(EstadoDocumento::AguardaEnvio);
 });
 
 it('devolve null quando não há Documentos Pendentes', function (): void {

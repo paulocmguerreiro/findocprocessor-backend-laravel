@@ -195,7 +195,7 @@ components:
         id:
           type: string
           format: uuid
-        status:
+        estado:
           $ref: '#/components/schemas/EstadoDocumento'
         nome_ficheiro_original:
           type: ['string', 'null']

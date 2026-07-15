@@ -43,7 +43,7 @@ Actions, o scope no Model já cobre a maioria dos casos de filtro reutilizável 
 _Pendente — primeiro repository a implementar quando surgir lógica de query complexa ou partilhada. As Actions de CRUD actuais (`CategoriaDocumento`, `Entidade`) acedem ao Eloquent directamente por serem CRUD simples._
 
 **Precedente:** a fundação de concorrência do pipeline (`ReivindicarDocumentoPendenteAction`
-com `lockForUpdate()`; `ReconciliarFicheirosJob` com filtro por `status`/`updated_at`) foi desenhada
+com `lockForUpdate()`; `ReconciliarFicheirosJob` com filtro por `estado`/`updated_at`) foi desenhada
 inicialmente com Repository (critério "Query partilhada entre ≥ 2 Actions" — mas com apenas 1
 consumidor real cada, a justificação real era "reutilização futura"). Revertido para scopes no
 `Documento` (`wherePendente()`, `documentosPresos()`) chamados directamente pela Action/Job — sem

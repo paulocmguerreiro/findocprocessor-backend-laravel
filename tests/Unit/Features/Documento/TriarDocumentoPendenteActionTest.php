@@ -37,7 +37,7 @@ it('transiciona para Perigoso quando o ficheiro está infectado', function (): v
 
     $resultado = app(TriarDocumentoPendenteAction::class)->handle($documento);
 
-    expect($resultado->status)->toBe(EstadoDocumento::Perigoso)
+    expect($resultado->estado)->toBe(EstadoDocumento::Perigoso)
         ->and($resultado->disco_storage)->toBe('perigoso');
 
     $this->assertDatabaseHas('etapas_documento', [
@@ -56,7 +56,7 @@ it('transiciona para AguardaEnvio quando o ficheiro está limpo', function (): v
 
     $resultado = app(TriarDocumentoPendenteAction::class)->handle($documento);
 
-    expect($resultado->status)->toBe(EstadoDocumento::AguardaEnvio);
+    expect($resultado->estado)->toBe(EstadoDocumento::AguardaEnvio);
 
     $this->assertDatabaseHas('etapas_documento', [
         'id_documento' => $documento->id,
@@ -74,7 +74,7 @@ it('transiciona para AguardaEnvio com motivo "scan desligado" quando a camada n�
 
     $resultado = app(TriarDocumentoPendenteAction::class)->handle($documento);
 
-    expect($resultado->status)->toBe(EstadoDocumento::AguardaEnvio);
+    expect($resultado->estado)->toBe(EstadoDocumento::AguardaEnvio);
 
     $this->assertDatabaseHas('etapas_documento', [
         'id_documento' => $documento->id,
@@ -92,7 +92,7 @@ it('transiciona para Erro quando o scan falha', function (): void {
 
     $resultado = app(TriarDocumentoPendenteAction::class)->handle($documento);
 
-    expect($resultado->status)->toBe(EstadoDocumento::Erro)
+    expect($resultado->estado)->toBe(EstadoDocumento::Erro)
         ->and($resultado->disco_storage)->toBe('erro');
 
     $this->assertDatabaseHas('etapas_documento', [

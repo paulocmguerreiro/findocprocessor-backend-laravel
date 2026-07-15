@@ -28,7 +28,7 @@ it('filtra a listagem por estado', function (): void {
     $this->getJson('/api/documentos?estado=PENDENTE')
         ->assertOk()
         ->assertJsonCount(2, 'data')
-        ->assertJsonPath('data.0.status', 'PENDENTE');
+        ->assertJsonPath('data.0.estado', 'PENDENTE');
 });
 
 it('rejeita um estado de filtro inválido com 422', function (): void {

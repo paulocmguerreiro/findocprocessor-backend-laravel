@@ -11,7 +11,7 @@
 Feature com 17 Actions no total: 8 expostas via endpoint HTTP (documentadas aqui) + 9 sem HTTP
 (`01-features/documento-pipeline.md`). 9 DTOs, 4 Events e camada HTTP completa. A máquina de
 estados é a peça central do pipeline — cada transição passa obrigatoriamente pelo mapa central em
-`RegraTransicaoEstado` (`documento-pipeline.md`) — nunca `if ($doc->status == ...)`.
+`RegraTransicaoEstado` (`documento-pipeline.md`) — nunca `if ($doc->estado == ...)`.
 
 ---
 

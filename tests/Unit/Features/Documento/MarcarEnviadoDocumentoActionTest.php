@@ -24,7 +24,7 @@ it('transiciona AguardaEnvio → Enviado e move o ficheiro entrada → enviado (
 
     $resultado = app(MarcarEnviadoDocumentoAction::class)->handle($documento);
 
-    expect($resultado->status)->toBe(EstadoDocumento::Enviado)
+    expect($resultado->estado)->toBe(EstadoDocumento::Enviado)
         ->and($resultado->disco_storage)->toBe('enviado');
 
     Storage::disk('enviado')->assertExists($documento->nome_ficheiro_storage);
@@ -52,7 +52,7 @@ it('compensa repondo o ficheiro na origem quando a transação falha', function 
     Storage::disk('enviado')->assertMissing($documento->nome_ficheiro_storage);
     $this->assertDatabaseHas('documentos', [
         'id' => $documento->id,
-        'status' => EstadoDocumento::AguardaEnvio->value,
+        'estado' => EstadoDocumento::AguardaEnvio->value,
         'disco_storage' => 'entrada',
     ]);
     $this->assertDatabaseCount('etapas_documento', 0);

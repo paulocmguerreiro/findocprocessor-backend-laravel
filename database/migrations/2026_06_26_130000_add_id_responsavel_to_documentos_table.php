@@ -11,7 +11,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('documentos', function (Blueprint $table): void {
-            $table->foreignId('id_responsavel')->nullable()->after('status')
+            $table->foreignId('id_responsavel')->nullable()->after('estado')
                 ->constrained('users')->nullOnDelete()
                 ->comment('FK para o utilizador responsável (autor do registo/upload); null = utilizador removido');
         });

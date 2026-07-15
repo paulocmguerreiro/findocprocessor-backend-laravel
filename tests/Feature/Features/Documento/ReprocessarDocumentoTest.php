@@ -23,7 +23,7 @@ it('reprocessa um documento em Erro e devolve 200 em AguardaEnvio', function ():
 
     $this->postJson("/api/documentos/{$documento->id}/reprocessar", ['modo' => ModoReprocessamento::Modelo->value])
         ->assertOk()
-        ->assertJsonPath('data.status', EstadoDocumento::AguardaEnvio->value);
+        ->assertJsonPath('data.estado', EstadoDocumento::AguardaEnvio->value);
 
     Storage::disk('entrada')->assertExists($documento->nome_ficheiro_storage);
 });

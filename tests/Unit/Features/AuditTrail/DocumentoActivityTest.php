@@ -21,13 +21,13 @@ it('regista actividade created ao criar', function (): void {
         ->and($actividade->subject_id)->toBe($documento->id);
 });
 
-it('regista o campo status (não sensível)', function (): void {
+it('regista o campo estado (não sensível)', function (): void {
     Documento::factory()->processado()->create();
 
     $actividade = Activity::query()->where('subject_type', Documento::class)->first();
 
     expect($actividade->properties->get('attributes'))
-        ->toHaveKey('status', EstadoDocumento::Processado->value);
+        ->toHaveKey('estado', EstadoDocumento::Processado->value);
 });
 
 it('nunca regista os campos sensíveis hash_sha256, disco_storage e nome_ficheiro_storage', function (): void {
@@ -41,12 +41,12 @@ it('nunca regista os campos sensíveis hash_sha256, disco_storage e nome_ficheir
 
     Activity::query()->delete();
     $documento->update([
-        'status' => EstadoDocumento::Erro,
+        'estado' => EstadoDocumento::Erro,
         'disco_storage' => 'erro',
     ]);
 
     $atributosUpdate = Activity::query()->first()->properties->get('attributes');
     expect($atributosUpdate)
-        ->toHaveKey('status', EstadoDocumento::Erro->value)
+        ->toHaveKey('estado', EstadoDocumento::Erro->value)
         ->not->toHaveKey('disco_storage');
 });

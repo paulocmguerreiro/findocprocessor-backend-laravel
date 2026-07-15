@@ -28,7 +28,7 @@ it('transiciona AguardaResposta → Erro: move enviado → erro, regista o motiv
 
     $resultado = app(MarcarErroDocumentoAction::class)->handle($documento, new MarcarErroDocumentoDto('timeout do serviço'));
 
-    expect($resultado->status)->toBe(EstadoDocumento::Erro)
+    expect($resultado->estado)->toBe(EstadoDocumento::Erro)
         ->and($resultado->disco_storage)->toBe('erro');
 
     Storage::disk('erro')->assertExists($documento->nome_ficheiro_storage);

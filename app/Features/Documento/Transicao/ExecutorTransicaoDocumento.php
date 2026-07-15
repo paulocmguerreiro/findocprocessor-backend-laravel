@@ -45,7 +45,7 @@ final readonly class ExecutorTransicaoDocumento
         ?string $nomeDestino = null,
         ?Closure $evento = null,
     ): Documento {
-        $estadoOrigem = $documento->status;
+        $estadoOrigem = $documento->estado;
         $discoOrigem = $documento->disco_storage;
         $nomeOrigem = $documento->nome_ficheiro_storage;
 
@@ -57,7 +57,7 @@ final readonly class ExecutorTransicaoDocumento
             return DB::transaction(function () use ($documento, $novoEstado, $motivo, $camposDominio, $destino, $evento): Documento {
                 $documento->update([
                     ...$camposDominio,
-                    'status' => $novoEstado,
+                    'estado' => $novoEstado,
                     'disco_storage' => $destino['disco'],
                     'nome_ficheiro_storage' => $destino['nome'],
                 ]);
