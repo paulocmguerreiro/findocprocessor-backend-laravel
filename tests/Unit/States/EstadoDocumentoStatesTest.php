@@ -22,7 +22,7 @@ describe('estado() devolve o state object correcto', function (): void {
         $stateObject = $documento->estado();
 
         expect($stateObject)->toBeInstanceOf($classe)
-            ->and($stateObject->estado())->toBe($estado);
+            ->and($stateObject->obterEstado())->toBe($estado);
     })->with([
         'pendente' => ['pendente', DocumentoPendente::class, EstadoDocumento::Pendente],
         'aguardaEnvio' => ['aguardaEnvio', DocumentoAguardaEnvio::class, EstadoDocumento::AguardaEnvio],
@@ -40,9 +40,9 @@ describe('getters comuns', function (): void {
 
         $stateObject = $documento->estado();
 
-        expect($stateObject->id())->toBe($documento->id)
-            ->and($stateObject->discoStorage())->toBe($documento->disco_storage)
-            ->and($stateObject->nomeFicheiroStorage())->toBe($documento->nome_ficheiro_storage);
+        expect($stateObject->obterId())->toBe($documento->id)
+            ->and($stateObject->obterDiscoStorage())->toBe($documento->disco_storage)
+            ->and($stateObject->obterNomeFicheiroStorage())->toBe($documento->nome_ficheiro_storage);
     })->with(['pendente', 'aguardaEnvio', 'enviado', 'aguardaResposta', 'processado', 'erro', 'perigoso']);
 });
 
@@ -53,8 +53,8 @@ describe('getters dos estados parciais', function (): void {
         /** @var DocumentoPendente $stateObject */
         $stateObject = $documento->estado();
 
-        expect($stateObject->nomeFicheiroOriginal())->toBe($documento->nome_ficheiro_original)
-            ->and($stateObject->hashSha256())->toBe($documento->hash_sha256);
+        expect($stateObject->obterNomeFicheiroOriginal())->toBe($documento->nome_ficheiro_original)
+            ->and($stateObject->obterHashSha256())->toBe($documento->hash_sha256);
     })->with(['pendente', 'aguardaEnvio', 'enviado', 'aguardaResposta']);
 });
 
@@ -65,13 +65,13 @@ describe('DocumentoProcessado — estado completo', function (): void {
         /** @var DocumentoProcessado $stateObject */
         $stateObject = $documento->estado();
 
-        expect($stateObject->nomeFicheiroOriginal())->toBe($documento->nome_ficheiro_original)
-            ->and($stateObject->hashSha256())->toBe($documento->hash_sha256)
-            ->and($stateObject->idFornecedor())->toBe($documento->id_fornecedor)
-            ->and($stateObject->idCliente())->toBe($documento->id_cliente)
-            ->and($stateObject->idCategoria())->toBe($documento->id_categoria)
-            ->and($stateObject->valor())->toBe($documento->valor)
-            ->and($stateObject->dataDocumento())->toBeInstanceOf(DateTimeInterface::class);
+        expect($stateObject->obterNomeFicheiroOriginal())->toBe($documento->nome_ficheiro_original)
+            ->and($stateObject->obterHashSha256())->toBe($documento->hash_sha256)
+            ->and($stateObject->obterIdFornecedor())->toBe($documento->id_fornecedor)
+            ->and($stateObject->obterIdCliente())->toBe($documento->id_cliente)
+            ->and($stateObject->obterIdCategoria())->toBe($documento->id_categoria)
+            ->and($stateObject->obterValor())->toBe($documento->valor)
+            ->and($stateObject->obterDataDocumento())->toBeInstanceOf(DateTimeInterface::class);
     });
 });
 

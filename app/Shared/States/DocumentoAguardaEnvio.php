@@ -28,32 +28,32 @@ final readonly class DocumentoAguardaEnvio implements ContratoEstadoDocumento
         );
     }
 
-    public function estado(): EstadoDocumento
+    public function obterEstado(): EstadoDocumento
     {
         return EstadoDocumento::AguardaEnvio;
     }
 
-    public function id(): string
+    public function obterId(): string
     {
         return $this->id;
     }
 
-    public function discoStorage(): string
+    public function obterDiscoStorage(): string
     {
         return $this->discoStorage;
     }
 
-    public function nomeFicheiroStorage(): string
+    public function obterNomeFicheiroStorage(): string
     {
         return $this->nomeFicheiroStorage;
     }
 
-    public function nomeFicheiroOriginal(): string
+    public function obterNomeFicheiroOriginal(): string
     {
         return $this->nomeFicheiroOriginal;
     }
 
-    public function hashSha256(): string
+    public function obterHashSha256(): string
     {
         return $this->hashSha256;
     }

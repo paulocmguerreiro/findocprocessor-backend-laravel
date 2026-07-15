@@ -24,22 +24,22 @@ final readonly class DocumentoErro implements ContratoEstadoDocumento
         );
     }
 
-    public function estado(): EstadoDocumento
+    public function obterEstado(): EstadoDocumento
     {
         return EstadoDocumento::Erro;
     }
 
-    public function id(): string
+    public function obterId(): string
     {
         return $this->id;
     }
 
-    public function discoStorage(): string
+    public function obterDiscoStorage(): string
     {
         return $this->discoStorage;
     }
 
-    public function nomeFicheiroStorage(): string
+    public function obterNomeFicheiroStorage(): string
     {
         return $this->nomeFicheiroStorage;
     }

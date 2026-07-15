@@ -8,11 +8,11 @@ use App\Shared\Enums\EstadoDocumento;
 
 interface ContratoEstadoDocumento
 {
-    public function estado(): EstadoDocumento;
+    public function obterEstado(): EstadoDocumento;
 
-    public function id(): string;
+    public function obterId(): string;
 
-    public function discoStorage(): string;
+    public function obterDiscoStorage(): string;
 
-    public function nomeFicheiroStorage(): string;
+    public function obterNomeFicheiroStorage(): string;
 }

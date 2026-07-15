@@ -69,14 +69,19 @@ existem (ou que não fazem sentido) numa dada fase — em vez de as espalhar por
 ```php
 interface ContratoEstadoDocumento
 {
-    public function estado(): EstadoDocumento;
-    public function id(): string;
-    public function discoStorage(): string;
-    public function nomeFicheiroStorage(): string;
+    public function obterEstado(): EstadoDocumento;
+    public function obterId(): string;
+    public function obterDiscoStorage(): string;
+    public function obterNomeFicheiroStorage(): string;
 }
 ```
 
 Declara apenas os **4 getters comuns a todos os 7 estados**. Campos adicionais vivem nas classes concretas.
+
+Prefixo `obter` (não a forma nua `estado()`/`id()`) — convenção VERBO+Intenção de
+`convencoes-nomenclatura.md` aplica-se também a acessores de leitura pura; evita ainda colisão de
+leitura com `Documento::estado()` (método do Model, devolve este objecto — nome diferente do getter
+do próprio objecto `estado()` → `obterEstado()`).
 
 ---
 
@@ -90,9 +95,9 @@ Declara apenas os **4 getters comuns a todos os 7 estados**. Campos adicionais v
 
 | Grupo    | Classes                                                                                      | Getters específicos (além dos 4 comuns)                                                                                  |
 | -------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Parciais | `DocumentoPendente`, `DocumentoAguardaEnvio`, `DocumentoEnviado`, `DocumentoAguardaResposta` | `nomeFicheiroOriginal()`, `hashSha256()`                                                                                 |
+| Parciais | `DocumentoPendente`, `DocumentoAguardaEnvio`, `DocumentoEnviado`, `DocumentoAguardaResposta` | `obterNomeFicheiroOriginal()`, `obterHashSha256()`                                                                                 |
 | Mínimos  | `DocumentoErro`, `DocumentoPerigoso`                                                         | — (só os 4 da interface)                                                                                                 |
-| Completo | `DocumentoProcessado`                                                                        | `nomeFicheiroOriginal()`, `hashSha256()`, `idFornecedor()`, `idCliente()`, `idCategoria()`, `valor()`, `dataDocumento()` |
+| Completo | `DocumentoProcessado`                                                                        | `obterNomeFicheiroOriginal()`, `obterHashSha256()`, `obterIdFornecedor()`, `obterIdCliente()`, `obterIdCategoria()`, `obterValor()`, `obterDataDocumento()` |
 
 ### Padrão de implementação (exemplo `DocumentoPendente`)
 
@@ -118,12 +123,12 @@ final readonly class DocumentoPendente implements ContratoEstadoDocumento
         );
     }
 
-    public function estado(): EstadoDocumento { return EstadoDocumento::Pendente; }
-    public function id(): string { return $this->id; }
-    public function discoStorage(): string { return $this->discoStorage; }
-    public function nomeFicheiroStorage(): string { return $this->nomeFicheiroStorage; }
-    public function nomeFicheiroOriginal(): string { return $this->nomeFicheiroOriginal; }
-    public function hashSha256(): string { return $this->hashSha256; }
+    public function obterEstado(): EstadoDocumento { return EstadoDocumento::Pendente; }
+    public function obterId(): string { return $this->id; }
+    public function obterDiscoStorage(): string { return $this->discoStorage; }
+    public function obterNomeFicheiroStorage(): string { return $this->nomeFicheiroStorage; }
+    public function obterNomeFicheiroOriginal(): string { return $this->nomeFicheiroOriginal; }
+    public function obterHashSha256(): string { return $this->hashSha256; }
 }
 ```
 

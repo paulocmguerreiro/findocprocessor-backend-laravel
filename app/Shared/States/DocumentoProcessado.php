@@ -38,57 +38,57 @@ final readonly class DocumentoProcessado implements ContratoEstadoDocumento
         );
     }
 
-    public function estado(): EstadoDocumento
+    public function obterEstado(): EstadoDocumento
     {
         return EstadoDocumento::Processado;
     }
 
-    public function id(): string
+    public function obterId(): string
     {
         return $this->id;
     }
 
-    public function discoStorage(): string
+    public function obterDiscoStorage(): string
     {
         return $this->discoStorage;
     }
 
-    public function nomeFicheiroStorage(): string
+    public function obterNomeFicheiroStorage(): string
     {
         return $this->nomeFicheiroStorage;
     }
 
-    public function nomeFicheiroOriginal(): string
+    public function obterNomeFicheiroOriginal(): string
     {
         return $this->nomeFicheiroOriginal;
     }
 
-    public function hashSha256(): string
+    public function obterHashSha256(): string
     {
         return $this->hashSha256;
     }
 
-    public function idFornecedor(): ?string
+    public function obterIdFornecedor(): ?string
     {
         return $this->idFornecedor;
     }
 
-    public function idCliente(): ?string
+    public function obterIdCliente(): ?string
     {
         return $this->idCliente;
     }
 
-    public function idCategoria(): ?string
+    public function obterIdCategoria(): ?string
     {
         return $this->idCategoria;
     }
 
-    public function valor(): ?string
+    public function obterValor(): ?string
     {
         return $this->valor;
     }
 
-    public function dataDocumento(): ?\DateTimeInterface
+    public function obterDataDocumento(): ?\DateTimeInterface
     {
         return $this->dataDocumento;
     }
