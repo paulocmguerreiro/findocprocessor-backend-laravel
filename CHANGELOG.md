@@ -6,6 +6,9 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Fixed
+- **Issue #108** — Isola cache Redis por processo Pest em paralelo: `AppServiceProvider` regista `ParallelTesting::setUpTestCase()` para salgar `config('cache.prefix')` com o token do teste e forçar `Cache::purge('redis')`, eliminando a condição de corrida entre workers que causava falhas intermitentes de `Cache::tags([...])->flush()` em CI (`composer test --parallel`), mantendo Redis real (sem trocar para o driver `array`)
+
 ### Added
 - **Issue #97** — Extração: cliente IA via Prism (local+cloud, nonce, structured output)
   - `App\Infrastructure\AI\ClienteExtracaoIAPrism` (implementa `ClienteIA`) — chama `Prism::structured()` com schema `ObjectSchema` raiz (`tipo_documento`, `motivo`, `data_documento`, `fornecedor`/`cliente` aninhados, `valor`), envolve o texto extraído num nonce aleatório (`Str::random(32)`) para mitigar prompt injection, e resolve o veredicto por ordem: `perigoso` → `desconhecido` (tipo não resolúvel) → validação de completude por `espera_*` do `TipoDocumento` → `completo`/`incompleto`
