@@ -70,36 +70,41 @@ Skills de workflow (invocadas internamente pelos commands, não pelo utilizador)
 
 ```mermaid
 flowchart TB
-    CI1["/cria-issue"] -->|Issue #N| PL
-    CI2["/cria-issue-modelo"] -->|Issue #N| PL
-    CI3["/cria-issue-persistencia"] -->|Issue #N| PL
-    CI4["/cria-issue-logica"] -->|Issue #N| PL
+    subgraph CI["Criar Issue"]
+        direction LR
+        CI1["/cria-issue"] ~~~ CI2["/cria-issue-modelo"] ~~~ CI3["/cria-issue-persistencia"] ~~~ CI4["/cria-issue-logica"]
+    end
+
+    CI -->|Issue #N| PL
 
     subgraph PL["Fase 1 — /planeia-issue"]
         direction LR
-        PLa[Brief] -->|Checkpoint A| PLb[Spec] -->|Checkpoint B| PLc[Plano]
+        PLa[Brief] --> CPA([Checkpoint A]) --> PLb[Spec] --> CPB([Checkpoint B]) --> PLc[Plano]
     end
 
     PL --> IM
 
     subgraph IM["Fase 2 — /implementa-plano"]
         direction LR
-        IMa["tarefas do Plano<br/>(loop)"] -->|Checkpoint task<br/>por tarefa| IMb["testes +<br/>checkpoint:scan"] -->|Checkpoint scan| IMc["Checkpoint ②"]
+        IMa["tarefas do Plano (loop)"] --> CPT(["Checkpoint task por tarefa"]) --> IMb["testes + checkpoint:scan"] --> CPS([Checkpoint scan]) --> IMc([Checkpoint ②])
     end
 
     IM --> DOC
 
     subgraph DOC["Fase 3a — /documenta-implementacao"]
         direction LR
-        DOCa[Debrief] -->|Checkpoint D| DOCb["system_spec +<br/>Changelog + README"]
+        DOCa[Debrief] --> CPD([Checkpoint D]) --> DOCb["system_spec + Changelog + README"]
     end
 
     DOC --> PUB
 
     subgraph PUB["Fase 3b — /publica-implementacao"]
         direction LR
-        PUBa["Checkpoint E"] --> PUBb["PR aberto"]
+        CPE([Checkpoint E]) --> PUBb["PR aberto"]
     end
+
+    classDef checkpoint fill:#fbead8,stroke:#c97c2c,color:#7a4a15,stroke-width:1.5px;
+    class CPA,CPB,CPT,CPS,IMc,CPD,CPE checkpoint;
 ```
 
 > Detalhe de cada checkpoint na tabela "Checkpoints humanos" abaixo; estado persiste em
