@@ -35,6 +35,38 @@ Excepção: métodos impostos pelo framework (ver tabela acima) — não traduzi
 
 ---
 
+## Métodos booleanos — prefixo `eh`/`esta`/`validar`
+
+Métodos que devolvem `bool` usam sempre prefixo `eh`, `esta` ou `validar` — nunca a forma
+Substantivo+Adjectivo (`nifValido()`, `dataValida()`). Substantivo+Adjectivo é ambíguo: não fica claro,
+só pelo nome, se o método é booleano ou se devolve o próprio valor interpretado/validado.
+
+```php
+// correcto
+public function validarNif(string $nif): bool {}
+public function ehDocumentoValido(Documento $documento): bool {}
+
+// incorrecto — encontrado em ClienteExtracaoIAPrism (WRN-021, #97): parecia boolean pelo nome
+public function nifValido(string $nif): bool {}
+```
+
+O inverso também é violação: um método que **não** devolve `bool` mas usa a forma
+Substantivo+Adjectivo sugere erradamente um booleano. O nome deve reflectir a acção real (verbo +
+intenção), mesmo quando o resultado parece uma validação.
+
+```php
+// correcto — interpreta e devolve DateTimeImmutable, o nome não sugere boolean
+public function interpretarDataDocumento(string $dataDocumentoTexto): ?DateTimeImmutable {}
+
+// incorrecto — encontrado em ClienteExtracaoIAPrism (WRN-021, #97): nome de boolean, devolvia ?DateTimeImmutable
+public function dataDocumentoValida(string $data): ?DateTimeImmutable {}
+```
+
+Nenhuma ferramenta automática (Pint, Rector, Larastan) detecta este tipo de violação — exige leitura
+de intenção método a método.
+
+---
+
 ## Variáveis e propriedades — NOME + Intenção [+ Escala]
 
 - Entidade singular: `$categoriaDocumento`, `$idCategoria`

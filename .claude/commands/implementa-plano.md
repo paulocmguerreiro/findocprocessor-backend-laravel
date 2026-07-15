@@ -50,6 +50,16 @@ Se a tarefa alterou **`composer.json`**, **extensões PHP necessárias** ou **`.
 incluir essas alterações no **mesmo** checkpoint. Não deixar o setup Docker
 desactualizado em relação ao código. Detalhe: `docs/system_spec/04-infra/ambiente-docker.md`.
 
+### Revisão de nomenclatura semântica (antes do checkpoint)
+Nem o Pint, nem o Rector, nem o Larastan detectam nomes semanticamente incorrectos (método sem verbo,
+booleano com nome Substantivo+Adjectivo, parâmetro/variável genérico onde há ambiguidade real). Antes
+de mostrar o checkpoint, reler os ficheiros alterados nesta tarefa linha a linha contra
+`docs/system_spec/02-shared/convencoes-nomenclatura.md` e confirmar: (1) todo o método começa por
+verbo; (2) métodos que devolvem `bool` usam prefixo `eh`/`esta`/`validar` (nunca Substantivo+Adjectivo,
+nos dois sentidos — ver secção "Métodos booleanos" do ficheiro); (3) parâmetros/variáveis não são
+genéricos (`$dados`, `$data`, `$valor`) quando há mais de um do mesmo tipo base na mesma assinatura.
+Corrigir antes do checkpoint — não deixar para revisão do utilizador.
+
 ### Checkpoint por tarefa
 Skill `pausa-checkpoint` tipo=task — mostrar ficheiros alterados e aguardar resposta:
 ```
