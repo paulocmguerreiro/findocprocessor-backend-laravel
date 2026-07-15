@@ -10,7 +10,9 @@ use App\Observers\RoleObserver;
 use App\Policies\RolePolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\ParallelTesting;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -35,6 +37,28 @@ class AppServiceProvider extends ServiceProvider
         Role::observe(RoleObserver::class);
 
         $this->configurarRateLimiters();
+
+        if ($this->app->runningUnitTests()) {
+            // setUpTestCase() (não setUpProcess(), o exemplo oficial do Laravel): o Pest
+            // corre --parallel com o próprio WrapperRunner (não o ParallelRunner do
+            // Illuminate), que nunca chama callSetUpProcessCallbacks() — setUpProcess()
+            // fica registado mas o closure nunca executa. setUpTestCase() é chamado
+            // directamente por InteractsWithTestCaseLifecycle em cada teste, independente
+            // do runner, por isso é o único hook fiável aqui.
+            ParallelTesting::setUpTestCase(function (int $token): void {
+                config(['cache.prefix' => self::prefixoCacheParalelo(config()->string('cache.prefix'), $token)]);
+                Cache::purge('redis');
+            });
+        }
+    }
+
+    /**
+     * Deriva um prefixo de cache exclusivo do processo Pest em paralelo, evitando que
+     * processos distintos leiam/invalidem chaves Redis uns dos outros.
+     */
+    public static function prefixoCacheParalelo(string $prefixoBase, int $token): string
+    {
+        return "{$prefixoBase}test_{$token}_";
     }
 
     /**
