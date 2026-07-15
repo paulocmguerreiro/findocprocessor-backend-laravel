@@ -33,6 +33,10 @@ effort: xhigh
 - Se a tarefa envolver testes: executar `search-docs` com query temática de Pest (ex: `"pest mock"`, `"pest dataset"`)
 - Usar os resultados para confirmar a API correcta antes de escrever — não assumir com base em treino
 
+### Triagem semântica — antes de implementar
+Skill `executa-triagem-semantica` alvo=tarefa-planeada — lê os specs relevantes para o(s) tipo(s) de
+ficheiro que esta tarefa vai criar/alterar, antes de escrever código. Sem correcção, só contexto.
+
 ### Implementar
 Implementar apenas o código desta tarefa. Não antecipar tarefas seguintes.
 
@@ -50,15 +54,11 @@ Se a tarefa alterou **`composer.json`**, **extensões PHP necessárias** ou **`.
 incluir essas alterações no **mesmo** checkpoint. Não deixar o setup Docker
 desactualizado em relação ao código. Detalhe: `docs/system_spec/04-infra/ambiente-docker.md`.
 
-### Revisão de nomenclatura semântica (antes do checkpoint)
-Nem o Pint, nem o Rector, nem o Larastan detectam nomes semanticamente incorrectos (método sem verbo,
-booleano com nome Substantivo+Adjectivo, parâmetro/variável genérico onde há ambiguidade real). Antes
-de mostrar o checkpoint, reler os ficheiros alterados nesta tarefa linha a linha contra
-`docs/system_spec/02-shared/convencoes-nomenclatura.md` e confirmar: (1) todo o método começa por
-verbo; (2) métodos que devolvem `bool` usam prefixo `eh`/`esta`/`validar` (nunca Substantivo+Adjectivo,
-nos dois sentidos — ver secção "Métodos booleanos" do ficheiro); (3) parâmetros/variáveis não são
-genéricos (`$dados`, `$data`, `$valor`) quando há mais de um do mesmo tipo base na mesma assinatura.
-Corrigir antes do checkpoint — não deixar para revisão do utilizador.
+### Triagem semântica — antes do checkpoint
+Skill `executa-triagem-semantica` alvo=codigo — nem o Pint, nem o Rector, nem o Larastan detectam
+nomes semanticamente incorrectos, duplicação de blocos condicionais ou nomenclatura de interfaces.
+Relê os ficheiros alterados nesta tarefa contra os specs relevantes (dinamicamente, conforme o tipo
+de ficheiro) e corrige antes do checkpoint — não deixar para revisão do utilizador.
 
 ### Checkpoint por tarefa
 Skill `pausa-checkpoint` tipo=task — mostrar ficheiros alterados e aguardar resposta:

@@ -32,6 +32,9 @@ effort: high
 8. Skill `escreve-spec` → `docs/specs/YYYY-MM-DD-<slug>.md`
 9. Skill `pausa-checkpoint` tipo=B
 10. Skill `escreve-plan` → `docs/plans/YYYY-MM-DD-<slug>.md`
+10.5. Skill `executa-triagem-semantica` alvo=plano — confronta os nomes de ficheiros/classes/métodos
+     previstos no Plano com os specs relevantes (nomenclatura, interfaces `Contrato<Nome>`, etc.);
+     sinaliza violações e ajusta o Plano só se confirmado pelo utilizador.
 11. Escrever `docs/workflow-state.md`:
     ```yaml
     issue_number: N
