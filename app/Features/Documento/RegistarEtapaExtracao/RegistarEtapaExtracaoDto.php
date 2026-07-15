@@ -16,7 +16,13 @@ use InvalidArgumentException;
 final readonly class RegistarEtapaExtracaoDto
 {
     /**
-     * @param  ?array<string, mixed>  $dadosJson
+     * @param  ?array{
+     *     data_documento?: string,
+     *     fornecedor?: array{nif?: string, nome?: string},
+     *     cliente?: array{nif?: string, nome?: string},
+     *     valor?: float,
+     * }  $dadosJson  Shape inferida de `ResultadoExtracaoIA` — o orquestrador real (#97/#98) ainda
+     *   não existe; este shape guia a implementação futura, não é um contrato já imposto por código.
      *
      * @throws InvalidArgumentException
      */

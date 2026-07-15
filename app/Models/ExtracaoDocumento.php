@@ -21,7 +21,12 @@ use Illuminate\Support\Carbon;
  * @property-read ?Carbon $extracao_reclamada_em
  * @property-read int $extracao_tentativas
  * @property-read ?string $texto_extraido
- * @property-read ?array<string, mixed> $dados_json
+ * @property-read ?array{
+ *     data_documento?: string,
+ *     fornecedor?: array{nif?: string, nome?: string},
+ *     cliente?: array{nif?: string, nome?: string},
+ *     valor?: float,
+ * } $dados_json
  * @property-read Carbon $created_at
  * @property-read Carbon $updated_at
  * @property-read Documento $documento
