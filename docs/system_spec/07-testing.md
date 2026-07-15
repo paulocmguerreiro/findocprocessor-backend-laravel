@@ -164,11 +164,27 @@ Pontos a reter:
 
 **Distinção 403 vs 401:** `403` é utilizador autenticado **sem** a permissão (a Policy nega); `401` é ausência de autenticação (middleware Sanctum bloqueia antes da Policy). Na camada Action o guest dá `AuthorizationException` (não 401) — o primeiro parâmetro do método de Policy ser `User` (não `?User`) faz o Laravel negar guests automaticamente.
 
-**Listagens com cache:** flush da tag no `beforeEach` — `CACHE_STORE=redis` nos testes **não isola entre testes**, e um paginador serializado de um teste anterior rebenta noutro (`unserialize` de objecto incompleto → 500):
+**Listagens com cache:** flush da tag no `beforeEach` — dentro do **mesmo** processo paralelo, um
+paginador serializado de um teste anterior rebenta noutro (`unserialize` de objecto incompleto → 500):
 
 ```php
 beforeEach(fn () => Cache::tags(['documentos'])->flush());
 ```
+
+**Isolamento entre processos paralelos:** `AppServiceProvider::boot()` regista
+`ParallelTesting::setUpTestCase(...)`, guardado por `runningUnitTests()`, que salga
+`config('cache.prefix')` com o token do teste (`AppServiceProvider::prefixoCacheParalelo()`) e chama
+`Cache::purge('redis')` logo a seguir. Cada processo Pest passa a escrever/ler chaves Redis sob um
+prefixo próprio — sem isto, `Cache::tags([...])->flush()` de um worker apaga chaves escritas por
+outro antes da asserção correr (condição de corrida intermitente em CI). O `flush()` do `beforeEach`
+acima continua necessário — isola entre testes do *mesmo* processo, papel distinto do prefixo por
+processo.
+
+**Nota sobre o hook usado:** o gancho é `ParallelTesting::setUpTestCase()`, não `setUpProcess()`
+(o exemplo oficial da documentação Laravel). O Pest `--parallel` corre com o seu próprio
+`WrapperRunner`, que nunca invoca `callSetUpProcessCallbacks()` — um callback registado via
+`setUpProcess()` fica registado mas nunca executa nesta stack. `setUpTestCase()` é invocado
+directamente por `InteractsWithTestCaseLifecycle` em cada teste, independente do runner usado.
 
 ---
 

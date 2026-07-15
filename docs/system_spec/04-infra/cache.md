@@ -128,7 +128,10 @@ A `EloquentCollection` é necessária porque o `CursorPaginator` contém uma col
 | `REDIS_HOST` | `127.0.0.1` | Docker expõe na porta 6379 |
 | `REDIS_PORT` | `6379` | — |
 
-Em testes (`phpunit.xml`): `CACHE_STORE=redis` — Redis real necessário (container Docker).
+Em testes (`phpunit.xml`): `CACHE_STORE=redis` — Redis real necessário (container Docker). Em
+paralelo (`--parallel`), cada processo isola-se via prefixo de chave salgado com o token do teste
+(`AppServiceProvider::prefixoCacheParalelo()`, registado em `ParallelTesting::setUpTestCase()`) —
+ver `07-testing.md`.
 
 ---
 
