@@ -7,6 +7,15 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
+- **Issue #97** — Extração: cliente IA via Prism (local+cloud, nonce, structured output)
+  - `App\Infrastructure\AI\ClienteExtracaoIAPrism` (implementa `ClienteIA`) — chama `Prism::structured()` com schema `ObjectSchema` raiz (`tipo_documento`, `motivo`, `data_documento`, `fornecedor`/`cliente` aninhados, `valor`), envolve o texto extraído num nonce aleatório (`Str::random(32)`) para mitigar prompt injection, e resolve o veredicto por ordem: `perigoso` → `desconhecido` (tipo não resolúvel) → validação de completude por `espera_*` do `TipoDocumento` → `completo`/`incompleto`
+  - `ResultadoExtracaoIA` (Value Object, construtor privado, 5 named constructors) — `idCategoria` sempre derivado de `TipoDocumento`, nunca lido da resposta da IA
+  - Enums `CamadaIA` (`Local`/`Cloud`) e `VeredictoExtracaoIA` (interno ao VO)
+  - Provider por camada configurável via `.env` (`LLM_LOCAL_PROVIDER`/`LLM_CLOUD_PROVIDER`, defaults `ollama`/`anthropic`) — resolvido para `Prism\Prism\Enums\Provider` em runtime, sem mapeamento fixo no código; `config/extracao.php` agrupa `provider`/`modelo`/`url`[/`key`] por camada (`local`/`cloud`), substituindo as flags `camada_local_activa`/`camada_cloud_activa` na raiz
+  - Validação de NIF genérica (5–20 caracteres, alfanumérico, sem checksum por país)
+  - Nunca propaga excepções — qualquer falha (Prism, rede, parsing) converte-se em `ResultadoExtracaoIA::falhaTecnica()`
+  - Cliente é um serviço puro — sem escrita em BD, sem orquestração do pipeline, sem reconciliação NIF+Nome→`Entidade` (issue seguinte)
+  - 1020 testes, 100% cobertura + type coverage, Larastan 9 — verde em MySQL
 - **Issue #96** — Extração: extractores de texto (pdfparser nativo + Tesseract OCR)
   - `App\Infrastructure\Extracao\ExtractorTextoNativo` — texto de PDF digital via `smalot/pdfparser`; aplica o threshold de 50 caracteres (`config('extracao.threshold_caracteres')`) e devolve o veredicto no `ResultadoExtracao`, sem decidir transição de estado
   - `App\Infrastructure\Extracao\ExtractorOcr` — rasteriza cada página via `imagick` a `config('extracao.ocr.dpi')` DPI (300) e reconhece com `thiagoalessio/tesseract_ocr` (`config('extracao.ocr.linguas')`, `por`+`eng`); liberta a memória do `Imagick` por página e garante em `finally` a limpeza de todos os temporários de `storage/app/temp/`, mesmo em falha a meio
