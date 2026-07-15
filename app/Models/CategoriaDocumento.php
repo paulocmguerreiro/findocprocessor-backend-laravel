@@ -35,6 +35,9 @@ class CategoriaDocumento extends Model
     /** @use HasFactory<CategoriaDocumentoFactory> */
     use FiltravelPorEstadoRegisto, HasFactory, HasUuids, RegistaActividade, SoftDeletes;
 
+    /**
+     * @return array{tipo_movimento: class-string<TipoMovimento>}
+     */
     #[\Override]
     protected function casts(): array
     {

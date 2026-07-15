@@ -10,6 +10,7 @@ use App\Policies\UtilizadorPolicy;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -37,6 +38,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read Collection<int, Role> $roles
  * @property-read Collection<int, Permission> $permissions
  */
+#[Table('users')]
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 #[UsePolicy(UtilizadorPolicy::class)]
