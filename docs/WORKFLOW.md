@@ -58,14 +58,14 @@ sequenceDiagram
     PL-->>U: Brief
     Note over U,PL: Checkpoint A — validação contra<br/>compreensão da issue (nunca só "sim")
     PL-->>U: Spec
-    Note over U,PL: Checkpoint B — Spec verificada contra<br/>CLAUDE.md; utilizador confirma ou corrige
+    Note over U,PL: Checkpoint B — Spec verificada contra<br/>CLAUDE.md, utilizador confirma ou corrige
     PL-->>U: Plano
 
     U->>IM: /implementa-plano #N
     IM->>WS: fase = implementa
     loop por tarefa do Plano
         IM-->>U: tarefa implementada
-        Note over U,IM: Checkpoint task — utilizador lê o diff;<br/>commit só após confirmação explícita
+        Note over U,IM: Checkpoint task — utilizador lê o diff,<br/>commit só após confirmação explícita
         IM->>IM: propoe-commit (git add -p + git commit)
     end
     IM-->>U: testes + php artisan checkpoint:scan
