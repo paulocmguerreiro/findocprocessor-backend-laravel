@@ -9,7 +9,7 @@ use App\Events\DocumentoMarcadoPerigoso;
 use App\Events\DocumentoProcessado;
 use App\Features\Documento\RecepcaoUpload\DocumentoDuplicadoException;
 use App\Features\Documento\Transicao\RegraNomearProcessado;
-use App\Infrastructure\Malware\AnalisadorMalware;
+use App\Infrastructure\Malware\ContratoAnalisadorMalware;
 use App\Infrastructure\Malware\FalhaAnaliseMalwareException;
 use App\Models\CategoriaDocumento;
 use App\Models\Documento;
@@ -27,7 +27,7 @@ use RuntimeException;
 
 /**
  * Registo manual: o utilizador envia o ficheiro já tratado + os dados de domínio.
- * Corre o mesmo scan de malware do pipeline automático (`AnalisadorMalware`)
+ * Corre o mesmo scan de malware do pipeline automático (`ContratoAnalisadorMalware`)
  * antes de gravar — limpo/não configurado vai para `Processado` (disco
  * `processado`, comportamento inalterado); infectado vai para `Perigoso`
  * (disco `perigoso`, motivo = assinatura); falha do scan vai para `Erro`
@@ -46,7 +46,7 @@ final readonly class RegistarDocumentoManualAction
     public function __construct(
         private RegraNomearProcessado $nomear,
         private CacheServico $cache,
-        private AnalisadorMalware $analisador,
+        private ContratoAnalisadorMalware $analisador,
     ) {}
 
     /**

@@ -66,6 +66,31 @@ Cases em TitleCase PT; values backed conforme o que vai para BD / query string.
 
 ---
 
+## Interfaces — prefixo `Contrato<Nome>` sempre
+
+Toda a interface do domínio leva o prefixo `Contrato<Nome>` — sem excepção e sem depender de haver
+ou não colisão de nome com a implementação concreta. Critério (decidido via WRN-020, Issue #97):
+uniformidade acima de poupança de um prefixo — evita ter de decidir caso a caso e ter classes de
+interface com convenções diferentes por historial de quando foram criadas.
+
+```php
+// correcto
+interface ContratoClienteIA { /* ... */ }
+final class ClienteExtracaoIAPrism implements ContratoClienteIA { /* ... */ }
+
+interface ContratoAnalisadorMalware { /* ... */ }
+final readonly class ClamAvAnalisadorMalware implements ContratoAnalisadorMalware { /* ... */ }
+
+// incorrecto — sem prefixo, mesmo que a implementação já tenha nome distinto
+interface ClienteIA { /* ... */ }
+```
+
+Aplica-se a qualquer interface de domínio: Repository (`Contrato<Nome>` — já documentado em
+`04-infra/repositories.md`), contratos de estado partilhado (`ContratoEstadoDocumento`) e
+interfaces de serviços de infra (`ContratoClienteIA`, `ContratoAnalisadorMalware`).
+
+---
+
 ## Chaves primárias e estrangeiras
 
 - **Sempre UUID** via `HasUuids` — nunca IDs incrementais.

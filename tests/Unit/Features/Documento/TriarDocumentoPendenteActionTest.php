@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use App\Features\Documento\Triar\TriarDocumentoPendenteAction;
-use App\Infrastructure\Malware\AnalisadorMalware;
+use App\Infrastructure\Malware\ContratoAnalisadorMalware;
 use App\Infrastructure\Malware\FalhaAnaliseMalwareException;
 use App\Infrastructure\Malware\ResultadoAnaliseMalware;
 use App\Models\Documento;
@@ -31,7 +31,7 @@ function criarDocumentoPendenteComFicheiro(): Documento
 it('transiciona para Perigoso quando o ficheiro está infectado', function (): void {
     $documento = criarDocumentoPendenteComFicheiro();
 
-    app()->instance(AnalisadorMalware::class, Mockery::mock(AnalisadorMalware::class, function ($mock): void {
+    app()->instance(ContratoAnalisadorMalware::class, Mockery::mock(ContratoAnalisadorMalware::class, function ($mock): void {
         $mock->shouldReceive('analisar')->once()->andReturn(ResultadoAnaliseMalware::infectado('Eicar-Signature'));
     }));
 
@@ -50,7 +50,7 @@ it('transiciona para Perigoso quando o ficheiro está infectado', function (): v
 it('transiciona para AguardaEnvio quando o ficheiro está limpo', function (): void {
     $documento = criarDocumentoPendenteComFicheiro();
 
-    app()->instance(AnalisadorMalware::class, Mockery::mock(AnalisadorMalware::class, function ($mock): void {
+    app()->instance(ContratoAnalisadorMalware::class, Mockery::mock(ContratoAnalisadorMalware::class, function ($mock): void {
         $mock->shouldReceive('analisar')->once()->andReturn(ResultadoAnaliseMalware::limpo());
     }));
 
@@ -68,7 +68,7 @@ it('transiciona para AguardaEnvio quando o ficheiro está limpo', function (): v
 it('transiciona para AguardaEnvio com motivo "scan desligado" quando a camada não está configurada', function (): void {
     $documento = criarDocumentoPendenteComFicheiro();
 
-    app()->instance(AnalisadorMalware::class, Mockery::mock(AnalisadorMalware::class, function ($mock): void {
+    app()->instance(ContratoAnalisadorMalware::class, Mockery::mock(ContratoAnalisadorMalware::class, function ($mock): void {
         $mock->shouldReceive('analisar')->once()->andReturn(ResultadoAnaliseMalware::naoConfigurado());
     }));
 
@@ -86,7 +86,7 @@ it('transiciona para AguardaEnvio com motivo "scan desligado" quando a camada n�
 it('transiciona para Erro quando o scan falha', function (): void {
     $documento = criarDocumentoPendenteComFicheiro();
 
-    app()->instance(AnalisadorMalware::class, Mockery::mock(AnalisadorMalware::class, function ($mock): void {
+    app()->instance(ContratoAnalisadorMalware::class, Mockery::mock(ContratoAnalisadorMalware::class, function ($mock): void {
         $mock->shouldReceive('analisar')->once()->andThrow(new FalhaAnaliseMalwareException('timeout do clamd'));
     }));
 

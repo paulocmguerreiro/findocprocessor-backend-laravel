@@ -9,7 +9,7 @@ use DateTimeInterface;
 use InvalidArgumentException;
 
 /**
- * Value Object do veredicto de `ClienteIA::extrair()`: `completo` (dados
+ * Value Object do veredicto de `ContratoClienteIA::extrair()`: `completo` (dados
  * normalizados + `TipoDocumento` resolvido + categoria derivada),
  * `desconhecido` (`tipo_documento` não resolúvel), `perigoso` (regra 7 do
  * prompt), `incompleto` (falta um campo `espera_*=true` ou NIF/Nome

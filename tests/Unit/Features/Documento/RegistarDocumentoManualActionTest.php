@@ -8,7 +8,7 @@ use App\Events\DocumentoProcessado;
 use App\Features\Documento\Criar\RegistarDocumentoManualAction;
 use App\Features\Documento\Criar\RegistarDocumentoManualDto;
 use App\Features\Documento\RecepcaoUpload\DocumentoDuplicadoException;
-use App\Infrastructure\Malware\AnalisadorMalware;
+use App\Infrastructure\Malware\ContratoAnalisadorMalware;
 use App\Infrastructure\Malware\FalhaAnaliseMalwareException;
 use App\Infrastructure\Malware\ResultadoAnaliseMalware;
 use App\Models\CategoriaDocumento;
@@ -81,7 +81,7 @@ it('regista em Perigoso quando o ficheiro está infectado: disco perigoso + even
     $ficheiro = UploadedFile::fake()->create('fatura.pdf', 100);
     $dados = dtoManual(['ficheiro' => $ficheiro]);
 
-    app()->instance(AnalisadorMalware::class, Mockery::mock(AnalisadorMalware::class, function ($mock): void {
+    app()->instance(ContratoAnalisadorMalware::class, Mockery::mock(ContratoAnalisadorMalware::class, function ($mock): void {
         $mock->shouldReceive('analisar')->once()->andReturn(ResultadoAnaliseMalware::infectado('Eicar-Signature'));
     }));
 
@@ -111,7 +111,7 @@ it('regista em Erro quando o scan falha: disco erro + evento DocumentoMarcadoErr
     $ficheiro = UploadedFile::fake()->create('fatura.pdf', 100);
     $dados = dtoManual(['ficheiro' => $ficheiro]);
 
-    app()->instance(AnalisadorMalware::class, Mockery::mock(AnalisadorMalware::class, function ($mock): void {
+    app()->instance(ContratoAnalisadorMalware::class, Mockery::mock(ContratoAnalisadorMalware::class, function ($mock): void {
         $mock->shouldReceive('analisar')->once()->andThrow(new FalhaAnaliseMalwareException('timeout do clamd'));
     }));
 

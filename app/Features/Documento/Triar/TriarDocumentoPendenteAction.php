@@ -9,7 +9,7 @@ use App\Features\Documento\MarcarErro\MarcarErroDocumentoAction;
 use App\Features\Documento\MarcarErro\MarcarErroDocumentoDto;
 use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoAction;
 use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoDto;
-use App\Infrastructure\Malware\AnalisadorMalware;
+use App\Infrastructure\Malware\ContratoAnalisadorMalware;
 use App\Infrastructure\Malware\FalhaAnaliseMalwareException;
 use App\Models\Documento;
 use Illuminate\Support\Facades\Storage;
@@ -33,7 +33,7 @@ use Illuminate\Support\Facades\Storage;
 final readonly class TriarDocumentoPendenteAction
 {
     public function __construct(
-        private AnalisadorMalware $analisador,
+        private ContratoAnalisadorMalware $analisador,
         private MarcarAguardaEnvioDocumentoAction $marcarAguardaEnvio,
         private MarcarPerigosoDocumentoAction $marcarPerigoso,
         private MarcarErroDocumentoAction $marcarErro,
