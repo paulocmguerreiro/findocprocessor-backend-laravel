@@ -80,6 +80,21 @@ A suite corre **exclusivamente em MySQL** — o mesmo motor de produção, sem m
 > Se o volume `mysql-data` já existir de um arranque anterior com collation diferente,
 > recriar o volume: `docker compose down -v && docker compose up -d`.
 
+### Conflito de recursos: docker-parity vs. containers standalone
+
+O `compose.yaml` (projecto docker-parity) não publica portas para `mysql`/`redis`/`clamav`
+no host — só `web` expõe `8000`. Correr `composer test` fora do Docker liga a
+`127.0.0.1:3306/6379/3310`, portas de **containers standalone** (fora do projecto
+docker-parity) mantidos à parte para esse fim.
+
+Se ambos os conjuntos correrem em simultâneo (docker-parity + standalone), duplicam-se
+mysql+redis+clamav na mesma VM do Docker Desktop — o ClamAV é particularmente pesado em
+RAM (carrega assinaturas no arranque) e a soma pode exceder o limite de memória da VM,
+causando OOM kill (containers terminam com exit code 137). `bin/test-preflight.sh`
+detecta esta situação (containers de imagem `mysql`/`redis`/`clamav` a correr fora do
+projecto docker-parity enquanto este está de pé) e pergunta interactivamente se deve
+pará-los antes de prosseguir; em execução não-interactiva (CI, scripts) apenas avisa.
+
 ## CI (`.github/workflows/ci.yml`)
 
 Dois jobs:
