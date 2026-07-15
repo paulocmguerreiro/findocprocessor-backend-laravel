@@ -69,49 +69,38 @@ Skills de workflow (invocadas internamente pelos commands, não pelo utilizador)
 ## Sequência de uma issue
 
 ```mermaid
-sequenceDiagram
-    actor U as Utilizador
-    participant CI as /cria-issue*
-    participant PL as /planeia-issue
-    participant IM as /implementa-plano
-    participant DOC as /documenta-implementacao
-    participant PUB as /publica-implementacao
-    participant WS as workflow-state.md
+flowchart TB
+    CI["/cria-issue*<br/>Issue #N"] --> PL
 
-    U->>CI: descrição da funcionalidade/bug
-    CI-->>U: Issue #N criada no GitHub
-
-    U->>PL: /planeia-issue #N
-    PL->>WS: fase = planeia
-    PL-->>U: Brief
-    Note over U,PL: Checkpoint A — validação contra<br/>compreensão da issue (nunca só "sim")
-    PL-->>U: Spec
-    Note over U,PL: Checkpoint B — Spec verificada contra<br/>CLAUDE.md, utilizador confirma ou corrige
-    PL-->>U: Plano
-
-    U->>IM: /implementa-plano #N
-    IM->>WS: fase = implementa
-    loop por tarefa do Plano
-        IM-->>U: tarefa implementada
-        Note over U,IM: Checkpoint task — utilizador lê o diff,<br/>commit só após confirmação explícita
-        IM->>IM: propoe-commit (git add -p + git commit)
+    subgraph PL["Fase 1 — /planeia-issue"]
+        direction LR
+        PLa[Brief] -->|Checkpoint A| PLb[Spec] -->|Checkpoint B| PLc[Plano]
     end
-    IM-->>U: testes + php artisan checkpoint:scan
-    Note over U,IM: Se o scan reportar FAILs, pausa e aguarda<br/>[ok] ou [stop] — nunca suprime automaticamente
-    IM-->>U: Checkpoint ② — implementação completa
 
-    U->>DOC: /documenta-implementacao #N
-    DOC->>WS: fase = documenta
-    DOC-->>U: Debrief
-    Note over U,DOC: Checkpoint D — validação de cada<br/>decisão antes do system_spec ser actualizado
-    DOC-->>U: system_spec + Changelog + README
+    PL --> IM
 
-    U->>PUB: /publica-implementacao #N
-    PUB->>WS: fase = publica
-    Note over U,PUB: Checkpoint E — validação que<br/>compreende e defende cada decisão do PR body
-    PUB-->>U: PR aberto no GitHub
-    PUB->>WS: remove workflow-state.md
+    subgraph IM["Fase 2 — /implementa-plano"]
+        direction LR
+        IMa["tarefas do Plano<br/>(loop)"] -->|Checkpoint task<br/>por tarefa| IMb["testes +<br/>checkpoint:scan"] -->|Checkpoint scan| IMc["Checkpoint ②"]
+    end
+
+    IM --> DOC
+
+    subgraph DOC["Fase 3a — /documenta-implementacao"]
+        direction LR
+        DOCa[Debrief] -->|Checkpoint D| DOCb["system_spec +<br/>Changelog + README"]
+    end
+
+    DOC --> PUB
+
+    subgraph PUB["Fase 3b — /publica-implementacao"]
+        direction LR
+        PUBa["Checkpoint E"] --> PUBb["PR aberto"]
+    end
 ```
+
+> Detalhe de cada checkpoint na tabela "Checkpoints humanos" abaixo; estado persiste em
+> `workflow-state.md` por fase e é removido por `/publica-implementacao` no fecho.
 
 Em qualquer fase, `/mostra-workflow` mostra o estado actual (útil para retomar após pausa), e
 `/ajusta-workflow` corrige desvios de processo — nunca despejando o ajuste directamente em
