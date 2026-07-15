@@ -14,13 +14,15 @@ Informação **estrutural da aplicação** (padrões, contratos, convenções de
 
 ## Argumentos
 
-- `$ARGUMENTS`: descrição do problema/melhoria — opcional. Se omitido, **antes de perguntar**, ler
-  `docs/process-warnings.md` e listar entradas `STATUS: PENDENTE` cuja `categoria` seja accionável
-  por este comando (ex: `system-spec-manutencao`) — essas entradas já têm, por contrato da skill
-  `regista-aviso`, uma `Sugestão` que nomeia `/ajusta-workflow` e descreve o que fazer, pelo que não é
-  preciso pedir mais contexto ao utilizador. Apresentar a lista e perguntar qual resolver (ou se é
-  para descrever um ajuste novo, não relacionado com nenhuma entrada pendente). Só perguntar o texto
-  livre de "O que precisa de ser ajustado?" se não houver entradas pendentes accionáveis.
+- `$ARGUMENTS`: descrição do problema/melhoria — opcional. Se omitido, **antes de perguntar**, correr
+  `grep -n "^WRN-" docs/process-warnings.md` e listar **todas** as entradas `STATUS: PENDENTE`
+  **individualmente, uma por uma** — nunca filtrar pela presença de um campo `categoria` nem pela
+  `Sugestão` nomear literalmente `/ajusta-workflow`, e nunca agrupar/resumir várias entradas da mesma
+  issue/sessão numa só linha. A `categoria`/`Sugestão`, quando existem, ajudam a pré-preencher o Tipo
+  no passo 2, mas não são filtro de inclusão nesta lista. Apresentar a lista completa e perguntar qual
+  resolver (ou se é para descrever um ajuste novo, não relacionado com nenhuma entrada pendente). Só
+  perguntar o texto livre de "O que precisa de ser ajustado?" se não houver nenhuma entrada
+  `STATUS: PENDENTE`.
 
 ## Heurística principal
 
@@ -30,9 +32,9 @@ Informação **estrutural da aplicação** (padrões, contratos, convenções de
 
 ### 1 — Receber a descrição
 
-Se `$ARGUMENTS` vazio: ler `docs/process-warnings.md`, filtrar entradas `STATUS: PENDENTE` com
-`categoria` accionável (a `Sugestão` dessas entradas já nomeia este comando — ver contrato de
-`regista-aviso`), e oferecer a lista ao utilizador antes de perguntar em texto livre. Caso contrário,
+Se `$ARGUMENTS` vazio: ler `docs/process-warnings.md`, listar **todas** as entradas `STATUS: PENDENTE`
+individualmente (sem filtrar por `categoria` nem por a `Sugestão` nomear este comando — ver
+`Argumentos` acima), e oferecer a lista completa ao utilizador antes de perguntar em texto livre. Caso contrário,
 usar `$ARGUMENTS` directamente. Reformular numa frase única para confirmar o entendimento, e marcar a
 entrada de `process-warnings.md` correspondente (se aplicável) para actualização a `STATUS: RESOLVIDO`
 no passo 8.

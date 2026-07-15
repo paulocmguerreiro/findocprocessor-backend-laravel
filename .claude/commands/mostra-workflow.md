@@ -35,10 +35,20 @@ Nenhum.
        Debrief: <path se fase=publica> [✅ existe | ❌ não encontrado]
      ```
 
-2. Verificar `docs/process-warnings.md` — se tiver avisos não resolvidos, listar:
+2. Verificar `docs/process-warnings.md`: correr `grep -n "^WRN-" docs/process-warnings.md` e listar
+   **individualmente, uma linha por entrada**, todas as que tenham `STATUS: PENDENTE` ou
+   `STATUS: PARCIALMENTE RESOLVIDO` (excluir `RESOLVIDO` e `IGNORADO`). Nunca agrupar, resumir ou
+   omitir entradas por pertencerem à mesma issue/sessão — cada `WRN-NNN` conta por si, mesmo que haja
+   5 entradas da mesma issue:
    ```
    ⚠️ Avisos de processo activos:
-   - WRN-001: <descrição>
+   - WRN-001 (PARCIALMENTE RESOLVIDO): <descrição curta>
+   - WRN-014 (PENDENTE): <descrição curta>
+   - WRN-019 (PENDENTE): <descrição curta>
+   - WRN-020 (PENDENTE): <descrição curta>
+   - WRN-021 (PENDENTE): <descrição curta>
+   - WRN-022 (PENDENTE): <descrição curta>
+   - WRN-023 (PENDENTE): <descrição curta>
    ```
 
 3. Mostrar comandos disponíveis para a fase actual:
