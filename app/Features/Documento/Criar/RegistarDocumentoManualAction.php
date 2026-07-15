@@ -134,16 +134,16 @@ final readonly class RegistarDocumentoManualAction
     private function avaliarScan(string $caminhoAbsoluto): array
     {
         try {
-            $resultado = $this->analisador->analisar($caminhoAbsoluto);
+            $resultadoScan = $this->analisador->analisar($caminhoAbsoluto);
         } catch (FalhaAnaliseMalwareException $erro) {
             return ['estado' => EstadoDocumento::Erro, 'disco' => self::DISCO_ERRO, 'motivo' => $erro->getMessage()];
         }
 
-        if ($resultado->estaInfectado()) {
+        if ($resultadoScan->estaInfectado()) {
             return [
                 'estado' => EstadoDocumento::Perigoso,
                 'disco' => self::DISCO_PERIGOSO,
-                'motivo' => $resultado->assinatura ?? 'assinatura desconhecida',
+                'motivo' => $resultadoScan->assinatura ?? 'assinatura desconhecida',
             ];
         }
 

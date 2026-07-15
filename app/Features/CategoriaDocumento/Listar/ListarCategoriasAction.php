@@ -24,7 +24,7 @@ final readonly class ListarCategoriasAction
      *
      * @throws AuthorizationException
      */
-    public function handle(int $perPage, CampoOrdenacaoCategorias $campoOrdenacao, DirecaoOrdenacao $direcaoOrdenacao, FiltroEstadoRegisto $filtroEstado): CursorPaginator
+    public function handle(int $porPagina, CampoOrdenacaoCategorias $campoOrdenacao, DirecaoOrdenacao $direcaoOrdenacao, FiltroEstadoRegisto $filtroEstado): CursorPaginator
     {
         Gate::authorize('viewAny', CategoriaDocumento::class);
 
@@ -33,17 +33,17 @@ final readonly class ListarCategoriasAction
         $chave = $this->cache->criarChave(
             TagCache::CategoriasDocumento,
             TagOperacao::Listar,
-            ['campo' => $campoOrdenacao->value, 'cursor' => $cursor, 'direcao' => $direcaoOrdenacao->value, 'estado' => $filtroEstado->value, 'por_pagina' => $perPage],
+            ['campo' => $campoOrdenacao->value, 'cursor' => $cursor, 'direcao' => $direcaoOrdenacao->value, 'estado' => $filtroEstado->value, 'por_pagina' => $porPagina],
         );
 
-        /** @var CursorPaginator<int, CategoriaDocumento> $resultado */
-        $resultado = $this->cache->lembrar(
+        /** @var CursorPaginator<int, CategoriaDocumento> $categoriasPaginadas */
+        $categoriasPaginadas = $this->cache->lembrar(
             TagCache::CategoriasDocumento,
             $chave,
             TtlCache::Curta,
-            fn (): CursorPaginator => CategoriaDocumento::filtrarPorEstadoRegisto($filtroEstado)->orderBy($campoOrdenacao->value, $direcaoOrdenacao->value)->cursorPaginate($perPage),
+            fn (): CursorPaginator => CategoriaDocumento::filtrarPorEstadoRegisto($filtroEstado)->orderBy($campoOrdenacao->value, $direcaoOrdenacao->value)->cursorPaginate($porPagina),
         );
 
-        return $resultado;
+        return $categoriasPaginadas;
     }
 }

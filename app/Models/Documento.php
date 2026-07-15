@@ -175,7 +175,7 @@ class Documento extends Model
      * @param  Builder<Documento>  $query
      * @param  list<EstadoDocumento>  $estados
      */
-    public function scopeDocumentosPresos(Builder $query, array $estados, int $limiarMinutos): void
+    public function scopeWherePresos(Builder $query, array $estados, int $limiarMinutos): void
     {
         $query->whereIn('status', $estados)->where('updated_at', '<', now()->subMinutes($limiarMinutos));
     }

@@ -32,14 +32,14 @@ final readonly class VerEntidadeAction
 
         $chave = $this->cache->criarChave(TagCache::Entidades, TagOperacao::Ver, ['id' => $entidade->id]);
 
-        /** @var Entidade $resultado */
-        $resultado = $this->cache->lembrar(
+        /** @var Entidade $entidadeEmCache */
+        $entidadeEmCache = $this->cache->lembrar(
             TagCache::Entidades,
             $chave,
             TtlCache::Media,
             fn (): Entidade => $entidade,
         );
 
-        return $resultado;
+        return $entidadeEmCache;
     }
 }

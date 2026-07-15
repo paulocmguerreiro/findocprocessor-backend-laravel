@@ -188,7 +188,7 @@ it('produz falhaTecnica quando o Prism não tem resposta disponível', function 
 
     $resultado = $cliente->extrair('texto', CamadaIA::Local);
 
-    expect($resultado->falhouTecnicamente())->toBeTrue()
+    expect($resultado->estaEmFalhaTecnica())->toBeTrue()
         ->and($resultado->motivo)->not->toBeNull();
 });
 

@@ -32,25 +32,28 @@ final class ReconciliarFicheirosJob implements ShouldQueue, ShouldQueueAfterComm
 
     public int $timeout = 120;
 
+    /**
+     * @throws \Throwable
+     */
     public function handle(RegraReconciliarLocalizacaoFicheiro $regra): void
     {
-        $presos = Documento::query()->documentosPresos(
+        $presos = Documento::query()->wherePresos(
             [EstadoDocumento::AguardaEnvio, EstadoDocumento::Enviado, EstadoDocumento::AguardaResposta],
             config()->integer('pipeline.reconciliacao_limiar_minutos'),
         )->cursor();
 
         foreach ($presos as $documento) {
-            $resultado = $regra->handle($documento);
+            $resultadoReconciliacao = $regra->handle($documento);
 
-            if ($resultado->coerente) {
+            if ($resultadoReconciliacao->coerente) {
                 continue;
             }
 
-            if ($resultado->encontrado) {
-                DB::transaction(function () use ($documento, $resultado): void {
+            if ($resultadoReconciliacao->encontrado) {
+                DB::transaction(function () use ($documento, $resultadoReconciliacao): void {
                     $documento->update([
-                        'disco_storage' => $resultado->disco,
-                        'nome_ficheiro_storage' => $resultado->nome,
+                        'disco_storage' => $resultadoReconciliacao->disco,
+                        'nome_ficheiro_storage' => $resultadoReconciliacao->nome,
                     ]);
                 });
 

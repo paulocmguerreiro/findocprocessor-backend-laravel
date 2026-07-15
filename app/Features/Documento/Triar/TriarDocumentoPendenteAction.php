@@ -57,7 +57,7 @@ final readonly class TriarDocumentoPendenteAction
                 $documento,
                 new MarcarPerigosoDocumentoDto($resultado->assinatura ?? 'assinatura desconhecida'),
             ),
-            $resultado->foiConfigurado() => $this->marcarAguardaEnvio->handle($documento),
+            $resultado->estaConfigurado() => $this->marcarAguardaEnvio->handle($documento),
             default => $this->marcarAguardaEnvio->handle($documento, 'scan de malware desligado'),
         };
     }

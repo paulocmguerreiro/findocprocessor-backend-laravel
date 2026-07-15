@@ -49,8 +49,8 @@ final readonly class ListarDocumentosAction
             ],
         );
 
-        /** @var CursorPaginator<int, Documento> $resultado */
-        $resultado = $this->cache->lembrar(
+        /** @var CursorPaginator<int, Documento> $documentosPaginados */
+        $documentosPaginados = $this->cache->lembrar(
             TagCache::Documentos,
             $chave,
             TtlCache::Curta,
@@ -60,6 +60,6 @@ final readonly class ListarDocumentosAction
                 ->cursorPaginate($porPagina),
         );
 
-        return $resultado;
+        return $documentosPaginados;
     }
 }

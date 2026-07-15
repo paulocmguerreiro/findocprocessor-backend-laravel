@@ -17,12 +17,12 @@ final class ListarRolesAction
      *
      * @throws AuthorizationException
      */
-    public function handle(int $perPage, CampoOrdenacaoRoles $campoOrdenacao, DirecaoOrdenacao $direcaoOrdenacao): CursorPaginator
+    public function handle(int $porPagina, CampoOrdenacaoRoles $campoOrdenacao, DirecaoOrdenacao $direcaoOrdenacao): CursorPaginator
     {
         Gate::authorize('viewAny', Role::class);
 
         return Role::with('permissions')
             ->orderBy($campoOrdenacao->value, $direcaoOrdenacao->value)
-            ->cursorPaginate($perPage);
+            ->cursorPaginate($porPagina);
     }
 }

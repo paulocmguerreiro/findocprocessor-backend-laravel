@@ -32,14 +32,14 @@ final readonly class VerCategoriaAction
 
         $chave = $this->cache->criarChave(TagCache::CategoriasDocumento, TagOperacao::Ver, ['id' => $categoria->id]);
 
-        /** @var CategoriaDocumento $resultado */
-        $resultado = $this->cache->lembrar(
+        /** @var CategoriaDocumento $categoriaEmCache */
+        $categoriaEmCache = $this->cache->lembrar(
             TagCache::CategoriasDocumento,
             $chave,
             TtlCache::Media,
             fn (): CategoriaDocumento => $categoria,
         );
 
-        return $resultado;
+        return $categoriaEmCache;
     }
 }

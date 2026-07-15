@@ -47,15 +47,15 @@ final readonly class CorrigirDocumentoDto
      */
     public static function fromRequest(CorrigirDocumentoRequest $request): self
     {
-        /** @var array{id_fornecedor: string, id_cliente: string, id_categoria: string, valor: numeric-string|float|int, data_documento: string} $dados */
-        $dados = $request->validated();
+        /** @var array{id_fornecedor: string, id_cliente: string, id_categoria: string, valor: numeric-string|float|int, data_documento: string} $dadosValidados */
+        $dadosValidados = $request->validated();
 
         return new self(
-            idFornecedor: $dados['id_fornecedor'],
-            idCliente: $dados['id_cliente'],
-            idCategoria: $dados['id_categoria'],
-            valor: (float) $dados['valor'],
-            dataDocumento: Carbon::parse($dados['data_documento']),
+            idFornecedor: $dadosValidados['id_fornecedor'],
+            idCliente: $dadosValidados['id_cliente'],
+            idCategoria: $dadosValidados['id_categoria'],
+            valor: (float) $dadosValidados['valor'],
+            dataDocumento: Carbon::parse($dadosValidados['data_documento']),
         );
     }
 }

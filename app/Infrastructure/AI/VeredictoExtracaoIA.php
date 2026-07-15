@@ -7,7 +7,7 @@ namespace App\Infrastructure\AI;
 /**
  * Estado interno de `ResultadoExtracaoIA` — nunca exposto directamente, só
  * através dos getters de consulta (`ehCompleto()`, `ehDesconhecido()`,
- * `ehPerigoso()`, `ehIncompleto()`, `falhouTecnicamente()`).
+ * `ehPerigoso()`, `ehIncompleto()`, `estaEmFalhaTecnica()`).
  */
 enum VeredictoExtracaoIA: string
 {

@@ -97,7 +97,7 @@ it('produz um resultado de falha técnica com o motivo', function (): void {
     $resultado = ResultadoExtracaoIA::falhaTecnica('timeout ao contactar o provider');
 
     expect($resultado->veredicto)->toBe(VeredictoExtracaoIA::FalhaTecnica)
-        ->and($resultado->falhouTecnicamente())->toBeTrue()
+        ->and($resultado->estaEmFalhaTecnica())->toBeTrue()
         ->and($resultado->motivo)->toBe('timeout ao contactar o provider');
 });
 

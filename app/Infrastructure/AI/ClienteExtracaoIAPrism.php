@@ -135,10 +135,10 @@ final class ClienteExtracaoIAPrism implements ContratoClienteIA
         /** @var list<string> $motivosFalta */
         $motivosFalta = [];
 
-        $dataDocumento = $this->validarDataDocumento($dadosResposta, $tipoDocumento, $motivosFalta);
-        [$nifFornecedor, $nomeFornecedor] = $this->validarEntidadeEsperada($dadosResposta, $tipoDocumento->espera_fornecedor, 'fornecedor', $motivosFalta);
-        [$nifCliente, $nomeCliente] = $this->validarEntidadeEsperada($dadosResposta, $tipoDocumento->espera_cliente, 'cliente', $motivosFalta);
-        $valor = $this->validarValor($dadosResposta, $tipoDocumento, $motivosFalta);
+        $dataDocumento = $this->resolverDataDocumento($dadosResposta, $tipoDocumento, $motivosFalta);
+        [$nifFornecedor, $nomeFornecedor] = $this->resolverEntidadeEsperada($dadosResposta, $tipoDocumento->espera_fornecedor, 'fornecedor', $motivosFalta);
+        [$nifCliente, $nomeCliente] = $this->resolverEntidadeEsperada($dadosResposta, $tipoDocumento->espera_cliente, 'cliente', $motivosFalta);
+        $valor = $this->resolverValor($dadosResposta, $tipoDocumento, $motivosFalta);
 
         if ($motivosFalta !== []) {
             return ResultadoExtracaoIA::incompleto($motivosFalta);
@@ -162,7 +162,7 @@ final class ClienteExtracaoIAPrism implements ContratoClienteIA
      *
      * @param-out  list<string>  $motivosFalta
      */
-    private function validarDataDocumento(array $dadosResposta, TipoDocumento $tipoDocumento, array &$motivosFalta): ?DateTimeImmutable
+    private function resolverDataDocumento(array $dadosResposta, TipoDocumento $tipoDocumento, array &$motivosFalta): ?DateTimeImmutable
     {
         if (! $tipoDocumento->espera_data_documento) {
             return null;
@@ -185,7 +185,7 @@ final class ClienteExtracaoIAPrism implements ContratoClienteIA
      *
      * @return array{0: ?string, 1: ?string}
      */
-    private function validarEntidadeEsperada(array $dadosResposta, bool $esperada, string $chave, array &$motivosFalta): array
+    private function resolverEntidadeEsperada(array $dadosResposta, bool $esperada, string $chave, array &$motivosFalta): array
     {
         if (! $esperada) {
             return [null, null];
@@ -206,7 +206,7 @@ final class ClienteExtracaoIAPrism implements ContratoClienteIA
      *
      * @param-out  list<string>  $motivosFalta
      */
-    private function validarValor(array $dadosResposta, TipoDocumento $tipoDocumento, array &$motivosFalta): ?float
+    private function resolverValor(array $dadosResposta, TipoDocumento $tipoDocumento, array &$motivosFalta): ?float
     {
         if (! $tipoDocumento->espera_valor) {
             return null;

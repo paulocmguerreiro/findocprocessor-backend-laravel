@@ -125,7 +125,7 @@ final readonly class ResultadoExtracaoIA
         return $this->veredicto === VeredictoExtracaoIA::Incompleto;
     }
 
-    public function falhouTecnicamente(): bool
+    public function estaEmFalhaTecnica(): bool
     {
         return $this->veredicto === VeredictoExtracaoIA::FalhaTecnica;
     }

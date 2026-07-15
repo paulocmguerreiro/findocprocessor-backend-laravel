@@ -25,7 +25,7 @@ final readonly class ListarTiposDocumentoAction
      *
      * @throws AuthorizationException
      */
-    public function handle(int $perPage, CampoOrdenacaoTiposDocumento $campoOrdenacao, DirecaoOrdenacao $direcaoOrdenacao, CategoriaDocumento|string|null $idCategoria = null): CursorPaginator
+    public function handle(int $porPagina, CampoOrdenacaoTiposDocumento $campoOrdenacao, DirecaoOrdenacao $direcaoOrdenacao, CategoriaDocumento|string|null $idCategoria = null): CursorPaginator
     {
         Gate::authorize('viewAny', TipoDocumento::class);
 
@@ -36,11 +36,11 @@ final readonly class ListarTiposDocumentoAction
         $chave = $this->cache->criarChave(
             TagCache::TiposDocumento,
             TagOperacao::Listar,
-            ['campo' => $campoOrdenacao->value, 'cursor' => $cursor, 'direcao' => $direcaoOrdenacao->value, 'id_categoria' => $idCategoria, 'por_pagina' => $perPage],
+            ['campo' => $campoOrdenacao->value, 'cursor' => $cursor, 'direcao' => $direcaoOrdenacao->value, 'id_categoria' => $idCategoria, 'por_pagina' => $porPagina],
         );
 
-        /** @var CursorPaginator<int, TipoDocumento> $resultado */
-        $resultado = $this->cache->lembrar(
+        /** @var CursorPaginator<int, TipoDocumento> $tiposDocumentoPaginados */
+        $tiposDocumentoPaginados = $this->cache->lembrar(
             TagCache::TiposDocumento,
             $chave,
             TtlCache::Curta,
@@ -48,9 +48,9 @@ final readonly class ListarTiposDocumentoAction
                 ->with('categoria')
                 ->when($idCategoria, fn (Builder $consulta, string $id): Builder => $consulta->where('id_categoria', $id))
                 ->orderBy($campoOrdenacao->value, $direcaoOrdenacao->value)
-                ->cursorPaginate($perPage),
+                ->cursorPaginate($porPagina),
         );
 
-        return $resultado;
+        return $tiposDocumentoPaginados;
     }
 }

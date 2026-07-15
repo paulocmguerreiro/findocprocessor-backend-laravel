@@ -36,8 +36,8 @@ final readonly class ListarUtilizadoresAction
             ['campo' => $campoOrdenacao->value, 'cursor' => $cursor, 'direcao' => $direcaoOrdenacao->value, 'estado' => $filtroEstado->value, 'por_pagina' => $porPagina],
         );
 
-        /** @var CursorPaginator<int, User> $resultado */
-        $resultado = $this->cache->lembrar(
+        /** @var CursorPaginator<int, User> $utilizadoresPaginados */
+        $utilizadoresPaginados = $this->cache->lembrar(
             TagCache::Utilizadores,
             $chave,
             TtlCache::Curta,
@@ -47,6 +47,6 @@ final readonly class ListarUtilizadoresAction
                 ->cursorPaginate($porPagina),
         );
 
-        return $resultado;
+        return $utilizadoresPaginados;
     }
 }

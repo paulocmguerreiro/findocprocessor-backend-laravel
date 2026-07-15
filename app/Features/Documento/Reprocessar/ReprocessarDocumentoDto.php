@@ -14,9 +14,9 @@ final readonly class ReprocessarDocumentoDto
 
     public static function fromRequest(ReprocessarDocumentoRequest $request): self
     {
-        /** @var array{modo: string} $dados */
-        $dados = $request->validated();
+        /** @var array{modo: string} $dadosValidados */
+        $dadosValidados = $request->validated();
 
-        return new self(ModoReprocessamento::from($dados['modo']));
+        return new self(ModoReprocessamento::from($dadosValidados['modo']));
     }
 }

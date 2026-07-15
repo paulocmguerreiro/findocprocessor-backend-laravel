@@ -34,14 +34,14 @@ final readonly class VerTipoDocumentoAction
 
         $chave = $this->cache->criarChave(TagCache::TiposDocumento, TagOperacao::Ver, ['id' => $tipoDocumento->id]);
 
-        /** @var TipoDocumento $resultado */
-        $resultado = $this->cache->lembrar(
+        /** @var TipoDocumento $tipoDocumentoEmCache */
+        $tipoDocumentoEmCache = $this->cache->lembrar(
             TagCache::TiposDocumento,
             $chave,
             TtlCache::Media,
             fn (): TipoDocumento => $tipoDocumento,
         );
 
-        return $resultado;
+        return $tipoDocumentoEmCache;
     }
 }

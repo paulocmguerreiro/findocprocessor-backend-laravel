@@ -36,8 +36,8 @@ final readonly class ListarEntidadesAction
             ['campo' => $campoOrdenacao->value, 'cursor' => $cursor, 'direcao' => $direcaoOrdenacao->value, 'estado' => $filtroEstado->value, 'por_pagina' => $porPagina],
         );
 
-        /** @var CursorPaginator<int, Entidade> $resultado */
-        $resultado = $this->cache->lembrar(
+        /** @var CursorPaginator<int, Entidade> $entidadesPaginadas */
+        $entidadesPaginadas = $this->cache->lembrar(
             TagCache::Entidades,
             $chave,
             TtlCache::Curta,
@@ -46,6 +46,6 @@ final readonly class ListarEntidadesAction
                 ->cursorPaginate($porPagina),
         );
 
-        return $resultado;
+        return $entidadesPaginadas;
     }
 }
