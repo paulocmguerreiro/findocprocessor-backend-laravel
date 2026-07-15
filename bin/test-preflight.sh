@@ -27,7 +27,7 @@ check_docker_conflict() {
     [ -z "${projeto_ids}" ] && return 0
 
     outros_ids=""
-    for id in $(docker ps -q 2>/dev/null); do
+    for id in $(docker ps -q --no-trunc 2>/dev/null); do
         pertence=0
         for pid in ${projeto_ids}; do
             [ "$id" = "$pid" ] && pertence=1 && break
