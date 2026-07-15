@@ -106,7 +106,9 @@ PENDENTE → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → PROCESSADO
 | Novo Repository                                | `04-infra/repositories.md`                                    |
 | Novo Job ou configuração de Queue              | `04-infra/queue-jobs.md`                                      |
 | Cache ou Redis                                 | `04-infra/cache.md`                                           |
-| API externa (IA ou outro serviço)              | `04-infra/external-apis.md`                                   |
+| API externa — extração via IA (Prism)          | `04-infra/extracao-ia.md`                                     |
+| API externa — scan de malware (ClamAV)         | `04-infra/malware.md`                                         |
+| API externa — extractores de texto (pdfparser/OCR) | `04-infra/extracao-texto.md`                              |
 | Nova rota API                                  | `05-routes/<slug>.md`                                         |
 | Alteração de contrato / rota API (OpenAPI)     | `./openapi.yaml` (raiz) — escrito na Fase 3a (`/documenta-implementacao`) |
 | Nova configuração ou .env var                  | `06-config.md`                                                |

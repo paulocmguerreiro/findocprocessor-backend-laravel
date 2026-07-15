@@ -68,9 +68,9 @@
 | Logging estruturado                          | `04-infra/logging.md`         | implementado                                                                           |
 | Audit trail (spatie/laravel-activitylog)     | `04-infra/audit-trail.md`     | implementado                                                                           |
 | Jobs / Queue + Events de domínio             | `04-infra/queue-jobs.md`      | implementado (Events de transição + `ReconciliarFicheirosJob`; Jobs de pipeline pendentes) |
-| APIs externas (IA)                           | `04-infra/external-apis.md`   | implementado (`PromptBuilder` + `ClienteExtracaoIAPrism`; orquestração do pipeline pendente) |
-| Scan de malware (ClamAV self-hosted)          | `04-infra/external-apis.md`   | implementado                                                                           |
-| Extractores de texto (pdfparser nativo + Tesseract OCR) | `04-infra/external-apis.md` | implementado                                                                 |
+| APIs externas — Extração via IA (Prism)      | `04-infra/extracao-ia.md`     | implementado (`PromptBuilder` + `ClienteExtracaoIAPrism`; orquestração do pipeline pendente) |
+| Scan de malware (ClamAV self-hosted)          | `04-infra/malware.md`         | implementado                                                                           |
+| Extractores de texto (pdfparser nativo + Tesseract OCR) | `04-infra/extracao-texto.md` | implementado                                                                 |
 | PromptBuilder (system prompt de extracção)   | `04-infra/prompt-builder.md`  | implementado                                                                           |
 | Ambiente Docker + paridade de testes (MySQL) | `04-infra/ambiente-docker.md` | implementado                                                                           |
 | CI/CD (GitHub Actions — jobs, gates de qualidade)  | `04-infra/ambiente-docker.md` (secção "CI") | implementado                                                             |

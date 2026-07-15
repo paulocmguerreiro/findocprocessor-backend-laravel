@@ -121,11 +121,11 @@ nunca chame `env()` fora de ficheiro de config:
 `provider` é o nome de `Prism\Prism\Enums\Provider` (ex.: `ollama`, `anthropic`, `openai`,
 `openrouter`) — `ClienteExtracaoIAPrism` resolve com `Provider::from($config['provider'])` e passa
 `url`/`api_key` como override a `Prism::structured()->using()`. Trocar de provider/modelo é só
-`.env`, sem alterações de código. Ver `04-infra/external-apis.md` para o detalhe do cliente.
+`.env`, sem alterações de código. Ver `04-infra/extracao-ia.md` para o detalhe do cliente.
 
 `ocr.dpi`/`ocr.linguas` — parâmetros de `ExtractorOcr` (rasterização `imagick` + reconhecimento
 `thiagoalessio/tesseract_ocr`), sem env var própria (valores fixos, não esperados como
-configuráveis por ambiente). Ver `04-infra/external-apis.md` para o contrato dos extractores de
+configuráveis por ambiente). Ver `04-infra/extracao-texto.md` para o contrato dos extractores de
 texto.
 
 `config/prism.php` (publicado via `vendor:publish --tag=prism-config`) — providers do Prism
@@ -165,7 +165,7 @@ desligada" — evita `?string`/`?int` (accessores tipados do Laravel exigem `str
 `null`). `StreamMaxLength` do `clamd` (default 25 MB na imagem oficial) deve ser ≥ ao limite de
 upload actual (`FILESYSTEM_MAX_FILE_SIZE` = 10 MB) — sem configuração adicional necessária no lado
 da app; se excedido, o INSTREAM falha e conta como falha do scan (`FalhaAnaliseMalwareException`),
-nunca como "não configurado". Ver `04-infra/external-apis.md` para o contrato `AnalisadorMalware`.
+nunca como "não configurado". Ver `04-infra/malware.md` para o contrato `AnalisadorMalware`.
 
 **Dependência de cache partilhado (`redis`):** `Schedule::job(...)->onOneServer()` (usado por
 `ReconciliarFicheirosJob`) e o futuro `WithoutOverlapping` por documento (issue do orquestrador)

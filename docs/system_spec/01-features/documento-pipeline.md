@@ -63,7 +63,7 @@ abre transacção própria), e ramifica: infectado → `MarcarPerigosoDocumentoA
 assinatura); limpo → `MarcarAguardaEnvioDocumentoAction`; não configurado (camada `clamd`
 inactiva) → `MarcarAguardaEnvioDocumentoAction` com motivo "scan de malware desligado"; falha do
 scan (`FalhaAnaliseMalwareException`) → `MarcarErroDocumentoAction` com o motivo = razão da falha.
-Ver `04-infra/external-apis.md` para o contrato `AnalisadorMalware`.
+Ver `04-infra/malware.md` para o contrato `AnalisadorMalware`.
 
 ---
 
