@@ -10,12 +10,25 @@
   `extrair(string $textoExtraido, CamadaIA $camada): ResultadoExtracaoIA`, e uma implementação
   concreta `ClienteExtracaoIAPrism` que a satisfaz, usando `Prism\Prism\Facades\Prism`.
 - RF-02: Novo enum `CamadaIA` (`app/Infrastructure/AI/CamadaIA.php` — `Local`/`Cloud`, backed
-  string) escolhe o provider Prism: `CamadaIA::Local` → `Provider::Ollama`; `CamadaIA::Cloud` →
-  `Provider::OpenAI`. O parâmetro `$camada` é sempre explícito — `ClienteExtracaoIAPrism` nunca
-  decide sozinho qual camada usar (essa decisão é do futuro orquestrador, Issue IV).
-- RF-03: O modelo (`gpt-...`/modelo Ollama) por camada é lido de `config('extracao.local.modelo')` /
-  `config('extracao.cloud.modelo')` (novas chaves, `env('LLM_LOCAL_MODEL')`/`env('LLM_CLOUD_MODEL')`)
-  — `ClienteExtracaoIAPrism` nunca chama `env()` directamente.
+  string) identifica qual configuração de camada (`config('extracao.local.*')`/
+  `config('extracao.cloud.*')`) usar. O parâmetro `$camada` é sempre explícito —
+  `ClienteExtracaoIAPrism` nunca decide sozinho qual camada usar (essa decisão é do futuro
+  orquestrador, Issue IV). O **provider Prism** de cada camada (`Prism\Prism\Enums\Provider` —
+  `'ollama'`, `'anthropic'`, `'openai'`, `'openrouter'`, ...) não é fixo no código — é lido de
+  `config('extracao.local.provider')`/`config('extracao.cloud.provider')` (revisão desta decisão
+  face ao Checkpoint A original: o mapeamento fixo `Local→Ollama`/`Cloud→OpenAI` foi substituído por
+  configuração dinâmica durante a implementação da Tarefa 1, a pedido do utilizador, para trocar de
+  provider — ex.: Cloud→Anthropic ou Cloud→OpenRouter — sem alterar código, só `.env`).
+- RF-03: O modelo, provider e ligação (url/key) por camada são lidos de
+  `config('extracao.local.*')`/`config('extracao.cloud.*')` (novas chaves — `modelo`, `provider`,
+  `url`, `key` [só cloud] — lidas de `env('LLM_LOCAL_MODEL')`/`env('LLM_LOCAL_PROVIDER')`/
+  `env('LLM_LOCAL_URL')`/`env('LLM_CLOUD_MODEL')`/`env('LLM_CLOUD_PROVIDER')`/`env('LLM_CLOUD_URL')`/
+  `env('LLM_CLOUD_KEY')`) — `ClienteExtracaoIAPrism` nunca chama `env()` directamente.
+  `ClienteExtracaoIAPrism` passa `url`/`api_key` como override a
+  `Prism::structured()->using($provider, $modelo, $providerConfig)` — o `PrismManager::resolve()`
+  do Prism faz `array_merge(config('prism.providers.<provider>'), $providerConfig)`, pelo que os
+  restantes campos por provider (ex.: `version`/`anthropic_beta` do Anthropic) continuam a vir de
+  `config/prism.php` sem duplicação em `config/extracao.php`.
 - RF-04: `ClienteExtracaoIAPrism::extrair()` constrói o *system prompt* via
   `PromptBuilder::novo()->comInstrucoesBase()->comEmpresaMae()->comTiposDocumento()->construir()`
   (sem filtro de categoria) e injecta-o com `Prism::structured()->withSystemPrompt(...)`.
@@ -146,6 +159,7 @@ Sem migrations nesta issue. `ResultadoExtracaoIA` (VO em memória, não persisti
 | Exposição do nome do modelo por camada? | `config/extracao.php` ganha `local.modelo`/`cloud.modelo`. |
 | Nível de validação do NIF? | Regra genérica: 5–20 caracteres, alfanumérico, sem lógica por país. |
 | Interface pública do cliente? | Com interface (`ClienteIA`) — substituição futura prevista (critério de `02-shared/padroes-acoes.md`). |
+| Mapeamento camada → provider Prism fixo no código? | **Revisto durante a Tarefa 1** (fora do Checkpoint A original): configurável via `config('extracao.local.provider')`/`config('extracao.cloud.provider')` (`env('LLM_LOCAL_PROVIDER')`/`env('LLM_CLOUD_PROVIDER')`, defaults `'ollama'`/`'anthropic'`) — trocar de provider (ex.: Anthropic → OpenRouter) é só `.env`, sem alterações de código. `ClienteExtracaoIAPrism` passa `url`/`api_key` como override a `using()`. |
 
 ## Critérios de aceitação
 
