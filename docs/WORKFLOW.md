@@ -25,6 +25,32 @@ em curso) e avisos de processo em `docs/process-warnings.md` (só entradas activ
 `PENDENTE`/`PARCIALMENTE RESOLVIDO`; histórico de `RESOLVIDO`/`IGNORADO` em
 `docs/process-warnings-concluidos.md`).
 
+## Skills
+
+Skills de workflow (invocadas internamente pelos commands, não pelo utilizador):
+
+| Skill | Propósito |
+|---|---|
+| `escolhe-issue` | Selecciona automaticamente a próxima issue pronta a implementar |
+| `escreve-brief` | Expande a Issue num Brief estruturado |
+| `escreve-spec` | Traduz o Brief em requisitos técnicos verificáveis |
+| `escreve-plan` | Decompõe a Spec em tarefas concretas e commitáveis |
+| `executa-testes` | Executa os testes do stack activo, com auto-retry até 3x |
+| `executa-checkpoint-scan` | Executa o scan de segurança/qualidade do Checkpoint |
+| `executa-triagem-semantica` | Revisão semântica — nomenclatura, legibilidade, duplicação |
+| `pausa-checkpoint` | Pausa o fluxo e aguarda resposta com conteúdo do utilizador |
+| `propoe-commit` | Formata e propõe commit em conventional commits (PT, emoji) |
+| `regista-aviso` | Regista erro/anomalia de processo em `process-warnings.md` |
+| `escreve-debrief` | Gera o Debrief a partir do git log e diff |
+| `actualiza-spec` | Actualiza `docs/system_spec/` com base no Debrief |
+| `actualiza-changelog` | Adiciona entrada ao `CHANGELOG.md` (Keep a Changelog) |
+| `actualiza-readme` | Actualiza o `README.md` se a implementação expõe rotas/stack/uso |
+| `propoe-pr` | Cria o PR no GitHub após confirmação (Checkpoint E) |
+
+> `laravel-best-practices`/`pest-testing` também vivem em `.claude/skills/` mas são skills de
+> conhecimento de domínio — auto-activadas pelo Claude Code ao escrever código Laravel/Pest, fora
+> do fluxo Commands → Skills → Agents acima.
+
 ## Comandos por fase
 
 | Command                                    | Fase    | Produz                                               |
