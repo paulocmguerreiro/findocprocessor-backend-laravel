@@ -70,7 +70,10 @@ Skills de workflow (invocadas internamente pelos commands, não pelo utilizador)
 
 ```mermaid
 flowchart TB
-    CI["/cria-issue*<br/>Issue #N"] --> PL
+    CI1["/cria-issue"] -->|Issue #N| PL
+    CI2["/cria-issue-modelo"] -->|Issue #N| PL
+    CI3["/cria-issue-persistencia"] -->|Issue #N| PL
+    CI4["/cria-issue-logica"] -->|Issue #N| PL
 
     subgraph PL["Fase 1 — /planeia-issue"]
         direction LR
