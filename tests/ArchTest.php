@@ -19,6 +19,7 @@ use App\Features\Utilizador\Criar\CriarUtilizadorRequest;
 use App\Features\Utilizador\Listar\CampoOrdenacaoUtilizadores;
 use App\Http\Controllers\Controller;
 use App\Infrastructure\AI\CamadaIA;
+use App\Infrastructure\AI\ClienteIA;
 use App\Infrastructure\AI\VeredictoExtracaoIA;
 use App\Infrastructure\Malware\AnalisadorMalware;
 use App\Infrastructure\Malware\EstadoAnaliseMalware;
@@ -67,7 +68,7 @@ arch('actions are final')
 arch('infrastructure classes are final')
     ->expect('App\Infrastructure')
     ->toBeFinal()
-    ->ignoring([AnalisadorMalware::class, EstadoAnaliseMalware::class, CamadaIA::class, VeredictoExtracaoIA::class]);
+    ->ignoring([AnalisadorMalware::class, EstadoAnaliseMalware::class, CamadaIA::class, VeredictoExtracaoIA::class, ClienteIA::class]);
 
 // RN-01/CA-02 (#90): todo Job de pipeline disparado a partir de uma Action de
 // escrita implementa ShouldQueueAfterCommit — nunca ShouldDispatchAfterCommit
