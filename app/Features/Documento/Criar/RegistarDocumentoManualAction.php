@@ -143,7 +143,7 @@ final readonly class RegistarDocumentoManualAction
             return [
                 'estado' => EstadoDocumento::Perigoso,
                 'disco' => self::DISCO_PERIGOSO,
-                'motivo' => $resultado->assinatura() ?? 'assinatura desconhecida',
+                'motivo' => $resultado->assinatura ?? 'assinatura desconhecida',
             ];
         }
 

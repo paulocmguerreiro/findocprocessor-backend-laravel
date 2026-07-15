@@ -1,6 +1,9 @@
 # System Spec — Shared: Padrões de DTOs
 
 > Padrão transversal a todos os DTOs. Vivem dentro da slice, co-localizados com a Action (`app/Features/<Feature>/<Action>/`).
+> Para VOs de resultado/veredicto com construtor privado e factories nomeadas (ex.:
+> `ResultadoAnaliseMalware`, `ResultadoExtracaoIA`) — estrutura distinta — ver
+> `02-shared/padroes-value-objects.md`.
 
 Os DTOs adoptam o padrão **Value Object**: nunca podem existir num estado inválido, independentemente do contexto de criação (HTTP, Job, Artisan, teste).
 

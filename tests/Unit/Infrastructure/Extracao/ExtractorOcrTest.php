@@ -32,9 +32,9 @@ it('reconhece o texto de cada página de um pdf-imagem via ocr', function (): vo
     try {
         $resultado = (new ExtractorOcr)->extrair($caminho);
 
-        expect($resultado->texto())->toContain('PALAVRACHAVEUM')
-            ->and($resultado->texto())->toContain('PALAVRACHAVEDOIS')
-            ->and($resultado->ultrapassaThreshold())->toBeNull();
+        expect($resultado->texto)->toContain('PALAVRACHAVEUM')
+            ->and($resultado->texto)->toContain('PALAVRACHAVEDOIS')
+            ->and($resultado->ultrapassaThreshold)->toBeNull();
     } finally {
         unlink($caminho);
     }

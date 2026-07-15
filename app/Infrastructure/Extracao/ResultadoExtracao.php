@@ -11,12 +11,14 @@ namespace App\Infrastructure\Extracao;
  * preenchido pelo extractor nativo (`comVeredictoThreshold()`), sempre
  * `null` no OCR (`semVeredicto()`, RN-01) porque essa camada não decide
  * threshold. Construtor privado — só acessível via as factories.
+ * Propriedades `public readonly` — sem lógica associada à leitura, dispensam
+ * getters.
  */
 final readonly class ResultadoExtracao
 {
     private function __construct(
-        private string $texto,
-        private ?bool $ultrapassaThreshold,
+        public string $texto,
+        public ?bool $ultrapassaThreshold,
     ) {}
 
     public static function comVeredictoThreshold(string $texto, bool $ultrapassaThreshold): self
@@ -27,15 +29,5 @@ final readonly class ResultadoExtracao
     public static function semVeredicto(string $texto): self
     {
         return new self($texto, null);
-    }
-
-    public function texto(): string
-    {
-        return $this->texto;
-    }
-
-    public function ultrapassaThreshold(): ?bool
-    {
-        return $this->ultrapassaThreshold;
     }
 }
