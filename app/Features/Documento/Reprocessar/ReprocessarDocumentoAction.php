@@ -10,7 +10,6 @@ use App\Models\Documento;
 use App\Models\ExtracaoDocumento;
 use App\Shared\Enums\EstadoDocumento;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -18,12 +17,12 @@ use Illuminate\Support\Facades\Gate;
  * reprocessamento, parametrizado pelo `modo`; move o ficheiro `erro → entrada`,
  * regista o `modo` como motivo e emite `DocumentoReprocessado`.
  *
- * Reset da dimensão de extracção (RN-03/RN-04, #94): abre a sua própria
- * `DB::transaction()`, dentro da qual a transição de estado
- * (`ExecutorTransicaoDocumento`) corre como transacção aninhada (`SAVEPOINT`).
- * Reseta `extracoes_documento` **só se existir linha** — usa `update()`, nunca
- * `create()`/`upsert()` — para não criar dimensão de extracção a documentos
- * que nunca lá entraram (ex.: erro de scan de malware em `Pendente`).
+ * A dimensão de extracção já foi eliminada ao entrar em `Erro`
+ * (`RegraEliminarExtracaoTerminal`, RN-03), por isso a Action deixa de precisar
+ * de transacção própria ou de reset condicional: delega a atomicidade da
+ * transição no `ExecutorTransicaoDocumento` e mantém apenas um `delete()`
+ * defensivo idempotente, rede de segurança para o caso raro de existir linha
+ * residual (RF-10).
  */
 final readonly class ReprocessarDocumentoAction
 {
@@ -37,22 +36,18 @@ final readonly class ReprocessarDocumentoAction
     {
         Gate::authorize('update', $documento);
 
-        return DB::transaction(function () use ($documento, $dados): Documento {
-            $documentoReaberto = $this->executor->executar(
-                $documento,
-                EstadoDocumento::Pendente,
-                $dados->modo->value,
-                evento: fn (Documento $documentoReaberto): DocumentoReprocessado => new DocumentoReprocessado($documentoReaberto, $dados->modo),
-            );
+        $documentoReaberto = $this->executor->executar(
+            $documento,
+            EstadoDocumento::Pendente,
+            $dados->modo->value,
+            evento: fn (Documento $documentoReaberto): DocumentoReprocessado => new DocumentoReprocessado($documentoReaberto, $dados->modo),
+        );
 
-            ExtracaoDocumento::query()->where('id_documento', $documentoReaberto->id)->update([
-                'extracao_reclamada_em' => null,
-                'extracao_tentativas' => 0,
-                'texto_extraido' => null,
-                'dados_json' => null,
-            ]);
+        // Rede de segurança idempotente: a linha já deveria ter sido eliminada ao
+        // entrar em Erro (RN-03) — este delete garante que um documento reaberto
+        // nunca herda scratch space de extracção residual.
+        ExtracaoDocumento::query()->where('id_documento', $documentoReaberto->id)->delete();
 
-            return $documentoReaberto;
-        });
+        return $documentoReaberto;
     }
 }
