@@ -55,6 +55,17 @@ it('marca Perigoso a partir de AnaliseIaLocal (guardrail)', function (): void {
     Storage::disk('perigoso')->assertExists($documento->nome_ficheiro_storage);
 });
 
+it('marca Perigoso a partir de AnaliseCloud (guardrail pós-cloud)', function (): void {
+    $documento = Documento::factory()->analiseCloud()->create();
+    Storage::disk('enviado')->put($documento->nome_ficheiro_storage, 'conteudo');
+
+    $resultado = app(MarcarPerigosoDocumentoAction::class)->handle($documento, new MarcarPerigosoDocumentoDto('conteúdo suspeito devolvido pela cloud'));
+
+    expect($resultado->estado)->toBe(EstadoDocumento::Perigoso)
+        ->and($resultado->disco_storage)->toBe('perigoso');
+    Storage::disk('perigoso')->assertExists($documento->nome_ficheiro_storage);
+});
+
 it('rejeita a transição a partir de um estado inválido', function (): void {
     $documento = Documento::factory()->pendente()->create();
 

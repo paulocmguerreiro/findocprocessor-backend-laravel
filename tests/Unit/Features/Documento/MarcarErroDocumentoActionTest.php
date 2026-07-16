@@ -47,6 +47,26 @@ it('transiciona AnaliseIaLocal → Erro: move enviado → erro, regista o motivo
     );
 });
 
+// Cobertura exaustiva das origens documentadas → Erro (RF-03): qualquer passo de
+// análise pode falhar. AnaliseIaLocal já está coberto pelo teste principal acima.
+it('aceita cada origem de análise → Erro e move para o disco erro', function (string $estadoOrigem, string $discoOrigem): void {
+    Storage::fake($discoOrigem);
+    $documento = Documento::factory()->{$estadoOrigem}()->create();
+    Storage::disk($discoOrigem)->put($documento->nome_ficheiro_storage, 'conteudo');
+
+    $resultado = app(MarcarErroDocumentoAction::class)->handle($documento, new MarcarErroDocumentoDto('falha do passo'));
+
+    expect($resultado->estado)->toBe(EstadoDocumento::Erro)
+        ->and($resultado->disco_storage)->toBe('erro');
+    Storage::disk('erro')->assertExists($documento->nome_ficheiro_storage);
+    Storage::disk($discoOrigem)->assertMissing($documento->nome_ficheiro_storage);
+})->with([
+    'de AnaliseMalware' => ['analiseMalware', 'entrada'],
+    'de AnaliseTexto' => ['analiseTexto', 'entrada'],
+    'de AnaliseOcr' => ['analiseOcr', 'entrada'],
+    'de AnaliseCloud' => ['analiseCloud', 'enviado'],
+]);
+
 it('rejeita a transição a partir de um estado inválido', function (): void {
     $documento = Documento::factory()->processado()->create();
 

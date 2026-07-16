@@ -63,6 +63,25 @@ it('transiciona AnaliseIaLocal → Processado: preenche domínio, move+renomeia 
     Event::assertDispatched(DocumentoProcessado::class);
 });
 
+it('transiciona AnaliseCloud → Processado: preenche domínio, move+renomeia e emite o evento', function (): void {
+    $documento = Documento::factory()->analiseCloud()->create(['nome_ficheiro_original' => 'scan.pdf']);
+    Storage::disk('enviado')->put($documento->nome_ficheiro_storage, 'conteudo');
+    $dados = dtoTransicao();
+
+    Event::fake([DocumentoProcessado::class]);
+
+    $resultado = app(TransicionarProcessadoDocumentoAction::class)->handle($documento, $dados);
+
+    expect($resultado->estado)->toBe(EstadoDocumento::Processado)
+        ->and($resultado->disco_storage)->toBe('processado')
+        ->and($resultado->nome_ficheiro_storage)->toBe('2026-06-25-fornecedor-lda-despesas.pdf');
+
+    Storage::disk('processado')->assertExists('2026-06-25-fornecedor-lda-despesas.pdf');
+    Storage::disk('enviado')->assertMissing($documento->nome_ficheiro_storage);
+
+    Event::assertDispatched(DocumentoProcessado::class);
+});
+
 it('rejeita a transição a partir de um estado inválido', function (): void {
     $documento = Documento::factory()->pendente()->create();
 
