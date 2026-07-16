@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Features\Documento\MarcarPerigoso;
 
-use App\Events\DocumentoMarcadoPerigoso;
+use App\Events\DocumentoMarcadoPerigosoEvent;
 use App\Features\Documento\Transicao\ExecutorTransicaoDocumento;
 use App\Models\Documento;
 use App\Shared\Enums\EstadoDocumento;
@@ -13,7 +13,7 @@ use App\Shared\Enums\EstadoDocumento;
  * Transição para `Perigoso` (pipeline) — alcançável de `AnaliseMalware` (scan de
  * malware) e dos estados de IA `AnaliseIaLocal`/`AnaliseCloud` (guardrail de
  * conteúdo). Move o ficheiro para o disco `perigoso`, regista o motivo e emite
- * `DocumentoMarcadoPerigoso`.
+ * `DocumentoMarcadoPerigosoEvent`.
  *
  * Transição de sistema: corre sempre em background (Jobs de extracção), sem
  * utilizador autenticado — não tem `Gate::authorize` (ver `02-shared/padroes-acoes.md`).
@@ -31,7 +31,7 @@ final readonly class MarcarPerigosoDocumentoAction
             $documento,
             EstadoDocumento::Perigoso,
             $dados->motivo,
-            evento: fn (Documento $documentoPerigoso): DocumentoMarcadoPerigoso => new DocumentoMarcadoPerigoso($documentoPerigoso, $dados->motivo),
+            evento: fn (Documento $documentoPerigoso): DocumentoMarcadoPerigosoEvent => new DocumentoMarcadoPerigosoEvent($documentoPerigoso, $dados->motivo),
         );
     }
 }

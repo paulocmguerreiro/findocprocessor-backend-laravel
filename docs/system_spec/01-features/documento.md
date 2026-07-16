@@ -27,9 +27,9 @@ estados é a peça central do pipeline — cada transição passa obrigatoriamen
 **`RegistarDocumentoManualAction`** — Cria um `Documento` já correndo o scan de malware
 (`AnalisadorMalware`) sobre o ficheiro antes de gravar. Calcula `hash_sha256`, gera o nome
 canónico via `RegraNomearProcessado`, escreve no disco decidido pelo scan: limpo/não configurado →
-`Processado`/disco `processado` (comportamento original, emite `DocumentoProcessado`); infectado →
-`Perigoso`/disco `perigoso` (motivo = assinatura, emite `DocumentoMarcadoPerigoso`); falha do scan →
-`Erro`/disco `erro` (motivo = razão da falha, emite `DocumentoMarcadoErro`). O `Documento` **é
+`Processado`/disco `processado` (comportamento original, emite `DocumentoProcessadoEvent`); infectado →
+`Perigoso`/disco `perigoso` (motivo = assinatura, emite `DocumentoMarcadoPerigosoEvent`); falha do scan →
+`Erro`/disco `erro` (motivo = razão da falha, emite `DocumentoMarcadoErroEvent`). O `Documento` **é
 sempre criado** — nunca rejeitado sem registo. Não usa `RegraTransicaoEstado` (criação, não
 transição).
 
@@ -49,7 +49,7 @@ colisão de hash com `DocumentoDuplicadoException` (→ 422).
 
 `ReprocessarDocumentoAction` — DTO `ReprocessarDocumentoDto` (enum `ModoReprocessamento`); reabre o
 pipeline (`Erro → Pendente`); move `erro → entrada`; grava `EtapaDocumento (Pendente, modo->value, id)`;
-emite `DocumentoReprocessado`. Delega a atomicidade no `ExecutorTransicaoDocumento` (sem transacção
+emite `DocumentoReprocessadoEvent`. Delega a atomicidade no `ExecutorTransicaoDocumento` (sem transacção
 própria). A linha `extracoes_documento` já foi eliminada ao entrar em `Erro`
 (`RegraEliminarExtracaoTerminal`); a Action mantém apenas um `delete()` defensivo idempotente como rede
 de segurança (RF-10) — nunca herda scratch space residual. Ver `01-features/documento-pipeline.md`
@@ -121,10 +121,10 @@ Todos `final`, `implements ShouldDispatchAfterCommit`, `use Dispatchable, Serial
 
 | Event | Emitido por | Payload extra |
 |---|---|---|
-| `DocumentoProcessado` | `RegistarDocumentoManualAction` (limpo/não configurado), `TransicionarProcessadoDocumentoAction` | — |
-| `DocumentoMarcadoErro` | `MarcarErroDocumentoAction`, `RegistarDocumentoManualAction` (falha do scan) | `mensagemErro: string` |
-| `DocumentoMarcadoPerigoso` | `MarcarPerigosoDocumentoAction`, `RegistarDocumentoManualAction` (infectado) | `motivo: string` |
-| `DocumentoReprocessado` | `ReprocessarDocumentoAction` | `modo: ModoReprocessamento` |
+| `DocumentoProcessadoEvent` | `RegistarDocumentoManualAction` (limpo/não configurado), `TransicionarProcessadoDocumentoAction` | — |
+| `DocumentoMarcadoErroEvent` | `MarcarErroDocumentoAction`, `RegistarDocumentoManualAction` (falha do scan) | `mensagemErro: string` |
+| `DocumentoMarcadoPerigosoEvent` | `MarcarPerigosoDocumentoAction`, `RegistarDocumentoManualAction` (infectado) | `motivo: string` |
+| `DocumentoReprocessadoEvent` | `ReprocessarDocumentoAction` | `modo: ModoReprocessamento` |
 
 Transições intermédias (`AnaliseMalware`, `AnaliseTexto`, `AnaliseOcr`, `AnaliseIaLocal`, `AnaliseCloud`) não emitem Event.
 

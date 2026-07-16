@@ -10,14 +10,14 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Documento transitou para `Erro` durante o pipeline. Disparado após commit.
+ * Documento marcado como `Perigoso` (pré-scan ou guardrail). Disparado após commit.
  */
-final class DocumentoMarcadoErro implements ShouldDispatchAfterCommit
+final class DocumentoMarcadoPerigosoEvent implements ShouldDispatchAfterCommit
 {
     use Dispatchable, SerializesModels;
 
     public function __construct(
         public Documento $documento,
-        public string $mensagemErro,
+        public string $motivo,
     ) {}
 }

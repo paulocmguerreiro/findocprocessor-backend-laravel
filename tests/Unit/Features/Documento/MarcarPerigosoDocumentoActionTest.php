@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Events\DocumentoMarcadoPerigoso;
+use App\Events\DocumentoMarcadoPerigosoEvent;
 use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoAction;
 use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoDto;
 use App\Models\Documento;
@@ -26,7 +26,7 @@ it('marca Perigoso a partir de AnaliseMalware (scan) e move para o disco perigos
     $documento = Documento::factory()->analiseMalware()->create();
     Storage::disk('entrada')->put($documento->nome_ficheiro_storage, 'conteudo');
 
-    Event::fake([DocumentoMarcadoPerigoso::class]);
+    Event::fake([DocumentoMarcadoPerigosoEvent::class]);
 
     $resultado = app(MarcarPerigosoDocumentoAction::class)->handle($documento, new MarcarPerigosoDocumentoDto('injecção detectada'));
 
@@ -42,7 +42,7 @@ it('marca Perigoso a partir de AnaliseMalware (scan) e move para o disco perigos
         'id_utilizador' => null,
     ]);
 
-    Event::assertDispatched(DocumentoMarcadoPerigoso::class);
+    Event::assertDispatched(DocumentoMarcadoPerigosoEvent::class);
 });
 
 it('marca Perigoso a partir de AnaliseIaLocal (guardrail)', function (): void {

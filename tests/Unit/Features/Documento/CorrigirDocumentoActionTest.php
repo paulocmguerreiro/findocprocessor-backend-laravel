@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Events\DocumentoProcessado;
+use App\Events\DocumentoProcessadoEvent;
 use App\Features\Documento\Corrigir\CorrigirDocumentoAction;
 use App\Features\Documento\Corrigir\CorrigirDocumentoDto;
 use App\Models\CategoriaDocumento;
@@ -37,7 +37,7 @@ it('corrige o domínio e renomeia o ficheiro quando o nome canónico muda', func
         dataDocumento: Carbon::parse('2026-06-25'),
     );
 
-    Event::fake([DocumentoProcessado::class]);
+    Event::fake([DocumentoProcessadoEvent::class]);
 
     $resultado = app(CorrigirDocumentoAction::class)->handle($documento, $dados);
 
@@ -54,7 +54,7 @@ it('corrige o domínio e renomeia o ficheiro quando o nome canónico muda', func
     ]);
 
     // A correcção não re-emite o evento de processamento.
-    Event::assertNotDispatched(DocumentoProcessado::class);
+    Event::assertNotDispatched(DocumentoProcessadoEvent::class);
 });
 
 describe('sem permissão de escrita', function (): void {

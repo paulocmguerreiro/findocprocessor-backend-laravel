@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Features\Documento\Criar;
 
-use App\Events\DocumentoMarcadoErro;
-use App\Events\DocumentoMarcadoPerigoso;
-use App\Events\DocumentoProcessado;
+use App\Events\DocumentoMarcadoErroEvent;
+use App\Events\DocumentoMarcadoPerigosoEvent;
+use App\Events\DocumentoProcessadoEvent;
 use App\Features\Documento\RecepcaoUpload\DocumentoDuplicadoException;
 use App\Features\Documento\Transicao\RegraNomearProcessado;
 use App\Infrastructure\Malware\ContratoAnalisadorMalware;
@@ -110,9 +110,9 @@ final readonly class RegistarDocumentoManualAction
                 $this->cache->invalidarCache(TagCache::Documentos);
 
                 match ($veredicto['estado']) {
-                    EstadoDocumento::Perigoso => DocumentoMarcadoPerigoso::dispatch($documento, $veredicto['motivo']),
-                    EstadoDocumento::Erro => DocumentoMarcadoErro::dispatch($documento, $veredicto['motivo']),
-                    default => DocumentoProcessado::dispatch($documento),
+                    EstadoDocumento::Perigoso => DocumentoMarcadoPerigosoEvent::dispatch($documento, $veredicto['motivo']),
+                    EstadoDocumento::Erro => DocumentoMarcadoErroEvent::dispatch($documento, $veredicto['motivo']),
+                    default => DocumentoProcessadoEvent::dispatch($documento),
                 };
 
                 return $documento;

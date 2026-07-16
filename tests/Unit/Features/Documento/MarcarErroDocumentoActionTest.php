@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Events\DocumentoMarcadoErro;
+use App\Events\DocumentoMarcadoErroEvent;
 use App\Features\Documento\MarcarErro\MarcarErroDocumentoAction;
 use App\Features\Documento\MarcarErro\MarcarErroDocumentoDto;
 use App\Models\Documento;
@@ -25,7 +25,7 @@ it('transiciona AnaliseIaLocal → Erro: move enviado → erro, regista o motivo
     $documento = Documento::factory()->analiseIaLocal()->create();
     Storage::disk('enviado')->put($documento->nome_ficheiro_storage, 'conteudo');
 
-    Event::fake([DocumentoMarcadoErro::class]);
+    Event::fake([DocumentoMarcadoErroEvent::class]);
 
     $resultado = app(MarcarErroDocumentoAction::class)->handle($documento, new MarcarErroDocumentoDto('timeout do serviço'));
 
@@ -42,8 +42,8 @@ it('transiciona AnaliseIaLocal → Erro: move enviado → erro, regista o motivo
     ]);
 
     Event::assertDispatched(
-        DocumentoMarcadoErro::class,
-        fn (DocumentoMarcadoErro $evento): bool => $evento->mensagemErro === 'timeout do serviço',
+        DocumentoMarcadoErroEvent::class,
+        fn (DocumentoMarcadoErroEvent $evento): bool => $evento->mensagemErro === 'timeout do serviço',
     );
 });
 

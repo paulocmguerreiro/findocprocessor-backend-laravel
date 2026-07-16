@@ -13,7 +13,7 @@ use Illuminate\Queue\SerializesModels;
  * Documento atingiu o estado `Processado` (registo manual ou fim do pipeline).
  * Disparado após o commit da transação da Action. Sem listeners nesta issue.
  */
-final class DocumentoProcessado implements ShouldDispatchAfterCommit
+final class DocumentoProcessadoEvent implements ShouldDispatchAfterCommit
 {
     use Dispatchable, SerializesModels;
 

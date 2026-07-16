@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Events\DocumentoReprocessado;
+use App\Events\DocumentoReprocessadoEvent;
 use App\Features\Documento\Reprocessar\ModoReprocessamento;
 use App\Features\Documento\Reprocessar\ReprocessarDocumentoAction;
 use App\Features\Documento\Reprocessar\ReprocessarDocumentoDto;
@@ -27,7 +27,7 @@ it('transiciona Erro → Pendente: move erro → entrada, regista o modo e emite
     $documento = Documento::factory()->erro()->create();
     Storage::disk('erro')->put($documento->nome_ficheiro_storage, 'conteudo');
 
-    Event::fake([DocumentoReprocessado::class]);
+    Event::fake([DocumentoReprocessadoEvent::class]);
 
     $resultado = app(ReprocessarDocumentoAction::class)->handle($documento, new ReprocessarDocumentoDto(ModoReprocessamento::Modelo));
 
@@ -43,8 +43,8 @@ it('transiciona Erro → Pendente: move erro → entrada, regista o modo e emite
     ]);
 
     Event::assertDispatched(
-        DocumentoReprocessado::class,
-        fn (DocumentoReprocessado $evento): bool => $evento->modo === ModoReprocessamento::Modelo,
+        DocumentoReprocessadoEvent::class,
+        fn (DocumentoReprocessadoEvent $evento): bool => $evento->modo === ModoReprocessamento::Modelo,
     );
 });
 

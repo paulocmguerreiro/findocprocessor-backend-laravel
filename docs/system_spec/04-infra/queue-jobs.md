@@ -26,12 +26,12 @@ atomicidade: `01-features/documento-reconciliacao.md`.
 Events dispatched pelas Actions de transição do `Documento`. Todos implementam
 `ShouldDispatchAfterCommit` — só são emitidos após o commit da transação.
 
-| Event                      | Ficheiro                                  | Emitido por                                                              | Payload                                             |
-| -------------------------- | ----------------------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------- |
-| `DocumentoProcessado`      | `app/Events/DocumentoProcessado.php`      | `RegistarDocumentoManualAction` (limpo/não configurado), `TransicionarProcessadoDocumentoAction` | `Documento $documento`                              |
-| `DocumentoMarcadoErro`     | `app/Events/DocumentoMarcadoErro.php`     | `MarcarErroDocumentoAction`, `RegistarDocumentoManualAction` (falha do scan)                | `Documento $documento`, `string $mensagemErro`      |
-| `DocumentoMarcadoPerigoso` | `app/Events/DocumentoMarcadoPerigoso.php` | `MarcarPerigosoDocumentoAction`, `RegistarDocumentoManualAction` (infectado)                 | `Documento $documento`, `string $motivo`            |
-| `DocumentoReprocessado`    | `app/Events/DocumentoReprocessado.php`    | `ReprocessarDocumentoAction`                                             | `Documento $documento`, `ModoReprocessamento $modo` |
+| Event                           | Ficheiro                                       | Emitido por                                                              | Payload                                             |
+| -------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------- |
+| `DocumentoProcessadoEvent`      | `app/Events/DocumentoProcessadoEvent.php`      | `RegistarDocumentoManualAction` (limpo/não configurado), `TransicionarProcessadoDocumentoAction` | `Documento $documento`                              |
+| `DocumentoMarcadoErroEvent`     | `app/Events/DocumentoMarcadoErroEvent.php`     | `MarcarErroDocumentoAction`, `RegistarDocumentoManualAction` (falha do scan)                | `Documento $documento`, `string $mensagemErro`      |
+| `DocumentoMarcadoPerigosoEvent` | `app/Events/DocumentoMarcadoPerigosoEvent.php` | `MarcarPerigosoDocumentoAction`, `RegistarDocumentoManualAction` (infectado)                 | `Documento $documento`, `string $motivo`            |
+| `DocumentoReprocessadoEvent`    | `app/Events/DocumentoReprocessadoEvent.php`    | `ReprocessarDocumentoAction`                                             | `Documento $documento`, `ModoReprocessamento $modo` |
 
 Sem Listeners nesta issue. Os Listeners serão adicionados quando a issue de extracção (IA/OCR) for implementada.
 

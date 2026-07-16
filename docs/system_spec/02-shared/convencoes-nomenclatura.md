@@ -151,6 +151,29 @@ interfaces de serviços de infra (`ContratoClienteIA`, `ContratoAnalisadorMalwar
 
 ---
 
+## Events — sufixo `Event` obrigatório, nome no passado
+
+Toda a classe de Event de domínio (`app/Events/`) leva o sufixo `Event` — sem excepção — e o nome
+descreve o que **já aconteceu** (particípio passado), nunca a acção a decorrer.
+
+```php
+// correcto
+final class DocumentoMarcadoErroEvent { /* ... */ }
+final class DocumentoProcessadoEvent { /* ... */ }
+
+// incorrecto — sem sufixo Event
+final class DocumentoMarcadoErro { /* ... */ }
+
+// incorrecto — presente, não passado
+final class DocumentoMarcaErroEvent { /* ... */ }
+```
+
+Não confundir com state objects (`app/Shared/States/`, ver `02-shared/estados.md`), que **não** levam
+o sufixo `Event` — só implementam `ContratoEstadoDocumento` e podem partilhar o mesmo nome base de
+um Event (ex.: `DocumentoProcessado` como state object vs `DocumentoProcessadoEvent` como Event).
+
+---
+
 ## Chaves primárias e estrangeiras
 
 - **Sempre UUID** via `HasUuids` — nunca IDs incrementais.

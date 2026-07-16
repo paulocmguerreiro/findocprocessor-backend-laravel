@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Events\DocumentoProcessado;
+use App\Events\DocumentoProcessadoEvent;
 use App\Features\Documento\TransicionarProcessado\TransicionarProcessadoDocumentoAction;
 use App\Features\Documento\TransicionarProcessado\TransicionarProcessadoDocumentoDto;
 use App\Models\CategoriaDocumento;
@@ -43,7 +43,7 @@ it('transiciona AnaliseIaLocal → Processado: preenche domínio, move+renomeia 
     Storage::disk('enviado')->put($documento->nome_ficheiro_storage, 'conteudo');
     $dados = dtoTransicao();
 
-    Event::fake([DocumentoProcessado::class]);
+    Event::fake([DocumentoProcessadoEvent::class]);
 
     $resultado = app(TransicionarProcessadoDocumentoAction::class)->handle($documento, $dados);
 
@@ -60,7 +60,7 @@ it('transiciona AnaliseIaLocal → Processado: preenche domínio, move+renomeia 
         'motivo' => 'processamento concluído',
     ]);
 
-    Event::assertDispatched(DocumentoProcessado::class);
+    Event::assertDispatched(DocumentoProcessadoEvent::class);
 });
 
 it('transiciona AnaliseCloud → Processado: preenche domínio, move+renomeia e emite o evento', function (): void {
@@ -68,7 +68,7 @@ it('transiciona AnaliseCloud → Processado: preenche domínio, move+renomeia e 
     Storage::disk('enviado')->put($documento->nome_ficheiro_storage, 'conteudo');
     $dados = dtoTransicao();
 
-    Event::fake([DocumentoProcessado::class]);
+    Event::fake([DocumentoProcessadoEvent::class]);
 
     $resultado = app(TransicionarProcessadoDocumentoAction::class)->handle($documento, $dados);
 
@@ -79,7 +79,7 @@ it('transiciona AnaliseCloud → Processado: preenche domínio, move+renomeia e 
     Storage::disk('processado')->assertExists('2026-06-25-fornecedor-lda-despesas.pdf');
     Storage::disk('enviado')->assertMissing($documento->nome_ficheiro_storage);
 
-    Event::assertDispatched(DocumentoProcessado::class);
+    Event::assertDispatched(DocumentoProcessadoEvent::class);
 });
 
 it('rejeita a transição a partir de um estado inválido', function (): void {

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Features\Documento\TransicionarProcessado;
 
-use App\Events\DocumentoProcessado;
+use App\Events\DocumentoProcessadoEvent;
 use App\Features\Documento\Transicao\ExecutorTransicaoDocumento;
 use App\Features\Documento\Transicao\RegraNomearProcessado;
 use App\Models\CategoriaDocumento;
@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Gate;
 /**
  * Transição `AnaliseIaLocal|AnaliseCloud → Processado` (pipeline). Preenche os
  * campos de domínio extraídos, move o ficheiro `enviado → processado` e
- * renomeia-o para o nome canónico; emite `DocumentoProcessado`.
+ * renomeia-o para o nome canónico; emite `DocumentoProcessadoEvent`.
  */
 final readonly class TransicionarProcessadoDocumentoAction
 {
@@ -56,7 +56,7 @@ final readonly class TransicionarProcessadoDocumentoAction
                 'data_documento' => $dados->dataDocumento,
             ],
             nomeDestino: $nomeCanonico,
-            evento: fn (Documento $documentoProcessado): DocumentoProcessado => new DocumentoProcessado($documentoProcessado),
+            evento: fn (Documento $documentoProcessado): DocumentoProcessadoEvent => new DocumentoProcessadoEvent($documentoProcessado),
         );
     }
 }

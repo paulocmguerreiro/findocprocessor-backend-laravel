@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Features\Documento\MarcarErro;
 
-use App\Events\DocumentoMarcadoErro;
+use App\Events\DocumentoMarcadoErroEvent;
 use App\Features\Documento\Transicao\ExecutorTransicaoDocumento;
 use App\Models\Documento;
 use App\Shared\Enums\EstadoDocumento;
@@ -13,7 +13,7 @@ use App\Shared\Enums\EstadoDocumento;
  * Transição para `Erro` (pipeline) — alcançável de qualquer estado de análise
  * (`AnaliseMalware`, `AnaliseTexto`, `AnaliseOcr`, `AnaliseIaLocal`, `AnaliseCloud`)
  * quando o passo respectivo falha. Move o ficheiro para o disco `erro`, regista a
- * `mensagem_erro` como motivo e emite `DocumentoMarcadoErro`.
+ * `mensagem_erro` como motivo e emite `DocumentoMarcadoErroEvent`.
  *
  * Transição de sistema: corre sempre em background (Jobs de extracção), sem
  * utilizador autenticado — não tem `Gate::authorize` (ver `02-shared/padroes-acoes.md`).
@@ -31,7 +31,7 @@ final readonly class MarcarErroDocumentoAction
             $documento,
             EstadoDocumento::Erro,
             $dados->mensagemErro,
-            evento: fn (Documento $documentoComErro): DocumentoMarcadoErro => new DocumentoMarcadoErro($documentoComErro, $dados->mensagemErro),
+            evento: fn (Documento $documentoComErro): DocumentoMarcadoErroEvent => new DocumentoMarcadoErroEvent($documentoComErro, $dados->mensagemErro),
         );
     }
 }

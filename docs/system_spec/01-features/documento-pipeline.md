@@ -43,17 +43,17 @@ apenas move o `Documento` para o passo de análise seguinte; um `motivo` opciona
 
 `TransicionarProcessadoDocumentoAction` — preenche campos de domínio (fornecedor/cliente/categoria/
 valor/data); usa `RegraNomearProcessado` para gerar o nome canónico. DTO:
-`TransicionarProcessadoDocumentoDto`. Emite `DocumentoProcessado`. Alcançável do fim do pipeline de
+`TransicionarProcessadoDocumentoDto`. Emite `DocumentoProcessadoEvent`. Alcançável do fim do pipeline de
 IA (`AnaliseIaLocal` directo ou via `AnaliseCloud`).
 
 `MarcarErroDocumentoAction` — DTO `MarcarErroDocumentoDto` (campo `mensagemErro`). Emite
-`DocumentoMarcadoErro`. Alcançável de **qualquer** passo de análise que falhe (`AnaliseMalware`,
+`DocumentoMarcadoErroEvent`. Alcançável de **qualquer** passo de análise que falhe (`AnaliseMalware`,
 `AnaliseTexto`, `AnaliseOcr`, `AnaliseIaLocal`, `AnaliseCloud`) — genérica, sem alteração de código
 entre os casos.
 
 `MarcarPerigosoDocumentoAction` — DTO `MarcarPerigosoDocumentoDto` (campo `motivo`). Alcançável de
 `AnaliseMalware` (scan) e dos passos de IA `AnaliseIaLocal`/`AnaliseCloud` (guardrail de conteúdo).
-Emite `DocumentoMarcadoPerigoso`.
+Emite `DocumentoMarcadoPerigosoEvent`.
 
 ---
 

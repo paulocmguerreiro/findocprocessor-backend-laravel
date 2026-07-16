@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Features\Documento\Reprocessar;
 
-use App\Events\DocumentoReprocessado;
+use App\Events\DocumentoReprocessadoEvent;
 use App\Features\Documento\Transicao\ExecutorTransicaoDocumento;
 use App\Models\Documento;
 use App\Models\ExtracaoDocumento;
@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Gate;
 /**
  * Transição `Erro → Pendente` (HTTP). Reabre um documento em erro para
  * reprocessamento, parametrizado pelo `modo`; move o ficheiro `erro → entrada`,
- * regista o `modo` como motivo e emite `DocumentoReprocessado`.
+ * regista o `modo` como motivo e emite `DocumentoReprocessadoEvent`.
  *
  * A dimensão de extracção já foi eliminada ao entrar em `Erro`
  * (`RegraEliminarExtracaoTerminal`, RN-03), por isso a Action deixa de precisar
@@ -40,7 +40,7 @@ final readonly class ReprocessarDocumentoAction
             $documento,
             EstadoDocumento::Pendente,
             $dados->modo->value,
-            evento: fn (Documento $documentoReaberto): DocumentoReprocessado => new DocumentoReprocessado($documentoReaberto, $dados->modo),
+            evento: fn (Documento $documentoReaberto): DocumentoReprocessadoEvent => new DocumentoReprocessadoEvent($documentoReaberto, $dados->modo),
         );
 
         // Rede de segurança idempotente: a linha já deveria ter sido eliminada ao

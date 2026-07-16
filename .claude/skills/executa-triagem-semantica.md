@@ -31,6 +31,7 @@ ganha uma regra nova.
 | DTO / Value Object | `02-shared/padroes-dtos.md` |
 | Repository (`*Repository.php`) | `04-infra/repositories.md` |
 | Job (`app/Jobs/*.php`) | `04-infra/queue-jobs.md` |
+| Event (`app/Events/*.php`) | `02-shared/convencoes-nomenclatura.md` (sufixo `Event` + nome no passado) + `04-infra/queue-jobs.md` (catálogo) |
 | Migration (`database/migrations/*.php`) | `03-models/00-convencoes-models.md` |
 | *(qualquer ficheiro PHP)* | `02-shared/convencoes-nomenclatura.md` + `02-shared/padroes-tipagem.md` — **sempre**, nomenclatura e tipagem são transversais |
 
