@@ -1,6 +1,7 @@
 ---
 description: Fase 3b — PR no GitHub a partir do Debrief
 allowed-tools: [Bash, Read]
+model: sonnet
 effort: medium
 ---
 
