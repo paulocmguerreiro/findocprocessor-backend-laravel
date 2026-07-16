@@ -45,10 +45,7 @@ class AppServiceProvider extends ServiceProvider
             // fica registado mas o closure nunca executa. setUpTestCase() é chamado
             // directamente por InteractsWithTestCaseLifecycle em cada teste, independente
             // do runner, por isso é o único hook fiável aqui.
-            ParallelTesting::setUpTestCase(function (int $token): void {
-                config(['cache.prefix' => self::prefixoCacheParalelo(config()->string('cache.prefix'), $token)]);
-                Cache::purge('redis');
-            });
+            ParallelTesting::setUpTestCase([self::class, 'isolarCacheParalelo']);
         }
     }
 
@@ -59,6 +56,18 @@ class AppServiceProvider extends ServiceProvider
     public static function prefixoCacheParalelo(string $prefixoBase, int $token): string
     {
         return "{$prefixoBase}test_{$token}_";
+    }
+
+    /**
+     * Aplica o prefixo de cache exclusivo do token de processo Pest. Extraído do closure de
+     * `setUpTestCase()` para um método nomeado: o `pcov` não regista de forma fiável a
+     * cobertura de código só alcançável através da invocação indirecta de um hook de
+     * framework — chamando este método directamente num teste garante 100% de cobertura.
+     */
+    public static function isolarCacheParalelo(int $token): void
+    {
+        config(['cache.prefix' => self::prefixoCacheParalelo(config()->string('cache.prefix'), $token)]);
+        Cache::purge('redis');
     }
 
     /**

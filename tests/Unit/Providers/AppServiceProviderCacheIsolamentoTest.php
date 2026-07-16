@@ -9,6 +9,19 @@ it('gera prefixo com o token do processo', function (): void {
     expect(AppServiceProvider::prefixoCacheParalelo('app-cache-', 3))->toBe('app-cache-test_3_');
 });
 
+it('isolarCacheParalelo aplica o prefixo do token e purga o store redis', function (): void {
+    $prefixoOriginal = config()->string('cache.prefix');
+
+    try {
+        AppServiceProvider::isolarCacheParalelo(9);
+
+        expect(config()->string('cache.prefix'))->toBe(AppServiceProvider::prefixoCacheParalelo($prefixoOriginal, 9));
+    } finally {
+        config(['cache.prefix' => $prefixoOriginal]);
+        Cache::purge('redis');
+    }
+});
+
 it('isola chaves de cache entre dois tokens diferentes', function (): void {
     $prefixoOriginal = config()->string('cache.prefix');
     $prefixoToken1 = AppServiceProvider::prefixoCacheParalelo($prefixoOriginal, 1);

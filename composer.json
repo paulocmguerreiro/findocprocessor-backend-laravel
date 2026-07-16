@@ -68,10 +68,10 @@
             "rector process --dry-run --no-progress-bar",
             "pint --test"
         ],
-        "test:arch": "pest tests/ArchTest.php",
-        "test:type-coverage": "pest --type-coverage --min=100",
+        "test:arch": "APP_ENV=testing pest tests/ArchTest.php",
+        "test:type-coverage": "APP_ENV=testing pest --type-coverage --min=100",
         "test:types": "phpstan analyse --no-progress --memory-limit=512M",
-        "test:coverage": "XDEBUG_MODE=coverage pest --parallel --processes=4 --coverage --min=100",
+        "test:coverage": "APP_ENV=testing XDEBUG_MODE=coverage pest --parallel --processes=4 --coverage --min=100",
         "test:preflight": "sh bin/test-preflight.sh",
         "test": [
             "@test:preflight",

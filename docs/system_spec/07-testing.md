@@ -172,8 +172,9 @@ beforeEach(fn () => Cache::tags(['documentos'])->flush());
 ```
 
 **Isolamento entre processos paralelos:** `AppServiceProvider::boot()` regista
-`ParallelTesting::setUpTestCase(...)`, guardado por `runningUnitTests()`, que salga
-`config('cache.prefix')` com o token do teste (`AppServiceProvider::prefixoCacheParalelo()`) e chama
+`ParallelTesting::setUpTestCase([self::class, 'isolarCacheParalelo'])`, guardado por
+`runningUnitTests()`. `AppServiceProvider::isolarCacheParalelo(int $token)` salga
+`config('cache.prefix')` com o token do processo (`AppServiceProvider::prefixoCacheParalelo()`) e chama
 `Cache::purge('redis')` logo a seguir. Cada processo Pest passa a escrever/ler chaves Redis sob um
 prefixo próprio — sem isto, `Cache::tags([...])->flush()` de um worker apaga chaves escritas por
 outro antes da asserção correr (condição de corrida intermitente em CI). O `flush()` do `beforeEach`
@@ -185,6 +186,34 @@ processo.
 `WrapperRunner`, que nunca invoca `callSetUpProcessCallbacks()` — um callback registado via
 `setUpProcess()` fica registado mas nunca executa nesta stack. `setUpTestCase()` é invocado
 directamente por `InteractsWithTestCaseLifecycle` em cada teste, independente do runner usado.
+
+**`APP_ENV=testing` tem de ser forçado na invocação do Pest, não só no `phpunit.xml` (WRN-034):**
+o container `app` do `compose.yaml` define `APP_ENV: local` como variável de ambiente real do
+processo (conveniência para `docker compose up` local). Essa variável popula `$_SERVER['APP_ENV']`
+no arranque do PHP-CLI, e a leitura de ambiente do Laravel (`Illuminate\Support\Env`, via
+`checkForSpecificEnvironmentFile()`/`detectEnvironment()`) lê `$_SERVER` — que o `<env>` do
+`phpunit.xml` **não** consegue sobrepor, mesmo com `force="true"` (`force` só afecta `getenv()`/`$_ENV`,
+nunca `$_SERVER`, que já está populado a partir do ambiente real do container antes do PHP arrancar).
+Resultado: `config('app.env')` ficava `'local'` durante toda a suite, `runningUnitTests()` era sempre
+`false`, e o `if` que regista `isolarCacheParalelo()` nunca entrava — a isolação de cache entre
+workers nunca disparou, para nenhum teste, desde que foi introduzida (WRN-025). Diagnosticado com
+canários de instrumentação temporária (removida) que confirmaram 0 invocações em 1069 testes.
+**Correcção:** os scripts `test:arch`, `test:type-coverage` e `test:coverage` do `composer.json`
+prefixam agora `APP_ENV=testing` directamente na linha de comando (variável de shell real, que
+sobrepõe a do container) — não basta o `<env>` do `phpunit.xml`. Qualquer novo script que corra
+Pest fora destes três deve seguir o mesmo padrão, ou correr através de `composer test`/`composer
+test:coverage`.
+
+**Cobertura de closures registadas em hooks de framework:** código só alcançável através da
+invocação indirecta de um hook (`ParallelTesting::setUpTestCase`, `Schedule::call`, etc.) não é
+registado de forma fiável pelo `pcov` como coberto, mesmo quando executa de facto (confirmado por
+instrumentação directa). Por isso `isolarCacheParalelo()` foi extraído para um método nomeado
+`public static` — chamado directamente por um teste (`AppServiceProviderCacheIsolamentoTest.php`) —
+em vez de viver dentro do closure inline. O registo em `setUpTestCase()` usa ainda um callable-array
+(`[self::class, 'isolarCacheParalelo']`), não uma closure, porque o `pcov` também falha a atribuir
+cobertura à *linha* de definição de uma closure passada como argumento quando invocada indirectamente
+via `Container::call()` (reflexão) — o callable-array evita esse problema por não ser um objecto
+`Closure` com bytecode próprio a rastrear.
 
 ---
 

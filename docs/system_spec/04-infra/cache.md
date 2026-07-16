@@ -130,8 +130,10 @@ A `EloquentCollection` é necessária porque o `CursorPaginator` contém uma col
 
 Em testes (`phpunit.xml`): `CACHE_STORE=redis` — Redis real necessário (container Docker). Em
 paralelo (`--parallel`), cada processo isola-se via prefixo de chave salgado com o token do teste
-(`AppServiceProvider::prefixoCacheParalelo()`, registado em `ParallelTesting::setUpTestCase()`) —
-ver `07-testing.md`.
+(`AppServiceProvider::prefixoCacheParalelo()`, aplicado por `AppServiceProvider::isolarCacheParalelo()`,
+registado em `ParallelTesting::setUpTestCase()`) — requer `APP_ENV=testing` forçado na linha de
+comando do Pest (`composer test:coverage`/`test:arch`/`test:type-coverage`), não só no `phpunit.xml`
+— ver detalhe (WRN-034) em `07-testing.md`.
 
 ---
 
