@@ -48,24 +48,28 @@ PHP 8.5 backed enum (string). Representa o estado de processamento de um documen
 ```php
 enum EstadoDocumento: string
 {
-    case Pendente        = 'PENDENTE';
-    case AguardaEnvio    = 'AGUARDA_ENVIO';
-    case Enviado         = 'ENVIADO';
-    case AguardaResposta = 'AGUARDA_RESPOSTA';
-    case Processado      = 'PROCESSADO';
-    case Erro            = 'ERRO';
-    case Perigoso        = 'PERIGOSO';
+    case Pendente      = 'PENDENTE';
+    case AnaliseMalware = 'ANALISE_MALWARE';
+    case AnaliseTexto   = 'ANALISE_TEXTO';
+    case AnaliseOcr     = 'ANALISE_OCR';
+    case AnaliseIaLocal = 'ANALISE_IA_LOCAL';
+    case AnaliseCloud   = 'ANALISE_CLOUD';
+    case Processado     = 'PROCESSADO';
+    case Erro           = 'ERRO';
+    case Perigoso       = 'PERIGOSO';
 }
 ```
 
-Ciclo de estados (transições permitidas):
+9 estados unificados (a extracção corre localmente — o passo de análise **é** o estado, não uma
+dimensão paralela). Ciclo (fluxo feliz na horizontal; `AnaliseOcr` e `AnaliseCloud` são ramos
+opcionais):
 ```
-PENDENTE → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → PROCESSADO
-                                                       ↘ ERRO
-                                                       ↘ PERIGOSO
+PENDENTE → ANALISE_MALWARE → ANALISE_TEXTO → ANALISE_IA_LOCAL → PROCESSADO
+                          ↘ (ANALISE_OCR)   ↗              ↘ (ANALISE_CLOUD) ↗
+  qualquer análise ↘ ERRO   |   ANALISE_MALWARE/IA_LOCAL/CLOUD ↘ PERIGOSO
 ```
 
-- Valores na BD: `'PENDENTE'`, `'AGUARDA_ENVIO'`, `'ENVIADO'`, `'AGUARDA_RESPOSTA'`, `'PROCESSADO'`, `'ERRO'`, `'PERIGOSO'`
+- Valores na BD: `'PENDENTE'`, `'ANALISE_MALWARE'`, `'ANALISE_TEXTO'`, `'ANALISE_OCR'`, `'ANALISE_IA_LOCAL'`, `'ANALISE_CLOUD'`, `'PROCESSADO'`, `'ERRO'`, `'PERIGOSO'`
 - State objects e mapeamento estado→disco em `02-shared/estados.md`; mapa de transições em
   `01-features/documento-pipeline.md`
 - Usado em: `Documento::$estado` (cast Eloquent), `Documento::estado()` (match exaustivo)
@@ -109,29 +113,6 @@ enum PosicaoEmpresaMae: string
 - Valores na BD: `'fornecedor'`, `'cliente'` (lowercase)
 - Usado em: `TipoDocumento::$posicao_empresa_mae` (cast Eloquent)
 - Regra de leitura pela issue futura de extracção (IA/OCR) — sem lógica de validação na camada de modelo (RN-04, `03-models/tipo-documento.md`)
-
----
-
-## `EtapaExtracao` — `App\Shared\Enums\EtapaExtracao`
-
-PHP 8.5 backed enum (string). Etapa da dimensão de extracção de um `Documento` — independente do
-`estado` de negócio. Cases em TitleCase PT; values em UPPER_SNAKE.
-
-```php
-enum EtapaExtracao: string
-{
-    case Pendente       = 'PENDENTE';
-    case NecessitaOcr    = 'NECESSITA_OCR';
-    case TextoPronto     = 'TEXTO_PRONTO';
-    case NecessitaCloud  = 'NECESSITA_CLOUD';
-    case Concluido       = 'CONCLUIDO';
-    case Falhado         = 'FALHADO';
-}
-```
-
-- Valores na BD: `'PENDENTE'`, `'NECESSITA_OCR'`, `'TEXTO_PRONTO'`, `'NECESSITA_CLOUD'`, `'CONCLUIDO'`, `'FALHADO'`
-- Usado em: `ExtracaoDocumento::$etapa_extracao` e `EtapaDocumento::$passo` (cast Eloquent, ambos)
-- Ver `01-features/documento-pipeline.md` — "Modelo de 2 dimensões" para a relação com `EstadoDocumento`
 
 ---
 

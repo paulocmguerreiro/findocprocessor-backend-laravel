@@ -10,18 +10,21 @@
 |---|---|---|---|---|
 | `id` | `uuid` PK | Não | — | UUIDv7 via `HasUuids` |
 | `id_documento` | `uuid` FK | Não | — | **UNIQUE** (1-1 com `documentos`); `cascadeOnDelete()` + `cascadeOnUpdate()` |
-| `etapa_extracao` | `string(50)` | Não | `'PENDENTE'` | Cast → `EtapaExtracao`; etapa actual da extracção |
 | `extracao_reclamada_em` | `timestamp` | Sim | `null` | Lease de reivindicação; TTL = `config('extracao.ttl_lease')` (300s) — **libertado pelo orquestrador de pipeline**; o Model só grava/limpa o valor |
 | `extracao_tentativas` | `unsignedTinyInteger` | Não | `0` | Tecto = `config('extracao.max_tentativas')` (3) — **enforcement fica no orquestrador de pipeline** |
 | `texto_extraido` | `longText` | Sim | `null` | PII — nunca em Resource |
 | `dados_json` | `json` | Sim | `null` | PII — nunca em Resource; cast `array` (array shape opcional por entidade — ver Notas arquitecturais) |
 | `created_at` / `updated_at` | `timestamp` | — | — | `timestamps()` — tabela **mutável** (ao contrário de `etapas_documento`, que é append-only) |
 
-Índice composto `(etapa_extracao, extracao_reclamada_em)` — preparação para o `SELECT` do futuro
-Schedule do orquestrador de pipeline; sem consumidor por agora.
+Índice simples `(extracao_reclamada_em)` — preparação para o `SELECT` do futuro Schedule do
+orquestrador de pipeline; sem consumidor por agora. (A coluna de estado da extracção deixou de
+existir: o progresso lê-se de `Documento.estado` na máquina de estados unificada — issue #110.)
 
-**1-1 com `Documento`** — `id_documento` é `unique()`; nunca existem duas linhas para o mesmo documento
-(upsert por esta chave, ver `RegistarEtapaExtracaoAction` abaixo).
+**Scratch space 1-1 com `Documento`** — sem coluna de estado; só produtos intermédios da extracção
+(`texto_extraido`/`dados_json`), lease e contador de tentativas. `id_documento` é `unique()`; nunca
+existem duas linhas para o mesmo documento (upsert por esta chave, ver `RegistarEtapaExtracaoAction`
+abaixo). Eliminada ao atingir estado terminal — ver `RegraEliminarExtracaoTerminal`
+(`02-shared/regras-negocio.md`).
 
 ---
 
@@ -32,7 +35,7 @@ Schedule do orquestrador de pipeline; sem consumidor por agora.
 ```php
 #[Table('extracoes_documento')]
 #[Fillable([
-    'id_documento', 'etapa_extracao', 'extracao_reclamada_em',
+    'id_documento', 'extracao_reclamada_em',
     'extracao_tentativas', 'texto_extraido', 'dados_json',
 ])]
 class ExtracaoDocumento extends Model
@@ -42,7 +45,6 @@ class ExtracaoDocumento extends Model
     protected function casts(): array
     {
         return [
-            'etapa_extracao' => EtapaExtracao::class,
             'extracao_reclamada_em' => 'datetime',
             'extracao_tentativas' => 'integer',
             'dados_json' => 'array',
@@ -60,7 +62,6 @@ duplicaria dados sensíveis fora do controlo dos Resources (RGPD).
 /**
  * @property-read string $id
  * @property-read string $id_documento
- * @property-read EtapaExtracao $etapa_extracao
  * @property-read ?Carbon $extracao_reclamada_em
  * @property-read int $extracao_tentativas
  * @property-read ?string $texto_extraido
@@ -90,17 +91,14 @@ Relação inversa: `Documento::extracao(): HasOne` — ver `03-models/documento.
 
 **Ficheiro:** `database/factories/ExtracaoDocumentoFactory.php`
 
-Base (`definition()`) = `etapa_extracao Pendente`, `extracao_tentativas: 0`, resto `null`.
+Base (`definition()`) = scratch space vazio: `extracao_tentativas: 0`, lease e dados a `null`.
 
-| State | `etapa_extracao` | Notas |
+| State | Efeito | Notas |
 |---|---|---|
-| base | `Pendente` | sem tentativas, lease nem dados |
-| `necessitaOcr()` | `NecessitaOcr` | — |
-| `textoPronto()` | `TextoPronto` | `texto_extraido` preenchido |
-| `necessitaCloud()` | `NecessitaCloud` | — |
-| `concluido()` | `Concluido` | `texto_extraido` + `dados_json` preenchidos |
-| `falhado()` | `Falhado` | `extracao_tentativas: 3` |
-| `reclamada()` | (mantém a etapa actual) | `extracao_reclamada_em: now()` — testa o campo de lease mesmo sem orquestrador |
+| base | scratch vazio | sem tentativas, lease nem dados |
+| `reclamada()` | `extracao_reclamada_em: now()` | testa o campo de lease mesmo sem orquestrador |
+| `comDadosExtraidos()` | `texto_extraido` + `dados_json` preenchidos | simula extracção concluída |
+| `comTentativas(int)` | `extracao_tentativas: N` | contador de tentativas |
 
 ---
 
@@ -108,9 +106,10 @@ Base (`definition()`) = `etapa_extracao Pendente`, `extracao_tentativas: 0`, res
 
 **Ficheiro:** `app/Features/Documento/RegistarEtapaExtracao/RegistarEtapaExtracaoAction.php`
 
-Único ponto de escrita em `extracoes_documento` fora do reset de `ReprocessarDocumentoAction`. Ver
-`01-features/documento-pipeline.md` para o detalhe completo (DTO, contrato "substituição total",
-ausência de `Gate::authorize`).
+Único ponto de **escrita** (upsert) em `extracoes_documento`. As **eliminações** ocorrem em
+`RegraEliminarExtracaoTerminal` (ao entrar num estado terminal) e no `delete()` defensivo de
+`ReprocessarDocumentoAction`. Ver `01-features/documento-pipeline.md` para o detalhe completo (DTO,
+contrato "substituição total", ausência de `Gate::authorize`).
 
 ---
 
@@ -126,5 +125,6 @@ ausência de `Gate::authorize`).
   orquestrador real que grava `dados_json` (`RegistarEtapaExtracaoAction`) ainda não existe (#97/#98)
   — este shape **guia** a implementação futura, não é um contrato já imposto por código; se o
   orquestrador vier a produzir uma forma diferente, o shape deve ser ajustado nessa altura.
-- **Índice composto sem consumidor** — aceite, mesmo padrão já usado no índice `(estado, updated_at)`
-  de `Documento` (preparação para uso futuro documentado, não especulação sem plano).
+- **Índice `(extracao_reclamada_em)` sem consumidor** — aceite, mesmo padrão já usado no índice
+  `(estado, updated_at)` de `Documento` (preparação para uso futuro documentado, não especulação sem
+  plano).

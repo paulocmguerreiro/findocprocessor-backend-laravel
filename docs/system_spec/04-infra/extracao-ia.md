@@ -99,6 +99,6 @@ pipeline (orquestrador a decidir `CamadaIA::Local`/`Cloud`, reconciliação NIF+
 find-or-create, gravação do resultado) fica para uma issue seguinte.
 
 **Modelo de destino do resultado:** o orquestrador do pipeline grava o resultado de cada passo via
-`RegistarEtapaExtracaoAction` — upsert em `App\Models\ExtracaoDocumento` (`etapa_extracao`,
-`texto_extraido`, `dados_json`) + `EtapaDocumento` (`passo`/`resultado`). Ver
+`RegistarEtapaExtracaoAction` — upsert em `App\Models\ExtracaoDocumento` (`texto_extraido`,
+`dados_json`) + `EtapaDocumento` (`resultado`; o passo é o `estado` actual do `Documento`). Ver
 `03-models/extracao-documento.md` e `01-features/documento.md`.

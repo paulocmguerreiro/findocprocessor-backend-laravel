@@ -17,8 +17,9 @@ Extractores de texto (nativo + OCR) implementados, ver secção dedicada abaixo.
 Matéria-prima (`texto_extraido`) para o cliente IA (integração planeada em `04-infra/extracao-ia.md`). Dois serviços
 isolados e puros em `app/Infrastructure/Extracao/` — recebem o caminho absoluto de um ficheiro e
 devolvem texto, sem escrita em BD, sem chamada a LLM e sem dependência de `Documento`/
-`ExtracaoDocumento`. A decisão de transição de `etapa_extracao`, a reivindicação/lease e a contagem
-de tentativas ficam a cargo do orquestrador do pipeline (ver `01-features/documento-pipeline.md`).
+`ExtracaoDocumento`. A decisão de transição de estado (o passo de análise é o `Documento.estado`), a
+reivindicação/lease e a contagem de tentativas ficam a cargo do orquestrador do pipeline (ver
+`01-features/documento-pipeline.md`).
 
 | Componente | Ficheiro | Papel |
 |---|---|---|

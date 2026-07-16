@@ -43,7 +43,7 @@
 
 - `POST /documentos/upload` — `multipart/form-data`; campo `ficheiro` (UploadedFile); validação por **MIME real** (`mimetypes:application/pdf,image/jpeg,image/png`) e dimensão (`max:10240` = 10 MB) no `ReceberUploadDocumentoRequest`. Rate limit dedicado `throttle:upload` (20/min — ver `02-shared/http.md`).
 - `GET /documentos/{documento}/ficheiro` — o Controller faz `streamDownload` do ficheiro do disco actual do documento; o `Content-Type` é inferido do MIME do ficheiro.
-- As transições de pipeline (`MarcarAguardaEnvio`, `MarcarEnviado`, `MarcarAguardaResposta`, `TransicionarProcessado`, `MarcarErro`, `MarcarPerigoso`) **não têm endpoint** — são invocadas programaticamente pelos Jobs da extracção (issue futura).
+- As transições de pipeline (`MarcarAnaliseMalware`, `MarcarAnaliseTexto`, `MarcarAnaliseOcr`, `MarcarAnaliseIaLocal`, `MarcarAnaliseCloud`, `TransicionarProcessado`, `MarcarErro`, `MarcarPerigoso`) **não têm endpoint** — são invocadas programaticamente pelos Jobs da extracção (issue futura).
 
 ---
 

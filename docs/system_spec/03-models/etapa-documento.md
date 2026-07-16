@@ -10,9 +10,8 @@
 |---|---|---|---|---|
 | `id` | `uuid` PK | Não | PK | UUIDv7 via `HasUuids` |
 | `id_documento` | `uuid` FK | Não | FK | → `documentos.id`; `cascadeOnDelete()` + `cascadeOnUpdate()` (histórico segue o documento) |
-| `estado` | `string(50)` | Não | simples | Cast → `EstadoDocumento`; a etapa atingida |
-| `passo` | `string(50)` | Sim | — | Cast → `EtapaExtracao`; `null` = linha de negócio, preenchido = linha de IA |
-| `resultado` | `string(20)` | Sim | — | Cast → `ResultadoEtapa`; `null` = linha de negócio, preenchido = linha de IA |
+| `estado` | `string(50)` | Não | simples | Cast → `EstadoDocumento`; a etapa atingida (na máquina unificada, é também o passo de análise em curso) |
+| `resultado` | `string(20)` | Sim | — | Cast → `ResultadoEtapa`; `null` = linha de transição de negócio, preenchido = linha de tentativa de IA |
 | `motivo` | `text` | Sim | — | Motivo/resposta/nota; pode conter detalhe sensível |
 | `id_utilizador` | `bigint unsigned` FK | Sim | FK | → `users.id`; `restrictOnDelete()` (era `nullOnDelete`) + `cascadeOnUpdate()`; `null` = passo automático (sistema) |
 | `created_at` | `timestamp` | Sim | — | Data+hora da etapa; **sem `updated_at`** (append-only) |
@@ -23,12 +22,12 @@
 - `cascadeOnDelete()` em `id_documento` — histórico não existe sem o documento.
 - `restrictOnDelete()` em `id_utilizador` — um utilizador que registou etapas não pode ser hard-deleted; `EliminarUtilizadorAction` cai no soft delete, preservando a autoria da etapa.
 - `cascadeOnUpdate()` em ambas as FKs (migration `add_cascade_on_update_to_domain_fks`, 2026-07-14) — sem esta cascade, um `UPDATE` à PK do documento ou do utilizador falharia por violação de FK; prepara para uma futura reconciliação/agregação de bases de dados que precise de remapear UUIDs.
-- **`passo`/`resultado`** — colunas nullable acrescentadas por migration própria
-  (`add_passo_resultado_to_etapas_documento_table`), sem migração de dados: linhas existentes ficam
-  com ambas a `null` (linha de negócio, comportamento inalterado). Uma linha de IA (gravada por
-  `RegistarEtapaExtracaoAction`, ver `01-features/documento-pipeline.md`) tem `estado` igual ao
-  estado actual do `Documento` (não muda) e `passo`/`resultado` preenchidos. Ver
-  `01-features/documento-pipeline.md` — "Modelo de 2 dimensões" para a distinção completa.
+- **`resultado`** — coluna nullable: `null` numa linha de transição de negócio (gravada por
+  `ExecutorTransicaoDocumento`); preenchido numa linha de tentativa de IA (gravada por
+  `RegistarEtapaExtracaoAction`, ver `01-features/documento-pipeline.md`), cujo `estado` é igual ao
+  estado actual do `Documento` — que na máquina de estados unificada (#110) **é** o passo de análise
+  em curso. A coluna `passo` (antiga dimensão `EtapaExtracao`) foi removida por migration
+  (`remove_passo_from_etapas_documento_table`).
 
 ---
 
@@ -38,7 +37,7 @@
 
 ```php
 #[Table('etapas_documento')]
-#[Fillable(['id_documento', 'estado', 'passo', 'resultado', 'motivo', 'id_utilizador'])]
+#[Fillable(['id_documento', 'estado', 'resultado', 'motivo', 'id_utilizador'])]
 class EtapaDocumento extends Model
 {
     use HasFactory, HasUuids;
@@ -49,7 +48,6 @@ class EtapaDocumento extends Model
     {
         return [
             'estado' => EstadoDocumento::class,
-            'passo' => EtapaExtracao::class,
             'resultado' => ResultadoEtapa::class,
         ];
     }
@@ -63,7 +61,6 @@ class EtapaDocumento extends Model
  * @property-read string $id
  * @property-read string $id_documento
  * @property-read EstadoDocumento $estado
- * @property-read ?EtapaExtracao $passo
  * @property-read ?ResultadoEtapa $resultado
  * @property-read ?string $motivo
  * @property-read ?int $id_utilizador    // bigint → users.id
@@ -73,7 +70,7 @@ class EtapaDocumento extends Model
  */
 ```
 
-`passo`/`resultado` nullable — Eloquent resolve `null` sem exigir um caso "vazio" no enum (cast
+`resultado` nullable — Eloquent resolve `null` sem exigir um caso "vazio" no enum (cast
 built-in do Laravel já trata `null` antes de instanciar o backed enum).
 
 ### Append-only — `const UPDATED_AT = null`
@@ -87,7 +84,6 @@ protected function casts(): array
 {
     return [
         'estado' => EstadoDocumento::class,
-        'passo' => EtapaExtracao::class,
         'resultado' => ResultadoEtapa::class,
     ];
 }
@@ -120,9 +116,9 @@ Base (`definition()`) = `estado Pendente`, `id_utilizador = null`, `motivo = nul
 | `perigoso()` | `Perigoso` | `faker->sentence()` | `null` |
 | `manual()` | `Processado` | `null` | `User::factory()` |
 
-**`passoIa(EtapaExtracao $passo = NecessitaOcr, ResultadoEtapa $resultado = Sucesso)`** — não
-altera `estado`; só define `passo`/`resultado`, simulando uma linha de IA gravada por
-`RegistarEtapaExtracaoAction` sobre o estado de negócio actual.
+**`passoIa(ResultadoEtapa $resultado = Sucesso)`** — não altera `estado`; só define `resultado`,
+simulando uma linha de tentativa de IA gravada por `RegistarEtapaExtracaoAction` sobre o estado
+(passo de análise) actual.
 
 ---
 

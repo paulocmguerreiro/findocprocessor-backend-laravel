@@ -79,7 +79,7 @@ _Valores definitivos pendentes de implementação._
 'perigoso'   => ['driver' => 'local', 'root' => storage_path('app/perigoso'),   'throw' => false],
 ```
 
-Mapeamento estado → disco: `Pendente`/`AguardaEnvio` → `entrada`; `Enviado`/`AguardaResposta` → `enviado`; `Processado` → `processado`; `Erro` → `erro`; `Perigoso` → `perigoso`.
+Mapeamento estado → disco: `Pendente`/`AnaliseMalware`/`AnaliseTexto`/`AnaliseOcr` → `entrada`; `AnaliseIaLocal`/`AnaliseCloud` → `enviado`; `Processado` → `processado`; `Erro` → `erro`; `Perigoso` → `perigoso`.
 
 O campo `disco_storage` na tabela `documentos` armazena o nome do disco activo. A movimentação de ficheiros entre discos (ao transitar de estado) é responsabilidade das Actions de transição.
 

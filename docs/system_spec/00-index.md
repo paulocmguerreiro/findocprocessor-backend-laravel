@@ -12,7 +12,7 @@
 | Entidade           | `01-features/entidade.md`            | 8 (5 CRUD + Restaurar + ConverterEmEmpresaMae + Remover) | 5 REST + 2 especiais |
 | Role               | `01-features/role.md`                | 5 CRUD                                         | 5 REST              |
 | Utilizador         | `01-features/utilizador.md`          | 8 (5 CRUD + AtribuirRole + Restaurar + Anonimizar) | 5 REST + 3 especiais |
-| Documento          | `01-features/documento.md` (HTTP) + `01-features/documento-pipeline.md` (background) | 17 (8 expostas via endpoint + 9 sem HTTP, só programáticas — 6 de transição + reivindicação/triagem + recorder de extracção) | 8 REST |
+| Documento          | `01-features/documento.md` (HTTP) + `01-features/documento-pipeline.md` (background) | 19 (8 expostas via endpoint + 11 sem HTTP, só programáticas — 8 de transição + reivindicação/triagem + recorder de extracção) | 8 REST |
 | TipoDocumento      | `01-features/tipo-documento.md`      | 5 CRUD (sem SoftDelete)                        | 5 REST              |
 
 ## Features planeadas
@@ -27,9 +27,9 @@
 
 | Componente                                                                                                                    | Ficheiro               |
 | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| Enums partilhados — apenas `app/Shared/Enums/` (`TipoMovimento`, `DirecaoOrdenacao`, `EstadoDocumento`, `FiltroEstadoRegisto`, `PosicaoEmpresaMae`, `EtapaExtracao`, `ResultadoEtapa`); enums feature-local vivem no respectivo `01-features/<slug>.md` | `02-shared/enums.md`   |
+| Enums partilhados — apenas `app/Shared/Enums/` (`TipoMovimento`, `DirecaoOrdenacao`, `EstadoDocumento`, `FiltroEstadoRegisto`, `PosicaoEmpresaMae`, `ResultadoEtapa`); enums feature-local vivem no respectivo `01-features/<slug>.md` | `02-shared/enums.md`   |
 | HTTP (`ApiResponse`, Exception Handler, cursor pagination, `TransicaoInvalidaException`)                                      | `02-shared/http.md`    |
-| Estados de documento + Interface `ContratoEstadoDocumento` + 7 state objects (mapa de transições em `01-features/documento-pipeline.md`) | `02-shared/estados.md` |
+| Estados de documento (9, máquina unificada) + Interface `ContratoEstadoDocumento` + 9 state objects (mapa de transições em `01-features/documento-pipeline.md`) | `02-shared/estados.md` |
 
 ## Padrões e convenções (Shared)
 

@@ -101,18 +101,20 @@ protected function atributosExcluidosDaActividade(): array
 public function estado(): ContratoEstadoDocumento
 {
     return match ($this->estado) {
-        EstadoDocumento::Pendente        => DocumentoPendente::deDocumento($this),
-        EstadoDocumento::AguardaEnvio    => DocumentoAguardaEnvio::deDocumento($this),
-        EstadoDocumento::Enviado         => DocumentoEnviado::deDocumento($this),
-        EstadoDocumento::AguardaResposta => DocumentoAguardaResposta::deDocumento($this),
-        EstadoDocumento::Processado      => DocumentoProcessado::deDocumento($this),
-        EstadoDocumento::Erro            => DocumentoErro::deDocumento($this),
-        EstadoDocumento::Perigoso        => DocumentoPerigoso::deDocumento($this),
+        EstadoDocumento::Pendente       => DocumentoPendente::deDocumento($this),
+        EstadoDocumento::AnaliseMalware => DocumentoAnaliseMalware::deDocumento($this),
+        EstadoDocumento::AnaliseTexto   => DocumentoAnaliseTexto::deDocumento($this),
+        EstadoDocumento::AnaliseOcr     => DocumentoAnaliseOcr::deDocumento($this),
+        EstadoDocumento::AnaliseIaLocal => DocumentoAnaliseIaLocal::deDocumento($this),
+        EstadoDocumento::AnaliseCloud   => DocumentoAnaliseCloud::deDocumento($this),
+        EstadoDocumento::Processado     => DocumentoProcessado::deDocumento($this),
+        EstadoDocumento::Erro           => DocumentoErro::deDocumento($this),
+        EstadoDocumento::Perigoso       => DocumentoPerigoso::deDocumento($this),
     };
 }
 ```
 
-`match` **sem `default`** — Larastan 9 valida a exaustividade dos 7 casos. Adicionar um 8.º estado ao enum sem tratar aqui produz erro em `composer test:types`.
+`match` **sem `default`** — Larastan 9 valida a exaustividade dos 9 casos. Adicionar um 10.º estado ao enum sem tratar aqui produz erro em `composer test:types`.
 
 ### PHPDoc `@property-read` — adição
 
@@ -135,9 +137,10 @@ public function extracao(): HasOne       // → ExtracaoDocumento (id_documento)
 
 **`historico`** — relação `hasMany` com FK explícita `id_documento`; ordenada por `created_at` ascendente (linha temporal). Ver `03-models/etapa-documento.md` para detalhe do Model.
 
-**`extracao`** — relação `hasOne`, **sem `withDefault()`**: `null` é um valor legítimo (documento
-nunca entrou na dimensão de extracção, ex.: registo manual via `RegistarDocumentoManualAction`, que
-vai directo a `Processado`/`Perigoso`/`Erro`). Ver `03-models/extracao-documento.md`.
+**`extracao`** — relação `hasOne` para o scratch space de extracção, **sem `withDefault()`**: `null` é
+um valor legítimo (documento nunca entrou no pipeline de extracção, ex.: registo manual via
+`RegistarDocumentoManualAction`; ou linha já eliminada ao atingir estado terminal —
+`RegraEliminarExtracaoTerminal`). Ver `03-models/extracao-documento.md`.
 
 ### Scopes
 
@@ -155,14 +158,16 @@ vai directo a `Processado`/`Perigoso`/`Erro`). Ver `03-models/extracao-documento
 
 **Ficheiro:** `database/factories/DocumentoFactory.php`
 
-Base (`definition()`) = estado `Processado` com todos os campos preenchidos. 7 states disponíveis:
+Base (`definition()`) = estado `Processado` com todos os campos preenchidos. 9 states disponíveis:
 
 | State | `estado` | `disco_storage` | FKs/valor/data |
 |---|---|---|---|
 | `pendente()` | `Pendente` | `entrada` | null |
-| `aguardaEnvio()` | `AguardaEnvio` | `entrada` | null |
-| `enviado()` | `Enviado` | `enviado` | null |
-| `aguardaResposta()` | `AguardaResposta` | `enviado` | null |
+| `analiseMalware()` | `AnaliseMalware` | `entrada` | null |
+| `analiseTexto()` | `AnaliseTexto` | `entrada` | null |
+| `analiseOcr()` | `AnaliseOcr` | `entrada` | null |
+| `analiseIaLocal()` | `AnaliseIaLocal` | `enviado` | null |
+| `analiseCloud()` | `AnaliseCloud` | `enviado` | null |
 | `processado()` | `Processado` | `processado` | preenchidos |
 | `erro()` | `Erro` | `erro` | null |
 | `perigoso()` | `Perigoso` | `perigoso` | null |
@@ -212,19 +217,18 @@ Os DTOs do Documento pertencem à camada de lógica e estão documentados — em
   "data_documento": "2026-06-25",
   "nome_ficheiro_original": "fatura.pdf",
   "hash_sha256": "abc123...64chars",
-  "etapa_extracao": "TEXTO_PRONTO",
   "criado_em": "2026-06-25T10:00:00.000000Z",
   "actualizado_em": "2026-06-25T10:00:00.000000Z"
 }
 ```
 
-- `estado` → `->value` (string UPPER_SNAKE)
+- `estado` → `->value` (string UPPER_SNAKE) — o progresso de extracção lê-se aqui (máquina unificada)
 - `id_responsavel` → `int|null` (id do utilizador autor; não expõe nome/email — só o id)
 - `valor` → conversão explícita `(float)` (cast `decimal:2` devolve `string`)
 - Relações via `whenLoaded()` + `EntidadeResource` / `CategoriaDocumentoResource`
 - **Não expõe** `disco_storage` nem `nome_ficheiro_storage` (detalhes internos / PII indirecta)
-- **`etapa_extracao`** — string ou `null`, via `whenLoaded('extracao', ...)`; ausente da resposta
-  quando a relação não é carregada. **Nunca** expõe `texto_extraido`/`dados_json` (PII).
+- **Sem `etapa_extracao`** — a coluna deixou de existir (#110); nunca expôs, nem expõe,
+  `texto_extraido`/`dados_json` (PII).
 
 ---
 

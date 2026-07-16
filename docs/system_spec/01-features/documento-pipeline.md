@@ -9,11 +9,16 @@
 
 ## Visão geral
 
-9 Actions sem endpoint HTTP: 6 de transição simples (`Marcar*` +
-`TransicionarProcessadoDocumentoAction`), `ReivindicarDocumentoPendenteAction` +
+11 Actions sem endpoint HTTP: 8 de transição simples (5 `MarcarAnalise*` + `MarcarErro` +
+`MarcarPerigoso` + `TransicionarProcessadoDocumentoAction`), `ReivindicarDocumentoPendenteAction` +
 `TriarDocumentoPendenteAction` (reivindicação/triagem) e `RegistarEtapaExtracaoAction` (recorder de
 extracção). Todas correm em background, sem utilizador autenticado — ver "Transições de sistema (sem
 Gate)" no fim.
+
+> **Máquina de estados unificada:** a extracção corre localmente, por isso cada passo de análise
+> (`AnaliseMalware`, `AnaliseTexto`, `AnaliseOcr`, `AnaliseIaLocal`, `AnaliseCloud`) é um **estado
+> próprio** de `EstadoDocumento` — não existe já uma segunda dimensão `EtapaExtracao`. O histórico de
+> IA é gravado como uma `EtapaDocumento` cujo `estado` é o passo em curso (ver "Recorder").
 
 ---
 
@@ -21,25 +26,34 @@ Gate)" no fim.
 
 | Action | Ability | De | Para | Move ficheiro |
 |---|---|---|---|---|
-| `MarcarAguardaEnvioDocumentoAction` | `update` | `Pendente` | `AguardaEnvio` | Não (fica em `entrada`) |
-| `MarcarEnviadoDocumentoAction` | `update` | `AguardaEnvio` | `Enviado` | `entrada → enviado` |
-| `MarcarAguardaRespostaDocumentoAction` | `update` | `Enviado` | `AguardaResposta` | Não (fica em `enviado`) |
-| `TransicionarProcessadoDocumentoAction` | `update` | `AguardaResposta` | `Processado` | `enviado → processado` + rename |
-| `MarcarErroDocumentoAction` | `update` | `AguardaResposta` ou `Pendente` | `Erro` | origem → `erro` |
-| `MarcarPerigosoDocumentoAction` | `update` | `Pendente` ou `AguardaResposta` | `Perigoso` | origem → `perigoso` |
+| `MarcarAnaliseMalwareDocumentoAction` | — (sistema) | `Pendente` | `AnaliseMalware` | Não (fica em `entrada`) |
+| `MarcarAnaliseTextoDocumentoAction` | — (sistema) | `AnaliseMalware` | `AnaliseTexto` | Não (fica em `entrada`) |
+| `MarcarAnaliseOcrDocumentoAction` | — (sistema) | `AnaliseTexto` | `AnaliseOcr` | Não (fica em `entrada`) |
+| `MarcarAnaliseIaLocalDocumentoAction` | — (sistema) | `AnaliseTexto` ou `AnaliseOcr` | `AnaliseIaLocal` | `entrada → enviado` |
+| `MarcarAnaliseCloudDocumentoAction` | — (sistema) | `AnaliseIaLocal` | `AnaliseCloud` | Não (fica em `enviado`) |
+| `TransicionarProcessadoDocumentoAction` | `update` | `AnaliseIaLocal` ou `AnaliseCloud` | `Processado` | `enviado → processado` + rename |
+| `MarcarErroDocumentoAction` | — (sistema) | qualquer `Analise*` | `Erro` | origem → `erro` |
+| `MarcarPerigosoDocumentoAction` | — (sistema) | `AnaliseMalware`, `AnaliseIaLocal` ou `AnaliseCloud` | `Perigoso` | origem → `perigoso` |
 
 Todas delegam em `ExecutorTransicaoDocumento::executar()`.
 
+As 5 `MarcarAnalise*` são flags de transição de sistema (sem `Gate`, sem DTO próprio) — cada uma
+apenas move o `Documento` para o passo de análise seguinte; um `motivo` opcional distingue casos
+(ex.: `MarcarAnaliseTexto($documento, 'scan de malware desligado')`).
+
 `TransicionarProcessadoDocumentoAction` — preenche campos de domínio (fornecedor/cliente/categoria/
 valor/data); usa `RegraNomearProcessado` para gerar o nome canónico. DTO:
-`TransicionarProcessadoDocumentoDto`. Emite `DocumentoProcessado`.
+`TransicionarProcessadoDocumentoDto`. Emite `DocumentoProcessado`. Alcançável do fim do pipeline de
+IA (`AnaliseIaLocal` directo ou via `AnaliseCloud`).
 
 `MarcarErroDocumentoAction` — DTO `MarcarErroDocumentoDto` (campo `mensagemErro`). Emite
-`DocumentoMarcadoErro`. Alcançável de `AguardaResposta` (falha de envio/resposta) e de `Pendente`
-(falha do scan de malware) — genérica, sem alteração de código entre os dois casos.
+`DocumentoMarcadoErro`. Alcançável de **qualquer** passo de análise que falhe (`AnaliseMalware`,
+`AnaliseTexto`, `AnaliseOcr`, `AnaliseIaLocal`, `AnaliseCloud`) — genérica, sem alteração de código
+entre os casos.
 
 `MarcarPerigosoDocumentoAction` — DTO `MarcarPerigosoDocumentoDto` (campo `motivo`). Alcançável de
-dois estados (`Pendente` pré-scan e `AguardaResposta` guardrail). Emite `DocumentoMarcadoPerigoso`.
+`AnaliseMalware` (scan) e dos passos de IA `AnaliseIaLocal`/`AnaliseCloud` (guardrail de conteúdo).
+Emite `DocumentoMarcadoPerigoso`.
 
 ---
 
@@ -47,8 +61,8 @@ dois estados (`Pendente` pré-scan e `AguardaResposta` guardrail). Emite `Docume
 
 | Action | Ability | De | Para | Move ficheiro |
 |---|---|---|---|---|
-| `ReivindicarDocumentoPendenteAction` | — (sem Gate, sistema) | `Pendente` | `AguardaEnvio`/`Perigoso`/`Erro` (via `TriarDocumentoPendenteAction`) | Não/origem → `perigoso`/`erro` |
-| `TriarDocumentoPendenteAction` | — (sem Gate, sistema) | `Pendente` | `AguardaEnvio`/`Perigoso`/`Erro` | conforme a Action delegada |
+| `ReivindicarDocumentoPendenteAction` | — (sem Gate, sistema) | `Pendente` | `AnaliseTexto`/`Perigoso`/`Erro` (via `TriarDocumentoPendenteAction`) | Não/origem → `perigoso`/`erro` |
+| `TriarDocumentoPendenteAction` | — (sem Gate, sistema) | `Pendente` | `AnaliseMalware` → `AnaliseTexto`/`Perigoso`/`Erro` | conforme a Action delegada |
 
 `ReivindicarDocumentoPendenteAction` (`app/Features/Documento/Reivindicar/`) — componente reutilizável
 de reivindicação para o futuro orquestrador de IA: abre `DB::transaction()` (ponto de entrada, sem
@@ -57,13 +71,14 @@ Action chamante), bloqueia (`lockForUpdate()`) o próximo `Documento` `Pendente`
 Evita que dois workers concorrentes reivindiquem o mesmo documento — ver `04-infra/transactions.md`
 para o padrão completo e `07-testing.md` para o teste de concorrência real (duas conexões MySQL).
 
-`TriarDocumentoPendenteAction` (`app/Features/Documento/Triar/`) — corre o `AnalisadorMalware`
-sobre o ficheiro do `Documento` `Pendente`, **dentro da mesma transacção/lock** que o reivindica (não
-abre transacção própria), e ramifica: infectado → `MarcarPerigosoDocumentoAction` (motivo =
-assinatura); limpo → `MarcarAguardaEnvioDocumentoAction`; não configurado (camada `clamd`
-inactiva) → `MarcarAguardaEnvioDocumentoAction` com motivo "scan de malware desligado"; falha do
-scan (`FalhaAnaliseMalwareException`) → `MarcarErroDocumentoAction` com o motivo = razão da falha.
-Ver `04-infra/malware.md` para o contrato `AnalisadorMalware`.
+`TriarDocumentoPendenteAction` (`app/Features/Documento/Triar/`) — admite primeiro o `Documento` a
+`AnaliseMalware` (`Pendente → AnaliseMalware`, via `MarcarAnaliseMalwareDocumentoAction`), depois corre
+o `AnalisadorMalware` sobre o ficheiro (disco `entrada`), **dentro da mesma transacção/lock** que o
+reivindica (não abre transacção própria), e ramifica a partir de `AnaliseMalware`: infectado →
+`MarcarPerigosoDocumentoAction` (motivo = assinatura); limpo → `MarcarAnaliseTextoDocumentoAction`;
+não configurado (camada `clamd` inactiva) → `MarcarAnaliseTextoDocumentoAction` com motivo "scan de
+malware desligado"; falha do scan (`FalhaAnaliseMalwareException`) → `MarcarErroDocumentoAction` com o
+motivo = razão da falha. Ver `04-infra/malware.md` para o contrato `AnalisadorMalware`.
 
 ---
 
@@ -71,17 +86,18 @@ Ver `04-infra/malware.md` para o contrato `AnalisadorMalware`.
 
 | Action | Ability | Escreve | Move ficheiro |
 |---|---|---|---|
-| `RegistarEtapaExtracaoAction` | — (sem Gate, sistema) | `extracoes_documento` (upsert) + `EtapaDocumento` (`passo`/`resultado`) | Não |
+| `RegistarEtapaExtracaoAction` | — (sem Gate, sistema) | `extracoes_documento` (upsert) + `EtapaDocumento` (`resultado`) | Não |
 
 **`RegistarEtapaExtracaoAction`** (`app/Features/Documento/RegistarEtapaExtracao/`) — recorder do
 pipeline: dado um `Documento` e um `RegistarEtapaExtracaoDto`, faz upsert (por `id_documento`, chave
-única) da linha em `extracoes_documento` e grava uma `EtapaDocumento` com `estado` igual ao estado
-actual do documento (não muda) e `passo`/`resultado` preenchidos — tudo na mesma `DB::transaction()`.
-Não altera `Documento.estado` nem usa `RegraTransicaoEstado` (não é uma transição de negócio).
-Contrato "substituição total": cada chamada substitui inteiramente `texto_extraido`/`dados_json` — o
-chamador (futuro orquestrador) envia sempre o valor completo pretendido, nunca deltas. Sem
-`Gate::authorize` (acção de sistema) — `EtapaDocumento` gravada com `id_utilizador = null`.
-Ver `03-models/extracao-documento.md` e "Modelo de 2 dimensões" abaixo.
+única) da linha em `extracoes_documento` (scratch space: `texto_extraido`/`dados_json`/lease/tentativas)
+e grava uma `EtapaDocumento` com `estado` igual ao estado actual do documento — que **é** já o passo
+de análise em curso (`AnaliseTexto`, `AnaliseIaLocal`, …) — e `resultado` (Sucesso/Falha/EmCurso), tudo
+na mesma `DB::transaction()`. Não altera `Documento.estado` nem usa `RegraTransicaoEstado` (não é uma
+transição de negócio; o passo já é o estado). Contrato "substituição total": cada chamada substitui
+inteiramente `texto_extraido`/`dados_json` — o chamador (futuro orquestrador) envia sempre o valor
+completo pretendido, nunca deltas. Sem `Gate::authorize` (acção de sistema) — `EtapaDocumento` gravada
+com `id_utilizador = null`. Ver `03-models/extracao-documento.md`.
 
 ---
 
@@ -91,13 +107,14 @@ Ver `03-models/extracao-documento.md` e "Modelo de 2 dimensões" abaixo.
 
 **Ficheiro:** `app/Features/Documento/Transicao/ExecutorTransicaoDocumento.php`
 
-Orquestrador partilhado pelas 8 Actions de transição simples. Encapsula a mecânica comum:
+Orquestrador partilhado pelas 10 Actions de transição. Encapsula a mecânica comum:
 
 ```
 regraTransicao->handle($de, $para)   ← valida De→Para
 regraMover->handle(...)              ← move ficheiro (fora da transação)
 DB::transaction()
   documento->update([estado, disco, nome, ...campos domínio])
+  regraEliminarExtracao->handle($documento, $novoEstado)  ← se terminal, apaga ExtracaoDocumento (RGPD)
   historico()->create([estado, motivo, id_utilizador])
   cache->invalidarCache(Documentos)
   Event::dispatch($evento($documento))  ← se evento fornecido
@@ -128,18 +145,26 @@ chamante antes de invocar `executar()`.
 A mudança de estado é sempre feita por Actions de transição, **nunca** com `if ($doc->estado == ...)`.
 O mapa central é validado por `RegraTransicaoEstado` (ver `02-shared/regras-negocio.md`).
 
-| De                | Para              | Action                                  | Via                  |
-| ----------------- | ----------------- | --------------------------------------- | -------------------- |
-| `Pendente`        | `AguardaEnvio`    | `MarcarAguardaEnvioDocumentoAction` (via `TriarDocumentoPendenteAction`) | pipeline |
-| `Pendente`        | `Perigoso`        | `MarcarPerigosoDocumentoAction` (via `TriarDocumentoPendenteAction`)    | pipeline (pré-scan)  |
-| `Pendente`        | `Erro`            | `MarcarErroDocumentoAction` (via `TriarDocumentoPendenteAction`)        | pipeline (falha do scan de malware) |
-| `AguardaEnvio`    | `Enviado`         | `MarcarEnviadoDocumentoAction`          | pipeline             |
-| `Enviado`         | `AguardaResposta` | `MarcarAguardaRespostaDocumentoAction`  | pipeline             |
-| `AguardaResposta` | `Processado`      | `TransicionarProcessadoDocumentoAction` | pipeline             |
-| `AguardaResposta` | `Erro`            | `MarcarErroDocumentoAction`             | pipeline             |
-| `AguardaResposta` | `Perigoso`        | `MarcarPerigosoDocumentoAction`         | pipeline (guardrail) |
-| `Erro`            | `AguardaEnvio`    | `ReprocessarDocumentoAction`            | HTTP                 |
-| `Processado`      | `Processado`      | `CorrigirDocumentoAction`               | HTTP (self-loop)     |
+| De               | Para             | Action                                  | Via                  |
+| ---------------- | ---------------- | --------------------------------------- | -------------------- |
+| `Pendente`       | `AnaliseMalware` | `MarcarAnaliseMalwareDocumentoAction` (via `TriarDocumentoPendenteAction`) | pipeline |
+| `AnaliseMalware` | `AnaliseTexto`   | `MarcarAnaliseTextoDocumentoAction` (via `TriarDocumentoPendenteAction`)   | pipeline (scan limpo) |
+| `AnaliseMalware` | `Perigoso`       | `MarcarPerigosoDocumentoAction` (via `TriarDocumentoPendenteAction`)       | pipeline (infectado) |
+| `AnaliseMalware` | `Erro`           | `MarcarErroDocumentoAction` (via `TriarDocumentoPendenteAction`)           | pipeline (falha do scan) |
+| `AnaliseTexto`   | `AnaliseOcr`     | `MarcarAnaliseOcrDocumentoAction`       | pipeline (texto insuficiente) |
+| `AnaliseTexto`   | `AnaliseIaLocal` | `MarcarAnaliseIaLocalDocumentoAction`   | pipeline             |
+| `AnaliseTexto`   | `Erro`           | `MarcarErroDocumentoAction`             | pipeline             |
+| `AnaliseOcr`     | `AnaliseIaLocal` | `MarcarAnaliseIaLocalDocumentoAction`   | pipeline             |
+| `AnaliseOcr`     | `Erro`           | `MarcarErroDocumentoAction`             | pipeline             |
+| `AnaliseIaLocal` | `AnaliseCloud`   | `MarcarAnaliseCloudDocumentoAction`     | pipeline (IA local insuficiente) |
+| `AnaliseIaLocal` | `Processado`     | `TransicionarProcessadoDocumentoAction` | pipeline             |
+| `AnaliseIaLocal` | `Perigoso`       | `MarcarPerigosoDocumentoAction`         | pipeline (guardrail) |
+| `AnaliseIaLocal` | `Erro`           | `MarcarErroDocumentoAction`             | pipeline             |
+| `AnaliseCloud`   | `Processado`     | `TransicionarProcessadoDocumentoAction` | pipeline             |
+| `AnaliseCloud`   | `Perigoso`       | `MarcarPerigosoDocumentoAction`         | pipeline (guardrail) |
+| `AnaliseCloud`   | `Erro`           | `MarcarErroDocumentoAction`             | pipeline             |
+| `Erro`           | `Pendente`       | `ReprocessarDocumentoAction`            | HTTP (reabre pipeline) |
+| `Processado`     | `Processado`     | `CorrigirDocumentoAction`               | HTTP (self-loop)     |
 
 Qualquer par não listado lança `TransicaoInvalidaException` (→ 422).
 
@@ -148,32 +173,27 @@ movimento de ficheiro entre discos e o registo em `EtapaDocumento` são feitos p
 
 ---
 
-## Modelo de 2 dimensões — estado de negócio × etapa de extracção
+## Dimensão de extracção — `ExtracaoDocumento` como scratch space
 
-`Documento.estado` (`EstadoDocumento`) e `ExtracaoDocumento.etapa_extracao` (`EtapaExtracao`) são
-**duas dimensões independentes**: o estado de negócio segue o ciclo de vida do documento
-(`02-shared/estados.md`); a etapa de extracção segue o progresso do pipeline de IA/OCR sobre o
-conteúdo do ficheiro. Um documento pode, por exemplo, estar em `AguardaResposta` (negócio) enquanto a
-sua extracção está em `NecessitaOcr` (IA) — os dois avançam a ritmos diferentes e são geridos por
-Actions distintas (`Marcar*`/`ExecutorTransicaoDocumento` vs. `RegistarEtapaExtracaoAction`).
-
-| Estado de negócio (`estado`) | Etapa de extracção possível | Lock (`extracao_reclamada_em`) |
-|---|---|---|
-| `Pendente` | Sem linha `ExtracaoDocumento` (ainda não reivindicado) ou `Pendente` | `null` |
-| `AguardaEnvio`, `Enviado`, `AguardaResposta` | `Pendente` → `NecessitaOcr`/`TextoPronto`/`NecessitaCloud` → `Concluido`/`Falhado` | preenchido enquanto reivindicado pelo orquestrador; `null` fora da janela de lease |
-| `Processado` | Tipicamente `Concluido` (não enforçado nesta fase) | `null` |
-| `Erro` | Etapa congelada no valor anterior à transição — **resetada para `Pendente`** ao reprocessar (`ReprocessarDocumentoAction`) | `null` após reset |
-| `Perigoso` | Documento nunca chega a ter linha de extracção nesta transição (ficheiro nunca é enviado ao pipeline de IA) | — |
+Com a máquina de estados **unificada**, o passo de análise **é** o `Documento.estado` — deixou de
+existir a coluna `EtapaExtracao`/dimensão paralela. `ExtracaoDocumento` reduz-se a **scratch space**
+1-1 com o `Documento`: `texto_extraido`/`dados_json` (produtos intermédios da extracção, PII),
+`extracao_reclamada_em` (lease) e `extracao_tentativas` (contador). Nenhuma coluna de estado — o
+progresso lê-se de `Documento.estado`.
 
 - **`ExtracaoDocumento` é opcional** — `Documento::extracao()` devolve `null` para qualquer documento
-  que nunca tenha entrado na dimensão de extracção (registo manual via
-  `RegistarDocumentoManualAction`, ou erro de scan de malware em `Pendente` antes de qualquer
-  reivindicação). Ver `03-models/extracao-documento.md`.
-- **`etapas_documento` regista ambas as dimensões na mesma tabela** — uma linha de negócio (gravada
-  por `ExecutorTransicaoDocumento`) tem `passo`/`resultado` a `null`; uma linha de IA (gravada por
-  `RegistarEtapaExtracaoAction`) tem `estado` igual ao estado **actual** do documento (não muda) e
-  `passo`/`resultado` preenchidos — permite reconstruir a história completa (negócio + IA) numa única
-  query ordenada por `created_at`.
+  que nunca tenha entrado no pipeline de extracção (registo manual via `RegistarDocumentoManualAction`,
+  ou documento marcado `Perigoso`/`Erro` no scan de malware antes de qualquer escrita de extracção).
+  Ver `03-models/extracao-documento.md`.
+- **Eliminada ao atingir estado terminal** — `RegraEliminarExtracaoTerminal` (invocada pelo
+  `ExecutorTransicaoDocumento` dentro da transacção) apaga a linha ao entrar em `Processado`, `Erro`
+  ou `Perigoso` (minimização de dados / RGPD). Ver `02-shared/regras-negocio.md`. Um documento
+  reaberto (`Erro → Pendente`) recomeça o pipeline sem herdar scratch space antigo;
+  `ReprocessarDocumentoAction` mantém um `delete()` defensivo idempotente como rede de segurança.
+- **`etapas_documento` regista a história completa** — uma linha de transição de negócio (gravada por
+  `ExecutorTransicaoDocumento`) tem `resultado` a `null`; uma linha de tentativa de IA (gravada por
+  `RegistarEtapaExtracaoAction`) tem `estado` igual ao passo de análise em curso e `resultado`
+  preenchido — permite reconstruir a história numa única query ordenada por `created_at`.
 - **Enforcement adiado**: reivindicação real com `lockForUpdate()`/libertação por TTL sobre
   `extracao_reclamada_em`, e a transição automática ao esgotar `extracao_tentativas`, ficam para o
   orquestrador de pipeline. Por agora só existem o modelo de dados e o recorder.
@@ -192,7 +212,8 @@ Como o conjunto de discos é fixo (5: `entrada`, `enviado`, `processado`, `erro`
 inconsistência permanente:
 
 - **Detecção:** `ReconciliarFicheirosJob` (agendado a cada 5 min, `onOneServer`) varre `Documento`s
-  presos num estado transitório (`AguardaEnvio`/`Enviado`/`AguardaResposta`) há mais tempo que
+  presos num estado transitório (`AnaliseMalware`/`AnaliseTexto`/`AnaliseOcr`/`AnaliseIaLocal`/
+  `AnaliseCloud` — os 5 passos de análise) há mais tempo que
   `config('pipeline.reconciliacao_limiar_minutos')` (default 15 min — não é uma janela de
   recência, é um limiar de "parado há mais tempo que uma transição normal demora").
 - **Resolução:** `RegraReconciliarLocalizacaoFicheiro` verifica se o ficheiro existe no
@@ -211,12 +232,14 @@ inconsistência permanente:
 
 ## Transições de sistema (sem Gate)
 
-As 5 transições intermédias de pipeline **não têm `Gate::authorize`** — correm sempre em background
-(Jobs de extracção), sem utilizador autenticado: `MarcarAguardaEnvioDocumentoAction`,
-`MarcarEnviadoDocumentoAction`, `MarcarAguardaRespostaDocumentoAction`, `MarcarErroDocumentoAction`,
-`MarcarPerigosoDocumentoAction`. A `EtapaDocumento` que gravam fica como **passo de sistema**
-(`id_utilizador = null`). `ReivindicarDocumentoPendenteAction`, `TriarDocumentoPendenteAction` e
-`RegistarEtapaExtracaoAction` seguem o mesmo padrão — sem Gate.
+As 7 transições intermédias de pipeline **não têm `Gate::authorize`** — correm sempre em background
+(Jobs de extracção), sem utilizador autenticado: as 5 `MarcarAnalise*`
+(`MarcarAnaliseMalwareDocumentoAction`, `MarcarAnaliseTextoDocumentoAction`,
+`MarcarAnaliseOcrDocumentoAction`, `MarcarAnaliseIaLocalDocumentoAction`,
+`MarcarAnaliseCloudDocumentoAction`), `MarcarErroDocumentoAction` e `MarcarPerigosoDocumentoAction`. A
+`EtapaDocumento` que gravam fica como **passo de sistema** (`id_utilizador = null`).
+`ReivindicarDocumentoPendenteAction`, `TriarDocumentoPendenteAction` e `RegistarEtapaExtracaoAction`
+seguem o mesmo padrão — sem Gate.
 
 O `TransicionarProcessadoDocumentoAction` é a excepção: apesar de não ter endpoint, **mantém
 `Gate::authorize('update')`** porque escreve os dados de negócio extraídos (fornecedor, valor,
