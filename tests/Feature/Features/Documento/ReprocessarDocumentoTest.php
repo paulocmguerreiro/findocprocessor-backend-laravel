@@ -6,7 +6,6 @@ use App\Features\Documento\Reprocessar\ModoReprocessamento;
 use App\Models\Documento;
 use App\Models\ExtracaoDocumento;
 use App\Shared\Enums\EstadoDocumento;
-use App\Shared\Enums\EtapaExtracao;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -17,13 +16,13 @@ beforeEach(function (): void {
     criarEAutenticarAdmin();
 });
 
-it('reprocessa um documento em Erro e devolve 200 em AguardaEnvio', function (): void {
+it('reprocessa um documento em Erro e devolve 200 em Pendente', function (): void {
     $documento = Documento::factory()->erro()->create();
     Storage::disk('erro')->put($documento->nome_ficheiro_storage, 'conteudo');
 
     $this->postJson("/api/documentos/{$documento->id}/reprocessar", ['modo' => ModoReprocessamento::Modelo->value])
         ->assertOk()
-        ->assertJsonPath('data.estado', EstadoDocumento::AguardaEnvio->value);
+        ->assertJsonPath('data.estado', EstadoDocumento::Pendente->value);
 
     Storage::disk('entrada')->assertExists($documento->nome_ficheiro_storage);
 });
@@ -40,24 +39,18 @@ it('rejeita o reprocessamento a partir de um estado inválido (422)', function (
 
     $this->postJson("/api/documentos/{$documento->id}/reprocessar", ['modo' => ModoReprocessamento::Ferramenta->value])
         ->assertUnprocessable()
-        ->assertJsonPath('detail', 'Transição de estado inválida: de "PROCESSADO" para "AGUARDA_ENVIO".');
+        ->assertJsonPath('detail', 'Transição de estado inválida: de "PROCESSADO" para "PENDENTE".');
 });
 
-it('reseta a extracoes_documento existente ao reprocessar', function (): void {
+it('elimina a extracoes_documento residual ao reprocessar', function (): void {
     $documento = Documento::factory()->erro()->create();
     Storage::disk('erro')->put($documento->nome_ficheiro_storage, 'conteudo');
-    ExtracaoDocumento::factory()->falhado()->for($documento, 'documento')->create([
-        'extracao_tentativas' => 2,
-        'texto_extraido' => 'texto anterior',
-    ]);
+    ExtracaoDocumento::factory()->comDadosExtraidos()->for($documento, 'documento')->create();
 
     $this->postJson("/api/documentos/{$documento->id}/reprocessar", ['modo' => ModoReprocessamento::Modelo->value])
         ->assertOk();
 
-    $extracao = ExtracaoDocumento::query()->where('id_documento', $documento->id)->sole();
-    expect($extracao->etapa_extracao)->toBe(EtapaExtracao::Pendente)
-        ->and($extracao->extracao_tentativas)->toBe(0)
-        ->and($extracao->texto_extraido)->toBeNull();
+    $this->assertDatabaseCount('extracoes_documento', 0);
 });
 
 it('utilizador sem permissão de escrita recebe 403', function (): void {

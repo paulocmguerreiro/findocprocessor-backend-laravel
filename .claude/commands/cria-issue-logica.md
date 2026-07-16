@@ -1,6 +1,7 @@
 ---
 description: "Cria issue para a camada de lógica (Actions + Controller + FormRequests + Jobs + Events + Listeners + Observers + testes)"
 allowed-tools: [Bash, Read]
+model: sonnet
 effort: high
 ---
 

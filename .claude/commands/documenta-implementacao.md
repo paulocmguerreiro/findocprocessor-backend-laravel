@@ -1,6 +1,7 @@
 ---
 description: Fase 3a — Debrief + SYSTEM_SPEC + Changelog (artefactos locais)
 allowed-tools: [Bash, Read, Write, Edit]
+model: sonnet
 effort: high
 ---
 

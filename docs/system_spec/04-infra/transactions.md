@@ -98,7 +98,7 @@ public function handle(): ?Documento
             return null;
         }
 
-        return $this->marcarAguardaEnvio->handle($documento);   // transação aninhada (savepoint)
+        return $this->triar->handle($documento);   // triagem de malware + transição (savepoint)
     });
 }
 ```
@@ -107,9 +107,10 @@ public function handle(): ?Documento
   `lockForUpdate()` só faz sentido dentro de uma transacção já aberta, mantendo o lock até ao commit.
 - `wherePendente()` é o scope existente do Model — sem Repository (ver `04-infra/repositories.md`
   para o critério de quando um se justifica).
-- A Action de transição chamada de seguida (`MarcarAguardaEnvioDocumentoAction`) abre a sua própria
-  `DB::transaction()` internamente (via `ExecutorTransicaoDocumento`) — Laravel resolve isto como
-  `SAVEPOINT` (transação aninhada), sem romper o lock da linha mantido pela transação exterior.
+- A `TriarDocumentoPendenteAction` chamada de seguida admite o documento a `AnaliseMalware`, corre o
+  scan e transiciona — cada `Marcar*` interna abre a sua própria `DB::transaction()` (via
+  `ExecutorTransicaoDocumento`), que Laravel resolve como `SAVEPOINT` (transação aninhada), sem romper
+  o lock da linha mantido pela transação exterior.
 - Sem `Gate::authorize()` — acção de sistema/pipeline (ver `02-shared/padroes-acoes.md`).
 - `RegraTransicaoEstado` actua como último nível de validação: se outro worker já mudou o `estado`
   antes deste obter o lock, a transição falha de forma previsível (`TransicaoInvalidaException`).

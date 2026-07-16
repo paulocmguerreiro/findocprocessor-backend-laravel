@@ -7,7 +7,7 @@ namespace App\Shared\States;
 use App\Models\Documento;
 use App\Shared\Enums\EstadoDocumento;
 
-final readonly class DocumentoAguardaResposta implements ContratoEstadoDocumento
+final readonly class DocumentoAnaliseCloud implements ContratoEstadoDocumento
 {
     public function __construct(
         private string $id,
@@ -30,7 +30,7 @@ final readonly class DocumentoAguardaResposta implements ContratoEstadoDocumento
 
     public function obterEstado(): EstadoDocumento
     {
-        return EstadoDocumento::AguardaResposta;
+        return EstadoDocumento::AnaliseCloud;
     }
 
     public function obterId(): string

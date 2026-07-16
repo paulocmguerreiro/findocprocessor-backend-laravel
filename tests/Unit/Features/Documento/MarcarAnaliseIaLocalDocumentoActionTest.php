@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\MarcarEnviado\MarcarEnviadoDocumentoAction;
+use App\Features\Documento\MarcarAnaliseIaLocal\MarcarAnaliseIaLocalDocumentoAction;
 use App\Models\Documento;
 use App\Shared\Enums\EstadoDocumento;
 use App\Shared\Exceptions\TransicaoInvalidaException;
@@ -18,33 +18,43 @@ beforeEach(function (): void {
     Storage::fake('enviado');
 });
 
-it('transiciona AguardaEnvio → Enviado e move o ficheiro entrada → enviado (passo de sistema, sem login)', function (): void {
-    $documento = Documento::factory()->aguardaEnvio()->create();
+it('transiciona AnaliseTexto → AnaliseIaLocal e move o ficheiro entrada → enviado (passo de sistema, sem login)', function (): void {
+    $documento = Documento::factory()->analiseTexto()->create();
     Storage::disk('entrada')->put($documento->nome_ficheiro_storage, 'conteudo');
 
-    $resultado = app(MarcarEnviadoDocumentoAction::class)->handle($documento);
+    $resultado = app(MarcarAnaliseIaLocalDocumentoAction::class)->handle($documento);
 
-    expect($resultado->estado)->toBe(EstadoDocumento::Enviado)
+    expect($resultado->estado)->toBe(EstadoDocumento::AnaliseIaLocal)
         ->and($resultado->disco_storage)->toBe('enviado');
 
     Storage::disk('enviado')->assertExists($documento->nome_ficheiro_storage);
     Storage::disk('entrada')->assertMissing($documento->nome_ficheiro_storage);
-    // Etapa gravada como passo automático de sistema — id_utilizador null.
     $this->assertDatabaseHas('etapas_documento', [
         'id_documento' => $documento->id,
-        'estado' => EstadoDocumento::Enviado->value,
-        'motivo' => 'enviado para extracção',
+        'estado' => EstadoDocumento::AnaliseIaLocal->value,
+        'motivo' => 'texto extraído, enviado para o modelo local',
         'id_utilizador' => null,
     ]);
 });
 
+it('transiciona também a partir de AnaliseOcr', function (): void {
+    $documento = Documento::factory()->analiseOcr()->create();
+    Storage::disk('entrada')->put($documento->nome_ficheiro_storage, 'conteudo');
+
+    $resultado = app(MarcarAnaliseIaLocalDocumentoAction::class)->handle($documento);
+
+    expect($resultado->estado)->toBe(EstadoDocumento::AnaliseIaLocal)
+        ->and($resultado->disco_storage)->toBe('enviado');
+    Storage::disk('enviado')->assertExists($documento->nome_ficheiro_storage);
+});
+
 it('compensa repondo o ficheiro na origem quando a transação falha', function (): void {
-    $documento = Documento::factory()->aguardaEnvio()->create();
+    $documento = Documento::factory()->analiseTexto()->create();
     Storage::disk('entrada')->put($documento->nome_ficheiro_storage, 'conteudo');
 
     Cache::shouldReceive('tags')->andThrow(new RuntimeException('falha na cache'));
 
-    expect(fn (): Documento => app(MarcarEnviadoDocumentoAction::class)->handle($documento))
+    expect(fn (): Documento => app(MarcarAnaliseIaLocalDocumentoAction::class)->handle($documento))
         ->toThrow(RuntimeException::class, 'falha na cache');
 
     // Ficheiro reposto em entrada; estado e histórico intactos.
@@ -52,7 +62,7 @@ it('compensa repondo o ficheiro na origem quando a transação falha', function 
     Storage::disk('enviado')->assertMissing($documento->nome_ficheiro_storage);
     $this->assertDatabaseHas('documentos', [
         'id' => $documento->id,
-        'estado' => EstadoDocumento::AguardaEnvio->value,
+        'estado' => EstadoDocumento::AnaliseTexto->value,
         'disco_storage' => 'entrada',
     ]);
     $this->assertDatabaseCount('etapas_documento', 0);
@@ -61,7 +71,7 @@ it('compensa repondo o ficheiro na origem quando a transação falha', function 
 it('rejeita a transição a partir de um estado inválido', function (): void {
     $documento = Documento::factory()->processado()->create();
 
-    expect(fn (): Documento => app(MarcarEnviadoDocumentoAction::class)->handle($documento))
+    expect(fn (): Documento => app(MarcarAnaliseIaLocalDocumentoAction::class)->handle($documento))
         ->toThrow(TransicaoInvalidaException::class);
 
     $this->assertDatabaseCount('etapas_documento', 0);

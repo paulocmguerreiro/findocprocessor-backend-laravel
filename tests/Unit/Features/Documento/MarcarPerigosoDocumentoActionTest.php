@@ -6,6 +6,7 @@ use App\Events\DocumentoMarcadoPerigoso;
 use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoAction;
 use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoDto;
 use App\Models\Documento;
+use App\Models\ExtracaoDocumento;
 use App\Shared\Enums\EstadoDocumento;
 use App\Shared\Exceptions\TransicaoInvalidaException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,8 +22,8 @@ beforeEach(function (): void {
     Storage::fake('perigoso');
 });
 
-it('marca Perigoso a partir de Pendente (pré-scan) e move para o disco perigoso', function (): void {
-    $documento = Documento::factory()->pendente()->create();
+it('marca Perigoso a partir de AnaliseMalware (scan) e move para o disco perigoso', function (): void {
+    $documento = Documento::factory()->analiseMalware()->create();
     Storage::disk('entrada')->put($documento->nome_ficheiro_storage, 'conteudo');
 
     Event::fake([DocumentoMarcadoPerigoso::class]);
@@ -44,8 +45,8 @@ it('marca Perigoso a partir de Pendente (pré-scan) e move para o disco perigoso
     Event::assertDispatched(DocumentoMarcadoPerigoso::class);
 });
 
-it('marca Perigoso a partir de AguardaResposta (guardrail)', function (): void {
-    $documento = Documento::factory()->aguardaResposta()->create();
+it('marca Perigoso a partir de AnaliseIaLocal (guardrail)', function (): void {
+    $documento = Documento::factory()->analiseIaLocal()->create();
     Storage::disk('enviado')->put($documento->nome_ficheiro_storage, 'conteudo');
 
     $resultado = app(MarcarPerigosoDocumentoAction::class)->handle($documento, new MarcarPerigosoDocumentoDto('conteúdo suspeito'));
@@ -54,11 +55,34 @@ it('marca Perigoso a partir de AguardaResposta (guardrail)', function (): void {
     Storage::disk('perigoso')->assertExists($documento->nome_ficheiro_storage);
 });
 
+it('marca Perigoso a partir de AnaliseCloud (guardrail pós-cloud)', function (): void {
+    $documento = Documento::factory()->analiseCloud()->create();
+    Storage::disk('enviado')->put($documento->nome_ficheiro_storage, 'conteudo');
+
+    $resultado = app(MarcarPerigosoDocumentoAction::class)->handle($documento, new MarcarPerigosoDocumentoDto('conteúdo suspeito devolvido pela cloud'));
+
+    expect($resultado->estado)->toBe(EstadoDocumento::Perigoso)
+        ->and($resultado->disco_storage)->toBe('perigoso');
+    Storage::disk('perigoso')->assertExists($documento->nome_ficheiro_storage);
+});
+
 it('rejeita a transição a partir de um estado inválido', function (): void {
-    $documento = Documento::factory()->enviado()->create();
+    $documento = Documento::factory()->pendente()->create();
 
     expect(fn (): Documento => app(MarcarPerigosoDocumentoAction::class)->handle($documento, new MarcarPerigosoDocumentoDto('x')))
         ->toThrow(TransicaoInvalidaException::class);
 
     $this->assertDatabaseCount('etapas_documento', 0);
+});
+
+// Integração: o Executor invoca RegraEliminarExtracaoTerminal dentro da transacção
+// (a lógica exaustiva por estado está em RegraEliminarExtracaoTerminalTest).
+it('elimina a ExtracaoDocumento existente ao transicionar para Perigoso (RGPD, #110)', function (): void {
+    $documento = Documento::factory()->analiseIaLocal()->create();
+    Storage::disk('enviado')->put($documento->nome_ficheiro_storage, 'conteudo');
+    ExtracaoDocumento::factory()->comDadosExtraidos()->for($documento, 'documento')->create();
+
+    app(MarcarPerigosoDocumentoAction::class)->handle($documento, new MarcarPerigosoDocumentoDto('conteúdo suspeito'));
+
+    $this->assertDatabaseCount('extracoes_documento', 0);
 });

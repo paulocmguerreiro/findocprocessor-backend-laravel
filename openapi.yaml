@@ -157,11 +157,7 @@ components:
 
     EstadoDocumento:
       type: string
-      enum: [PENDENTE, AGUARDA_ENVIO, ENVIADO, AGUARDA_RESPOSTA, PROCESSADO, ERRO, PERIGOSO]
-
-    EtapaExtracao:
-      type: string
-      enum: [PENDENTE, NECESSITA_OCR, TEXTO_PRONTO, NECESSITA_CLOUD, CONCLUIDO, FALHADO]
+      enum: [PENDENTE, ANALISE_MALWARE, ANALISE_TEXTO, ANALISE_OCR, ANALISE_IA_LOCAL, ANALISE_CLOUD, PROCESSADO, ERRO, PERIGOSO]
 
     ResultadoEtapa:
       type: string
@@ -172,11 +168,6 @@ components:
       properties:
         estado:
           $ref: '#/components/schemas/EstadoDocumento'
-        passo:
-          allOf:
-            - $ref: '#/components/schemas/EtapaExtracao'
-          nullable: true
-          description: "Passo de IA (parser/OCR/LLM local/LLM cloud) — null numa linha de negócio (transição de EstadoDocumento)"
         resultado:
           allOf:
             - $ref: '#/components/schemas/ResultadoEtapa'
@@ -220,11 +211,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/EtapaDocumento'
-        etapa_extracao:
-          allOf:
-            - $ref: '#/components/schemas/EtapaExtracao'
-          nullable: true
-          description: "Presente apenas quando a relação 'extracao' é carregada; null se o documento nunca entrou na dimensão de extracção"
 
     TipoDocumento:
       type: object
@@ -268,7 +254,7 @@ components:
           example: 422
         detail:
           type: string
-          example: "Transição de estado inválida: PROCESSADO → ENVIADO."
+          example: 'Transição de estado inválida: de "PROCESSADO" para "PENDENTE".'
 
 security:
   - bearerAuth: []

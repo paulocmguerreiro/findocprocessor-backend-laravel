@@ -1,6 +1,6 @@
 # System Spec — Shared: Estados e Contratos
 
-> `app/Shared/States/` — o contrato partilhado (`ContratoEstadoDocumento`) e os 7 state objects.
+> `app/Shared/States/` — o contrato partilhado (`ContratoEstadoDocumento`) e os 9 state objects.
 > O mapa de transições, o recorder de extracção e o contrato de atomicidade ficheiro↔BD vivem em
 > `01-features/documento-pipeline.md` (componentes de `app/Features/Documento/`, não de `app/Shared/`).
 
@@ -8,12 +8,15 @@
 
 ## Ciclo de estados do `Documento`
 
-Fluxo feliz na horizontal; ramos de falha/risco em baixo:
+Máquina de estados **unificada**: a extracção corre localmente, por isso cada passo de análise é um
+estado próprio de `EstadoDocumento` (não há dimensão de extracção paralela). Fluxo feliz na
+horizontal; `AnaliseOcr`/`AnaliseCloud` são ramos opcionais; `Erro`/`Perigoso` em baixo:
 
 ```
-PENDENTE → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → PROCESSADO
-    ↘ ERRO (falha do scan de malware em Pendente)        ↘ ERRO
-                                                       ↘ PERIGOSO
+PENDENTE → ANALISE_MALWARE → ANALISE_TEXTO → ANALISE_IA_LOCAL → PROCESSADO
+                          ↘ (ANALISE_OCR) ↗                ↘ (ANALISE_CLOUD) ↗
+   qualquer análise que falha ↘ ERRO  ·  malware/IA/cloud suspeitos ↘ PERIGOSO
+   ERRO → PENDENTE (reprocessamento)  ·  PROCESSADO → PROCESSADO (correcção)
 ```
 
 ### Semântica dos estados
@@ -21,22 +24,24 @@ PENDENTE → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → PROCESSADO
 | Estado (enum)     | Value BD           | Significado                                                                            |
 | ----------------- | ------------------ | -------------------------------------------------------------------------------------- |
 | `Pendente`        | `PENDENTE`         | Documento recebido; campos de domínio podem estar a null (registo automático iniciado) |
-| `AguardaEnvio`    | `AGUARDA_ENVIO`    | Pronto a ser enviado para o serviço de extracção                                       |
-| `Enviado`         | `ENVIADO`          | Enviado para o serviço de extracção (IA / OCR)                                         |
-| `AguardaResposta` | `AGUARDA_RESPOSTA` | À espera da resposta do serviço de extracção                                           |
+| `AnaliseMalware`  | `ANALISE_MALWARE`  | Em análise de malware (scan ClamAV)                                                     |
+| `AnaliseTexto`    | `ANALISE_TEXTO`    | Em extracção de texto nativa (pdfparser)                                                |
+| `AnaliseOcr`      | `ANALISE_OCR`      | Em OCR (ramo opcional, quando o texto nativo é insuficiente)                            |
+| `AnaliseIaLocal`  | `ANALISE_IA_LOCAL` | Em extracção por IA local                                                               |
+| `AnaliseCloud`    | `ANALISE_CLOUD`    | Em extracção por IA cloud (ramo opcional, quando a IA local não basta)                  |
 | `Processado`      | `PROCESSADO`       | Processamento concluído com sucesso; todos os campos preenchidos                       |
 | `Erro`            | `ERRO`             | Falha no processamento — recuperável (permite reprocessar)                             |
 | `Perigoso`        | `PERIGOSO`         | Documento marcado como potencialmente malicioso/suspeito                               |
 
 ### Mapeamento estado → disco de storage
 
-| Estado                       | `disco_storage` |
-| ---------------------------- | --------------- |
-| `Pendente`, `AguardaEnvio`   | `entrada`       |
-| `Enviado`, `AguardaResposta` | `enviado`       |
-| `Processado`                 | `processado`    |
-| `Erro`                       | `erro`          |
-| `Perigoso`                   | `perigoso`      |
+| Estado                                                | `disco_storage` |
+| ----------------------------------------------------- | --------------- |
+| `Pendente`, `AnaliseMalware`, `AnaliseTexto`, `AnaliseOcr` | `entrada`  |
+| `AnaliseIaLocal`, `AnaliseCloud`                      | `enviado`       |
+| `Processado`                                          | `processado`    |
+| `Erro`                                                | `erro`          |
+| `Perigoso`                                            | `perigoso`      |
 
 ---
 
@@ -54,9 +59,8 @@ existem (ou que não fazem sentido) numa dada fase — em vez de as espalhar por
 
 - **Superfície limitada por fase** — um `Documento` em `Pendente` não expõe operações de
   `Processado`; o PHPStan garante-o.
-- **Extensível sem tocar no existente** — acrescentar comportamento a `Enviado` /
-  `AguardaResposta` (envio ao serviço de extracção, recepção da resposta) é adicionar a esse
-  state object, sem `switch` central.
+- **Extensível sem tocar no existente** — acrescentar comportamento a um passo de análise
+  (`AnaliseTexto`, `AnaliseIaLocal`, …) é adicionar a esse state object, sem `switch` central.
 - **Transições explícitas e testáves** — o mapa de transições vive num só sítio; uma
   transição inválida falha de forma previsível (`422`), não por omissão de um `if`.
 
@@ -76,7 +80,7 @@ interface ContratoEstadoDocumento
 }
 ```
 
-Declara apenas os **4 getters comuns a todos os 7 estados**. Campos adicionais vivem nas classes concretas.
+Declara apenas os **4 getters comuns a todos os 9 estados**. Campos adicionais vivem nas classes concretas.
 
 Prefixo `obter` (não a forma nua `estado()`/`id()`) — convenção VERBO+Intenção de
 `convencoes-nomenclatura.md` aplica-se também a acessores de leitura pura; evita ainda colisão de
@@ -87,7 +91,7 @@ do próprio objecto `estado()` → `obterEstado()`).
 
 ## State objects — `app/Shared/States/Documento*.php`
 
-7 classes `final readonly`, cada uma implementando `ContratoEstadoDocumento`. Construídas via `static deDocumento(Documento $documento): self` — nunca instanciadas directamente pelo consumidor.
+9 classes `final readonly`, cada uma implementando `ContratoEstadoDocumento`. Construídas via `static deDocumento(Documento $documento): self` — nunca instanciadas directamente pelo consumidor.
 
 **Regra:** a mudança de estado é feita por Actions de transição (`01-features/documento-pipeline.md`). Aqui os state objects são **read-only** — sem método `correct()`.
 
@@ -95,7 +99,7 @@ do próprio objecto `estado()` → `obterEstado()`).
 
 | Grupo    | Classes                                                                                      | Getters específicos (além dos 4 comuns)                                                                                  |
 | -------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Parciais | `DocumentoPendente`, `DocumentoAguardaEnvio`, `DocumentoEnviado`, `DocumentoAguardaResposta` | `obterNomeFicheiroOriginal()`, `obterHashSha256()`                                                                                 |
+| Parciais | `DocumentoPendente`, `DocumentoAnaliseMalware`, `DocumentoAnaliseTexto`, `DocumentoAnaliseOcr`, `DocumentoAnaliseIaLocal`, `DocumentoAnaliseCloud` | `obterNomeFicheiroOriginal()`, `obterHashSha256()`                          |
 | Mínimos  | `DocumentoErro`, `DocumentoPerigoso`                                                         | — (só os 4 da interface)                                                                                                 |
 | Completo | `DocumentoProcessado`                                                                        | `obterNomeFicheiroOriginal()`, `obterHashSha256()`, `obterIdFornecedor()`, `obterIdCliente()`, `obterIdCategoria()`, `obterValor()`, `obterDataDocumento()` |
 
@@ -138,14 +142,14 @@ final readonly class DocumentoPendente implements ContratoEstadoDocumento
 $documento->estado(); // → ContratoEstadoDocumento (match exaustivo, sem default)
 ```
 
-O `match` em `Documento::estado()` cobre os 7 casos sem `default` — Larastan 9 valida a exaustividade.
+O `match` em `Documento::estado()` cobre os 9 casos sem `default` — Larastan 9 valida a exaustividade.
 
 ---
 
 ## Onde encontrar as transições, o recorder e a atomicidade ficheiro↔BD
 
-O mapa De→Para das transições (`RegraTransicaoEstado`), o modelo de 2 dimensões (estado de negócio ×
-etapa de extracção) e o contrato de atomicidade ficheiro↔BD (`ExecutorTransicaoDocumento`,
+O mapa De→Para das transições (`RegraTransicaoEstado`), o recorder de extracção
+(`RegistarEtapaExtracaoAction`) e o contrato de atomicidade ficheiro↔BD (`ExecutorTransicaoDocumento`,
 `ReconciliarFicheirosJob`) descrevem componentes de `app/Features/Documento/`, não de
 `app/Shared/States/` — documentados em `01-features/documento-pipeline.md`.
 

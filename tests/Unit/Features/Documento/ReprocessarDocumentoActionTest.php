@@ -9,12 +9,9 @@ use App\Features\Documento\Reprocessar\ReprocessarDocumentoDto;
 use App\Models\Documento;
 use App\Models\ExtracaoDocumento;
 use App\Shared\Enums\EstadoDocumento;
-use App\Shared\Enums\EtapaExtracao;
 use App\Shared\Exceptions\TransicaoInvalidaException;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 
@@ -26,7 +23,7 @@ beforeEach(function (): void {
     $this->actingAs(criarAdmin());
 });
 
-it('transiciona Erro → AguardaEnvio: move erro → entrada, regista o modo e emite o evento', function (): void {
+it('transiciona Erro → Pendente: move erro → entrada, regista o modo e emite o evento', function (): void {
     $documento = Documento::factory()->erro()->create();
     Storage::disk('erro')->put($documento->nome_ficheiro_storage, 'conteudo');
 
@@ -34,14 +31,14 @@ it('transiciona Erro → AguardaEnvio: move erro → entrada, regista o modo e e
 
     $resultado = app(ReprocessarDocumentoAction::class)->handle($documento, new ReprocessarDocumentoDto(ModoReprocessamento::Modelo));
 
-    expect($resultado->estado)->toBe(EstadoDocumento::AguardaEnvio)
+    expect($resultado->estado)->toBe(EstadoDocumento::Pendente)
         ->and($resultado->disco_storage)->toBe('entrada');
 
     Storage::disk('entrada')->assertExists($documento->nome_ficheiro_storage);
     Storage::disk('erro')->assertMissing($documento->nome_ficheiro_storage);
     $this->assertDatabaseHas('etapas_documento', [
         'id_documento' => $documento->id,
-        'estado' => EstadoDocumento::AguardaEnvio->value,
+        'estado' => EstadoDocumento::Pendente->value,
         'motivo' => ModoReprocessamento::Modelo->value,
     ]);
 
@@ -52,7 +49,7 @@ it('transiciona Erro → AguardaEnvio: move erro → entrada, regista o modo e e
 });
 
 it('rejeita a transição a partir de um estado inválido', function (): void {
-    // Processado → AguardaEnvio não consta do mapa (≠ Pendente/Erro → AguardaEnvio).
+    // Processado → Pendente não consta do mapa (só Erro → Pendente reabre o pipeline).
     $documento = Documento::factory()->processado()->create();
 
     expect(fn (): Documento => app(ReprocessarDocumentoAction::class)->handle($documento, new ReprocessarDocumentoDto(ModoReprocessamento::Ferramenta)))
@@ -81,53 +78,26 @@ it('exige utilizador autenticado (guest é rejeitado)', function (): void {
         ->toThrow(AuthorizationException::class);
 });
 
-describe('Reset de extracoes_documento (ripple #94)', function (): void {
-    it('reseta a linha extracoes_documento existente para Pendente/zero/null', function (): void {
+describe('Limpeza defensiva de extracoes_documento residual (RF-10)', function (): void {
+    it('elimina uma linha de ExtracaoDocumento residual ao reabrir (rede de segurança)', function (): void {
+        // Caso raro: a linha não foi eliminada ao entrar em Erro (a via normal é
+        // RegraEliminarExtracaoTerminal). O delete defensivo garante que não sobra.
         $documento = Documento::factory()->erro()->create();
-        ExtracaoDocumento::factory()->falhado()->for($documento, 'documento')->create([
-            'extracao_tentativas' => 2,
-            'texto_extraido' => 'texto anterior',
-            'dados_json' => ['nif' => '123456789'],
-            'extracao_reclamada_em' => now(),
-        ]);
-        Storage::disk('erro')->put($documento->nome_ficheiro_storage, 'conteudo');
-
-        app(ReprocessarDocumentoAction::class)->handle($documento, new ReprocessarDocumentoDto(ModoReprocessamento::Modelo));
-
-        $extracao = ExtracaoDocumento::query()->where('id_documento', $documento->id)->sole();
-
-        expect($extracao->etapa_extracao)->toBe(EtapaExtracao::Pendente)
-            ->and($extracao->extracao_tentativas)->toBe(0)
-            ->and($extracao->texto_extraido)->toBeNull()
-            ->and($extracao->dados_json)->toBeNull()
-            ->and($extracao->extracao_reclamada_em)->toBeNull();
-    });
-
-    it('não cria extracoes_documento quando o documento nunca entrou na dimensão de extracção', function (): void {
-        $documento = Documento::factory()->erro()->create();
+        ExtracaoDocumento::factory()->comDadosExtraidos()->for($documento, 'documento')->create();
         Storage::disk('erro')->put($documento->nome_ficheiro_storage, 'conteudo');
 
         app(ReprocessarDocumentoAction::class)->handle($documento, new ReprocessarDocumentoDto(ModoReprocessamento::Modelo));
 
         $this->assertDatabaseCount('extracoes_documento', 0);
-        expect($documento->fresh()->extracao)->toBeNull();
     });
 
-    it('faz rollback da transição de estado quando o reset da extracoes_documento falha', function (): void {
+    it('não falha quando não existe linha de ExtracaoDocumento (caso normal pós-Erro)', function (): void {
         $documento = Documento::factory()->erro()->create();
-        ExtracaoDocumento::factory()->falhado()->for($documento, 'documento')->create();
         Storage::disk('erro')->put($documento->nome_ficheiro_storage, 'conteudo');
 
-        DB::listen(function (QueryExecuted $query): void {
-            if (str_contains($query->sql, 'update `extracoes_documento`')) {
-                throw new RuntimeException('falha simulada no reset da extracoes_documento');
-            }
-        });
+        $resultado = app(ReprocessarDocumentoAction::class)->handle($documento, new ReprocessarDocumentoDto(ModoReprocessamento::Modelo));
 
-        expect(fn (): Documento => app(ReprocessarDocumentoAction::class)->handle($documento, new ReprocessarDocumentoDto(ModoReprocessamento::Modelo)))
-            ->toThrow(RuntimeException::class, 'falha simulada no reset da extracoes_documento');
-
-        expect($documento->fresh()->estado)->toBe(EstadoDocumento::Erro);
-        $this->assertDatabaseCount('etapas_documento', 0);
+        expect($resultado->estado)->toBe(EstadoDocumento::Pendente);
+        $this->assertDatabaseCount('extracoes_documento', 0);
     });
 });

@@ -1,6 +1,7 @@
 ---
 description: "Cria issue para a camada de modelo (migration + model + factory + policy + DTOs + resource + testes)"
 allowed-tools: [Bash, Read]
+model: sonnet
 effort: high
 ---
 

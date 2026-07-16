@@ -87,7 +87,7 @@ docker compose exec app composer test
 - **Soft delete e restauro:** `categorias-documento`, `entidades` e `utilizadores` usam soft delete — o `DELETE` desactiva (mantém o registo) e existe `PATCH .../restaurar`. **`documentos` não tem soft delete:** o `DELETE` é permanente e **não** há restauro.
 - **O parâmetro `?estado=` tem duas semânticas distintas** conforme o recurso:
   - Em `categorias-documento`, `entidades` e `utilizadores` é um **filtro de soft delete**: `todos | somente_ativos | somente_inativos`.
-  - Em `documentos` é a **fase do ciclo de vida** (`EstadoDocumento`): `Pendente | AguardaEnvio | Enviado | AguardaResposta | Processado | Erro | Perigoso`.
+  - Em `documentos` é a **fase do ciclo de vida** (`EstadoDocumento`): `Pendente | AnaliseMalware | AnaliseTexto | AnaliseOcr | AnaliseIaLocal | AnaliseCloud | Processado | Erro | Perigoso`.
 
 ## Testes
 
@@ -122,7 +122,7 @@ Todas as rotas exigem Bearer token. Lista completa de endpoints e parâmetros: [
 | Categorias de documento ([spec](docs/system_spec/05-routes/categorias-documento.md)) | 5 (CRUD) | Soft delete + `PATCH .../restaurar` |
 | Entidades ([spec](docs/system_spec/05-routes/entidades.md)) | 7 (CRUD + restaurar + empresa-mãe) | Soft delete; `?estado=todos|somente_ativos|somente_inativos` |
 | Tipos de documento ([spec](docs/system_spec/05-routes/tipos-documento.md)) | 5 (CRUD) | Sem soft delete — `DELETE` é definitivo |
-| Documentos ([spec](docs/system_spec/05-routes/documento.md)) | 8 (CRUD + upload + ficheiro + reprocessar) | Sem soft delete; ciclo de estados `Pendente → AguardaEnvio → Enviado → AguardaResposta → Processado` (ramos `Erro`/`Perigoso`), transições validadas por `RegraTransicaoEstado` (`422` se inválida); `?estado=` filtra pela fase do ciclo de vida |
+| Documentos ([spec](docs/system_spec/05-routes/documento.md)) | 8 (CRUD + upload + ficheiro + reprocessar) | Sem soft delete; máquina de estados unificada `Pendente → AnaliseMalware → AnaliseTexto → AnaliseIaLocal → Processado` (ramos opcionais `AnaliseOcr`/`AnaliseCloud`; ramos `Erro`/`Perigoso`), transições validadas por `RegraTransicaoEstado` (`422` se inválida); `?estado=` filtra pela fase do ciclo de vida |
 | Roles & Utilizadores ([spec](docs/system_spec/05-routes/role.md)) | 5 + 8 | Role `admin`; utilizadores com soft delete, restauro e anonimização RGPD (Art. 17.º) |
 
 ## Qualidade

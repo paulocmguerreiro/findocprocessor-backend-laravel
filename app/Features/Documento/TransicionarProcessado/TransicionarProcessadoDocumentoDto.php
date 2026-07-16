@@ -8,8 +8,9 @@ use DateTimeInterface;
 use InvalidArgumentException;
 
 /**
- * Dados de domínio extraídos para a transição `AguardaResposta → Processado`.
- * Construído programaticamente pelo pipeline (Job de extracção) — sem `fromRequest`.
+ * Dados de domínio extraídos para a transição `AnaliseIaLocal|AnaliseCloud →
+ * Processado`. Construído programaticamente pelo pipeline (Job de extracção) —
+ * sem `fromRequest`.
  */
 final readonly class TransicionarProcessadoDocumentoDto
 {

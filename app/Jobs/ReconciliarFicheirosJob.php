@@ -15,7 +15,8 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Reconciliação ficheiro↔BD (1d, #90): varre `Documento`s presos num estado
- * transitório (`AguardaEnvio`/`Enviado`/`AguardaResposta`) há mais tempo que
+ * transitório (`AnaliseMalware`/`AnaliseTexto`/`AnaliseOcr`/`AnaliseIaLocal`/
+ * `AnaliseCloud`) há mais tempo que
  * `config('pipeline.reconciliacao_limiar_minutos')`. Repõe automaticamente
  * `disco_storage`/`nome_ficheiro_storage` quando o ficheiro é localizado noutro
  * disco conhecido; regista erro estruturado quando não é encontrado em nenhum
@@ -38,7 +39,13 @@ final class ReconciliarFicheirosJob implements ShouldQueue, ShouldQueueAfterComm
     public function handle(RegraReconciliarLocalizacaoFicheiro $regra): void
     {
         $presos = Documento::query()->wherePresos(
-            [EstadoDocumento::AguardaEnvio, EstadoDocumento::Enviado, EstadoDocumento::AguardaResposta],
+            [
+                EstadoDocumento::AnaliseMalware,
+                EstadoDocumento::AnaliseTexto,
+                EstadoDocumento::AnaliseOcr,
+                EstadoDocumento::AnaliseIaLocal,
+                EstadoDocumento::AnaliseCloud,
+            ],
             config()->integer('pipeline.reconciliacao_limiar_minutos'),
         )->cursor();
 

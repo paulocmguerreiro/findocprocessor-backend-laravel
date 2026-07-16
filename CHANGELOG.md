@@ -6,6 +6,20 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Changed
+- **Issue #110** — Unifica a máquina de estados do `Documento`: funde a dimensão de extracção (`EtapaExtracao`) em `EstadoDocumento`, que passa de 7 para **9 estados** (`Pendente`, `AnaliseMalware`, `AnaliseTexto`, `AnaliseOcr`, `AnaliseIaLocal`, `AnaliseCloud`, `Processado`, `Erro`, `Perigoso`) — a extracção corre localmente, por isso cada passo de análise é agora um estado próprio (uma dimensão, não duas)
+  - `RegraTransicaoEstado` (novo grafo) e `RegraMoverFicheiro` (mapa estado→disco) reescritos; 5 novos state objects `DocumentoAnalise*` (read-only); família `Marcar<Estado>DocumentoAction` reorganizada (+4 novas `MarcarAnalise*`, `MarcarAnaliseTexto` renomeada, `MarcarEnviado`/`MarcarAguardaResposta` removidas)
+  - `TriarDocumentoPendenteAction` admite o documento a `AnaliseMalware` antes do scan; `Processado`/`Erro`/`Perigoso` passam a ser alcançáveis de cada passo de análise (RF-03)
+  - `ReprocessarDocumentoAction` reabre o pipeline com `Erro → Pendente` (antes `Erro → AguardaEnvio`) e delega a atomicidade no `ExecutorTransicaoDocumento` (sem transacção própria)
+  - `ExtracaoDocumento` reduz-se a scratch space (sem coluna de estado); `ReconciliarFicheirosJob` varre os 5 estados de análise como transitórios
+  - 1068 testes, 100% cobertura + type coverage, Larastan 9 — verde em MySQL
+
+### Removed
+- **Issue #110** — Enum `EtapaExtracao` (`app/Shared/Enums`); coluna `etapa_extracao` de `extracoes_documento` e coluna `passo` de `etapas_documento` (via migrations); campos `etapa_extracao`/`passo` deixam de sair de `DocumentoResource`/`EtapaDocumentoResource` (o progresso lê-se de `estado`)
+
+### Security
+- **Issue #110** — `RegraEliminarExtracaoTerminal` (nova) elimina a linha `ExtracaoDocumento` (scratch space com PII: `texto_extraido`/`dados_json`) ao entrar num estado terminal (`Processado`/`Erro`/`Perigoso`), dentro da transacção da transição — minimização de dados (RGPD). Um documento reaberto nunca herda scratch residual
+
 ### Fixed
 - **Issue #108** — Isola cache Redis por processo Pest em paralelo: `AppServiceProvider` regista `ParallelTesting::setUpTestCase()` para salgar `config('cache.prefix')` com o token do teste e forçar `Cache::purge('redis')`, eliminando a condição de corrida entre workers que causava falhas intermitentes de `Cache::tags([...])->flush()` em CI (`composer test --parallel`), mantendo Redis real (sem trocar para o driver `array`)
 

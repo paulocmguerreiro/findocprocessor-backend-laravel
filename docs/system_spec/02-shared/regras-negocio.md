@@ -89,18 +89,20 @@ inválidas lançam `TransicaoInvalidaException` (→ 422). Nunca `if ($doc->esta
 
 **Activação:** Chamada por `ExecutorTransicaoDocumento` antes de qualquer persistência.
 
-**Invocada por:** `ExecutorTransicaoDocumento` (que é usado por todas as 8 Actions de transição simples).
+**Invocada por:** `ExecutorTransicaoDocumento` (que é usado pelas 10 Actions de transição).
 
 **Mapa central (match exaustivo sem `default`):**
 
 ```
-Pendente       → AguardaEnvio
-AguardaEnvio   → Enviado
-Enviado        → AguardaResposta
-AguardaResposta → Processado | Erro | Perigoso
-Pendente       → Perigoso        (pré-scan)
-Erro           → AguardaEnvio    (reprocessamento)
-Processado     → Processado      (correcção — self-loop)
+Pendente        → AnaliseMalware
+AnaliseMalware  → AnaliseTexto | Perigoso | Erro
+AnaliseTexto    → AnaliseIaLocal | AnaliseOcr | Erro
+AnaliseOcr      → AnaliseIaLocal | Erro
+AnaliseIaLocal  → Processado | AnaliseCloud | Perigoso | Erro
+AnaliseCloud    → Processado | Erro | Perigoso
+Erro            → Pendente        (reprocessamento reabre o pipeline)
+Processado      → Processado      (correcção — self-loop)
+Perigoso        → (terminal, sem saída)
 ```
 
 **Nota:** O `match` em PHP 8.5 sem `default` garante que se um novo `case` de `EstadoDocumento` for
@@ -125,8 +127,8 @@ na origem. Verifica o retorno de cada operação e lança em falha. Compensaçã
 tenta mover de volta para a origem.
 
 **Mapa estado→disco** (ver `02-shared/estados.md` para tabela completa):
-- `Pendente`, `AguardaEnvio` → `entrada`
-- `Enviado`, `AguardaResposta` → `enviado`
+- `Pendente`, `AnaliseMalware`, `AnaliseTexto`, `AnaliseOcr` → `entrada`
+- `AnaliseIaLocal`, `AnaliseCloud` → `enviado`
 - `Processado` → `processado`
 - `Erro` → `erro`
 - `Perigoso` → `perigoso`
@@ -137,6 +139,32 @@ ver `RegraReconciliarLocalizacaoFicheiro`.
 
 **Nota:** `discoParaEstado(EstadoDocumento $estado): string` é `public` — reutilizado por
 `RegraReconciliarLocalizacaoFicheiro` para listar os discos conhecidos sem duplicar o mapa.
+
+---
+
+### `RegraEliminarExtracaoTerminal`
+
+**Ficheiro:** `app/Features/Documento/Transicao/RegraEliminarExtracaoTerminal.php`
+
+**Invariante:** Um `Documento` que atinge um **estado terminal** não retém `ExtracaoDocumento` — o
+scratch space da extracção (`texto_extraido`/`dados_json`, PII) é eliminado por minimização de dados
+(RGPD). Estados terminais para este efeito: `Processado`, `Erro`, `Perigoso`.
+
+**Activação:** Chamada por `ExecutorTransicaoDocumento` **dentro** da transacção, após o
+`documento->update(...)`, sempre que o novo estado é terminal. Idempotente (mass-delete por
+`id_documento`: apaga 0 ou mais linhas, sem erro se não houver nenhuma).
+
+**Invocada por:** `ExecutorTransicaoDocumento`.
+
+**Terminal de RGPD ≠ terminal do grafo:** `Erro` tem a aresta `Erro → Pendente` (reprocessamento),
+logo **não** é terminal no grafo de `RegraTransicaoEstado`; é, ainda assim, terminal para efeitos de
+eliminação de extracção (ao reabrir, o documento recomeça o pipeline sem herdar dados antigos). Esta
+diferença de definição é a razão de a regra ter `match` próprio e teste exaustivo, em vez de reusar o
+mapa de transições.
+
+**Implementação:** `match` exaustivo sem `default` sobre os 9 estados (terminal → `delete()` por
+`where('id_documento', ...)`; não-terminal → no-op). A `ReprocessarDocumentoAction` mantém ainda um
+`delete()` defensivo idempotente como rede de segurança (a linha já foi eliminada ao entrar em `Erro`).
 
 ---
 

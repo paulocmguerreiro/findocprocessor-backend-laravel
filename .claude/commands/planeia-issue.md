@@ -1,7 +1,6 @@
 ---
 description: Fase 1 — Brief + Branch + Spec + Plano para uma Issue
 allowed-tools: [Bash, Read, Write]
-model: opus
 effort: high
 ---
 

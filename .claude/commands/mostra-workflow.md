@@ -1,6 +1,7 @@
 ---
 description: Mostra o estado actual do workflow e próximo passo
 allowed-tools: [Bash, Read]
+model: sonnet
 effort: low
 ---
 

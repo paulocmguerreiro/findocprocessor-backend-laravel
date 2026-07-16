@@ -28,6 +28,23 @@ function criarDocumentoPendenteComFicheiro(): Documento
     return $documento;
 }
 
+it('admite o documento a AnaliseMalware antes de correr o scan', function (): void {
+    $documento = criarDocumentoPendenteComFicheiro();
+
+    app()->instance(ContratoAnalisadorMalware::class, Mockery::mock(ContratoAnalisadorMalware::class, function ($mock): void {
+        $mock->shouldReceive('analisar')->once()->andReturn(ResultadoAnaliseMalware::limpo());
+    }));
+
+    app(TriarDocumentoPendenteAction::class)->handle($documento);
+
+    // A passagem intermédia por AnaliseMalware fica registada no histórico.
+    $this->assertDatabaseHas('etapas_documento', [
+        'id_documento' => $documento->id,
+        'estado' => EstadoDocumento::AnaliseMalware->value,
+        'motivo' => 'triagem de malware',
+    ]);
+});
+
 it('transiciona para Perigoso quando o ficheiro está infectado', function (): void {
     $documento = criarDocumentoPendenteComFicheiro();
 
@@ -47,7 +64,7 @@ it('transiciona para Perigoso quando o ficheiro está infectado', function (): v
     ]);
 });
 
-it('transiciona para AguardaEnvio quando o ficheiro está limpo', function (): void {
+it('transiciona para AnaliseTexto quando o ficheiro está limpo', function (): void {
     $documento = criarDocumentoPendenteComFicheiro();
 
     app()->instance(ContratoAnalisadorMalware::class, Mockery::mock(ContratoAnalisadorMalware::class, function ($mock): void {
@@ -56,16 +73,17 @@ it('transiciona para AguardaEnvio quando o ficheiro está limpo', function (): v
 
     $resultado = app(TriarDocumentoPendenteAction::class)->handle($documento);
 
-    expect($resultado->estado)->toBe(EstadoDocumento::AguardaEnvio);
+    expect($resultado->estado)->toBe(EstadoDocumento::AnaliseTexto)
+        ->and($resultado->disco_storage)->toBe('entrada');
 
     $this->assertDatabaseHas('etapas_documento', [
         'id_documento' => $documento->id,
-        'estado' => EstadoDocumento::AguardaEnvio->value,
-        'motivo' => 'pronto para envio',
+        'estado' => EstadoDocumento::AnaliseTexto->value,
+        'motivo' => 'análise de malware concluída',
     ]);
 });
 
-it('transiciona para AguardaEnvio com motivo "scan desligado" quando a camada não está configurada', function (): void {
+it('transiciona para AnaliseTexto com motivo "scan desligado" quando a camada não está configurada', function (): void {
     $documento = criarDocumentoPendenteComFicheiro();
 
     app()->instance(ContratoAnalisadorMalware::class, Mockery::mock(ContratoAnalisadorMalware::class, function ($mock): void {
@@ -74,11 +92,11 @@ it('transiciona para AguardaEnvio com motivo "scan desligado" quando a camada n�
 
     $resultado = app(TriarDocumentoPendenteAction::class)->handle($documento);
 
-    expect($resultado->estado)->toBe(EstadoDocumento::AguardaEnvio);
+    expect($resultado->estado)->toBe(EstadoDocumento::AnaliseTexto);
 
     $this->assertDatabaseHas('etapas_documento', [
         'id_documento' => $documento->id,
-        'estado' => EstadoDocumento::AguardaEnvio->value,
+        'estado' => EstadoDocumento::AnaliseTexto->value,
         'motivo' => 'scan de malware desligado',
     ]);
 });

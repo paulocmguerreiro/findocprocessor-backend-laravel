@@ -76,8 +76,11 @@ final readonly class RegraMoverFicheiro
     public function discoParaEstado(EstadoDocumento $estado): string
     {
         return match ($estado) {
-            EstadoDocumento::Pendente, EstadoDocumento::AguardaEnvio => 'entrada',
-            EstadoDocumento::Enviado, EstadoDocumento::AguardaResposta => 'enviado',
+            EstadoDocumento::Pendente,
+            EstadoDocumento::AnaliseMalware,
+            EstadoDocumento::AnaliseTexto,
+            EstadoDocumento::AnaliseOcr => 'entrada',
+            EstadoDocumento::AnaliseIaLocal, EstadoDocumento::AnaliseCloud => 'enviado',
             EstadoDocumento::Processado => 'processado',
             EstadoDocumento::Erro => 'erro',
             EstadoDocumento::Perigoso => 'perigoso',

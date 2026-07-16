@@ -7,7 +7,8 @@ namespace App\Features\Documento\MarcarErro;
 use InvalidArgumentException;
 
 /**
- * Motivo da falha na transição `AguardaResposta → Erro`. Construído pelo pipeline.
+ * Motivo da falha na transição para `Erro` (a partir de qualquer estado de
+ * análise). Construído pelo pipeline.
  */
 final readonly class MarcarErroDocumentoDto
 {

@@ -43,18 +43,17 @@ colisão de hash com `DocumentoDuplicadoException` (→ 422).
 
 | Action | Ability | De | Para | Exposta HTTP |
 |---|---|---|---|---|
-| `ReprocessarDocumentoAction` | `update` | `Erro` | `AguardaEnvio` | ✅ `POST /documentos/{documento}/reprocessar` |
+| `ReprocessarDocumentoAction` | `update` | `Erro` | `Pendente` | ✅ `POST /documentos/{documento}/reprocessar` |
 | `CorrigirDocumentoAction` | `update` | `Processado` | `Processado` (loop) | ✅ `PATCH /documentos/{documento}` |
 | `EliminarDocumentoAction` | `delete` | qualquer | — (eliminado) | ✅ `DELETE /documentos/{documento}` |
 
-`ReprocessarDocumentoAction` — DTO `ReprocessarDocumentoDto` (enum `ModoReprocessamento`); move
-`erro → entrada`; grava `EtapaDocumento (AguardaEnvio, modo->value, id)`; emite `DocumentoReprocessado`.
-Abre a sua própria `DB::transaction()` (a transição via `ExecutorTransicaoDocumento` corre como
-transacção aninhada/`SAVEPOINT` dentro dela) e reseta a linha `extracoes_documento` desse documento
-**se existir** (`etapa_extracao = Pendente`, `extracao_reclamada_em = null`, `extracao_tentativas =
-0`, `texto_extraido = null`, `dados_json = null`) via `update()` — nunca `create()`/`upsert()`, para
-não criar dimensão de extracção a documentos que nunca lá entraram (ex.: erro de scan de malware em
-`Pendente`). Ver `01-features/documento-pipeline.md` ("Modelo de 2 dimensões") para o racional.
+`ReprocessarDocumentoAction` — DTO `ReprocessarDocumentoDto` (enum `ModoReprocessamento`); reabre o
+pipeline (`Erro → Pendente`); move `erro → entrada`; grava `EtapaDocumento (Pendente, modo->value, id)`;
+emite `DocumentoReprocessado`. Delega a atomicidade no `ExecutorTransicaoDocumento` (sem transacção
+própria). A linha `extracoes_documento` já foi eliminada ao entrar em `Erro`
+(`RegraEliminarExtracaoTerminal`); a Action mantém apenas um `delete()` defensivo idempotente como rede
+de segurança (RF-10) — nunca herda scratch space residual. Ver `01-features/documento-pipeline.md`
+("Dimensão de extracção") para o racional.
 
 `CorrigirDocumentoAction` — DTO `CorrigirDocumentoDto` (só campos de domínio, sem campos de storage);
 renomeia via `RegraNomearProcessado` se o slug mudar; grava `EtapaDocumento (Processado, "correcção", id)`.
@@ -106,7 +105,7 @@ faz `streamDownload`. Lança `NotFoundHttpException` se o ficheiro não existir 
 | `CorrigirDocumentoDto` | `Corrigir/` | campos de domínio (sem campos de storage) |
 | `FicheiroDocumentoDto` | `Descarregar/` | `disco: string`, `nome: string` (VO de vista, sem `fromRequest`) |
 | `ResultadoReconciliacaoFicheiro` | `Transicao/` | `coerente: bool`, `encontrado: bool`, `disco: ?string`, `nome: ?string` (VO interno, sem `fromRequest`) |
-| `RegistarEtapaExtracaoDto` | `RegistarEtapaExtracao/` | `etapaExtracao: EtapaExtracao`, `resultado: ResultadoEtapa`, `motivo: ?string`, `textoExtraido: ?string`, `dadosJson: ?array`, `reclamar: bool`, `incrementarTentativas: bool` (VO interno, sem `fromRequest`) |
+| `RegistarEtapaExtracaoDto` | `RegistarEtapaExtracao/` | `resultado: ResultadoEtapa`, `motivo: ?string`, `textoExtraido: ?string`, `dadosJson: ?array`, `reclamar: bool`, `incrementarTentativas: bool` (VO interno, sem `fromRequest`; o passo é o `estado` actual do `Documento`, não redundado no DTO) |
 
 Todos `final readonly`. Todos com `fromRequest()` excepto `FicheiroDocumentoDto`,
 `ResultadoReconciliacaoFicheiro` e `RegistarEtapaExtracaoDto` (VOs internos/de vista, nunca
@@ -127,7 +126,7 @@ Todos `final`, `implements ShouldDispatchAfterCommit`, `use Dispatchable, Serial
 | `DocumentoMarcadoPerigoso` | `MarcarPerigosoDocumentoAction`, `RegistarDocumentoManualAction` (infectado) | `motivo: string` |
 | `DocumentoReprocessado` | `ReprocessarDocumentoAction` | `modo: ModoReprocessamento` |
 
-Transições intermédias (`AguardaEnvio`, `Enviado`, `AguardaResposta`) não emitem Event.
+Transições intermédias (`AnaliseMalware`, `AnaliseTexto`, `AnaliseOcr`, `AnaliseIaLocal`, `AnaliseCloud`) não emitem Event.
 
 ---
 
@@ -155,10 +154,10 @@ Todos com `messages()` em PT.
 ### Resources
 
 `DocumentoResource` — serializa campos do `Documento`; histórico via `whenLoaded('historico')` →
-`EtapaDocumentoResource`; `etapa_extracao` (string ou `null`) via `whenLoaded('extracao')` —
-**nunca** expõe `texto_extraido`/`dados_json` (PII).
+`EtapaDocumentoResource`. Sem `etapa_extracao` (coluna removida, #110); o progresso de extracção lê-se
+de `estado`. **Nunca** expõe `texto_extraido`/`dados_json` (PII).
 
-`EtapaDocumentoResource` — campos: `estado`, `passo`, `resultado` (`null` numa linha de negócio), `motivo`, `id_utilizador`, `criado_em`.
+`EtapaDocumentoResource` — campos: `estado`, `resultado` (`null` numa linha de transição de negócio), `motivo`, `id_utilizador`, `criado_em`. Sem `passo` (coluna removida, #110).
 
 ---
 

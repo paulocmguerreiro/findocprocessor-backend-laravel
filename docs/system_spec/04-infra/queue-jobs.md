@@ -11,7 +11,7 @@
 | `ReconciliarFicheirosJob` | Scheduled | `Schedule::job(new ReconciliarFicheirosJob)->everyFiveMinutes()->onOneServer()->name('reconciliar-ficheiros')` (`routes/console.php`) |
 
 `ReconciliarFicheirosJob` — reconciliação ficheiro↔BD: varre `Documento`s presos num estado
-transitório (`AguardaEnvio`/`Enviado`/`AguardaResposta`) há mais tempo que
+transitório (os 5 passos de análise: `AnaliseMalware`/`AnaliseTexto`/`AnaliseOcr`/`AnaliseIaLocal`/`AnaliseCloud`) há mais tempo que
 `config('pipeline.reconciliacao_limiar_minutos')` (scope `Documento::documentosPresos()`), verifica
 a coerência `disco_storage`/`nome_ficheiro_storage` via `RegraReconciliarLocalizacaoFicheiro` e repõe
 automaticamente quando o ficheiro é localizado noutro disco conhecido, ou regista `Log::error`
@@ -37,8 +37,9 @@ Sem Listeners nesta issue. Os Listeners serão adicionados quando a issue de ext
 
 ### Invocação programática das Actions de pipeline
 
-As Actions de transição de pipeline (`MarcarAguardaEnvio`, `MarcarEnviado`, `MarcarAguardaResposta`,
-`TransicionarProcessado`, `MarcarErro`, `MarcarPerigoso`) não têm endpoint HTTP — são invocadas
+As Actions de transição de pipeline (`MarcarAnaliseMalware`, `MarcarAnaliseTexto`, `MarcarAnaliseOcr`,
+`MarcarAnaliseIaLocal`, `MarcarAnaliseCloud`, `TransicionarProcessado`, `MarcarErro`, `MarcarPerigoso`)
+não têm endpoint HTTP — são invocadas
 pelos Jobs da extracção. Os Jobs futuros correrão em nome do utilizador que fez o upload (autor da
 primeira `EtapaDocumento` do documento). Ver `03-models/etapa-documento.md` para detalhe de
 `id_utilizador`.
@@ -48,15 +49,15 @@ nesta issue — corre o scan de malware e decide a transição, invocada por
 `ReivindicarDocumentoPendenteAction` (mesma transacção/lock). Fica pendente integrar
 `TriarDocumentoPendenteAction`/o Job que a envolver no pipeline de extracção, invocando-o **antes** de
 iniciar o processamento — mesmo padrão de dependência a informar já usado por `Reivindicar`/
-`MarcarAguardaEnvio`.
+`MarcarAnaliseMalware`.
 
 `RegistarEtapaExtracaoAction` (`app/Features/Documento/RegistarEtapaExtracao/`) é o ponto de
 invocação programática que o futuro orquestrador de pipeline vai chamar para registar cada
 passo de IA (OCR/cloud) sobre um `Documento` — upsert em `extracoes_documento` + `EtapaDocumento`
-(`passo`/`resultado`). Sem Job concreto nesta issue: só o modelo de dados e o recorder existem; o
-Job/Schedule que varre `extracoes_documento` por `(etapa_extracao, extracao_reclamada_em)` e invoca
-esta Action fica para o orquestrador de pipeline. Ver `01-features/documento-pipeline.md` ("Modelo de
-2 dimensões").
+(`resultado`; o passo é o `estado` actual). Sem Job concreto nesta issue: só o modelo de dados e o
+recorder existem; o Job/Schedule que varre `extracoes_documento` por `extracao_reclamada_em` e invoca
+esta Action fica para o orquestrador de pipeline. Ver `01-features/documento-pipeline.md` ("Dimensão de
+extracção").
 
 ---
 

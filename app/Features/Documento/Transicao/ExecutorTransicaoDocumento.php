@@ -28,6 +28,7 @@ final readonly class ExecutorTransicaoDocumento
     public function __construct(
         private RegraTransicaoEstado $regraTransicao,
         private RegraMoverFicheiro $regraMover,
+        private RegraEliminarExtracaoTerminal $regraEliminarExtracao,
         private CacheServico $cache,
     ) {}
 
@@ -61,6 +62,10 @@ final readonly class ExecutorTransicaoDocumento
                     'disco_storage' => $destino['disco'],
                     'nome_ficheiro_storage' => $destino['nome'],
                 ]);
+
+                // RGPD (RN-03/RF-09, #110): ao chegar a um terminal, o scratch space
+                // de extracção (incl. PII) é eliminado — condicionante na própria Regra.
+                $this->regraEliminarExtracao->handle($documento, $novoEstado);
 
                 $documento->historico()->create([
                     'estado' => $novoEstado,

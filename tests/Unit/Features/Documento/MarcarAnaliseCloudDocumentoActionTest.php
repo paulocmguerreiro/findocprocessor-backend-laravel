@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\MarcarAguardaResposta\MarcarAguardaRespostaDocumentoAction;
+use App\Features\Documento\MarcarAnaliseCloud\MarcarAnaliseCloudDocumentoAction;
 use App\Models\Documento;
 use App\Shared\Enums\EstadoDocumento;
 use App\Shared\Exceptions\TransicaoInvalidaException;
@@ -16,28 +16,28 @@ beforeEach(function (): void {
     Storage::fake('enviado');
 });
 
-it('transiciona Enviado → AguardaResposta sem mover o ficheiro (passo de sistema, sem login)', function (): void {
-    $documento = Documento::factory()->enviado()->create();
+it('transiciona AnaliseIaLocal → AnaliseCloud sem mover o ficheiro (passo de sistema, sem login)', function (): void {
+    $documento = Documento::factory()->analiseIaLocal()->create();
     Storage::disk('enviado')->put($documento->nome_ficheiro_storage, 'conteudo');
 
-    $resultado = app(MarcarAguardaRespostaDocumentoAction::class)->handle($documento);
+    $resultado = app(MarcarAnaliseCloudDocumentoAction::class)->handle($documento);
 
-    expect($resultado->estado)->toBe(EstadoDocumento::AguardaResposta)
+    expect($resultado->estado)->toBe(EstadoDocumento::AnaliseCloud)
         ->and($resultado->disco_storage)->toBe('enviado');
 
     Storage::disk('enviado')->assertExists($documento->nome_ficheiro_storage);
     $this->assertDatabaseHas('etapas_documento', [
         'id_documento' => $documento->id,
-        'estado' => EstadoDocumento::AguardaResposta->value,
-        'motivo' => 'a aguardar resposta da extracção',
+        'estado' => EstadoDocumento::AnaliseCloud->value,
+        'motivo' => 'escalado para o modelo cloud',
         'id_utilizador' => null,
     ]);
 });
 
 it('rejeita a transição a partir de um estado inválido', function (): void {
-    $documento = Documento::factory()->pendente()->create();
+    $documento = Documento::factory()->processado()->create();
 
-    expect(fn (): Documento => app(MarcarAguardaRespostaDocumentoAction::class)->handle($documento))
+    expect(fn (): Documento => app(MarcarAnaliseCloudDocumentoAction::class)->handle($documento))
         ->toThrow(TransicaoInvalidaException::class);
 
     $this->assertDatabaseCount('etapas_documento', 0);
