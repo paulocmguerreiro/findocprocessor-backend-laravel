@@ -8,6 +8,7 @@ use App\Features\Documento\TransicionarProcessado\TransicionarProcessadoDocument
 use App\Models\CategoriaDocumento;
 use App\Models\Documento;
 use App\Models\Entidade;
+use App\Models\ExtracaoDocumento;
 use App\Shared\Enums\EstadoDocumento;
 use App\Shared\Exceptions\TransicaoInvalidaException;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -88,4 +89,16 @@ describe('sem permissão de escrita', function (): void {
         expect(fn (): Documento => app(TransicionarProcessadoDocumentoAction::class)->handle($documento, dtoTransicao()))
             ->toThrow(AuthorizationException::class);
     });
+});
+
+// Integração: o Executor invoca RegraEliminarExtracaoTerminal dentro da transacção
+// (a lógica exaustiva por estado está em RegraEliminarExtracaoTerminalTest).
+it('elimina a ExtracaoDocumento existente ao transicionar para Processado (RGPD, #110)', function (): void {
+    $documento = Documento::factory()->analiseIaLocal()->create(['nome_ficheiro_original' => 'scan.pdf']);
+    Storage::disk('enviado')->put($documento->nome_ficheiro_storage, 'conteudo');
+    ExtracaoDocumento::factory()->comDadosExtraidos()->for($documento, 'documento')->create();
+
+    app(TransicionarProcessadoDocumentoAction::class)->handle($documento, dtoTransicao());
+
+    $this->assertDatabaseCount('extracoes_documento', 0);
 });

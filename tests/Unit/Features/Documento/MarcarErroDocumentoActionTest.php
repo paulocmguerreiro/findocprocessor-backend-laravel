@@ -6,6 +6,7 @@ use App\Events\DocumentoMarcadoErro;
 use App\Features\Documento\MarcarErro\MarcarErroDocumentoAction;
 use App\Features\Documento\MarcarErro\MarcarErroDocumentoDto;
 use App\Models\Documento;
+use App\Models\ExtracaoDocumento;
 use App\Shared\Enums\EstadoDocumento;
 use App\Shared\Exceptions\TransicaoInvalidaException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -53,4 +54,16 @@ it('rejeita a transição a partir de um estado inválido', function (): void {
         ->toThrow(TransicaoInvalidaException::class);
 
     $this->assertDatabaseCount('etapas_documento', 0);
+});
+
+// Integração: o Executor invoca RegraEliminarExtracaoTerminal dentro da transacção
+// (a lógica exaustiva por estado está em RegraEliminarExtracaoTerminalTest).
+it('elimina a ExtracaoDocumento existente ao transicionar para Erro (RGPD, #110)', function (): void {
+    $documento = Documento::factory()->analiseIaLocal()->create();
+    Storage::disk('enviado')->put($documento->nome_ficheiro_storage, 'conteudo');
+    ExtracaoDocumento::factory()->comDadosExtraidos()->for($documento, 'documento')->create();
+
+    app(MarcarErroDocumentoAction::class)->handle($documento, new MarcarErroDocumentoDto('timeout do serviço'));
+
+    $this->assertDatabaseCount('extracoes_documento', 0);
 });
