@@ -12,7 +12,7 @@
 | Entidade           | `01-features/entidade.md`            | 8 (5 CRUD + Restaurar + ConverterEmEmpresaMae + Remover) | 5 REST + 2 especiais |
 | Role               | `01-features/role.md`                | 5 CRUD                                         | 5 REST              |
 | Utilizador         | `01-features/utilizador.md`          | 8 (5 CRUD + AtribuirRole + Restaurar + Anonimizar) | 5 REST + 3 especiais |
-| Documento          | `01-features/documento.md` (HTTP) + `01-features/documento-pipeline.md` (background) | 19 (8 expostas via endpoint + 11 sem HTTP, só programáticas — 8 de transição + reivindicação/triagem + recorder de extracção) | 8 REST |
+| Documento          | `01-features/documento.md` (HTTP) + `01-features/documento-pipeline.md` (background) + `01-features/documento-reconciliacao.md` (scratch space + atomicidade) | 19 (8 expostas via endpoint + 11 sem HTTP, só programáticas — 8 de transição + reivindicação/triagem + recorder de extracção) | 8 REST |
 | TipoDocumento      | `01-features/tipo-documento.md`      | 5 CRUD (sem SoftDelete)                        | 5 REST              |
 
 ## Features planeadas
@@ -42,6 +42,7 @@
 | Convenções de nomenclatura (PT/EN)               | `02-shared/convencoes-nomenclatura.md` |
 | Contratos por camada (checklist arquitectural)   | `02-shared/contratos-por-camada.md`    |
 | Regras de negócio (`Regra*`) — catálogo e padrão | `02-shared/regras-negocio.md`          |
+| Regras de transição do Documento (`RegraTransicaoEstado`, `RegraMoverFicheiro`, `RegraEliminarExtracaoTerminal`, `RegraNomearProcessado`, `RegraReconciliarLocalizacaoFicheiro`) | `02-shared/regras-transicao-documento.md` |
 | SoftDelete — quando usar, Padrão B, FiltroEstadoRegisto, RestaurarAction | `02-shared/soft-delete.md` |
 
 ## Modelos Eloquent
@@ -53,7 +54,8 @@
 | `CategoriaDocumento`                                             | `03-models/categoria-documento.md`  |
 | `Entidade`                                                       | `03-models/entidade.md`             |
 | `Role` (Spatie — audit via Observer)                             | `03-models/role.md`                 |
-| `Documento` (migration, Model, Factory, Policy, DTOs, Resource)  | `03-models/documento.md`            |
+| `Documento` (migration, Model, Factory, relações, scopes)        | `03-models/documento.md`            |
+| `Documento` (Policy, DTOs, Resource)                             | `03-models/documento-policy-resource.md` |
 | `EtapaDocumento` (histórico append-only de estados do documento) | `03-models/etapa-documento.md`      |
 | `ExtracaoDocumento` (dimensão de extracção 1-1 com `Documento`)  | `03-models/extracao-documento.md`  |
 | `TipoDocumento` (migration, Model, Factory, Policy, DTOs, Resource) | `03-models/tipo-documento.md`     |

@@ -148,10 +148,11 @@ O `match` em `Documento::estado()` cobre os 9 casos sem `default` — Larastan 9
 
 ## Onde encontrar as transições, o recorder e a atomicidade ficheiro↔BD
 
-O mapa De→Para das transições (`RegraTransicaoEstado`), o recorder de extracção
-(`RegistarEtapaExtracaoAction`) e o contrato de atomicidade ficheiro↔BD (`ExecutorTransicaoDocumento`,
-`ReconciliarFicheirosJob`) descrevem componentes de `app/Features/Documento/`, não de
-`app/Shared/States/` — documentados em `01-features/documento-pipeline.md`.
+O mapa De→Para das transições (`RegraTransicaoEstado`) e o recorder de extracção
+(`RegistarEtapaExtracaoAction`) descrevem componentes de `app/Features/Documento/`, não de
+`app/Shared/States/` — documentados em `01-features/documento-pipeline.md`. O contrato de
+atomicidade ficheiro↔BD (`ExecutorTransicaoDocumento`, `ReconciliarFicheirosJob`) está em
+`01-features/documento-reconciliacao.md`.
 
 ---
 

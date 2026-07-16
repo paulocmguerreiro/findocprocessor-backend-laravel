@@ -17,7 +17,7 @@ a coerência `disco_storage`/`nome_ficheiro_storage` via `RegraReconciliarLocali
 automaticamente quando o ficheiro é localizado noutro disco conhecido, ou regista `Log::error`
 estruturado quando não é encontrado em nenhum. `$tries = 1`, `$timeout = 120`. Implementa
 `ShouldQueue` **e** `ShouldQueueAfterCommit` (ver secção seguinte). Detalhe do contrato de
-atomicidade: `01-features/documento-pipeline.md`.
+atomicidade: `01-features/documento-reconciliacao.md`.
 
 ---
 
@@ -56,8 +56,8 @@ invocação programática que o futuro orquestrador de pipeline vai chamar para 
 passo de IA (OCR/cloud) sobre um `Documento` — upsert em `extracoes_documento` + `EtapaDocumento`
 (`resultado`; o passo é o `estado` actual). Sem Job concreto nesta issue: só o modelo de dados e o
 recorder existem; o Job/Schedule que varre `extracoes_documento` por `extracao_reclamada_em` e invoca
-esta Action fica para o orquestrador de pipeline. Ver `01-features/documento-pipeline.md` ("Dimensão de
-extracção").
+esta Action fica para o orquestrador de pipeline. Ver `01-features/documento-reconciliacao.md`
+("Dimensão de extracção").
 
 ---
 

@@ -24,7 +24,7 @@ existir: o progresso lê-se de `Documento.estado` na máquina de estados unifica
 (`texto_extraido`/`dados_json`), lease e contador de tentativas. `id_documento` é `unique()`; nunca
 existem duas linhas para o mesmo documento (upsert por esta chave, ver `RegistarEtapaExtracaoAction`
 abaixo). Eliminada ao atingir estado terminal — ver `RegraEliminarExtracaoTerminal`
-(`02-shared/regras-negocio.md`).
+(`02-shared/regras-transicao-documento.md`).
 
 ---
 
