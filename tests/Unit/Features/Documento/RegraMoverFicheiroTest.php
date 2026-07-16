@@ -12,7 +12,7 @@ it('move o ficheiro entre discos distintos e apaga a origem', function (): void 
     Storage::fake('enviado');
     Storage::disk('entrada')->put('doc.pdf', 'conteudo');
 
-    $resultado = (new RegraMoverFicheiro)->handle('entrada', 'doc.pdf', EstadoDocumento::Enviado);
+    $resultado = (new RegraMoverFicheiro)->handle('entrada', 'doc.pdf', EstadoDocumento::AnaliseIaLocal);
 
     expect($resultado)->toBe(['disco' => 'enviado', 'nome' => 'doc.pdf']);
     Storage::disk('enviado')->assertExists('doc.pdf');
@@ -23,7 +23,7 @@ it('não move nada quando disco e nome não mudam', function (): void {
     Storage::fake('entrada');
     Storage::disk('entrada')->put('doc.pdf', 'conteudo');
 
-    $resultado = (new RegraMoverFicheiro)->handle('entrada', 'doc.pdf', EstadoDocumento::AguardaEnvio);
+    $resultado = (new RegraMoverFicheiro)->handle('entrada', 'doc.pdf', EstadoDocumento::AnaliseMalware);
 
     expect($resultado)->toBe(['disco' => 'entrada', 'nome' => 'doc.pdf']);
     Storage::disk('entrada')->assertExists('doc.pdf');
@@ -40,18 +40,18 @@ it('renomeia no mesmo disco quando só o nome muda', function (): void {
     Storage::disk('processado')->assertMissing('antigo.pdf');
 });
 
-it('mapeia cada estado para o disco correcto', function (EstadoDocumento $estado, string $disco): void {
-    Storage::fake('entrada');
-    Storage::fake($disco);
-    Storage::disk('entrada')->put('doc.pdf', 'conteudo');
-
-    $resultado = (new RegraMoverFicheiro)->handle('entrada', 'doc.pdf', $estado);
-
-    expect($resultado['disco'])->toBe($disco);
+it('mapeia cada um dos 9 estados para o disco correcto', function (EstadoDocumento $estado, string $disco): void {
+    expect((new RegraMoverFicheiro)->discoParaEstado($estado))->toBe($disco);
 })->with([
+    'pendente → entrada' => [EstadoDocumento::Pendente, 'entrada'],
+    'análise malware → entrada' => [EstadoDocumento::AnaliseMalware, 'entrada'],
+    'análise texto → entrada' => [EstadoDocumento::AnaliseTexto, 'entrada'],
+    'análise ocr → entrada' => [EstadoDocumento::AnaliseOcr, 'entrada'],
+    'análise ia local → enviado' => [EstadoDocumento::AnaliseIaLocal, 'enviado'],
+    'análise cloud → enviado' => [EstadoDocumento::AnaliseCloud, 'enviado'],
+    'processado → processado' => [EstadoDocumento::Processado, 'processado'],
     'erro → erro' => [EstadoDocumento::Erro, 'erro'],
     'perigoso → perigoso' => [EstadoDocumento::Perigoso, 'perigoso'],
-    'aguarda resposta → enviado' => [EstadoDocumento::AguardaResposta, 'enviado'],
 ]);
 
 it('lança quando o ficheiro de origem não existe', function (): void {
@@ -79,7 +79,7 @@ it('lança quando a escrita no disco de destino falha', function (): void {
     Storage::shouldReceive('disk')->with('entrada')->andReturn($origem);
     Storage::shouldReceive('disk')->with('enviado')->andReturn($destino);
 
-    expect(fn (): array => (new RegraMoverFicheiro)->handle('entrada', 'doc.pdf', EstadoDocumento::Enviado))
+    expect(fn (): array => (new RegraMoverFicheiro)->handle('entrada', 'doc.pdf', EstadoDocumento::AnaliseIaLocal))
         ->toThrow(RuntimeException::class, 'Falha ao escrever o ficheiro no disco de destino.');
 });
 
@@ -95,7 +95,7 @@ it('compensa (apaga o destino) e lança quando a remoção da origem falha', fun
     Storage::shouldReceive('disk')->with('entrada')->andReturn($origem);
     Storage::shouldReceive('disk')->with('enviado')->andReturn($destino);
 
-    expect(fn (): array => (new RegraMoverFicheiro)->handle('entrada', 'doc.pdf', EstadoDocumento::Enviado))
+    expect(fn (): array => (new RegraMoverFicheiro)->handle('entrada', 'doc.pdf', EstadoDocumento::AnaliseIaLocal))
         ->toThrow(RuntimeException::class, 'Falha ao remover o ficheiro da origem.');
 
     $destino->shouldHaveReceived('delete')->with('doc.pdf');

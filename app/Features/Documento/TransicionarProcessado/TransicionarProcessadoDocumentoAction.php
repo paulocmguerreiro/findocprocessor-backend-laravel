@@ -15,9 +15,9 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * Transição `AguardaResposta → Processado` (pipeline). Preenche os campos de
- * domínio extraídos, move o ficheiro `enviado → processado` e renomeia-o para o
- * nome canónico; emite `DocumentoProcessado`.
+ * Transição `AnaliseIaLocal|AnaliseCloud → Processado` (pipeline). Preenche os
+ * campos de domínio extraídos, move o ficheiro `enviado → processado` e
+ * renomeia-o para o nome canónico; emite `DocumentoProcessado`.
  */
 final readonly class TransicionarProcessadoDocumentoAction
 {

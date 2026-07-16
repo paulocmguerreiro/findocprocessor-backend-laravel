@@ -14,7 +14,7 @@ beforeEach(function (): void {
     Storage::fake('entrada');
 });
 
-it('reivindica um Documento Pendente, transicionando-o para AguardaEnvio', function (): void {
+it('reivindica um Documento Pendente, triando-o (scan desligado em teste) até AnaliseTexto', function (): void {
     $documento = Documento::factory()->pendente()->create();
     Storage::disk('entrada')->put($documento->nome_ficheiro_storage, 'conteudo');
 
@@ -22,7 +22,7 @@ it('reivindica um Documento Pendente, transicionando-o para AguardaEnvio', funct
 
     expect($resultado)->not->toBeNull()
         ->and($resultado->id)->toBe($documento->id)
-        ->and($resultado->estado)->toBe(EstadoDocumento::AguardaEnvio);
+        ->and($resultado->estado)->toBe(EstadoDocumento::AnaliseTexto);
 });
 
 it('devolve null quando não há Documentos Pendentes', function (): void {

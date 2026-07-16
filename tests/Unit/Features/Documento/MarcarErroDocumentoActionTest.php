@@ -20,8 +20,8 @@ beforeEach(function (): void {
     Storage::fake('erro');
 });
 
-it('transiciona AguardaResposta → Erro: move enviado → erro, regista o motivo e emite o evento (passo de sistema)', function (): void {
-    $documento = Documento::factory()->aguardaResposta()->create();
+it('transiciona AnaliseIaLocal → Erro: move enviado → erro, regista o motivo e emite o evento (passo de sistema)', function (): void {
+    $documento = Documento::factory()->analiseIaLocal()->create();
     Storage::disk('enviado')->put($documento->nome_ficheiro_storage, 'conteudo');
 
     Event::fake([DocumentoMarcadoErro::class]);

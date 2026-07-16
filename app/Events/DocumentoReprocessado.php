@@ -11,7 +11,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Documento em `Erro` foi reposto em `AguardaEnvio` para reprocessamento,
+ * Documento em `Erro` foi reposto em `Pendente` para reprocessamento,
  * parametrizado pelo `modo`. Disparado após commit.
  */
 final class DocumentoReprocessado implements ShouldDispatchAfterCommit

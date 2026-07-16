@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 use App\Models\Documento;
 use App\Shared\Enums\EstadoDocumento;
-use App\Shared\States\DocumentoAguardaEnvio;
-use App\Shared\States\DocumentoAguardaResposta;
-use App\Shared\States\DocumentoEnviado;
+use App\Shared\States\DocumentoAnaliseCloud;
+use App\Shared\States\DocumentoAnaliseIaLocal;
+use App\Shared\States\DocumentoAnaliseMalware;
+use App\Shared\States\DocumentoAnaliseOcr;
+use App\Shared\States\DocumentoAnaliseTexto;
 use App\Shared\States\DocumentoErro;
 use App\Shared\States\DocumentoPendente;
 use App\Shared\States\DocumentoPerigoso;
@@ -25,9 +27,11 @@ describe('estado() devolve o state object correcto', function (): void {
             ->and($stateObject->obterEstado())->toBe($estado);
     })->with([
         'pendente' => ['pendente', DocumentoPendente::class, EstadoDocumento::Pendente],
-        'aguardaEnvio' => ['aguardaEnvio', DocumentoAguardaEnvio::class, EstadoDocumento::AguardaEnvio],
-        'enviado' => ['enviado', DocumentoEnviado::class, EstadoDocumento::Enviado],
-        'aguardaResposta' => ['aguardaResposta', DocumentoAguardaResposta::class, EstadoDocumento::AguardaResposta],
+        'analiseMalware' => ['analiseMalware', DocumentoAnaliseMalware::class, EstadoDocumento::AnaliseMalware],
+        'analiseTexto' => ['analiseTexto', DocumentoAnaliseTexto::class, EstadoDocumento::AnaliseTexto],
+        'analiseOcr' => ['analiseOcr', DocumentoAnaliseOcr::class, EstadoDocumento::AnaliseOcr],
+        'analiseIaLocal' => ['analiseIaLocal', DocumentoAnaliseIaLocal::class, EstadoDocumento::AnaliseIaLocal],
+        'analiseCloud' => ['analiseCloud', DocumentoAnaliseCloud::class, EstadoDocumento::AnaliseCloud],
         'processado' => ['processado', DocumentoProcessado::class, EstadoDocumento::Processado],
         'erro' => ['erro', DocumentoErro::class, EstadoDocumento::Erro],
         'perigoso' => ['perigoso', DocumentoPerigoso::class, EstadoDocumento::Perigoso],
@@ -43,7 +47,10 @@ describe('getters comuns', function (): void {
         expect($stateObject->obterId())->toBe($documento->id)
             ->and($stateObject->obterDiscoStorage())->toBe($documento->disco_storage)
             ->and($stateObject->obterNomeFicheiroStorage())->toBe($documento->nome_ficheiro_storage);
-    })->with(['pendente', 'aguardaEnvio', 'enviado', 'aguardaResposta', 'processado', 'erro', 'perigoso']);
+    })->with([
+        'pendente', 'analiseMalware', 'analiseTexto', 'analiseOcr',
+        'analiseIaLocal', 'analiseCloud', 'processado', 'erro', 'perigoso',
+    ]);
 });
 
 describe('getters dos estados parciais', function (): void {
@@ -55,7 +62,7 @@ describe('getters dos estados parciais', function (): void {
 
         expect($stateObject->obterNomeFicheiroOriginal())->toBe($documento->nome_ficheiro_original)
             ->and($stateObject->obterHashSha256())->toBe($documento->hash_sha256);
-    })->with(['pendente', 'aguardaEnvio', 'enviado', 'aguardaResposta']);
+    })->with(['pendente', 'analiseMalware', 'analiseTexto', 'analiseOcr', 'analiseIaLocal', 'analiseCloud']);
 });
 
 describe('DocumentoProcessado — estado completo', function (): void {
@@ -83,9 +90,11 @@ describe('imutabilidade', function (): void {
             ->and($reflexao->isReadOnly())->toBeTrue();
     })->with([
         DocumentoPendente::class,
-        DocumentoAguardaEnvio::class,
-        DocumentoEnviado::class,
-        DocumentoAguardaResposta::class,
+        DocumentoAnaliseMalware::class,
+        DocumentoAnaliseTexto::class,
+        DocumentoAnaliseOcr::class,
+        DocumentoAnaliseIaLocal::class,
+        DocumentoAnaliseCloud::class,
         DocumentoProcessado::class,
         DocumentoErro::class,
         DocumentoPerigoso::class,

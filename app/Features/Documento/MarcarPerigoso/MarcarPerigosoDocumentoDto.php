@@ -7,8 +7,8 @@ namespace App\Features\Documento\MarcarPerigoso;
 use InvalidArgumentException;
 
 /**
- * Motivo da marcação como `Perigoso` (pré-scan em `Pendente` ou guardrail em
- * `AguardaResposta`). Construído pelo pipeline.
+ * Motivo da marcação como `Perigoso` (scan em `AnaliseMalware` ou guardrail de
+ * conteúdo em `AnaliseIaLocal`/`AnaliseCloud`). Construído pelo pipeline.
  */
 final readonly class MarcarPerigosoDocumentoDto
 {

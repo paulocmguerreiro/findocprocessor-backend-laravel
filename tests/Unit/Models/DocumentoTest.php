@@ -41,10 +41,10 @@ describe('Model', function (): void {
 
 describe('Casts', function (): void {
     it('cast estado para EstadoDocumento enum', function (): void {
-        $documento = Documento::factory()->make(['estado' => EstadoDocumento::Enviado]);
+        $documento = Documento::factory()->make(['estado' => EstadoDocumento::AnaliseIaLocal]);
 
         expect($documento->estado)->toBeInstanceOf(EstadoDocumento::class)
-            ->and($documento->estado)->toBe(EstadoDocumento::Enviado);
+            ->and($documento->estado)->toBe(EstadoDocumento::AnaliseIaLocal);
     });
 
     it('cast valor para string decimal com 2 casas', function (): void {
@@ -182,10 +182,10 @@ describe('Scopes', function (): void {
     uses(RefreshDatabase::class);
 
     it('whereEstado filtra pelo estado passado', function (): void {
-        Documento::factory()->enviado()->create();
+        Documento::factory()->analiseIaLocal()->create();
         Documento::factory()->pendente()->create();
 
-        expect(Documento::whereEstado(EstadoDocumento::Enviado)->count())->toBe(1);
+        expect(Documento::whereEstado(EstadoDocumento::AnaliseIaLocal)->count())->toBe(1);
     });
 
     it('whereProcessado retorna só processados', function (): void {
@@ -229,9 +229,11 @@ describe('Factory — states', function (): void {
             ->and($documento->disco_storage)->toBe($disco);
     })->with([
         'pendente' => ['pendente', EstadoDocumento::Pendente, 'entrada'],
-        'aguardaEnvio' => ['aguardaEnvio', EstadoDocumento::AguardaEnvio, 'entrada'],
-        'enviado' => ['enviado', EstadoDocumento::Enviado, 'enviado'],
-        'aguardaResposta' => ['aguardaResposta', EstadoDocumento::AguardaResposta, 'enviado'],
+        'analiseMalware' => ['analiseMalware', EstadoDocumento::AnaliseMalware, 'entrada'],
+        'analiseTexto' => ['analiseTexto', EstadoDocumento::AnaliseTexto, 'entrada'],
+        'analiseOcr' => ['analiseOcr', EstadoDocumento::AnaliseOcr, 'entrada'],
+        'analiseIaLocal' => ['analiseIaLocal', EstadoDocumento::AnaliseIaLocal, 'enviado'],
+        'analiseCloud' => ['analiseCloud', EstadoDocumento::AnaliseCloud, 'enviado'],
         'processado' => ['processado', EstadoDocumento::Processado, 'processado'],
         'erro' => ['erro', EstadoDocumento::Erro, 'erro'],
         'perigoso' => ['perigoso', EstadoDocumento::Perigoso, 'perigoso'],

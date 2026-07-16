@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace App\Features\Documento\RegistarEtapaExtracao;
 
-use App\Shared\Enums\EtapaExtracao;
 use App\Shared\Enums\ResultadoEtapa;
 use InvalidArgumentException;
 
 /**
  * Passo de IA a registar (upsert em `extracoes_documento` + `EtapaDocumento`).
- * Construído programaticamente pelo pipeline (futuro orquestrador, #97/#98) —
- * sem `fromRequest`, VO interno nunca originado de HTTP.
+ * O passo é sempre o `estado` actual do `Documento`, por isso não é redundado aqui —
+ * o `resultado` distingue a tentativa (Sucesso/Falha/EmCurso). Construído
+ * programaticamente pelo pipeline (futuro orquestrador, #97/#98) — sem `fromRequest`,
+ * VO interno nunca originado de HTTP.
  */
 final readonly class RegistarEtapaExtracaoDto
 {
@@ -27,7 +28,6 @@ final readonly class RegistarEtapaExtracaoDto
      * @throws InvalidArgumentException
      */
     public function __construct(
-        public EtapaExtracao $etapaExtracao,
         public ResultadoEtapa $resultado,
         public ?string $motivo = null,
         public ?string $textoExtraido = null,

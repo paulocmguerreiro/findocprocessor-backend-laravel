@@ -13,8 +13,8 @@ use Illuminate\Support\Facades\DB;
 /**
  * Recorder do pipeline de extracção — regista o passo de IA numa única
  * transacção: upsert em `extracoes_documento` (dimensão de extracção) +
- * `EtapaDocumento` (histórico, `passo`/`resultado` preenchidos, `estado`
- * igual ao `estado` actual do `Documento`).
+ * `EtapaDocumento` (histórico, `resultado` preenchido, `estado` igual ao
+ * `estado` actual do `Documento` — que é já o passo em curso).
  *
  * Contrato "substituição total": cada chamada substitui inteiramente
  * `texto_extraido`/`dados_json` — o chamador (futuro orquestrador, #97/#98)
@@ -37,7 +37,6 @@ final readonly class RegistarEtapaExtracaoAction
             $extracao = ExtracaoDocumento::query()->updateOrCreate(
                 ['id_documento' => $documento->id],
                 [
-                    'etapa_extracao' => $dados->etapaExtracao,
                     'extracao_reclamada_em' => $dados->reclamar ? now() : null,
                     'texto_extraido' => $dados->textoExtraido,
                     'dados_json' => $dados->dadosJson,
@@ -50,7 +49,6 @@ final readonly class RegistarEtapaExtracaoAction
 
             $documento->historico()->create([
                 'estado' => $documento->estado,
-                'passo' => $dados->etapaExtracao,
                 'resultado' => $dados->resultado,
                 'motivo' => $dados->motivo,
                 'id_utilizador' => null,

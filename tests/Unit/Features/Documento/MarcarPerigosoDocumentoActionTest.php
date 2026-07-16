@@ -21,8 +21,8 @@ beforeEach(function (): void {
     Storage::fake('perigoso');
 });
 
-it('marca Perigoso a partir de Pendente (pré-scan) e move para o disco perigoso', function (): void {
-    $documento = Documento::factory()->pendente()->create();
+it('marca Perigoso a partir de AnaliseMalware (scan) e move para o disco perigoso', function (): void {
+    $documento = Documento::factory()->analiseMalware()->create();
     Storage::disk('entrada')->put($documento->nome_ficheiro_storage, 'conteudo');
 
     Event::fake([DocumentoMarcadoPerigoso::class]);
@@ -44,8 +44,8 @@ it('marca Perigoso a partir de Pendente (pré-scan) e move para o disco perigoso
     Event::assertDispatched(DocumentoMarcadoPerigoso::class);
 });
 
-it('marca Perigoso a partir de AguardaResposta (guardrail)', function (): void {
-    $documento = Documento::factory()->aguardaResposta()->create();
+it('marca Perigoso a partir de AnaliseIaLocal (guardrail)', function (): void {
+    $documento = Documento::factory()->analiseIaLocal()->create();
     Storage::disk('enviado')->put($documento->nome_ficheiro_storage, 'conteudo');
 
     $resultado = app(MarcarPerigosoDocumentoAction::class)->handle($documento, new MarcarPerigosoDocumentoDto('conteúdo suspeito'));
@@ -55,7 +55,7 @@ it('marca Perigoso a partir de AguardaResposta (guardrail)', function (): void {
 });
 
 it('rejeita a transição a partir de um estado inválido', function (): void {
-    $documento = Documento::factory()->enviado()->create();
+    $documento = Documento::factory()->pendente()->create();
 
     expect(fn (): Documento => app(MarcarPerigosoDocumentoAction::class)->handle($documento, new MarcarPerigosoDocumentoDto('x')))
         ->toThrow(TransicaoInvalidaException::class);

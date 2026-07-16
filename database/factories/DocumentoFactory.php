@@ -58,19 +58,29 @@ class DocumentoFactory extends Factory
         return $this->semDadosDeDominio(EstadoDocumento::Pendente, 'entrada');
     }
 
-    public function aguardaEnvio(): static
+    public function analiseMalware(): static
     {
-        return $this->semDadosDeDominio(EstadoDocumento::AguardaEnvio, 'entrada');
+        return $this->semDadosDeDominio(EstadoDocumento::AnaliseMalware, 'entrada');
     }
 
-    public function enviado(): static
+    public function analiseTexto(): static
     {
-        return $this->semDadosDeDominio(EstadoDocumento::Enviado, 'enviado');
+        return $this->semDadosDeDominio(EstadoDocumento::AnaliseTexto, 'entrada');
     }
 
-    public function aguardaResposta(): static
+    public function analiseOcr(): static
     {
-        return $this->semDadosDeDominio(EstadoDocumento::AguardaResposta, 'enviado');
+        return $this->semDadosDeDominio(EstadoDocumento::AnaliseOcr, 'entrada');
+    }
+
+    public function analiseIaLocal(): static
+    {
+        return $this->semDadosDeDominio(EstadoDocumento::AnaliseIaLocal, 'enviado');
+    }
+
+    public function analiseCloud(): static
+    {
+        return $this->semDadosDeDominio(EstadoDocumento::AnaliseCloud, 'enviado');
     }
 
     public function processado(): static

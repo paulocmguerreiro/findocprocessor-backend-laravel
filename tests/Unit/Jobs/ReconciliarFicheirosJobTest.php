@@ -24,7 +24,7 @@ function correrReconciliarFicheirosJob(): void
 }
 
 it('ignora um documento preso cujo ficheiro está no disco correcto (coerente)', function (): void {
-    $documento = Documento::factory()->enviado()->create(['updated_at' => now()->subMinutes(30)]);
+    $documento = Documento::factory()->analiseIaLocal()->create(['updated_at' => now()->subMinutes(30)]);
     Storage::disk('enviado')->put($documento->nome_ficheiro_storage, 'conteudo');
 
     correrReconciliarFicheirosJob();
@@ -35,7 +35,7 @@ it('ignora um documento preso cujo ficheiro está no disco correcto (coerente)',
 
 it('repõe disco_storage/nome_ficheiro_storage quando o ficheiro está localizado noutro disco', function (): void {
     $conteudo = 'conteudo-real-do-ficheiro';
-    $documento = Documento::factory()->enviado()->create([
+    $documento = Documento::factory()->analiseIaLocal()->create([
         'hash_sha256' => hash('sha256', $conteudo),
         'updated_at' => now()->subMinutes(30),
     ]);
@@ -51,7 +51,7 @@ it('repõe disco_storage/nome_ficheiro_storage quando o ficheiro está localizad
 it('regista erro estruturado e não altera a BD quando o ficheiro não é encontrado em nenhum disco', function (): void {
     Log::spy();
 
-    $documento = Documento::factory()->enviado()->create(['updated_at' => now()->subMinutes(30)]);
+    $documento = Documento::factory()->analiseIaLocal()->create(['updated_at' => now()->subMinutes(30)]);
 
     correrReconciliarFicheirosJob();
 
@@ -64,14 +64,24 @@ it('regista erro estruturado e não altera a BD quando o ficheiro não é encont
 });
 
 it('não toca em documentos dentro da janela do limiar', function (): void {
-    $documento = Documento::factory()->enviado()->create(['updated_at' => now()->subMinutes(5)]);
+    $documento = Documento::factory()->analiseIaLocal()->create(['updated_at' => now()->subMinutes(5)]);
 
     correrReconciliarFicheirosJob();
 
     expect($documento->fresh()->updated_at->equalTo($documento->updated_at))->toBeTrue();
 });
 
-it('não toca em documentos fora dos 3 estados transitórios', function (): void {
+it('reconcilia também um documento preso num estado transitório do disco entrada (AnaliseMalware)', function (): void {
+    $documento = Documento::factory()->analiseMalware()->create(['updated_at' => now()->subMinutes(30)]);
+    Storage::disk('entrada')->put($documento->nome_ficheiro_storage, 'conteudo');
+
+    correrReconciliarFicheirosJob();
+
+    expect($documento->fresh()->disco_storage)->toBe('entrada')
+        ->and($documento->fresh()->nome_ficheiro_storage)->toBe($documento->nome_ficheiro_storage);
+});
+
+it('não toca em documentos fora dos estados transitórios', function (): void {
     $documento = Documento::factory()->pendente()->create(['updated_at' => now()->subMinutes(30)]);
 
     correrReconciliarFicheirosJob();

@@ -10,9 +10,10 @@ use App\Models\Documento;
 use App\Shared\Enums\EstadoDocumento;
 
 /**
- * Transição para `Perigoso` (pipeline) — alcançável de `Pendente` (pré-scan) e de
- * `AguardaResposta` (guardrail). Move o ficheiro para o disco `perigoso`, regista
- * o motivo e emite `DocumentoMarcadoPerigoso`.
+ * Transição para `Perigoso` (pipeline) — alcançável de `AnaliseMalware` (scan de
+ * malware) e dos estados de IA `AnaliseIaLocal`/`AnaliseCloud` (guardrail de
+ * conteúdo). Move o ficheiro para o disco `perigoso`, regista o motivo e emite
+ * `DocumentoMarcadoPerigoso`.
  *
  * Transição de sistema: corre sempre em background (Jobs de extracção), sem
  * utilizador autenticado — não tem `Gate::authorize` (ver `02-shared/padroes-acoes.md`).

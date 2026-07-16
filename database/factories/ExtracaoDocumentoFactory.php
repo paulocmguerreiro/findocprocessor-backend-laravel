@@ -6,7 +6,6 @@ namespace Database\Factories;
 
 use App\Models\Documento;
 use App\Models\ExtracaoDocumento;
-use App\Shared\Enums\EtapaExtracao;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,11 +17,11 @@ class ExtracaoDocumentoFactory extends Factory
     protected $model = ExtracaoDocumento::class;
 
     /**
-     * Estado base: etapa Pendente, sem tentativas nem lease nem dados extraídos.
+     * Estado base: scratch space vazio — sem tentativas, sem lease, sem dados
+     * extraídos. A linha só existe enquanto o documento está em pipeline activo.
      *
      * @return array{
      *     id_documento: Factory<Documento>,
-     *     etapa_extracao: EtapaExtracao,
      *     extracao_reclamada_em: null,
      *     extracao_tentativas: int,
      *     texto_extraido: null,
@@ -33,7 +32,6 @@ class ExtracaoDocumentoFactory extends Factory
     {
         return [
             'id_documento' => Documento::factory(),
-            'etapa_extracao' => EtapaExtracao::Pendente,
             'extracao_reclamada_em' => null,
             'extracao_tentativas' => 0,
             'texto_extraido' => null,
@@ -41,44 +39,24 @@ class ExtracaoDocumentoFactory extends Factory
         ];
     }
 
-    public function necessitaOcr(): static
+    /** Lease reclamado — testa o campo, mesmo sem orquestrador real. */
+    public function reclamada(): static
     {
-        return $this->state(['etapa_extracao' => EtapaExtracao::NecessitaOcr]);
+        return $this->state(['extracao_reclamada_em' => now()]);
     }
 
-    public function textoPronto(): static
+    /** Scratch space preenchido com o payload de extracção (PII) — cobre a eliminação nos terminais. */
+    public function comDadosExtraidos(): static
     {
         return $this->state([
-            'etapa_extracao' => EtapaExtracao::TextoPronto,
-            'texto_extraido' => $this->faker->paragraph(),
-        ]);
-    }
-
-    public function necessitaCloud(): static
-    {
-        return $this->state(['etapa_extracao' => EtapaExtracao::NecessitaCloud]);
-    }
-
-    public function concluido(): static
-    {
-        return $this->state([
-            'etapa_extracao' => EtapaExtracao::Concluido,
             'texto_extraido' => $this->faker->paragraph(),
             'dados_json' => ['nif' => $this->faker->numerify('#########')],
         ]);
     }
 
-    public function falhado(): static
+    /** Contador de tentativas de extracção. */
+    public function comTentativas(int $tentativas): static
     {
-        return $this->state([
-            'etapa_extracao' => EtapaExtracao::Falhado,
-            'extracao_tentativas' => 3,
-        ]);
-    }
-
-    /** Lease reclamado — testa o campo, mesmo sem orquestrador real. */
-    public function reclamada(): static
-    {
-        return $this->state(['extracao_reclamada_em' => now()]);
+        return $this->state(['extracao_tentativas' => $tentativas]);
     }
 }

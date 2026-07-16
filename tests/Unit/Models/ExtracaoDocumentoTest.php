@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Models\Documento;
 use App\Models\ExtracaoDocumento;
-use App\Shared\Enums\EtapaExtracao;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -21,7 +20,7 @@ describe('Model', function (): void {
 
     it('tem fillable correcto', function (): void {
         expect((new ExtracaoDocumento)->getFillable())->toBe([
-            'id_documento', 'etapa_extracao', 'extracao_reclamada_em',
+            'id_documento', 'extracao_reclamada_em',
             'extracao_tentativas', 'texto_extraido', 'dados_json',
         ]);
     });
@@ -32,13 +31,6 @@ describe('Model', function (): void {
 });
 
 describe('Casts', function (): void {
-    it('cast etapa_extracao para EtapaExtracao enum', function (): void {
-        $extracao = ExtracaoDocumento::factory()->make(['etapa_extracao' => EtapaExtracao::NecessitaOcr]);
-
-        expect($extracao->etapa_extracao)->toBeInstanceOf(EtapaExtracao::class)
-            ->and($extracao->etapa_extracao)->toBe(EtapaExtracao::NecessitaOcr);
-    });
-
     it('cast extracao_reclamada_em para Carbon', function (): void {
         $extracao = ExtracaoDocumento::factory()->reclamada()->create();
 
@@ -46,13 +38,13 @@ describe('Casts', function (): void {
     });
 
     it('cast extracao_tentativas para int', function (): void {
-        $extracao = ExtracaoDocumento::factory()->falhado()->create();
+        $extracao = ExtracaoDocumento::factory()->comTentativas(3)->create();
 
         expect($extracao->extracao_tentativas)->toBeInt()->toBe(3);
     });
 
     it('cast dados_json para array', function (): void {
-        $extracao = ExtracaoDocumento::factory()->concluido()->create();
+        $extracao = ExtracaoDocumento::factory()->comDadosExtraidos()->create();
 
         expect($extracao->dados_json)->toBeArray();
     });
@@ -86,23 +78,10 @@ describe('Relações', function (): void {
 });
 
 describe('Factory — states', function (): void {
-    it('cada state define a etapa esperada', function (string $state, EtapaExtracao $etapa): void {
-        $extracao = ExtracaoDocumento::factory()->{$state}()->create();
-
-        expect($extracao->etapa_extracao)->toBe($etapa);
-    })->with([
-        'necessitaOcr' => ['necessitaOcr', EtapaExtracao::NecessitaOcr],
-        'textoPronto' => ['textoPronto', EtapaExtracao::TextoPronto],
-        'necessitaCloud' => ['necessitaCloud', EtapaExtracao::NecessitaCloud],
-        'concluido' => ['concluido', EtapaExtracao::Concluido],
-        'falhado' => ['falhado', EtapaExtracao::Falhado],
-    ]);
-
-    it('base é Pendente sem tentativas nem lease nem dados', function (): void {
+    it('base é scratch space vazio: sem tentativas, sem lease, sem dados', function (): void {
         $extracao = ExtracaoDocumento::factory()->create();
 
-        expect($extracao->etapa_extracao)->toBe(EtapaExtracao::Pendente)
-            ->and($extracao->extracao_tentativas)->toBe(0)
+        expect($extracao->extracao_tentativas)->toBe(0)
             ->and($extracao->extracao_reclamada_em)->toBeNull()
             ->and($extracao->texto_extraido)->toBeNull()
             ->and($extracao->dados_json)->toBeNull();
@@ -112,5 +91,18 @@ describe('Factory — states', function (): void {
         $extracao = ExtracaoDocumento::factory()->reclamada()->create();
 
         expect($extracao->extracao_reclamada_em)->not->toBeNull();
+    });
+
+    it('comDadosExtraidos preenche o payload PII (texto_extraido/dados_json)', function (): void {
+        $extracao = ExtracaoDocumento::factory()->comDadosExtraidos()->create();
+
+        expect($extracao->texto_extraido)->not->toBeNull()
+            ->and($extracao->dados_json)->toBeArray();
+    });
+
+    it('comTentativas define o contador', function (): void {
+        $extracao = ExtracaoDocumento::factory()->comTentativas(2)->create();
+
+        expect($extracao->extracao_tentativas)->toBe(2);
     });
 });

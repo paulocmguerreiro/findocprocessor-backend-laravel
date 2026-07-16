@@ -17,7 +17,7 @@ beforeEach(function (): void {
     });
 
     Route::get('/test-transicao-invalida', function (): never {
-        throw TransicaoInvalidaException::entre(EstadoDocumento::Processado, EstadoDocumento::Enviado);
+        throw TransicaoInvalidaException::entre(EstadoDocumento::Processado, EstadoDocumento::Pendente);
     });
 
     Route::get('/test-not-found', function (): never {
@@ -49,7 +49,7 @@ it('TransicaoInvalidaException mapeia para 422 com a mensagem de domínio', func
     $this->getJson('/test-transicao-invalida')
         ->assertUnprocessable()
         ->assertJsonPath('status', Response::HTTP_UNPROCESSABLE_ENTITY)
-        ->assertJsonPath('detail', 'Transição de estado inválida: de "PROCESSADO" para "ENVIADO".');
+        ->assertJsonPath('detail', 'Transição de estado inválida: de "PROCESSADO" para "PENDENTE".');
 });
 
 it('ModelNotFoundException mapeia para 404', function (): void {

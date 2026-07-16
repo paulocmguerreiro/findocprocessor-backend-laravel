@@ -37,8 +37,8 @@ function dtoTransicao(): TransicionarProcessadoDocumentoDto
     );
 }
 
-it('transiciona AguardaResposta → Processado: preenche domínio, move+renomeia e emite o evento', function (): void {
-    $documento = Documento::factory()->aguardaResposta()->create(['nome_ficheiro_original' => 'scan.pdf']);
+it('transiciona AnaliseIaLocal → Processado: preenche domínio, move+renomeia e emite o evento', function (): void {
+    $documento = Documento::factory()->analiseIaLocal()->create(['nome_ficheiro_original' => 'scan.pdf']);
     Storage::disk('enviado')->put($documento->nome_ficheiro_storage, 'conteudo');
     $dados = dtoTransicao();
 
@@ -72,7 +72,7 @@ it('rejeita a transição a partir de um estado inválido', function (): void {
 });
 
 it('guest (sem autenticação) é rejeitado', function (): void {
-    $documento = Documento::factory()->aguardaResposta()->create();
+    $documento = Documento::factory()->analiseIaLocal()->create();
     auth()->logout();
 
     expect(fn (): Documento => app(TransicionarProcessadoDocumentoAction::class)->handle($documento, dtoTransicao()))
@@ -83,7 +83,7 @@ describe('sem permissão de escrita', function (): void {
     beforeEach(fn () => $this->actingAs(criarUtilizador()));
 
     it('lança AuthorizationException quando utilizador não tem permissão de escrita', function (): void {
-        $documento = Documento::factory()->aguardaResposta()->create();
+        $documento = Documento::factory()->analiseIaLocal()->create();
 
         expect(fn (): Documento => app(TransicionarProcessadoDocumentoAction::class)->handle($documento, dtoTransicao()))
             ->toThrow(AuthorizationException::class);

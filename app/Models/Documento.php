@@ -8,9 +8,11 @@ use App\Models\Concerns\RegistaActividade;
 use App\Policies\DocumentoPolicy;
 use App\Shared\Enums\EstadoDocumento;
 use App\Shared\States\ContratoEstadoDocumento;
-use App\Shared\States\DocumentoAguardaEnvio;
-use App\Shared\States\DocumentoAguardaResposta;
-use App\Shared\States\DocumentoEnviado;
+use App\Shared\States\DocumentoAnaliseCloud;
+use App\Shared\States\DocumentoAnaliseIaLocal;
+use App\Shared\States\DocumentoAnaliseMalware;
+use App\Shared\States\DocumentoAnaliseOcr;
+use App\Shared\States\DocumentoAnaliseTexto;
 use App\Shared\States\DocumentoErro;
 use App\Shared\States\DocumentoPendente;
 use App\Shared\States\DocumentoPerigoso;
@@ -93,9 +95,11 @@ class Documento extends Model
     {
         return match ($this->estado) {
             EstadoDocumento::Pendente => DocumentoPendente::deDocumento($this),
-            EstadoDocumento::AguardaEnvio => DocumentoAguardaEnvio::deDocumento($this),
-            EstadoDocumento::Enviado => DocumentoEnviado::deDocumento($this),
-            EstadoDocumento::AguardaResposta => DocumentoAguardaResposta::deDocumento($this),
+            EstadoDocumento::AnaliseMalware => DocumentoAnaliseMalware::deDocumento($this),
+            EstadoDocumento::AnaliseTexto => DocumentoAnaliseTexto::deDocumento($this),
+            EstadoDocumento::AnaliseOcr => DocumentoAnaliseOcr::deDocumento($this),
+            EstadoDocumento::AnaliseIaLocal => DocumentoAnaliseIaLocal::deDocumento($this),
+            EstadoDocumento::AnaliseCloud => DocumentoAnaliseCloud::deDocumento($this),
             EstadoDocumento::Processado => DocumentoProcessado::deDocumento($this),
             EstadoDocumento::Erro => DocumentoErro::deDocumento($this),
             EstadoDocumento::Perigoso => DocumentoPerigoso::deDocumento($this),

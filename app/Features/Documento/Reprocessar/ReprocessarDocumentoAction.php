@@ -9,13 +9,12 @@ use App\Features\Documento\Transicao\ExecutorTransicaoDocumento;
 use App\Models\Documento;
 use App\Models\ExtracaoDocumento;
 use App\Shared\Enums\EstadoDocumento;
-use App\Shared\Enums\EtapaExtracao;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * Transição `Erro → AguardaEnvio` (HTTP). Reabre um documento em erro para
+ * Transição `Erro → Pendente` (HTTP). Reabre um documento em erro para
  * reprocessamento, parametrizado pelo `modo`; move o ficheiro `erro → entrada`,
  * regista o `modo` como motivo e emite `DocumentoReprocessado`.
  *
@@ -41,13 +40,12 @@ final readonly class ReprocessarDocumentoAction
         return DB::transaction(function () use ($documento, $dados): Documento {
             $documentoReaberto = $this->executor->executar(
                 $documento,
-                EstadoDocumento::AguardaEnvio,
+                EstadoDocumento::Pendente,
                 $dados->modo->value,
                 evento: fn (Documento $documentoReaberto): DocumentoReprocessado => new DocumentoReprocessado($documentoReaberto, $dados->modo),
             );
 
             ExtracaoDocumento::query()->where('id_documento', $documentoReaberto->id)->update([
-                'etapa_extracao' => EtapaExtracao::Pendente,
                 'extracao_reclamada_em' => null,
                 'extracao_tentativas' => 0,
                 'texto_extraido' => null,
