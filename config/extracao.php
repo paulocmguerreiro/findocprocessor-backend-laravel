@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 return [
     'threshold_caracteres' => 50,
-    'ttl_lease' => env('EXTRACAO_TTL_LEASE', 300), // segundos — afinado na #98
+    'ttl_lease' => (int) env('EXTRACAO_TTL_LEASE', 300), // segundos — afinado na #98; cast: env() devolve string quando definido, e config()->integer() exige int
     'max_tentativas' => 3,
     // Provider/modelo/ligação agrupados por camada — expostos aqui (em vez de
     // env() directo) para que ClienteExtracaoIAPrism nunca chame env() fora de

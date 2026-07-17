@@ -48,13 +48,10 @@ app/Policies/              ← Autorização por Gate/Policy
 app/Shared/                ← Enums, Http (ApiResponse) e Cache (CacheServico, TagCache, TtlCache)
 app/Http/Controllers/      ← Thin controllers (só dispatch para Actions)
 app/Http/Middleware/       ← InjectarContextoLog (trace_id UUID por request via Context facade)
-app/Infrastructure/        ← AI, FileSystem, Repositories  →  ver Roadmap (ingestão de documentos)
-app/Jobs/                  ← Processamento assíncrono       →  ver Roadmap (pipeline de inbox)
+app/Infrastructure/        ← AI (Prism), Extracao (pdfparser/OCR), Malware (ClamAV) — motores puros
+app/Console/Commands/      ← Commands extracao:* — dispatch síncrono para as Actions orquestradoras
+app/Jobs/                  ← ReconciliarFicheirosJob — reconciliação ficheiro↔BD agendada
 ```
-
-> As pastas `app/Infrastructure/` e `app/Jobs/` estão reservadas para o pipeline
-> de ingestão de documentos (OCR / análise de imagem / IA) descrito no
-> [Roadmap](#roadmap) — ainda não contêm implementação.
 
 Padrões aplicados: Actions `final readonly`, autorização dupla camada (`Gate::authorize()` no FormRequest **e** na Action), `DB::transaction()` em todas as escritas, DTOs como Value Objects, `strict_types=1` em todos os ficheiros, cursor pagination (keyset) nas listagens, cache Redis com invalidação por tags e logging estruturado com `trace_id` por request (propagado a Jobs). Detalhe em [Documentação](#documentação).
 
@@ -88,6 +85,30 @@ docker compose exec app composer test
 - **O parâmetro `?estado=` tem duas semânticas distintas** conforme o recurso:
   - Em `categorias-documento`, `entidades` e `utilizadores` é um **filtro de soft delete**: `todos | somente_ativos | somente_inativos`.
   - Em `documentos` é a **fase do ciclo de vida** (`EstadoDocumento`): `Pendente | AnaliseMalware | AnaliseTexto | AnaliseOcr | AnaliseIaLocal | AnaliseCloud | Processado | Erro | Perigoso`.
+
+## Configuração — variáveis de ambiente
+
+Ver `.env.example` para o conjunto completo. As da extracção e do pipeline (todas com
+_fail-safe_: vazio/ausente **desliga** a camada respectiva):
+
+| Variável | Default | Para que serve |
+| --- | --- | --- |
+| `LLM_LOCAL_PROVIDER` / `LLM_LOCAL_URL` / `LLM_LOCAL_MODEL` | `ollama` / — / — | Camada de IA **local** (Prism). Sem `URL`+`MODEL` a etapa `AnaliseIaLocal` é saltada para a cloud. |
+| `LLM_CLOUD_PROVIDER` / `LLM_CLOUD_URL` / `LLM_CLOUD_MODEL` / `LLM_CLOUD_KEY` | `anthropic` / — / — / — | Camada de IA **cloud**. Sem `URL`+`MODEL`+`KEY` a etapa `AnaliseCloud` termina em `Erro`. |
+| `EXTRACAO_TTL_LEASE` | `300` | TTL (s) do _lease_ de reivindicação das etapas de análise: recupera documentos de _workers_ mortos e espaça os _retries_. |
+| `CLAMAV_HOST` / `CLAMAV_PORT` / `CLAMAV_TIMEOUT_SEGUNDOS` | — / — / `5` | Scan de malware (`clamd`/`INSTREAM`). Sem `HOST`+`PORT` o scan é saltado (documento admitido). |
+| `PIPELINE_RECONCILIACAO_LIMIAR_MINUTOS` | `15` | Idade (min) a partir da qual um documento preso num estado transitório é reconciliado ficheiro↔BD. |
+| `FILESYSTEM_MAX_FILE_SIZE` / `FILESYSTEM_ALLOWED_EXTENSIONS` | `52428800` / `.pdf,.png,…` | Limite (50 MB) e extensões aceites no upload — documentais; a imposição é a validação de `ReceberUploadDocumentoRequest`. |
+
+> **Nota:** `config:cache` (produção) **congela** `local.activa`/`cloud.activa` (derivadas destas vars no
+> arranque). Mudar as vars de LLM em produção exige `php artisan config:clear`/rebuild da cache — reflectir
+> a mudança no serviço `scheduler` (que corre `schedule:work`).
+
+O agendamento do pipeline vive no serviço **`scheduler`** do `compose.yaml` (`php artisan schedule:work`),
+que dispara `extracao:run-scan|run-parser|run-tesseract|run-ia-local` a cada minuto e `run-ia-cloud` a
+cada 5 minutos (todos `withoutOverlapping`). O container tem os _delegates_ de imagem TIFF/WEBP
+(`libwebp`/`tiff`) e o limite de upload de 50 MB alinhado em PHP (`upload_max_filesize`), nginx
+(`client_max_body_size`) e ClamAV (`docker/clamav/clamd.conf`, `StreamMaxLength`).
 
 ## Testes
 
@@ -139,7 +160,7 @@ Todas as rotas exigem Bearer token. Lista completa de endpoints e parâmetros: [
 Próximos passos, geridos como issues no repositório:
 
 - **Gestão financeira** _(próximo)_ — movimentos (débito/crédito) associados a documentos e entidades.
-- **Pipeline de ingestão** — Jobs + Schedule sobre a pasta de inbox, com OCR, análise de imagem e extração de dados via IA (`app/Infrastructure/AI`).
+- **Agrupar entidades duplicadas** — mitigar duplicação de `Entidade` criada por NIF/nome ligeiramente diferentes entre extrações da IA.
 
 ## Relacionado (roadmap)
 

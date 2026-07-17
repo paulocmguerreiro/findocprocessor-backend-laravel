@@ -10,15 +10,16 @@
 |---|---|---|---|---|
 | `id` | `uuid` PK | Não | — | UUIDv7 via `HasUuids` |
 | `id_documento` | `uuid` FK | Não | — | **UNIQUE** (1-1 com `documentos`); `cascadeOnDelete()` + `cascadeOnUpdate()` |
-| `extracao_reclamada_em` | `timestamp` | Sim | `null` | Lease de reivindicação; TTL = `config('extracao.ttl_lease')` (300s) — **libertado pelo orquestrador de pipeline**; o Model só grava/limpa o valor |
-| `extracao_tentativas` | `unsignedTinyInteger` | Não | `0` | Tecto = `config('extracao.max_tentativas')` (3) — **enforcement fica no orquestrador de pipeline** |
+| `extracao_reclamada_em` | `timestamp` | Sim | `null` | Lease de reivindicação; TTL = `config('extracao.ttl_lease')` (300s) — gravado por `ReivindicarDocumentoEmEtapaAction` (`updateOrCreate`), não é explicitamente limpo (o `RegistarEtapaExtracaoAction` da etapa seguinte já reclama de novo) |
+| `extracao_tentativas` | `unsignedTinyInteger` | Não | `0` | Tecto = `config('extracao.max_tentativas')` (3), enforcement em `RegistarFalhaTecnicaExtracaoAction`; reposto a 0 no avanço correcto de etapa por `RegraReporTentativasExtracao` (`02-shared/regras-transicao-documento.md`) |
 | `texto_extraido` | `longText` | Sim | `null` | PII — nunca em Resource |
-| `dados_json` | `json` | Sim | `null` | PII — nunca em Resource; cast `array` (array shape opcional por entidade — ver Notas arquitecturais) |
+| `dados_json` | `json` | Sim | `null` | PII — nunca em Resource; cast `array` (array shape opcional por entidade — ver Notas arquitecturais); **não populado por nenhum orquestrador** — ver Notas arquitecturais |
 | `created_at` / `updated_at` | `timestamp` | — | — | `timestamps()` — tabela **mutável** (ao contrário de `etapas_documento`, que é append-only) |
 
-Índice simples `(extracao_reclamada_em)` — preparação para o `SELECT` do futuro Schedule do
-orquestrador de pipeline; sem consumidor por agora. (A coluna de estado da extracção deixou de
-existir: o progresso lê-se de `Documento.estado` na máquina de estados unificada — issue #110.)
+Índice simples `(extracao_reclamada_em)` — consumido por `ReivindicarDocumentoEmEtapaAction`
+(`01-features/documento-pipeline.md`) para seleccionar o próximo documento elegível por etapa (lease
+nulo ou expirado). (A coluna de estado da extracção deixou de existir: o progresso lê-se de
+`Documento.estado` na máquina de estados unificada — issue #110.)
 
 **Scratch space 1-1 com `Documento`** — sem coluna de estado; só produtos intermédios da extracção
 (`texto_extraido`/`dados_json`), lease e contador de tentativas. `id_documento` é `unique()`; nunca
@@ -96,7 +97,7 @@ Base (`definition()`) = scratch space vazio: `extracao_tentativas: 0`, lease e d
 | State | Efeito | Notas |
 |---|---|---|
 | base | scratch vazio | sem tentativas, lease nem dados |
-| `reclamada()` | `extracao_reclamada_em: now()` | testa o campo de lease mesmo sem orquestrador |
+| `reclamada()` | `extracao_reclamada_em: now()` | testa o campo de lease (elegibilidade em `ReivindicarDocumentoEmEtapaAction`) |
 | `comDadosExtraidos()` | `texto_extraido` + `dados_json` preenchidos | simula extracção concluída |
 | `comTentativas(int)` | `extracao_tentativas: N` | contador de tentativas |
 
@@ -121,10 +122,11 @@ contrato "substituição total", ausência de `Gate::authorize`).
   não cobre Models.
 - **`dados_json` tipado com array shape de chaves opcionais** (`data_documento?`, `fornecedor?`,
   `cliente?`, `valor?`) em vez de `mixed` — inferida de `ResultadoExtracaoIA`
-  (`04-infra/extracao-ia.md`), que é hoje o único produtor conhecido de dados equivalentes. O
-  orquestrador real que grava `dados_json` (`RegistarEtapaExtracaoAction`) ainda não existe (#97/#98)
-  — este shape **guia** a implementação futura, não é um contrato já imposto por código; se o
-  orquestrador vier a produzir uma forma diferente, o shape deve ser ajustado nessa altura.
-- **Índice `(extracao_reclamada_em)` sem consumidor** — aceite, mesmo padrão já usado no índice
-  `(estado, updated_at)` de `Documento` (preparação para uso futuro documentado, não especulação sem
-  plano).
+  (`04-infra/extracao-ia.md`). Mesmo com os 4 orquestradores de etapa implementados, nenhum escreve
+  `dados_json` — `RegistarFalhaTecnicaExtracaoAction` só **preserva** o valor já existente (contrato
+  de substituição total do recorder) e `ConcluirExtracaoDocumentoAction` passa o `ResultadoExtracaoIA`
+  directamente ao DTO de transição, sem passar por `dados_json` — populá-lo ficou fora de âmbito.
+  Este shape continua a **guiar** uma implementação futura, não é um contrato já imposto por código.
+- **Índice `(extracao_reclamada_em)` consumido** — deixou de ser preparação especulativa:
+  `ReivindicarDocumentoEmEtapaAction` filtra por este campo em toda reivindicação de etapa. Mesmo
+  padrão do índice `(estado, updated_at)` de `Documento`, agora ambos com consumidor real.

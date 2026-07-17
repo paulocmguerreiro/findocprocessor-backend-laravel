@@ -109,8 +109,40 @@ o slug (fornecedor, categoria ou data).
 **Geração:** `Str::slug($nomeFornecedor)`, `Str::slug($nomeCategoria)`; data de `data_documento`;
 extensão preservada de `nome_ficheiro_original`.
 
+**Fallbacks (documentos parciais, `TransicionarProcessadoDocumentoDto` flexibilizado):**
+fornecedor `null` (`espera_fornecedor = false`, ex.: extracto/aviso) → usa o **nome extraído**
+(`nomeFornecedorExtraido`) sem criar `Entidade`, com fallback adicional para o nome da empresa mãe se
+o extraído também vier vazio; data `null` (`espera_data = false`) → usa `Documento.created_at` como
+prefixo `yyyy-mm-dd`. A assinatura passa a receber sempre `?string $nomeFornecedor`,
+`?DateTimeInterface $dataDocumento`, `?string $nomeFornecedorExtraido` e `DateTimeInterface
+$createdAt` — nunca assume os dois primeiros como não-nulos.
+
 **Limitação:** dois documentos com o mesmo fornecedor, categoria e data terão o mesmo nome canónico
 — `Storage::put()` sobrepõe silenciosamente. Diferido.
+
+---
+
+### `RegraReporTentativasExtracao`
+
+**Ficheiro:** `app/Features/Documento/Operacoes/Transicao/RegraReporTentativasExtracao.php`
+
+**Invariante (RN-05/RF-13):** `extracao_tentativas` conta as falhas técnicas da **etapa
+actual** do pipeline de extracção — cada etapa tem direito a um orçamento próprio de tentativas
+(`config('extracao.max_tentativas')`). Por isso, sempre que o `Documento` avança correctamente para
+um estado **não-terminal** (`Pendente`, `AnaliseMalware`, `AnaliseTexto`, `AnaliseOcr`,
+`AnaliseIaLocal`, `AnaliseCloud`), o contador é reposto a 0; **nunca** reposto numa transição para
+`Erro`. Nos terminais `Processado`/`Perigoso` a reposição é irrelevante — a linha `ExtracaoDocumento`
+já foi eliminada por `RegraEliminarExtracaoTerminal` na mesma transacção.
+
+**Activação:** Chamada por `ExecutorTransicaoDocumento` dentro da transacção, logo após
+`regraEliminarExtracao->handle(...)`.
+
+**Invocada por:** `ExecutorTransicaoDocumento` (que é usado pelas 10 Actions de transição).
+
+**Implementação:** `match` exaustivo sem `default` sobre os 9 estados (decide reposição sim/não) +
+`update(['extracao_tentativas' => 0])` por `id_documento`. No-op se não existir `ExtracaoDocumento`
+(update de 0 linhas não é erro) — cobre o caso de o documento ainda não ter entrado no pipeline de
+extracção.
 
 ---
 

@@ -1,6 +1,6 @@
 # System Spec — Infra: Jobs / Queue
 
-> `app/Jobs/`
+> `app/Jobs/`, `app/Console/Commands/Extracao/`
 
 ---
 
@@ -9,6 +9,40 @@
 | Job                       | Tipo      | Schedule/Queue                                                                                                                        |
 | ------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `ReconciliarFicheirosJob` | Scheduled | `Schedule::job(new ReconciliarFicheirosJob)->everyFiveMinutes()->onOneServer()->name('reconciliar-ficheiros')` (`routes/console.php`) |
+
+---
+
+## Commands `extracao:*` + Schedule (pipeline automático de extracção)
+
+> `app/Console/Commands/Extracao/`, agendados em `routes/console.php`.
+
+5 Commands, um por etapa activa do pipeline (os 3 estados terminais — `Processado`/`Erro`/`Perigoso`
+— não têm Command). **Não são Jobs de fila** — correm sincronamente a partir do `Schedule`, como um
+Controller despacha para uma Action; a fila (`QUEUE_CONNECTION=redis`) fica reservada a
+`ReconciliarFicheirosJob`. Todos finos: sem lógica de negócio, só ligam o comando à Action
+orquestradora (`01-features/documento-pipeline.md`).
+
+| Command | Signature | Action | Lote/ciclo | Schedule |
+|---|---|---|---|---|
+| `ExecutarScanExtracaoCommand` | `extracao:run-scan` | `ReivindicarDocumentoPendenteAction` (reutilizada) | 25 (`LOTE_PADRAO`) | `everyMinute()` |
+| `ExecutarParserExtracaoCommand` | `extracao:run-parser` | `ProcessarAnaliseTextoDocumentoAction` | 25 | `everyMinute()` |
+| `ExecutarTesseractExtracaoCommand` | `extracao:run-tesseract` | `ProcessarAnaliseOcrDocumentoAction` | **1** (Tesseract pesado, M1 8GB) | `everyMinute()` |
+| `ExecutarIaLocalExtracaoCommand` | `extracao:run-ia-local` | `ProcessarAnaliseIaLocalDocumentoAction` | **1** (modelo local pesado) | `everyMinute()` |
+| `ExecutarIaCloudExtracaoCommand` | `extracao:run-ia-cloud` | `ProcessarAnaliseCloudDocumentoAction` | 25 | `everyFiveMinutes()` |
+
+`EtapaExtracaoCommand` (base abstracta, sufixo `Command` obrigatório mesmo na base — ArchTest de
+nomenclatura de Commands aplica-se a toda a hierarquia) — `handle()` chama repetidamente
+`processarProximo(): ?Documento` até devolver `null` (sem candidato) ou atingir `loteMaximo()`; as
+subclasses só implementam essas duas primitivas. Todos os 5 Commands têm `->withoutOverlapping()` no
+`Schedule` (o mesmo Command nunca se sobrepõe a si próprio entre execuções); a exclusão **por
+documento** entre workers/execuções não é responsabilidade do Command — vem do lease
+(`ReivindicarDocumentoEmEtapaAction`) ou da mudança de estado imediata (`scan`, via
+`ReivindicarDocumentoPendenteAction`). Sem `WithoutOverlapping($idDocumento)` por Job — o lease já dá
+essa garantia por documento, não é preciso replicá-la a nível de fila.
+
+**`extracao:run-scan` ignora documentos manuais** (CA-09) por construção: só selecciona `Documento`s
+em `Pendente`, e `RegistarDocumentoManualAction` nunca deixa um documento em `Pendente` (vai directo a
+`Processado`/`Perigoso`/`Erro`).
 
 `ReconciliarFicheirosJob` — reconciliação ficheiro↔BD: varre `Documento`s presos num estado
 transitório (os 5 passos de análise: `AnaliseMalware`/`AnaliseTexto`/`AnaliseOcr`/`AnaliseIaLocal`/`AnaliseCloud`) há mais tempo que
@@ -39,24 +73,21 @@ Sem Listeners nesta issue. Os Listeners serão adicionados quando a issue de ext
 
 As Actions de transição de pipeline (`MarcarAnaliseMalware`, `MarcarAnaliseTexto`, `MarcarAnaliseOcr`,
 `MarcarAnaliseIaLocal`, `MarcarAnaliseCloud`, `TransicionarProcessado`, `MarcarErro`, `MarcarPerigoso`)
-não têm endpoint HTTP — são invocadas
-pelos Jobs da extracção. Os Jobs futuros correrão em nome do utilizador que fez o upload (autor da
-primeira `EtapaDocumento` do documento). Ver `03-models/etapa-documento.md` para detalhe de
-`id_utilizador`.
+não têm endpoint HTTP — são invocadas pelos 4 orquestradores de etapa (`ProcessarAnalise*`,
+`01-features/documento-pipeline.md`), chamados pelos Commands `extracao:*` acima.
+`TransicionarProcessadoDocumentoAction` corre em nome do utilizador que fez o upload
+(`Documento.id_responsavel`, autor da primeira `EtapaDocumento`) — impersonação temporária feita por
+`ConcluirExtracaoDocumentoAction`, único ponto do pipeline que precisa de um utilizador autenticado
+(`Gate::authorize('update')`). Ver `03-models/etapa-documento.md` para detalhe de `id_utilizador`.
 
-`TriarDocumentoPendenteAction` é outro ponto de invocação programática sem Job concreto
-nesta issue — corre o scan de malware e decide a transição, invocada por
-`ReivindicarDocumentoPendenteAction` (mesma transacção/lock). Fica pendente integrar
-`TriarDocumentoPendenteAction`/o Job que a envolver no pipeline de extracção, invocando-o **antes** de
-iniciar o processamento — mesmo padrão de dependência a informar já usado por `Reivindicar`/
-`MarcarAnaliseMalware`.
+`TriarDocumentoPendenteAction` corre o scan de malware e decide a transição, invocada por
+`ReivindicarDocumentoPendenteAction` (mesma transacção/lock) — por sua vez chamada pelo
+`ExecutarScanExtracaoCommand` (`extracao:run-scan`).
 
-`RegistarEtapaExtracaoAction` (`app/Features/Documento/Processamento/RegistarEtapaExtracao/`) é o ponto de
-invocação programática que o futuro orquestrador de pipeline vai chamar para registar cada
-passo de IA (OCR/cloud) sobre um `Documento` — upsert em `extracoes_documento` + `EtapaDocumento`
-(`resultado`; o passo é o `estado` actual). Sem Job concreto nesta issue: só o modelo de dados e o
-recorder existem; o Job/Schedule que varre `extracoes_documento` por `extracao_reclamada_em` e invoca
-esta Action fica para o orquestrador de pipeline. Ver `01-features/documento-reconciliacao.md`
+`RegistarEtapaExtracaoAction` (`app/Features/Documento/Processamento/RegistarEtapaExtracao/`) é
+invocada por cada um dos 4 orquestradores de etapa e por `RegistarFalhaTecnicaExtracaoAction` — regista
+cada passo de IA/parser/OCR sobre um `Documento` (upsert em `extracoes_documento` + `EtapaDocumento`
+com `resultado`; o passo é o `estado` actual). Ver `01-features/documento-reconciliacao.md`
 ("Dimensão de extracção").
 
 ---

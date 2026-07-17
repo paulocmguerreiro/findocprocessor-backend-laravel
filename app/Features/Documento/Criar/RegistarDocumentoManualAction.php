@@ -44,7 +44,7 @@ final readonly class RegistarDocumentoManualAction
     private const string DISCO_ERRO = 'erro';
 
     public function __construct(
-        private RegraNomearProcessado $nomear,
+        private RegraNomearProcessado $regraNomear,
         private CacheServico $cache,
         private ContratoAnalisadorMalware $analisador,
     ) {}
@@ -54,30 +54,32 @@ final readonly class RegistarDocumentoManualAction
      * @throws DocumentoDuplicadoException
      * @throws \Throwable
      */
-    public function handle(RegistarDocumentoManualDto $dados): Documento
+    public function handle(RegistarDocumentoManualDto $dadosRegisto): Documento
     {
         Gate::authorize('create', Documento::class);
 
-        $hash = (string) hash_file('sha256', (string) $dados->ficheiro->getRealPath());
+        $hash = (string) hash_file('sha256', (string) $dadosRegisto->ficheiro->getRealPath());
 
         if (Documento::query()->where('hash_sha256', $hash)->exists()) {
             throw DocumentoDuplicadoException::paraHash($hash);
         }
 
-        $fornecedor = Entidade::findOrFail($dados->idFornecedor);
-        $categoria = CategoriaDocumento::findOrFail($dados->idCategoria);
+        $fornecedor = Entidade::findOrFail($dadosRegisto->idFornecedor);
+        $categoria = CategoriaDocumento::findOrFail($dadosRegisto->idCategoria);
 
-        $nomeStorage = $this->nomear->handle(
-            $dados->dataDocumento,
+        $nomeStorage = $this->regraNomear->handle(
+            $dadosRegisto->dataDocumento,
             $fornecedor->nome,
+            null,
             $categoria->nome,
-            $dados->ficheiro->getClientOriginalName(),
+            $dadosRegisto->ficheiro->getClientOriginalName(),
+            now(),
         );
 
         /** @var array{estado: EstadoDocumento, disco: string, motivo: string} $veredicto */
-        $veredicto = $this->avaliarScan((string) $dados->ficheiro->getRealPath());
+        $veredicto = $this->avaliarScan((string) $dadosRegisto->ficheiro->getRealPath());
 
-        $caminho = $dados->ficheiro->storeAs('', $nomeStorage, $veredicto['disco']);
+        $caminho = $dadosRegisto->ficheiro->storeAs('', $nomeStorage, $veredicto['disco']);
 
         if ($caminho === false) {
             throw new RuntimeException("Falha ao guardar o ficheiro no disco {$veredicto['disco']}.");
@@ -86,16 +88,16 @@ final readonly class RegistarDocumentoManualAction
         Log::info('documento.registar_manual.inicio', ['id_utilizador' => Auth::id()]);
 
         try {
-            $documento = DB::transaction(function () use ($dados, $hash, $nomeStorage, $veredicto): Documento {
+            $documento = DB::transaction(function () use ($dadosRegisto, $hash, $nomeStorage, $veredicto): Documento {
                 $documento = Documento::create([
                     'estado' => $veredicto['estado'],
                     'id_responsavel' => Auth::id(),
-                    'id_fornecedor' => $dados->idFornecedor,
-                    'id_cliente' => $dados->idCliente,
-                    'id_categoria' => $dados->idCategoria,
-                    'valor' => $dados->valor,
-                    'data_documento' => $dados->dataDocumento,
-                    'nome_ficheiro_original' => $dados->ficheiro->getClientOriginalName(),
+                    'id_fornecedor' => $dadosRegisto->idFornecedor,
+                    'id_cliente' => $dadosRegisto->idCliente,
+                    'id_categoria' => $dadosRegisto->idCategoria,
+                    'valor' => $dadosRegisto->valor,
+                    'data_documento' => $dadosRegisto->dataDocumento,
+                    'nome_ficheiro_original' => $dadosRegisto->ficheiro->getClientOriginalName(),
                     'disco_storage' => $veredicto['disco'],
                     'nome_ficheiro_storage' => $nomeStorage,
                     'hash_sha256' => $hash,

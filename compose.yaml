@@ -95,6 +95,34 @@ services:
         condition: service_healthy
     networks: [findoc]
 
+  # Agendador (#111): corre o Schedule (routes/console.php) que dispara os comandos
+  # extracao:* do pipeline. Partilha a imagem/env da app; não corre migrations
+  # (RUN_MIGRATIONS ausente — o serviço `app` já as aplicou).
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: findocprocessor-app
+    restart: unless-stopped
+    command: php artisan schedule:work
+    environment:
+      <<: *app-env
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/vendor
+    depends_on:
+      app:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+      mysql-grants:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+      clamav:
+        condition: service_healthy
+    networks: [findoc]
+
   mysql:
     image: mysql:8.4
     restart: unless-stopped
@@ -147,6 +175,9 @@ services:
     restart: unless-stopped
     volumes:
       - clamav-data:/var/lib/clamav
+      # clamd.conf próprio: limites de scan ≥ 50 MB (StreamMaxLength/MaxScanSize/MaxFileSize)
+      # para acompanhar o limite de upload de 50 MB (#111, RF-15).
+      - ./docker/clamav/clamd.conf:/etc/clamav/clamd.conf:ro
     healthcheck:
       test: ["CMD", "clamdcheck.sh"]
       interval: 30s

@@ -21,38 +21,40 @@ use Illuminate\Support\Facades\Gate;
 final readonly class CorrigirDocumentoAction
 {
     public function __construct(
-        private ExecutorTransicaoDocumento $executor,
-        private RegraNomearProcessado $nomear,
+        private ExecutorTransicaoDocumento $executorTransicao,
+        private RegraNomearProcessado $regraNomear,
     ) {}
 
     /**
      * @throws AuthorizationException
      * @throws \Throwable
      */
-    public function handle(Documento $documento, CorrigirDocumentoDto $dados): Documento
+    public function handle(Documento $documento, CorrigirDocumentoDto $dadosCorrecao): Documento
     {
         Gate::authorize('update', $documento);
 
-        $fornecedor = Entidade::findOrFail($dados->idFornecedor);
-        $categoria = CategoriaDocumento::findOrFail($dados->idCategoria);
+        $fornecedor = Entidade::findOrFail($dadosCorrecao->idFornecedor);
+        $categoria = CategoriaDocumento::findOrFail($dadosCorrecao->idCategoria);
 
-        $nomeCanonico = $this->nomear->handle(
-            $dados->dataDocumento,
+        $nomeCanonico = $this->regraNomear->handle(
+            $dadosCorrecao->dataDocumento,
             $fornecedor->nome,
+            null,
             $categoria->nome,
             $documento->nome_ficheiro_original,
+            $documento->created_at,
         );
 
-        return $this->executor->executar(
+        return $this->executorTransicao->executar(
             $documento,
             EstadoDocumento::Processado,
             'correcção',
             camposDominio: [
-                'id_fornecedor' => $dados->idFornecedor,
-                'id_cliente' => $dados->idCliente,
-                'id_categoria' => $dados->idCategoria,
-                'valor' => $dados->valor,
-                'data_documento' => $dados->dataDocumento,
+                'id_fornecedor' => $dadosCorrecao->idFornecedor,
+                'id_cliente' => $dadosCorrecao->idCliente,
+                'id_categoria' => $dadosCorrecao->idCategoria,
+                'valor' => $dadosCorrecao->valor,
+                'data_documento' => $dadosCorrecao->dataDocumento,
             ],
             nomeDestino: $nomeCanonico,
         );
