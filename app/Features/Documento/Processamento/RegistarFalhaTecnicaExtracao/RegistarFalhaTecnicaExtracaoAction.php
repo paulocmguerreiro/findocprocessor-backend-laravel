@@ -9,6 +9,7 @@ use App\Features\Documento\MarcarErro\MarcarErroDocumentoDto;
 use App\Features\Documento\Processamento\RegistarEtapaExtracao\RegistarEtapaExtracaoAction;
 use App\Features\Documento\Processamento\RegistarEtapaExtracao\RegistarEtapaExtracaoDto;
 use App\Models\Documento;
+use App\Models\ExtracaoDocumento;
 use App\Shared\Enums\ResultadoEtapa;
 
 /**
@@ -35,9 +36,16 @@ final readonly class RegistarFalhaTecnicaExtracaoAction
      */
     public function handle(Documento $documento, string $motivo): Documento
     {
+        // O recorder é "substituição total": re-enviar o texto/dados já extraídos
+        // preserva-os (uma etapa de IA que falha tecnicamente tem de manter o texto
+        // do parser/OCR para o próximo ciclo poder reprocessar).
+        $extracaoActual = ExtracaoDocumento::query()->where('id_documento', $documento->id)->first();
+
         $extracao = $this->registarEtapa->handle($documento, new RegistarEtapaExtracaoDto(
             resultado: ResultadoEtapa::Falha,
             motivo: $motivo,
+            textoExtraido: $extracaoActual?->texto_extraido,
+            dadosJson: $extracaoActual?->dados_json,
             incrementarTentativas: true,
         ));
 

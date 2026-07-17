@@ -28,6 +28,22 @@ it('regista a falha, incrementa a tentativa e mantém o estado abaixo do tecto',
     ]);
 });
 
+it('preserva o texto_extraido já registado ao contabilizar a falha técnica', function (): void {
+    $documento = Documento::factory()->analiseIaLocal()->create();
+    ExtracaoDocumento::factory()->for($documento, 'documento')->create([
+        'texto_extraido' => 'texto do parser',
+        'extracao_tentativas' => 0,
+    ]);
+
+    app(RegistarFalhaTecnicaExtracaoAction::class)->handle($documento, 'timeout da IA');
+
+    $this->assertDatabaseHas('extracoes_documento', [
+        'id_documento' => $documento->id,
+        'texto_extraido' => 'texto do parser',
+        'extracao_tentativas' => 1,
+    ]);
+});
+
 it('transiciona para Erro quando a tentativa atinge o tecto (max_tentativas)', function (): void {
     $documento = Documento::factory()->analiseOcr()->create();
     Storage::disk('entrada')->put($documento->nome_ficheiro_storage, 'conteudo');
