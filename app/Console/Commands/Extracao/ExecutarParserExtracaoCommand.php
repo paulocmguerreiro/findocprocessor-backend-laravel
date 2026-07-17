@@ -15,7 +15,7 @@ use Illuminate\Console\Attributes\Signature;
  */
 #[Signature('extracao:run-parser')]
 #[Description('Processa em lote os documentos em AnaliseTexto (parser nativo de PDF; imagem salta para OCR).')]
-final class ExecutarParserExtracaoCommand extends ComandoExtracao
+final class ExecutarParserExtracaoCommand extends EtapaExtracaoCommand
 {
     public function __construct(private readonly ProcessarAnaliseTextoDocumentoAction $processar)
     {

@@ -16,7 +16,7 @@ use Illuminate\Console\Attributes\Signature;
  */
 #[Signature('extracao:run-scan')]
 #[Description('Reclama e tria (scan de malware) os documentos Pendente, em lote.')]
-final class ExecutarScanExtracaoCommand extends ComandoExtracao
+final class ExecutarScanExtracaoCommand extends EtapaExtracaoCommand
 {
     public function __construct(private readonly ReivindicarDocumentoPendenteAction $reivindicar)
     {

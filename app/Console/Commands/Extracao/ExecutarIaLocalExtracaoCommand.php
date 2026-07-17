@@ -15,7 +15,7 @@ use Illuminate\Console\Attributes\Signature;
  */
 #[Signature('extracao:run-ia-local')]
 #[Description('Processa 1 documento por ciclo em AnaliseIaLocal (modelo de IA local).')]
-final class ExecutarIaLocalExtracaoCommand extends ComandoExtracao
+final class ExecutarIaLocalExtracaoCommand extends EtapaExtracaoCommand
 {
     public function __construct(private readonly ProcessarAnaliseIaLocalDocumentoAction $processar)
     {

@@ -15,7 +15,7 @@ use Illuminate\Console\Attributes\Signature;
  */
 #[Signature('extracao:run-tesseract')]
 #[Description('Processa 1 documento por ciclo em AnaliseOcr (OCR via Tesseract).')]
-final class ExecutarTesseractExtracaoCommand extends ComandoExtracao
+final class ExecutarTesseractExtracaoCommand extends EtapaExtracaoCommand
 {
     public function __construct(private readonly ProcessarAnaliseOcrDocumentoAction $processar)
     {

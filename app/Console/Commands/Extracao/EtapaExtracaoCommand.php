@@ -15,7 +15,7 @@ use Illuminate\Console\Command;
  * etapas pesadas — Tesseract/IA local, M1 8GB; em lote nas restantes). Fino como
  * um Controller — sem lógica de negócio.
  */
-abstract class ComandoExtracao extends Command
+abstract class EtapaExtracaoCommand extends Command
 {
     protected const int LOTE_PADRAO = 25;
 

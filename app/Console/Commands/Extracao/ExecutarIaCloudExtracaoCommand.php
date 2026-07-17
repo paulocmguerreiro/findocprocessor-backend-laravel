@@ -15,7 +15,7 @@ use Illuminate\Console\Attributes\Signature;
  */
 #[Signature('extracao:run-ia-cloud')]
 #[Description('Processa em lote os documentos em AnaliseCloud (modelo de IA cloud).')]
-final class ExecutarIaCloudExtracaoCommand extends ComandoExtracao
+final class ExecutarIaCloudExtracaoCommand extends EtapaExtracaoCommand
 {
     public function __construct(private readonly ProcessarAnaliseCloudDocumentoAction $processar)
     {
