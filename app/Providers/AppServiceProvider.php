@@ -9,6 +9,7 @@ use App\Infrastructure\Malware\ContratoAnalisadorMalware;
 use App\Observers\RoleObserver;
 use App\Policies\RolePolicy;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
@@ -32,6 +33,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Model::shouldBeStrict(! $this->app->isProduction());
+
         Gate::policy(Role::class, RolePolicy::class);
 
         Role::observe(RoleObserver::class);
