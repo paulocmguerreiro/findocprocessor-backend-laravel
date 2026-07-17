@@ -23,6 +23,28 @@ directório — nunca antes disso.
 
 ---
 
+## Dissolução da subpasta (queda abaixo do limiar)
+
+A regra do limiar aplica-se nos dois sentidos, mas de forma assimétrica:
+
+- **Criar** (categoria atinge 3) é obrigatório — sem margem de decisão, aplica-se sempre.
+- **Dissolver com 1-2 Actions remanescentes** (por remoção/fusão/migração de uma Action para outra
+  categoria) **nunca é automático** — implica sempre perguntar ao utilizador se quer mover os
+  ficheiros restantes de volta para a raiz da Feature (mesmo "Fluxo ao mover uma Action" abaixo,
+  em sentido inverso).
+- **Subpasta que fica com 0 Actions** (a última Action foi removida/migrada) — remover a pasta vazia
+  **sem pedir autorização**. Não há decisão de reorganização a tomar (nada para onde mover, nada a
+  julgar) — é limpeza de estrutura morta, tratamento igual a remover um import não usado.
+
+Razão da assimetria 1-2 vs 0: dissolver por causa de uma Action que desapareceu não traz ganho de
+navegação quando ainda sobra conteúdo (uma pasta com 2 ficheiros continua perfeitamente navegável) —
+o custo do refactor só se justifica se o utilizador achar que faz sentido nesse momento. Perguntar
+sempre que a contagem oscila entre 2 e 3 ao longo de vários PRs causaria *flapping*; por isso, se o
+utilizador recusar dissolver, a pasta fica como está e **não se volta a perguntar** sobre o mesmo
+estado — só há nova pergunta se a contagem dessa categoria mudar outra vez.
+
+---
+
 ## Vocabulário canónico (linguagem do negócio, não de infra)
 
 Proibido nomear subpastas com termos técnicos/de padrão de desenho — não criar `/Jobs`, `/Events`,
@@ -88,10 +110,16 @@ nova já na subpasta correcta, seja ao reorganizar Actions existentes por terem 
 1. **Namespace:** actualizar o `namespace` da classe para corresponder ao novo caminho físico.
 2. **Imports:** actualizar todos os `use` nos ficheiros que referenciam a classe movida (Controllers,
    testes, Service Providers, outras Actions).
-3. **Sem alteração de comportamento:** um refactor de pastas não muda lógica de negócio — o código
+3. **`docs/system_spec`:** procurar (`grep -rn`) referências ao caminho antigo do ficheiro/pasta
+   movido em `docs/system_spec/` (caminhos tipo `app/Features/<Feature>/<PastaAntiga>/...` e
+   namespaces `App\Features\<Feature>\<PastaAntiga>\...`) e actualizá-las para o caminho novo. O
+   spec documenta o estado actual do código — um refactor de pastas que não actualiza o spec deixa-o
+   desactualizado. `docs/plans/` e `docs/debriefs/` **não** se actualizam (são registo histórico do
+   momento em que a tarefa foi feita).
+4. **Sem alteração de comportamento:** um refactor de pastas não muda lógica de negócio — o código
    continua a passar exactamente nos mesmos testes.
-4. **Commit isolado:** quando o refactor for retroactivo (mover Actions já existentes, não uma Action
+5. **Commit isolado:** quando o refactor for retroactivo (mover Actions já existentes, não uma Action
    nova sendo criada na tarefa actual), fica num commit próprio, sem lógica nova misturada — facilita
    revisão e reversão.
-5. **Nota de justificação:** se o nome da subpasta foi ajustado para coincidir com uma já existente
+6. **Nota de justificação:** se o nome da subpasta foi ajustado para coincidir com uma já existente
    noutra Feature (regra acima), referir isso no output/checkpoint da tarefa.

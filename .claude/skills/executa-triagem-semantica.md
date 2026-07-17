@@ -77,11 +77,19 @@ antes de prosseguir — não inventar regra sem fonte.
    `02-shared/estrutura-subpastas-features.md` — categoria correcta, limiar de 3 respeitado (nem
    subpasta prematura com <3, nem Action a mais deixada na raiz quando a Feature já atingiu o limiar
    nessa categoria), e nome de subpasta consistente com o já usado noutras Features.
-5. Se limpo → `✅ Triagem semântica limpa`, segue sem pausar.
-6. Se houver violações → corrigir directamente (tratamento igual a lint/Rector — correcção normal de
+5. Se a tarefa **removeu ou migrou** uma Action de uma subpasta semântica existente:
+   - Se a subpasta ficou **vazia** → remover a pasta sem pedir autorização (limpeza de estrutura
+     morta).
+   - Se a subpasta ficou com **1-2 Actions** → perguntar ao utilizador se quer dissolver e mover os
+     ficheiros restantes para a raiz da Feature; se recusar, não perguntar de novo sobre o mesmo
+     estado nesta tarefa.
+   Em ambos os casos, se houver movimentação de ficheiros, procurar e actualizar referências a
+   `docs/system_spec/` ao caminho antigo (ver `02-shared/estrutura-subpastas-features.md`).
+6. Se limpo → `✅ Triagem semântica limpa`, segue sem pausar.
+7. Se houver violações → corrigir directamente (tratamento igual a lint/Rector — correcção normal de
    qualidade, não é um FAIL bloqueante tipo `checkpoint:scan`) e listar o que foi corrigido no
    checkpoint da tarefa. Se a correcção implicar mover o ficheiro de pasta, seguir o fluxo de
-   namespace/imports de `02-shared/estrutura-subpastas-features.md`.
+   namespace/imports/`docs/system_spec` de `02-shared/estrutura-subpastas-features.md`.
 
 ---
 
