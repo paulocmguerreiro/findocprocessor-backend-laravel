@@ -28,7 +28,7 @@ progresso lê-se de `Documento.estado`.
   `ExecutorTransicaoDocumento`) tem `resultado` a `null`; uma linha de tentativa de IA (gravada por
   `RegistarEtapaExtracaoAction`) tem `estado` igual ao passo de análise em curso e `resultado`
   preenchido — permite reconstruir a história numa única query ordenada por `created_at`.
-- **Enforcement implementado (#111)**: reivindicação real com `lockForUpdate()`/expiração por TTL
+- **Enforcement implementado**: reivindicação real com `lockForUpdate()`/expiração por TTL
   sobre `extracao_reclamada_em` é `ReivindicarDocumentoEmEtapaAction`; a transição automática ao
   esgotar `extracao_tentativas` é `RegistarFalhaTecnicaExtracaoAction`; a reposição do contador a cada
   avanço de etapa é `RegraReporTentativasExtracao`. Todos em `01-features/documento-pipeline.md`.

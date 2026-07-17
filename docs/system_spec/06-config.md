@@ -46,7 +46,7 @@ LLM_CLOUD_MODEL=
 LLM_CLOUD_KEY=
 
 # TTL (segundos) do lease de reivindicação das etapas de análise (AnaliseTexto/AnaliseOcr/
-# AnaliseIaLocal/AnaliseCloud, #111): um documento reclamado há mais tempo que isto é
+# AnaliseIaLocal/AnaliseCloud): um documento reclamado há mais tempo que isto é
 # considerado abandonado (worker morto) e pode ser recuperado por outro worker/ciclo.
 EXTRACAO_TTL_LEASE=300
 
@@ -63,7 +63,7 @@ CLAMAV_TIMEOUT_SEGUNDOS=5
 FILESYSTEM_INBOX_PATH=inbox/
 FILESYSTEM_PROCESSED_PATH=processed/
 FILESYSTEM_TEMP_PATH=temp/
-# Limite implementado no upload: 50 MB (max:51200 KB no ReceberUploadDocumentoRequest, #111).
+# Limite implementado no upload: 50 MB (max:51200 KB no ReceberUploadDocumentoRequest).
 FILESYSTEM_MAX_FILE_SIZE=52428800
 FILESYSTEM_ALLOWED_EXTENSIONS=.pdf,.png,.jpg,.jpeg,.tif,.tiff,.bmp,.webp
 ```
@@ -123,7 +123,7 @@ nunca chame `env()` fora de ficheiro de config:
 ],
 ```
 
-`ttl_lease` (#111) — TTL do lease de reivindicação das etapas de análise, consumido por
+`ttl_lease` — TTL do lease de reivindicação das etapas de análise, consumido por
 `ReivindicarDocumentoEmEtapaAction`; `max_tentativas` — tecto de falhas técnicas por etapa, consumido
 por `RegistarFalhaTecnicaExtracaoAction`. Ambos em `01-features/documento-pipeline.md`.
 
@@ -172,14 +172,14 @@ demora — consumido por `ReconciliarFicheirosJob` (`04-infra/queue-jobs.md`).
 `config()->string()`/`config()->integer()`). `host` vazio ou `port` `0` são a sentinela de "camada
 desligada" — evita `?string`/`?int` (accessores tipados do Laravel exigem `string`/`int`, não
 `null`). `StreamMaxLength` do `clamd` (default 25 MB na imagem oficial) tem de ser ≥ ao limite de
-upload actual (`FILESYSTEM_MAX_FILE_SIZE` = 50 MB, #111) — por isso `docker/clamav/clamd.conf`
+upload actual (`FILESYSTEM_MAX_FILE_SIZE` = 50 MB) — por isso `docker/clamav/clamd.conf`
 (montado no serviço `clamav`) sobe os limites para 64M/100M/64M; se excedido, o INSTREAM falha e
 conta como falha do scan (`FalhaAnaliseMalwareException`), nunca como "não configurado". Ver
 `04-infra/malware.md` para o contrato `AnalisadorMalware` e o detalhe do `clamd.conf`.
 
 **Dependência de cache partilhado (`redis`):** `Schedule::job(...)->onOneServer()` (usado por
-`ReconciliarFicheirosJob`) e `->withoutOverlapping()` dos 5 Commands `extracao:*` (#111,
-`04-infra/queue-jobs.md`) dependem de um cache store com locks atómicos partilhados entre processos
+`ReconciliarFicheirosJob`) e `->withoutOverlapping()` dos 5 Commands `extracao:*`
+(`04-infra/queue-jobs.md`) dependem de um cache store com locks atómicos partilhados entre processos
 — `config/cache.php` já usa
 `redis` como default (`CACHE_STORE=redis`, `.env.example`). Em qualquer ambiente onde o cache não seja
 partilhado entre workers (ex.: `array`/`file` num único processo local), `onOneServer()`/

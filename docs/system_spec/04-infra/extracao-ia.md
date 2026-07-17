@@ -38,7 +38,7 @@ Implementação de `ContratoClienteIA` (`app/Infrastructure/AI/ContratoClienteIA
 `extrair(string $textoExtraido, CamadaIA $camada): ResultadoExtracaoIA`. Nunca propaga excepções —
 qualquer falha ao montar o pedido, invocar o Prism ou resolver o veredicto é convertida em
 `ResultadoExtracaoIA::falhaTecnica()`. Bind em `AppServiceProvider`:
-`$this->app->bind(ContratoClienteIA::class, ClienteExtracaoIAPrism::class)` (#111).
+`$this->app->bind(ContratoClienteIA::class, ClienteExtracaoIAPrism::class)`.
 
 | Componente | Ficheiro | Papel |
 |---|---|---|
@@ -92,7 +92,7 @@ pedido efectivamente montado. Sem chamada de rede em nenhum teste.
 
 ---
 
-## Orquestração (#111)
+## Orquestração
 
 `ClienteExtracaoIAPrism` continua um serviço puro — não escreve em BD, não decide qual camada
 invocar, não monta `TransicionarProcessadoDocumentoDto` nem chama Actions de transição. Quem decide

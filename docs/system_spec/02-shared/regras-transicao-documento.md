@@ -109,7 +109,7 @@ o slug (fornecedor, categoria ou data).
 **Geração:** `Str::slug($nomeFornecedor)`, `Str::slug($nomeCategoria)`; data de `data_documento`;
 extensão preservada de `nome_ficheiro_original`.
 
-**Fallbacks (#111 — documentos parciais, `TransicionarProcessadoDocumentoDto` flexibilizado):**
+**Fallbacks (documentos parciais, `TransicionarProcessadoDocumentoDto` flexibilizado):**
 fornecedor `null` (`espera_fornecedor = false`, ex.: extracto/aviso) → usa o **nome extraído**
 (`nomeFornecedorExtraido`) sem criar `Entidade`, com fallback adicional para o nome da empresa mãe se
 o extraído também vier vazio; data `null` (`espera_data = false`) → usa `Documento.created_at` como
@@ -126,7 +126,7 @@ $createdAt` — nunca assume os dois primeiros como não-nulos.
 
 **Ficheiro:** `app/Features/Documento/Operacoes/Transicao/RegraReporTentativasExtracao.php`
 
-**Invariante (#111, RN-05/RF-13):** `extracao_tentativas` conta as falhas técnicas da **etapa
+**Invariante (RN-05/RF-13):** `extracao_tentativas` conta as falhas técnicas da **etapa
 actual** do pipeline de extracção — cada etapa tem direito a um orçamento próprio de tentativas
 (`config('extracao.max_tentativas')`). Por isso, sempre que o `Documento` avança correctamente para
 um estado **não-terminal** (`Pendente`, `AnaliseMalware`, `AnaliseTexto`, `AnaliseOcr`,

@@ -10,7 +10,7 @@
 
 Feature com 26 Actions no total: 8 expostas via endpoint HTTP (documentadas aqui) + 18 sem HTTP
 (`01-features/documento-pipeline.md` — inclui os 4 orquestradores de etapa + reivindicação por lease
-do pipeline automático de extracção, #111). 9 DTOs, 4 Events e camada HTTP completa. A máquina de
+do pipeline automático de extracção). 9 DTOs, 4 Events e camada HTTP completa. A máquina de
 estados é a peça central do pipeline — cada transição passa obrigatoriamente pelo mapa central em
 `RegraTransicaoEstado` (`documento-pipeline.md`) — nunca `if ($doc->estado == ...)`.
 

@@ -34,10 +34,10 @@ Ao contrário do padrão Repository/Service (`02-shared/padroes-acoes.md`), não
 prevista entre `ExtractorTextoNativo` e `ExtractorOcr` — nunca um no lugar do outro, o único contrato
 de saída partilhado é o VO `ResultadoExtracao`. O orquestrador (`ProcessarAnaliseTextoDocumentoAction`,
 `01-features/documento-pipeline.md`) decide qual invocar: PDF → `ExtractorTextoNativo` primeiro (OCR
-só se o threshold falhar); **não-PDF** (imagem — JPG/PNG/TIFF/BMP/WEBP, #111) → salta directo para
+só se o threshold falhar); **não-PDF** (imagem — JPG/PNG/TIFF/BMP/WEBP) → salta directo para
 `ExtractorOcr`, o parser nativo nunca é chamado (não há texto embutido para extrair de uma imagem).
 
-### Delegates de imagem (TIFF/WEBP/BMP, #111)
+### Delegates de imagem (TIFF/WEBP/BMP)
 
 `ExtractorOcr` rasteriza com `imagick` — os formatos de upload alargados (`image/tiff`, `image/bmp`,
 `image/webp`, ver `01-features/documento.md`) dependem dos delegates correspondentes estarem

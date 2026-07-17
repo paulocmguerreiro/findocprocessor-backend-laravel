@@ -12,7 +12,7 @@
 
 ---
 
-## Commands `extracao:*` + Schedule (pipeline automático de extracção, #111)
+## Commands `extracao:*` + Schedule (pipeline automático de extracção)
 
 > `app/Console/Commands/Extracao/`, agendados em `routes/console.php`.
 

@@ -66,7 +66,7 @@ consistência abaixo.
 
 Aplicação do limiar de 3 ao estado actual do repositório, incluída aqui como caso de estudo de como a
 trava funciona (categorias abaixo do limiar ficam na raiz, mesmo fazendo sentido semântico). `Atribuicao/`
-é o caso documentado de travessia do limiar: ficou 2 (na raiz) até #111 acrescentar
+é o caso documentado de travessia do limiar: ficou 2 (na raiz) até a introdução de
 `ReivindicarDocumentoEmEtapaAction` — a 3ª Action obrigou o agrupamento, incl. mover as duas já
 existentes (`Reivindicar`, `Triar`) para dentro da subpasta nova, num commit de refactor isolado.
 
@@ -75,7 +75,7 @@ existentes (`Reivindicar`, `Triar`) para dentro da subpasta nova, num commit de 
 | `Processamento/` | MarcarAnaliseCloud, MarcarAnaliseIaLocal, MarcarAnaliseMalware, MarcarAnaliseOcr, MarcarAnaliseTexto, RegistarEtapaExtracao, ProcessarAnaliseTexto, ProcessarAnaliseOcr, ProcessarAnaliseIaLocal, ProcessarAnaliseCloud, ConcluirExtracao, RegistarFalhaTecnicaExtracao | ✅ 12 — agrupar |
 | `Operacoes/` | Transicao, TransicionarProcessado, Reprocessar | ✅ 3 — agrupar |
 | `Pesquisa/` | Listar, Descarregar, Ver | ✅ 3 — agrupar |
-| `Atribuicao/` | Reivindicar, Triar, ReivindicarDocumentoEmEtapa | ✅ 3 — agrupar (#111, ver nota acima) |
+| `Atribuicao/` | Reivindicar, Triar, ReivindicarDocumentoEmEtapa | ✅ 3 — agrupar (ver nota acima) |
 | `Anomalias/` | MarcarErro, MarcarPerigoso | ❌ 2 — fica na raiz |
 | `Ingestao/` | RecepcaoUpload | ❌ 1 — fica na raiz |
 

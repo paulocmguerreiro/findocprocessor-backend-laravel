@@ -13,7 +13,7 @@
 | `extracao_reclamada_em` | `timestamp` | Sim | `null` | Lease de reivindicação; TTL = `config('extracao.ttl_lease')` (300s) — gravado por `ReivindicarDocumentoEmEtapaAction` (`updateOrCreate`), não é explicitamente limpo (o `RegistarEtapaExtracaoAction` da etapa seguinte já reclama de novo) |
 | `extracao_tentativas` | `unsignedTinyInteger` | Não | `0` | Tecto = `config('extracao.max_tentativas')` (3), enforcement em `RegistarFalhaTecnicaExtracaoAction`; reposto a 0 no avanço correcto de etapa por `RegraReporTentativasExtracao` (`02-shared/regras-transicao-documento.md`) |
 | `texto_extraido` | `longText` | Sim | `null` | PII — nunca em Resource |
-| `dados_json` | `json` | Sim | `null` | PII — nunca em Resource; cast `array` (array shape opcional por entidade — ver Notas arquitecturais); **não populado por nenhum orquestrador (#111)** — ver Notas arquitecturais |
+| `dados_json` | `json` | Sim | `null` | PII — nunca em Resource; cast `array` (array shape opcional por entidade — ver Notas arquitecturais); **não populado por nenhum orquestrador** — ver Notas arquitecturais |
 | `created_at` / `updated_at` | `timestamp` | — | — | `timestamps()` — tabela **mutável** (ao contrário de `etapas_documento`, que é append-only) |
 
 Índice simples `(extracao_reclamada_em)` — consumido por `ReivindicarDocumentoEmEtapaAction`
@@ -122,12 +122,11 @@ contrato "substituição total", ausência de `Gate::authorize`).
   não cobre Models.
 - **`dados_json` tipado com array shape de chaves opcionais** (`data_documento?`, `fornecedor?`,
   `cliente?`, `valor?`) em vez de `mixed` — inferida de `ResultadoExtracaoIA`
-  (`04-infra/extracao-ia.md`). Mesmo com os 4 orquestradores de etapa implementados (#111), nenhum
-  escreve `dados_json` — `RegistarFalhaTecnicaExtracaoAction` só **preserva** o valor já existente
-  (contrato de substituição total do recorder) e `ConcluirExtracaoDocumentoAction` passa o
-  `ResultadoExtracaoIA` directamente ao DTO de transição, sem passar por `dados_json` — populá-lo
-  ficou fora de âmbito do Brief #111. Este shape continua a **guiar** uma implementação futura, não é
-  um contrato já imposto por código.
-- **Índice `(extracao_reclamada_em)` consumido (#111)** — deixou de ser preparação especulativa:
+  (`04-infra/extracao-ia.md`). Mesmo com os 4 orquestradores de etapa implementados, nenhum escreve
+  `dados_json` — `RegistarFalhaTecnicaExtracaoAction` só **preserva** o valor já existente (contrato
+  de substituição total do recorder) e `ConcluirExtracaoDocumentoAction` passa o `ResultadoExtracaoIA`
+  directamente ao DTO de transição, sem passar por `dados_json` — populá-lo ficou fora de âmbito.
+  Este shape continua a **guiar** uma implementação futura, não é um contrato já imposto por código.
+- **Índice `(extracao_reclamada_em)` consumido** — deixou de ser preparação especulativa:
   `ReivindicarDocumentoEmEtapaAction` filtra por este campo em toda reivindicação de etapa. Mesmo
   padrão do índice `(estado, updated_at)` de `Documento`, agora ambos com consumidor real.

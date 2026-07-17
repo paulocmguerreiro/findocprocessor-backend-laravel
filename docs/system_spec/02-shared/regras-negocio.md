@@ -87,7 +87,7 @@ As 6 regras `Regra*` da máquina de estados do `Documento` (`RegraTransicaoEstad
 `RegraReconciliarLocalizacaoFicheiro`, `RegraReporTentativasExtracao`) estão catalogadas em
 `02-shared/regras-transicao-documento.md` — ficheiro dedicado por concentrarem o maior volume de
 regras de uma única feature (máquina de estados unificada, #110). A reconciliação de entidades por
-lado (`RegraReconciliarEntidadesDocumento`, #111) fica em `01-features/documento-pipeline.md` — não
+lado (`RegraReconciliarEntidadesDocumento`) fica em `01-features/documento-pipeline.md` — não
 é uma regra de transição de estado, é específica do pipeline de extracção (regra de sustentabilidade
 do `actualiza-spec`: regra feature-específica vai para a feature, mesmo parecendo genérica).
 
