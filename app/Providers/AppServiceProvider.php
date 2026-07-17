@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Infrastructure\AI\ClienteExtracaoIAPrism;
+use App\Infrastructure\AI\ContratoClienteIA;
 use App\Infrastructure\Malware\ClamAvAnalisadorMalware;
 use App\Infrastructure\Malware\ContratoAnalisadorMalware;
 use App\Observers\RoleObserver;
@@ -29,6 +31,8 @@ class AppServiceProvider extends ServiceProvider
             port: config()->integer('pipeline.malware.port'),
             timeoutSegundos: config()->integer('pipeline.malware.timeout_segundos'),
         ));
+
+        $this->app->bind(ContratoClienteIA::class, ClienteExtracaoIAPrism::class);
     }
 
     public function boot(): void
