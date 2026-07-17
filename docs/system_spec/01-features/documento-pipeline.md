@@ -88,7 +88,7 @@ motivo = razão da falha. Ver `04-infra/malware.md` para o contrato `AnalisadorM
 |---|---|---|---|
 | `RegistarEtapaExtracaoAction` | — (sem Gate, sistema) | `extracoes_documento` (upsert) + `EtapaDocumento` (`resultado`) | Não |
 
-**`RegistarEtapaExtracaoAction`** (`app/Features/Documento/RegistarEtapaExtracao/`) — recorder do
+**`RegistarEtapaExtracaoAction`** (`app/Features/Documento/Processamento/RegistarEtapaExtracao/`) — recorder do
 pipeline: dado um `Documento` e um `RegistarEtapaExtracaoDto`, faz upsert (por `id_documento`, chave
 única) da linha em `extracoes_documento` (scratch space: `texto_extraido`/`dados_json`/lease/tentativas)
 e grava uma `EtapaDocumento` com `estado` igual ao estado actual do documento — que **é** já o passo
@@ -105,7 +105,7 @@ com `id_utilizador = null`. Ver `03-models/extracao-documento.md`.
 
 ### `ExecutorTransicaoDocumento`
 
-**Ficheiro:** `app/Features/Documento/Transicao/ExecutorTransicaoDocumento.php`
+**Ficheiro:** `app/Features/Documento/Operacoes/Transicao/ExecutorTransicaoDocumento.php`
 
 Orquestrador partilhado pelas 10 Actions de transição. Encapsula a mecânica comum:
 

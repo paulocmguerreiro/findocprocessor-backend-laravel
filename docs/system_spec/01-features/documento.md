@@ -87,8 +87,8 @@ faz `streamDownload`. Lança `NotFoundHttpException` se o ficheiro não existir 
 
 | Classe | Namespace | Cases | Descrição |
 |---|---|---|---|
-| `CampoOrdenacaoDocumentos` | `App\Features\Documento\Listar` | `DataDocumento = 'data_documento'`, `CriadoEm = 'created_at'` | Campo de ordenação da listagem de documentos |
-| `ModoReprocessamento` | `App\Features\Documento\Reprocessar` | `Modelo = 'MODELO'`, `Ferramenta = 'FERRAMENTA'` | Modo de reprocessamento de um documento em `Erro`; registado como `motivo` na `EtapaDocumento`. Semântica de fallback entre modelos/ferramentas diferida para a issue de extracção |
+| `CampoOrdenacaoDocumentos` | `App\Features\Documento\Pesquisa\Listar` | `DataDocumento = 'data_documento'`, `CriadoEm = 'created_at'` | Campo de ordenação da listagem de documentos |
+| `ModoReprocessamento` | `App\Features\Documento\Operacoes\Reprocessar` | `Modelo = 'MODELO'`, `Ferramenta = 'FERRAMENTA'` | Modo de reprocessamento de um documento em `Erro`; registado como `motivo` na `EtapaDocumento`. Semântica de fallback entre modelos/ferramentas diferida para a issue de extracção |
 
 ---
 

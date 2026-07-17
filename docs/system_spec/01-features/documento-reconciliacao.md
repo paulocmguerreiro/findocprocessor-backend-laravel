@@ -1,6 +1,6 @@
 # System Spec — Feature: Documento (reconciliação ficheiro↔BD)
 
-> `app/Features/Documento/Transicao/` (`RegraReconciliarLocalizacaoFicheiro`) +
+> `app/Features/Documento/Operacoes/Transicao/` (`RegraReconciliarLocalizacaoFicheiro`) +
 > `app/Jobs/ReconciliarFicheirosJob.php`. Extraído de `01-features/documento-pipeline.md` (WRN-033)
 > por limiar de tamanho (~200 linhas). Actions de transição/triagem/recorder + mapa De→Para
 > continuam em `documento-pipeline.md`; Job/Schedule em `04-infra/queue-jobs.md`.

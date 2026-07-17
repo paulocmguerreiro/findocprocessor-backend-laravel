@@ -51,7 +51,7 @@ nesta issue — corre o scan de malware e decide a transição, invocada por
 iniciar o processamento — mesmo padrão de dependência a informar já usado por `Reivindicar`/
 `MarcarAnaliseMalware`.
 
-`RegistarEtapaExtracaoAction` (`app/Features/Documento/RegistarEtapaExtracao/`) é o ponto de
+`RegistarEtapaExtracaoAction` (`app/Features/Documento/Processamento/RegistarEtapaExtracao/`) é o ponto de
 invocação programática que o futuro orquestrador de pipeline vai chamar para registar cada
 passo de IA (OCR/cloud) sobre um `Documento` — upsert em `extracoes_documento` + `EtapaDocumento`
 (`resultado`; o passo é o `estado` actual). Sem Job concreto nesta issue: só o modelo de dados e o

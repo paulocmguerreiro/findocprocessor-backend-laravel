@@ -8,7 +8,7 @@
 
 ### `RegraTransicaoEstado`
 
-**Ficheiro:** `app/Features/Documento/Transicao/RegraTransicaoEstado.php`
+**Ficheiro:** `app/Features/Documento/Operacoes/Transicao/RegraTransicaoEstado.php`
 
 **Invariante:** Toda a mudança de estado do `Documento` tem de constar do mapa central De→Para. Transições
 inválidas lançam `TransicaoInvalidaException` (→ 422). Nunca `if ($doc->estado == ...)`.
@@ -38,7 +38,7 @@ adicionado, o Larastan 9 dá erro de compilação — impossível esquecer um ca
 
 ### `RegraMoverFicheiro`
 
-**Ficheiro:** `app/Features/Documento/Transicao/RegraMoverFicheiro.php`
+**Ficheiro:** `app/Features/Documento/Operacoes/Transicao/RegraMoverFicheiro.php`
 
 **Invariante:** `status ↔ disco_storage ↔ nome_ficheiro_storage` ficam sempre consistentes após uma
 transição. O ficheiro é movido entre discos distintos com verificação do valor de retorno (discos
@@ -70,7 +70,7 @@ ver `RegraReconciliarLocalizacaoFicheiro`.
 
 ### `RegraEliminarExtracaoTerminal`
 
-**Ficheiro:** `app/Features/Documento/Transicao/RegraEliminarExtracaoTerminal.php`
+**Ficheiro:** `app/Features/Documento/Operacoes/Transicao/RegraEliminarExtracaoTerminal.php`
 
 **Invariante:** Um `Documento` que atinge um **estado terminal** não retém `ExtracaoDocumento` — o
 scratch space da extracção (`texto_extraido`/`dados_json`, PII) é eliminado por minimização de dados
@@ -96,7 +96,7 @@ mapa de transições.
 
 ### `RegraNomearProcessado`
 
-**Ficheiro:** `app/Features/Documento/Transicao/RegraNomearProcessado.php`
+**Ficheiro:** `app/Features/Documento/Operacoes/Transicao/RegraNomearProcessado.php`
 
 **Invariante:** O nome de ficheiro de um `Documento` processado segue o formato canónico
 `yyyy-mm-dd-{slug-fornecedor}-{slug-categoria}.{ext}`, derivado dos dados de domínio.
@@ -116,7 +116,7 @@ extensão preservada de `nome_ficheiro_original`.
 
 ### `RegraReconciliarLocalizacaoFicheiro`
 
-**Ficheiro:** `app/Features/Documento/Transicao/RegraReconciliarLocalizacaoFicheiro.php`
+**Ficheiro:** `app/Features/Documento/Operacoes/Transicao/RegraReconciliarLocalizacaoFicheiro.php`
 
 **Invariante:** `disco_storage`/`nome_ficheiro_storage` de um `Documento` reflectem a localização
 real do ficheiro. Quando a compensação best-effort de `ExecutorTransicaoDocumento` falha, a BD pode
