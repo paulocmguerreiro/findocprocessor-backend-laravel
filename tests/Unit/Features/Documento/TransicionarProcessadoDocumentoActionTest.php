@@ -41,16 +41,16 @@ function dtoTransicao(): TransicionarProcessadoDocumentoDto
 it('transiciona AnaliseIaLocal → Processado: preenche domínio, move+renomeia e emite o evento', function (): void {
     $documento = Documento::factory()->analiseIaLocal()->create(['nome_ficheiro_original' => 'scan.pdf']);
     Storage::disk('enviado')->put($documento->nome_ficheiro_storage, 'conteudo');
-    $dados = dtoTransicao();
+    $dadosProcessamento = dtoTransicao();
 
     Event::fake([DocumentoProcessadoEvent::class]);
 
-    $resultado = app(TransicionarProcessadoDocumentoAction::class)->handle($documento, $dados);
+    $resultado = app(TransicionarProcessadoDocumentoAction::class)->handle($documento, $dadosProcessamento);
 
     expect($resultado->estado)->toBe(EstadoDocumento::Processado)
         ->and($resultado->disco_storage)->toBe('processado')
         ->and($resultado->nome_ficheiro_storage)->toBe('2026-06-25-fornecedor-lda-despesas.pdf')
-        ->and($resultado->id_fornecedor)->toBe($dados->idFornecedor);
+        ->and($resultado->id_fornecedor)->toBe($dadosProcessamento->idFornecedor);
 
     Storage::disk('processado')->assertExists('2026-06-25-fornecedor-lda-despesas.pdf');
     Storage::disk('enviado')->assertMissing($documento->nome_ficheiro_storage);
@@ -66,11 +66,11 @@ it('transiciona AnaliseIaLocal → Processado: preenche domínio, move+renomeia 
 it('transiciona AnaliseCloud → Processado: preenche domínio, move+renomeia e emite o evento', function (): void {
     $documento = Documento::factory()->analiseCloud()->create(['nome_ficheiro_original' => 'scan.pdf']);
     Storage::disk('enviado')->put($documento->nome_ficheiro_storage, 'conteudo');
-    $dados = dtoTransicao();
+    $dadosProcessamento = dtoTransicao();
 
     Event::fake([DocumentoProcessadoEvent::class]);
 
-    $resultado = app(TransicionarProcessadoDocumentoAction::class)->handle($documento, $dados);
+    $resultado = app(TransicionarProcessadoDocumentoAction::class)->handle($documento, $dadosProcessamento);
 
     expect($resultado->estado)->toBe(EstadoDocumento::Processado)
         ->and($resultado->disco_storage)->toBe('processado')
@@ -80,6 +80,28 @@ it('transiciona AnaliseCloud → Processado: preenche domínio, move+renomeia e 
     Storage::disk('enviado')->assertMissing($documento->nome_ficheiro_storage);
 
     Event::assertDispatched(DocumentoProcessadoEvent::class);
+});
+
+it('nomeia com o fornecedor extraído quando o documento é parcial (id_fornecedor nulo)', function (): void {
+    $documento = Documento::factory()->analiseIaLocal()->create(['nome_ficheiro_original' => 'extrato.pdf']);
+    Storage::disk('enviado')->put($documento->nome_ficheiro_storage, 'conteudo');
+
+    $dadosProcessamento = new TransicionarProcessadoDocumentoDto(
+        idFornecedor: null,
+        idCliente: Entidade::factory()->create()->id,
+        idCategoria: CategoriaDocumento::factory()->create(['nome' => 'Extratos'])->id,
+        valor: null,
+        dataDocumento: Carbon::parse('2026-06-25'),
+        nomeFornecedorExtraido: 'Banco Comercial XYZ',
+    );
+
+    $resultado = app(TransicionarProcessadoDocumentoAction::class)->handle($documento, $dadosProcessamento);
+
+    expect($resultado->estado)->toBe(EstadoDocumento::Processado)
+        ->and($resultado->id_fornecedor)->toBeNull()
+        ->and($resultado->nome_ficheiro_storage)->toBe('2026-06-25-banco-comercial-xyz-extratos.pdf');
+
+    Storage::disk('processado')->assertExists('2026-06-25-banco-comercial-xyz-extratos.pdf');
 });
 
 it('rejeita a transição a partir de um estado inválido', function (): void {

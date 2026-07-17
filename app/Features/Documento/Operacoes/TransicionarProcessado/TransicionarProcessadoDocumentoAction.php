@@ -22,38 +22,42 @@ use Illuminate\Support\Facades\Gate;
 final readonly class TransicionarProcessadoDocumentoAction
 {
     public function __construct(
-        private ExecutorTransicaoDocumento $executor,
-        private RegraNomearProcessado $nomear,
+        private ExecutorTransicaoDocumento $executorTransicao,
+        private RegraNomearProcessado $regraNomear,
     ) {}
 
     /**
      * @throws AuthorizationException
      * @throws \Throwable
      */
-    public function handle(Documento $documento, TransicionarProcessadoDocumentoDto $dados): Documento
+    public function handle(Documento $documento, TransicionarProcessadoDocumentoDto $dadosProcessamento): Documento
     {
         Gate::authorize('update', $documento);
 
-        $fornecedor = Entidade::findOrFail($dados->idFornecedor);
-        $categoria = CategoriaDocumento::findOrFail($dados->idCategoria);
+        $nomeFornecedor = $dadosProcessamento->idFornecedor !== null
+            ? Entidade::findOrFail($dadosProcessamento->idFornecedor)->nome
+            : null;
+        $categoria = CategoriaDocumento::findOrFail($dadosProcessamento->idCategoria);
 
-        $nomeCanonico = $this->nomear->handle(
-            $dados->dataDocumento,
-            $fornecedor->nome,
+        $nomeCanonico = $this->regraNomear->handle(
+            $dadosProcessamento->dataDocumento,
+            $nomeFornecedor,
+            $dadosProcessamento->nomeFornecedorExtraido,
             $categoria->nome,
             $documento->nome_ficheiro_original,
+            $documento->created_at,
         );
 
-        return $this->executor->executar(
+        return $this->executorTransicao->executar(
             $documento,
             EstadoDocumento::Processado,
             'processamento concluído',
             camposDominio: [
-                'id_fornecedor' => $dados->idFornecedor,
-                'id_cliente' => $dados->idCliente,
-                'id_categoria' => $dados->idCategoria,
-                'valor' => $dados->valor,
-                'data_documento' => $dados->dataDocumento,
+                'id_fornecedor' => $dadosProcessamento->idFornecedor,
+                'id_cliente' => $dadosProcessamento->idCliente,
+                'id_categoria' => $dadosProcessamento->idCategoria,
+                'valor' => $dadosProcessamento->valor,
+                'data_documento' => $dadosProcessamento->dataDocumento,
             ],
             nomeDestino: $nomeCanonico,
             evento: fn (Documento $documentoProcessado): DocumentoProcessadoEvent => new DocumentoProcessadoEvent($documentoProcessado),
