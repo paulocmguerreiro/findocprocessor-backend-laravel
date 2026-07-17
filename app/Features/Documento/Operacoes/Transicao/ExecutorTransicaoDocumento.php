@@ -29,6 +29,7 @@ final readonly class ExecutorTransicaoDocumento
         private RegraTransicaoEstado $regraTransicao,
         private RegraMoverFicheiro $regraMover,
         private RegraEliminarExtracaoTerminal $regraEliminarExtracao,
+        private RegraReporTentativasExtracao $regraReporTentativas,
         private CacheServico $cache,
     ) {}
 
@@ -62,6 +63,10 @@ final readonly class ExecutorTransicaoDocumento
                     'disco_storage' => $destino['disco'],
                     'nome_ficheiro_storage' => $destino['nome'],
                 ]);
+
+                // RN-05/RF-13 (#111): num avanço correcto para um estado não-terminal,
+                // repõe o orçamento de tentativas técnicas da nova etapa; nunca em `Erro`.
+                $this->regraReporTentativas->handle($documento, $novoEstado);
 
                 // RGPD (RN-03/RF-09, #110): ao chegar a um terminal, o scratch space
                 // de extracção (incl. PII) é eliminado — condicionante na própria Regra.

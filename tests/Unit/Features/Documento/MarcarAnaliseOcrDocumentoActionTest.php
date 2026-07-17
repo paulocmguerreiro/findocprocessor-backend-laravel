@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Features\Documento\Processamento\MarcarAnaliseOcr\MarcarAnaliseOcrDocumentoAction;
 use App\Models\Documento;
+use App\Models\ExtracaoDocumento;
 use App\Shared\Enums\EstadoDocumento;
 use App\Shared\Exceptions\TransicaoInvalidaException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -31,6 +32,19 @@ it('transiciona AnaliseTexto → AnaliseOcr sem mover o ficheiro (passo de siste
         'estado' => EstadoDocumento::AnaliseOcr->value,
         'motivo' => 'texto ilegível, encaminhado para OCR',
         'id_utilizador' => null,
+    ]);
+});
+
+it('repõe extracao_tentativas a 0 ao avançar de etapa (RN-05, via Executor)', function (): void {
+    $documento = Documento::factory()->analiseTexto()->create();
+    Storage::disk('entrada')->put($documento->nome_ficheiro_storage, 'conteudo');
+    ExtracaoDocumento::factory()->comTentativas(2)->for($documento, 'documento')->create();
+
+    app(MarcarAnaliseOcrDocumentoAction::class)->handle($documento);
+
+    $this->assertDatabaseHas('extracoes_documento', [
+        'id_documento' => $documento->id,
+        'extracao_tentativas' => 0,
     ]);
 });
 
