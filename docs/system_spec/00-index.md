@@ -12,7 +12,7 @@
 | Entidade           | `01-features/entidade.md`            | 8 (5 CRUD + Restaurar + ConverterEmEmpresaMae + Remover) | 5 REST + 2 especiais |
 | Role               | `01-features/role.md`                | 5 CRUD                                         | 5 REST              |
 | Utilizador         | `01-features/utilizador.md`          | 8 (5 CRUD + AtribuirRole + Restaurar + Anonimizar) | 5 REST + 3 especiais |
-| Documento          | `01-features/documento.md` (HTTP) + `01-features/documento-pipeline.md` (background) + `01-features/documento-reconciliacao.md` (scratch space + atomicidade) | 19 (8 expostas via endpoint + 11 sem HTTP, só programáticas — 8 de transição + reivindicação/triagem + recorder de extracção) | 8 REST |
+| Documento          | `01-features/documento.md` (HTTP) + `01-features/documento-pipeline.md` (background) + `01-features/documento-reconciliacao.md` (scratch space + atomicidade) | 26 (8 expostas via endpoint + 18 sem HTTP, só programáticas — 8 de transição + 3 reivindicação/triagem + recorder + 6 pipeline automático de extracção) | 8 REST |
 | TipoDocumento      | `01-features/tipo-documento.md`      | 5 CRUD (sem SoftDelete)                        | 5 REST              |
 
 ## Features planeadas
@@ -71,8 +71,8 @@
 | Cache / Redis                                | `04-infra/cache.md`           | implementado                                                                           |
 | Logging estruturado                          | `04-infra/logging.md`         | implementado                                                                           |
 | Audit trail (spatie/laravel-activitylog)     | `04-infra/audit-trail.md`     | implementado                                                                           |
-| Jobs / Queue + Events de domínio             | `04-infra/queue-jobs.md`      | implementado (Events de transição + `ReconciliarFicheirosJob`; Jobs de pipeline pendentes) |
-| APIs externas — Extração via IA (Prism)      | `04-infra/extracao-ia.md`     | implementado (`PromptBuilder` + `ClienteExtracaoIAPrism`; orquestração do pipeline pendente) |
+| Jobs / Queue + Events de domínio             | `04-infra/queue-jobs.md`      | implementado (Events de transição + `ReconciliarFicheirosJob` + 5 Commands `extracao:*` agendados) |
+| APIs externas — Extração via IA (Prism)      | `04-infra/extracao-ia.md`     | implementado (`PromptBuilder` + `ClienteExtracaoIAPrism`; orquestração do pipeline em `01-features/documento-pipeline.md`) |
 | Scan de malware (ClamAV self-hosted)          | `04-infra/malware.md`         | implementado                                                                           |
 | Extractores de texto (pdfparser nativo + Tesseract OCR) | `04-infra/extracao-texto.md` | implementado                                                                 |
 | PromptBuilder (system prompt de extracção)   | `04-infra/prompt-builder.md`  | implementado                                                                           |

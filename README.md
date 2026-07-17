@@ -48,13 +48,10 @@ app/Policies/              ← Autorização por Gate/Policy
 app/Shared/                ← Enums, Http (ApiResponse) e Cache (CacheServico, TagCache, TtlCache)
 app/Http/Controllers/      ← Thin controllers (só dispatch para Actions)
 app/Http/Middleware/       ← InjectarContextoLog (trace_id UUID por request via Context facade)
-app/Infrastructure/        ← AI, FileSystem, Repositories  →  ver Roadmap (ingestão de documentos)
-app/Jobs/                  ← Processamento assíncrono       →  ver Roadmap (pipeline de inbox)
+app/Infrastructure/        ← AI (Prism), Extracao (pdfparser/OCR), Malware (ClamAV) — motores puros
+app/Console/Commands/      ← Commands extracao:* — dispatch síncrono para as Actions orquestradoras
+app/Jobs/                  ← ReconciliarFicheirosJob — reconciliação ficheiro↔BD agendada
 ```
-
-> As pastas `app/Infrastructure/` e `app/Jobs/` estão reservadas para o pipeline
-> de ingestão de documentos (OCR / análise de imagem / IA) descrito no
-> [Roadmap](#roadmap) — ainda não contêm implementação.
 
 Padrões aplicados: Actions `final readonly`, autorização dupla camada (`Gate::authorize()` no FormRequest **e** na Action), `DB::transaction()` em todas as escritas, DTOs como Value Objects, `strict_types=1` em todos os ficheiros, cursor pagination (keyset) nas listagens, cache Redis com invalidação por tags e logging estruturado com `trace_id` por request (propagado a Jobs). Detalhe em [Documentação](#documentação).
 
@@ -163,7 +160,7 @@ Todas as rotas exigem Bearer token. Lista completa de endpoints e parâmetros: [
 Próximos passos, geridos como issues no repositório:
 
 - **Gestão financeira** _(próximo)_ — movimentos (débito/crédito) associados a documentos e entidades.
-- **Pipeline de ingestão** — Jobs + Schedule sobre a pasta de inbox, com OCR, análise de imagem e extração de dados via IA (`app/Infrastructure/AI`).
+- **Agrupar entidades duplicadas** — mitigar duplicação de `Entidade` criada por NIF/nome ligeiramente diferentes entre extrações da IA.
 
 ## Relacionado (roadmap)
 

@@ -12,6 +12,7 @@ ambiente de testes e o stack real (MySQL + Redis).
 | `app` | build local (PHP 8.5 FPM) | Aplicação; corre migrations + seed no arranque |
 | `web` | `nginx:1.27-alpine` | Reverse proxy → `app:9000`; expõe `http://localhost:8000` |
 | `queue` | mesma imagem que `app` | `php artisan queue:work` |
+| `scheduler` | mesma imagem que `app` | `php artisan schedule:work` — dispara o `Schedule` (`routes/console.php`): Commands `extracao:*` do pipeline (#111) + `ReconciliarFicheirosJob` |
 | `mysql` | `mysql:8.4` | Base de dados (`findocprocessor` + `findocprocessor_testing`) |
 | `redis` | `redis:7-alpine` | Cache e queue |
 | `clamav` | `clamav/clamav-debian:1.4` | Scan de malware (`clamd`, protocolo INSTREAM) |
@@ -19,9 +20,19 @@ ambiente de testes e o stack real (MySQL + Redis).
 A imagem (`Dockerfile`) instala extensões via `install-php-extensions`
 (inclui `pcov` para cobertura e `imagick`, para rasterização de PDF/PS do
 pipeline de extração) e fixa `memory_limit=512M` (a análise estática
-excede os 128M por omissão). Via `apk add` instala também `tesseract-ocr`
-(+ dados `por`/`eng`) e `ghostscript` (delegate do ImageMagick para PDF).
-`app` e `queue` partilham a imagem `findocprocessor-app`.
+excede os 128M por omissão), mais `upload_max_filesize=50M`/`post_max_size=52M` em
+`zz-findoc.ini` (#111 — alinhado ao limite de upload de 50 MB; nginx já tinha
+`client_max_body_size 50M`). Via `apk add` instala também `tesseract-ocr` (+ dados
+`por`/`eng`), `ghostscript` (delegate do ImageMagick para PDF) e `libwebp`/`tiff`
+(delegates do `imagick`/Leptonica para os formatos de upload alargados — WEBP e TIFF; BMP
+é nativo — sem eles o upload aceita o ficheiro mas o OCR falha ao rasterizar). `app` e
+`queue`/`scheduler` partilham a imagem `findocprocessor-app`.
+
+`scheduler` não corre migrations (`RUN_MIGRATIONS` ausente — só o `app` prepara a BD) e
+depende de `mysql`/`redis`/`clamav` saudáveis, tal como `queue`. Herda a mesma ressalva de
+`config:cache` congelar `local.activa`/`cloud.activa` (`06-config.md`) — sem
+`config:cache` automático no entrypoint, alterar `LLM_*` exige reiniciar o container ou
+`config:clear` manual.
 
 ### `imagick` e `policy.xml`
 
@@ -53,6 +64,11 @@ Imagem `clamav/clamav-debian:1.4` (multi-arch — inclui `arm64`; `clamav/clamav
 acessível na rede `findoc` interna, via o alias de serviço `clamav` (`CLAMAV_HOST=clamav`,
 `CLAMAV_PORT=3310` em `x-app-env`). Volume nomeado `clamav-data:/var/lib/clamav` persiste as
 assinaturas entre reinícios (`freshclam` corre embutido, autoupdate sem intervenção da app).
+
+`docker/clamav/clamd.conf` (#111) é montado em `/etc/clamav/clamd.conf` (`ro`) — sobe
+`StreamMaxLength`/`MaxScanSize`/`MaxFileSize` para acima dos 50 MB do limite de upload (os defaults
+do `clamd`, ~25 MB, fariam o `INSTREAM` rejeitar ficheiros grandes que a aplicação já aceita). Ver
+`04-infra/malware.md`.
 
 Healthcheck via `clamdcheck.sh` (script embutido na imagem) com `start_period: 300s` — o arranque
 carrega as assinaturas em RAM e pode demorar minutos na primeira vez; `app`/`queue` declaram

@@ -53,27 +53,30 @@ Proibido nomear subpastas com termos técnicos/de padrão de desenho — não cr
 | Categoria | Propósito | Exemplos de Actions (nomenclatura do projecto) |
 |---|---|---|
 | `Ingestao/` | Receção de dados — upload, leitura de webhook, criação inicial do registo | `RecepcaoUploadDocumentoAction` |
-| `Processamento/` | Transformação — OCR, IA, parsing, chamadas a APIs externas | `MarcarAnaliseOcrAction`, `MarcarAnaliseTextoAction`, `MarcarAnaliseIaLocalAction`, `MarcarAnaliseCloudAction`, `MarcarAnaliseMalwareAction`, `RegistarEtapaExtracaoAction` |
+| `Processamento/` | Transformação — OCR, IA, parsing, chamadas a APIs externas | `MarcarAnaliseOcrAction`, `MarcarAnaliseTextoAction`, `MarcarAnaliseIaLocalAction`, `MarcarAnaliseCloudAction`, `MarcarAnaliseMalwareAction`, `RegistarEtapaExtracaoAction`, `ProcessarAnaliseTextoDocumentoAction`, `ProcessarAnaliseOcrDocumentoAction`, `ProcessarAnaliseIaLocalDocumentoAction`, `ProcessarAnaliseCloudDocumentoAction`, `ConcluirExtracaoDocumentoAction`, `RegistarFalhaTecnicaExtracaoAction` |
 | `Operacoes/` | Máquina de estados, transições, conversões de papel de registo | `TransicaoAction`, `TransicionarProcessadoDocumentoAction`, `ReprocessarDocumentoAction` |
-| `Atribuicao/` | Decisão humana — triagem manual, delegação, atribuição de responsável/permissão | `ReivindicarDocumentoPendenteAction`, `TriarDocumentoPendenteAction`, `AtribuirRoleAction` |
+| `Atribuicao/` | Decisão humana — triagem manual, delegação, atribuição de responsável/permissão | `ReivindicarDocumentoPendenteAction`, `TriarDocumentoPendenteAction`, `ReivindicarDocumentoEmEtapaAction`, `AtribuirRoleAction` |
 | `Anomalias/` | Desvios de fluxo — erros de sistema, marcas de alerta/perigo, recuperação | `MarcarErroDocumentoAction`, `MarcarPerigosoDocumentoAction` |
 | `Pesquisa/` | Leitura e saída — listagens, filtros, exportação/download | `ListarDocumentosAction`, `DescarregarDocumentoAction`, `VerDocumentoAction` |
 
 Esta tabela é o vocabulário de referência — não inventar sinónimo novo sem consultar a regra de
 consistência abaixo.
 
-### Exemplo real validado (app/Features/Documento, 19 Actions)
+### Exemplo real validado (app/Features/Documento, 26 Actions)
 
 Aplicação do limiar de 3 ao estado actual do repositório, incluída aqui como caso de estudo de como a
-trava funciona (categorias abaixo do limiar ficam na raiz, mesmo fazendo sentido semântico):
+trava funciona (categorias abaixo do limiar ficam na raiz, mesmo fazendo sentido semântico). `Atribuicao/`
+é o caso documentado de travessia do limiar: ficou 2 (na raiz) até #111 acrescentar
+`ReivindicarDocumentoEmEtapaAction` — a 3ª Action obrigou o agrupamento, incl. mover as duas já
+existentes (`Reivindicar`, `Triar`) para dentro da subpasta nova, num commit de refactor isolado.
 
 | Categoria | Actions que qualificam | Atinge limiar? |
 |---|---|---|
-| `Processamento/` | MarcarAnaliseCloud, MarcarAnaliseIaLocal, MarcarAnaliseMalware, MarcarAnaliseOcr, MarcarAnaliseTexto, RegistarEtapaExtracao | ✅ 6 — agrupar |
+| `Processamento/` | MarcarAnaliseCloud, MarcarAnaliseIaLocal, MarcarAnaliseMalware, MarcarAnaliseOcr, MarcarAnaliseTexto, RegistarEtapaExtracao, ProcessarAnaliseTexto, ProcessarAnaliseOcr, ProcessarAnaliseIaLocal, ProcessarAnaliseCloud, ConcluirExtracao, RegistarFalhaTecnicaExtracao | ✅ 12 — agrupar |
 | `Operacoes/` | Transicao, TransicionarProcessado, Reprocessar | ✅ 3 — agrupar |
 | `Pesquisa/` | Listar, Descarregar, Ver | ✅ 3 — agrupar |
+| `Atribuicao/` | Reivindicar, Triar, ReivindicarDocumentoEmEtapa | ✅ 3 — agrupar (#111, ver nota acima) |
 | `Anomalias/` | MarcarErro, MarcarPerigoso | ❌ 2 — fica na raiz |
-| `Atribuicao/` | Reivindicar, Triar | ❌ 2 — fica na raiz |
 | `Ingestao/` | RecepcaoUpload | ❌ 1 — fica na raiz |
 
 Corrigir, Criar e Eliminar são CRUD simples e ficam sempre na raiz (não têm categoria de negócio

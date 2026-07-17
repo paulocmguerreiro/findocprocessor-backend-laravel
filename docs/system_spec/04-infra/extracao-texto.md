@@ -31,9 +31,20 @@ reivindicação/lease e a contagem de tentativas ficam a cargo do orquestrador d
 ### Sem interface comum entre os dois extractores
 
 Ao contrário do padrão Repository/Service (`02-shared/padroes-acoes.md`), não há substituição
-prevista entre `ExtractorTextoNativo` e `ExtractorOcr` — o orquestrador invoca sempre os dois, em
-sequência condicional (nativo primeiro; OCR só se o threshold do nativo falhar), nunca um no lugar
-do outro. O único contrato de saída partilhado é o VO `ResultadoExtracao`.
+prevista entre `ExtractorTextoNativo` e `ExtractorOcr` — nunca um no lugar do outro, o único contrato
+de saída partilhado é o VO `ResultadoExtracao`. O orquestrador (`ProcessarAnaliseTextoDocumentoAction`,
+`01-features/documento-pipeline.md`) decide qual invocar: PDF → `ExtractorTextoNativo` primeiro (OCR
+só se o threshold falhar); **não-PDF** (imagem — JPG/PNG/TIFF/BMP/WEBP, #111) → salta directo para
+`ExtractorOcr`, o parser nativo nunca é chamado (não há texto embutido para extrair de uma imagem).
+
+### Delegates de imagem (TIFF/WEBP/BMP, #111)
+
+`ExtractorOcr` rasteriza com `imagick` — os formatos de upload alargados (`image/tiff`, `image/bmp`,
+`image/webp`, ver `01-features/documento.md`) dependem dos delegates correspondentes estarem
+disponíveis no container. O Dockerfile instala `libwebp`/`tiff` via `apk` antes do
+`install-php-extensions imagick` (BMP é suportado nativamente pelo ImageMagick/Leptonica, sem
+delegate extra). Sem o delegate, o upload é aceite (a validação do `FormRequest` só olha ao
+`mimetype`) mas a rasterização falha em runtime — o documento vai a `Erro` por falha técnica de OCR.
 
 ### `ultrapassaThreshold` — só o nativo decide
 

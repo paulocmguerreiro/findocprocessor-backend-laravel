@@ -12,7 +12,7 @@ Construção do system prompt implementada (`PromptBuilder`, ver `04-infra/promp
 |---|---|---|
 | `PromptBuilder` — construção do system prompt | `04-infra/prompt-builder.md` | implementado |
 | `config/prism.php` — providers Prism (Ollama local + OpenAI-compatible cloud) | `config/prism.php` | implementado |
-| `ClienteIA`/`ClienteExtracaoIAPrism` — cliente do pipeline de extração | `app/Infrastructure/AI/` | implementado |
+| `ContratoClienteIA`/`ClienteExtracaoIAPrism` — cliente do pipeline de extração | `app/Infrastructure/AI/` | implementado |
 
 ## Prism — camadas LLM opcionais
 
@@ -34,14 +34,15 @@ Prism (`Provider` backed enum) — um provider fora dessa lista exige `PrismMana
 
 ## `ClienteExtracaoIAPrism` — cliente do pipeline de extração
 
-Implementação de `ClienteIA` (`app/Infrastructure/AI/ClienteIA.php`): contrato
+Implementação de `ContratoClienteIA` (`app/Infrastructure/AI/ContratoClienteIA.php`): contrato
 `extrair(string $textoExtraido, CamadaIA $camada): ResultadoExtracaoIA`. Nunca propaga excepções —
 qualquer falha ao montar o pedido, invocar o Prism ou resolver o veredicto é convertida em
-`ResultadoExtracaoIA::falhaTecnica()`.
+`ResultadoExtracaoIA::falhaTecnica()`. Bind em `AppServiceProvider`:
+`$this->app->bind(ContratoClienteIA::class, ClienteExtracaoIAPrism::class)` (#111).
 
 | Componente | Ficheiro | Papel |
 |---|---|---|
-| `ClienteIA` (interface) | `ClienteIA.php` | Contrato único, sem `@throws` — excepções sempre capturadas |
+| `ContratoClienteIA` (interface) | `ContratoClienteIA.php` | Contrato único, sem `@throws` — excepções sempre capturadas |
 | `ClienteExtracaoIAPrism` (implementação) | `ClienteExtracaoIAPrism.php` | Chamada Prism (`structured()`), resolução de veredicto |
 | `CamadaIA` (enum) | `CamadaIA.php` | `Local`/`Cloud` — identifica a sub-árvore de `config('extracao.*')` a usar; decisão de qual camada invocar é sempre do chamador |
 | `ResultadoExtracaoIA` (Value Object) | `ResultadoExtracaoIA.php` | Construtor privado + 5 named constructors (`completo`/`desconhecido`/`perigoso`/`incompleto`/`falhaTecnica`); propriedades `public readonly`, sem getters (sem lógica associada à leitura) |
@@ -91,14 +92,17 @@ pedido efectivamente montado. Sem chamada de rede em nenhum teste.
 
 ---
 
-## Orquestração planeada
+## Orquestração (#111)
 
-`ClienteExtracaoIAPrism` é um serviço puro — não escreve em BD, não decide qual camada invocar,
-não monta `TransicionarProcessadoDocumentoDto` nem chama Actions de transição. A integração no
-pipeline (orquestrador a decidir `CamadaIA::Local`/`Cloud`, reconciliação NIF+Nome→`Entidade`
-find-or-create, gravação do resultado) fica para uma issue seguinte.
+`ClienteExtracaoIAPrism` continua um serviço puro — não escreve em BD, não decide qual camada
+invocar, não monta `TransicionarProcessadoDocumentoDto` nem chama Actions de transição. Quem decide
+`CamadaIA::Local`/`Cloud` e encaminha o veredicto são `ProcessarAnaliseIaLocalDocumentoAction` e
+`ProcessarAnaliseCloudDocumentoAction`; a reconciliação NIF/Nome→`Entidade` (find-or-create) é
+`RegraReconciliarEntidadesDocumento`; a gravação do resultado é `ConcluirExtracaoDocumentoAction`
+(veredicto completo) via `TransicionarProcessadoDocumentoAction`. Ver
+`01-features/documento-pipeline.md` ("Orquestradores de etapa") para o detalhe.
 
-**Modelo de destino do resultado:** o orquestrador do pipeline grava o resultado de cada passo via
+**Modelo de destino do resultado:** cada orquestrador de etapa grava o resultado do passo via
 `RegistarEtapaExtracaoAction` — upsert em `App\Models\ExtracaoDocumento` (`texto_extraido`,
 `dados_json`) + `EtapaDocumento` (`resultado`; o passo é o `estado` actual do `Documento`). Ver
 `03-models/extracao-documento.md` e `01-features/documento.md`.

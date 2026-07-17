@@ -8,8 +8,9 @@
 
 ## Visão geral
 
-Feature com 17 Actions no total: 8 expostas via endpoint HTTP (documentadas aqui) + 9 sem HTTP
-(`01-features/documento-pipeline.md`). 9 DTOs, 4 Events e camada HTTP completa. A máquina de
+Feature com 26 Actions no total: 8 expostas via endpoint HTTP (documentadas aqui) + 18 sem HTTP
+(`01-features/documento-pipeline.md` — inclui os 4 orquestradores de etapa + reivindicação por lease
+do pipeline automático de extracção, #111). 9 DTOs, 4 Events e camada HTTP completa. A máquina de
 estados é a peça central do pipeline — cada transição passa obrigatoriamente pelo mapa central em
 `RegraTransicaoEstado` (`documento-pipeline.md`) — nunca `if ($doc->estado == ...)`.
 
@@ -142,7 +143,7 @@ Transições intermédias (`AnaliseMalware`, `AnaliseTexto`, `AnaliseOcr`, `Anal
 |---|---|---|
 | `ListarDocumentosRequest` | `viewAny` | `Gate::authorize('viewAny', Documento::class)` |
 | `CriarDocumentoManualRequest` | `create` | `Gate::authorize('create', Documento::class)` |
-| `ReceberUploadDocumentoRequest` | `create` | idem; valida `multipart/form-data`, tipo e dimensão |
+| `ReceberUploadDocumentoRequest` | `create` | idem; valida `multipart/form-data`, tipo (`pdf`/`jpeg`/`png`/`tiff`/`bmp`/`webp`) e dimensão (≤ 50 MB) |
 | `VerDocumentoRequest` | `view` | `Gate::authorize('view', $documento)` |
 | `CorrigirDocumentoRequest` | `update` | `Gate::authorize('update', $documento)` |
 | `ReprocessarDocumentoRequest` | `update` | idem |
@@ -183,4 +184,3 @@ estão documentadas em `01-features/documento-pipeline.md` ("Transições de sis
 - **Colisão de nome canónico**: `RegraNomearProcessado` gera `yyyy-mm-dd-{slug-fornecedor}-{slug-categoria}.{ext}`. Dois documentos com o mesmo fornecedor/categoria/data terão o mesmo nome — `Storage::put()` sobrepõe silenciosamente. Diferido.
 - **Atomicidade filesystem↔BD**: o ficheiro é movido antes da transação; em dupla falha (mover OK + compensação falha), a BD reverte mas o ficheiro fica no disco destino. Reconciliação manual necessária. Detalhe em `documento-pipeline.md`.
 - **Sem ownership na autorização**: o `id_responsavel` regista o autor da entrada, mas o `DocumentoPolicy` ainda **não** o usa — qualquer utilizador com `documentos.actualizar`/`documentos.eliminar` pode alterar qualquer documento, não só os seus. Ownership por responsável fica para futuro.
-- **Jobs reais de pipeline** (`WatchInboxJob`, `ProcessBatchJob`) diferidos: as Actions são invocáveis programaticamente e os Events são `after_commit`, mas o orquestrador real ainda não existe.

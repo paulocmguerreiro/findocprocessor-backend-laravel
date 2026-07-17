@@ -6,7 +6,18 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Added
+- **Issue #111** — Extração: orquestradores `Schedule` (`extracao:*`) sobre a máquina de estados unificada — fecha o pipeline `Pendente → … → Processado|Erro|Perigoso` end-to-end, ligando os motores puros (#96/#97/#90) às Actions de transição (#94/#110)
+  - 4 orquestradores de etapa (`ProcessarAnaliseTexto`/`ProcessarAnaliseOcr`/`ProcessarAnaliseIaLocal`/`ProcessarAnaliseCloud`) + 2 Actions partilhadas (`ConcluirExtracaoDocumentoAction`, `RegistarFalhaTecnicaExtracaoAction`) — reclamam por lease, chamam o motor puro da etapa, interpretam o resultado e transicionam; detecção de imagem (não-PDF) salta directo para OCR
+  - `ReivindicarDocumentoEmEtapaAction` — reivindicação por lease (`extracao_reclamada_em`, TTL `EXTRACAO_TTL_LEASE`) com `lockForUpdate`, primeiro consumidor real do índice/coluna existentes desde #94; `Reivindicar`/`Triar`/nova agrupadas em `app/Features/Documento/Atribuicao/` (limiar de 3 Actions atingido)
+  - `RegraReconciliarEntidadesDocumento` — resolve `id_fornecedor`/`id_cliente` por lado (empresa mãe singleton / find-or-create por NIF / `null` quando a contraparte não é uma entidade real, ex. extractos)
+  - `RegraReporTentativasExtracao` — reset de `extracao_tentativas` no `ExecutorTransicaoDocumento` a cada avanço correcto de etapa; nunca reposto numa transição para `Erro`
+  - 5 Commands `extracao:*` (`run-scan`/`run-parser`/`run-tesseract`/`run-ia-local`/`run-ia-cloud`) agendados no `Schedule` (`everyMinute()`/`everyFiveMinutes()`, `withoutOverlapping()`), invocados sincronamente (sem fila) — a exclusão por documento vem do lease, não de `WithoutOverlapping` por Job; serviço `scheduler` (`schedule:work`) novo no `compose.yaml`
+  - 1146 testes, 100% cobertura + type coverage, Larastan 9 — verde em MySQL
+
 ### Changed
+- **Issue #111** — `TransicionarProcessadoDocumentoDto` flexibilizado (`idFornecedor`/`idCliente`/`valor`/`dataDocumento` nullable) para documentos "parciais" (extractos/avisos onde um dos lados não tem contraparte real); `RegraNomearProcessado` ganha fallbacks de nome (nome extraído do documento, ou o da empresa mãe) e de data (`created_at`) quando esses campos vêm nulos
+- **Issue #111** — Upload aceita `image/tiff`/`image/bmp`/`image/webp` além de PDF/JPEG/PNG; limite sobe de 10 MB para 50 MB (`ReceberUploadDocumentoRequest`, PHP `upload_max_filesize`/`post_max_size`, `clamd` `StreamMaxLength`/`MaxScanSize`/`MaxFileSize` via `docker/clamav/clamd.conf`)
 - **Issue #110** — Unifica a máquina de estados do `Documento`: funde a dimensão de extracção (`EtapaExtracao`) em `EstadoDocumento`, que passa de 7 para **9 estados** (`Pendente`, `AnaliseMalware`, `AnaliseTexto`, `AnaliseOcr`, `AnaliseIaLocal`, `AnaliseCloud`, `Processado`, `Erro`, `Perigoso`) — a extracção corre localmente, por isso cada passo de análise é agora um estado próprio (uma dimensão, não duas)
   - `RegraTransicaoEstado` (novo grafo) e `RegraMoverFicheiro` (mapa estado→disco) reescritos; 5 novos state objects `DocumentoAnalise*` (read-only); família `Marcar<Estado>DocumentoAction` reorganizada (+4 novas `MarcarAnalise*`, `MarcarAnaliseTexto` renomeada, `MarcarEnviado`/`MarcarAguardaResposta` removidas)
   - `TriarDocumentoPendenteAction` admite o documento a `AnaliseMalware` antes do scan; `Processado`/`Erro`/`Perigoso` passam a ser alcançáveis de cada passo de análise (RF-03)
