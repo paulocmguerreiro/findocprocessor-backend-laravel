@@ -64,14 +64,14 @@ Emite `DocumentoMarcadoPerigosoEvent`.
 | `ReivindicarDocumentoPendenteAction` | — (sem Gate, sistema) | `Pendente` | `AnaliseTexto`/`Perigoso`/`Erro` (via `TriarDocumentoPendenteAction`) | Não/origem → `perigoso`/`erro` |
 | `TriarDocumentoPendenteAction` | — (sem Gate, sistema) | `Pendente` | `AnaliseMalware` → `AnaliseTexto`/`Perigoso`/`Erro` | conforme a Action delegada |
 
-`ReivindicarDocumentoPendenteAction` (`app/Features/Documento/Reivindicar/`) — componente reutilizável
+`ReivindicarDocumentoPendenteAction` (`app/Features/Documento/Atribuicao/Reivindicar/`) — componente reutilizável
 de reivindicação para o futuro orquestrador de IA: abre `DB::transaction()` (ponto de entrada, sem
 Action chamante), bloqueia (`lockForUpdate()`) o próximo `Documento` `Pendente` (scope
 `wherePendente()`) e delega em `TriarDocumentoPendenteAction` (transação aninhada via `SAVEPOINT`).
 Evita que dois workers concorrentes reivindiquem o mesmo documento — ver `04-infra/transactions.md`
 para o padrão completo e `07-testing.md` para o teste de concorrência real (duas conexões MySQL).
 
-`TriarDocumentoPendenteAction` (`app/Features/Documento/Triar/`) — admite primeiro o `Documento` a
+`TriarDocumentoPendenteAction` (`app/Features/Documento/Atribuicao/Triar/`) — admite primeiro o `Documento` a
 `AnaliseMalware` (`Pendente → AnaliseMalware`, via `MarcarAnaliseMalwareDocumentoAction`), depois corre
 o `AnalisadorMalware` sobre o ficheiro (disco `entrada`), **dentro da mesma transacção/lock** que o
 reivindica (não abre transacção própria), e ramifica a partir de `AnaliseMalware`: infectado →

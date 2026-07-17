@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Features\Documento\Triar;
+namespace App\Features\Documento\Atribuicao\Triar;
 
 use App\Features\Documento\MarcarErro\MarcarErroDocumentoAction;
 use App\Features\Documento\MarcarErro\MarcarErroDocumentoDto;

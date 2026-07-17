@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\Triar\TriarDocumentoPendenteAction;
+use App\Features\Documento\Atribuicao\Triar\TriarDocumentoPendenteAction;
 use App\Infrastructure\Malware\ContratoAnalisadorMalware;
 use App\Infrastructure\Malware\FalhaAnaliseMalwareException;
 use App\Infrastructure\Malware\ResultadoAnaliseMalware;

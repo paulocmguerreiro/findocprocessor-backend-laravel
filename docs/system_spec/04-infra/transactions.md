@@ -83,7 +83,7 @@ ArchTest garante esta interface em todo `Job` de `app/Jobs/` (RN-01/CA-02).
 ## Padrão de reivindicação com `lockForUpdate()`
 
 Componente reutilizável para varrer candidatos ao pipeline sem duplo processamento entre workers
-concorrentes (`ReivindicarDocumentoPendenteAction`, `app/Features/Documento/Reivindicar/`):
+concorrentes (`ReivindicarDocumentoPendenteAction`, `app/Features/Documento/Atribuicao/Reivindicar/`):
 
 ```php
 /**

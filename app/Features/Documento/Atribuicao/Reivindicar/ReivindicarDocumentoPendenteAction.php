@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Features\Documento\Reivindicar;
+namespace App\Features\Documento\Atribuicao\Reivindicar;
 
-use App\Features\Documento\Triar\TriarDocumentoPendenteAction;
+use App\Features\Documento\Atribuicao\Triar\TriarDocumentoPendenteAction;
 use App\Models\Documento;
 use Illuminate\Support\Facades\DB;
 
