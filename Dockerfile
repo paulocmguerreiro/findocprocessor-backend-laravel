@@ -11,16 +11,21 @@ FROM php:8.5-fpm-alpine
 # - imagick   → rasterização de PDF/PS para OCR (pipeline de extração, #95/#96); o
 #               policy.xml do apk imagemagick já permite ler PDF por omissão (verificado
 #               manualmente), ao contrário do policy restritivo típico em bases Debian/Ubuntu.
-RUN apk add --no-cache git unzip tesseract-ocr tesseract-ocr-data-por tesseract-ocr-data-eng ghostscript \
+# libwebp/tiff → delegates do imagick para ler os formatos de upload alargados (#111,
+#               RNF-05): WEBP e TIFF (BMP é nativo). Sem eles, o upload aceita mas o OCR
+#               falha ao rasterizar. Instalados antes do install-php-extensions imagick.
+RUN apk add --no-cache git unzip tesseract-ocr tesseract-ocr-data-por tesseract-ocr-data-eng ghostscript libwebp tiff \
     && curl -sSLf \
        https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions \
        -o /usr/local/bin/install-php-extensions \
     && chmod +x /usr/local/bin/install-php-extensions \
     && install-php-extensions pdo_mysql bcmath intl zip opcache pcntl redis pcov gd imagick
 
-# memory_limit elevado: a análise estática (PHPStan / type-coverage) excede os
-# 128M por omissão. Aplica-se a CLI e FPM (conf.d partilhada nesta imagem).
-RUN printf "memory_limit=512M\n" > "$PHP_INI_DIR/conf.d/zz-findoc.ini"
+# zz-findoc.ini (CLI + FPM, conf.d partilhada):
+# - memory_limit elevado: a análise estática (PHPStan / type-coverage) excede os 128M por omissão.
+# - upload_max_filesize/post_max_size: limite de upload de 50 MB (#111, RF-15); post ligeiramente
+#   acima do upload para acomodar o overhead do multipart. nginx (client_max_body_size) já em 50M.
+RUN printf "memory_limit=512M\nupload_max_filesize=50M\npost_max_size=52M\n" > "$PHP_INI_DIR/conf.d/zz-findoc.ini"
 
 # Composer (binário oficial).
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
