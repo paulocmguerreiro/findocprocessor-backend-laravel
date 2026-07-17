@@ -39,6 +39,30 @@ it('rejeita um upload de tipo não permitido com 422', function (): void {
     ], ['Accept' => 'application/json'])->assertUnprocessable();
 });
 
+it('aceita imagens TIFF, BMP e WEBP', function (string $nome, string $mime): void {
+    $this->post('/api/documentos/upload', [
+        'ficheiro' => UploadedFile::fake()->create($nome, 100, $mime),
+    ])->assertCreated();
+})->with([
+    'tiff' => ['scan.tiff', 'image/tiff'],
+    'bmp' => ['scan.bmp', 'image/bmp'],
+    'webp' => ['scan.webp', 'image/webp'],
+]);
+
+it('aceita um ficheiro de exactamente 50 MB', function (): void {
+    $this->post('/api/documentos/upload', [
+        'ficheiro' => UploadedFile::fake()->create('grande.pdf', 51200, 'application/pdf'),
+    ])->assertCreated();
+});
+
+it('rejeita um ficheiro acima de 50 MB com 422', function (): void {
+    $this->post('/api/documentos/upload', [
+        'ficheiro' => UploadedFile::fake()->create('enorme.pdf', 51201, 'application/pdf'),
+    ], ['Accept' => 'application/json'])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['ficheiro']);
+});
+
 it('aplica rate limit ao upload após 20 pedidos por minuto', function (): void {
     // ThrottleRequests está desligado por omissão nos testes (ver LoginThrottleTest).
     $this->withMiddleware(ThrottleRequests::class);
