@@ -36,6 +36,7 @@
 | Tema                                             | Ficheiro                               |
 | ------------------------------------------------ | -------------------------------------- |
 | Padrões de Actions (autorização dupla camada)    | `02-shared/padroes-acoes.md`           |
+| Subpastas semânticas dentro de uma Feature (limiar de coesão, vocabulário, dicionário de sinónimos) | `02-shared/estrutura-subpastas-features.md` |
 | Padrões de DTOs (Value Object)                   | `02-shared/padroes-dtos.md`            |
 | Padrões de VOs de resultado/veredicto (construtor privado + factories) | `02-shared/padroes-value-objects.md` |
 | Padrões de tipagem (array shape, `@throws`)      | `02-shared/padroes-tipagem.md`         |

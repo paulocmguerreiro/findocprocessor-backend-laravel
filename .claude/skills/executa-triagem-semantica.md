@@ -26,7 +26,7 @@ ganha uma regra nova.
 | Tipo de ficheiro | Specs a ler |
 |---|---|
 | Model (`app/Models/*.php`) | `03-models/00-convencoes-models.md` |
-| Action (`*Action.php`) | `02-shared/padroes-acoes.md` (+ `02-shared/estados.md` se envolver `Documento`) |
+| Action (`*Action.php`) | `02-shared/padroes-acoes.md` (+ `02-shared/estados.md` se envolver `Documento`) + `02-shared/estrutura-subpastas-features.md` (posicionamento da pasta) |
 | Interface (`Contrato*.php`) | `02-shared/contratos-por-camada.md` |
 | DTO / Value Object | `02-shared/padroes-dtos.md` |
 | Repository (`*Repository.php`) | `04-infra/repositories.md` |
@@ -58,7 +58,13 @@ antes de prosseguir — não inventar regra sem fonte.
 3. Confrontar os nomes previstos com as regras normativas desses specs (nomenclatura, prefixo
    `Contrato<Nome>`, etc.) — sinalizar nomes já previstos incorrectamente no próprio Plano, antes de a
    tarefa ser escrita.
-4. Sem correcção automática do Plano — reportar ao utilizador e ajustar o Plano só se confirmado.
+4. Se o Plano prevê Actions novas para uma Feature: contar, por categoria de propósito de negócio
+   (`02-shared/estrutura-subpastas-features.md`), quantas Actions dessa Feature (existentes + previstas
+   no Plano) partilham a mesma categoria. Se atingir o limiar de 3, sinalizar que devem nascer já na
+   subpasta semântica correcta — e antes de nomear a subpasta, correr
+   `find app/Features -maxdepth 2 -type d` para reutilizar um nome já usado noutra Feature (dicionário de
+   equivalência), em vez de propor um sinónimo novo.
+5. Sem correcção automática do Plano — reportar ao utilizador e ajustar o Plano só se confirmado.
 
 ### `alvo=codigo` (usado em `/implementa-plano`, por tarefa, antes do checkpoint)
 
@@ -67,10 +73,15 @@ antes de prosseguir — não inventar regra sem fonte.
    foram lidos no passo `alvo=tarefa-planeada` desta mesma tarefa, não é necessário reler.
 3. Reler os ficheiros alterados **linha a linha** (não é grep mecânico) contra as regras normativas
    ("obrigatório"/"sempre"/"nunca") de cada spec carregado, aplicáveis ao tipo do ficheiro.
-4. Se limpo → `✅ Triagem semântica limpa`, segue sem pausar.
-5. Se houver violações → corrigir directamente (tratamento igual a lint/Rector — correcção normal de
+4. Se a tarefa criou uma Action nova: confirmar que a pasta onde nasceu respeita
+   `02-shared/estrutura-subpastas-features.md` — categoria correcta, limiar de 3 respeitado (nem
+   subpasta prematura com <3, nem Action a mais deixada na raiz quando a Feature já atingiu o limiar
+   nessa categoria), e nome de subpasta consistente com o já usado noutras Features.
+5. Se limpo → `✅ Triagem semântica limpa`, segue sem pausar.
+6. Se houver violações → corrigir directamente (tratamento igual a lint/Rector — correcção normal de
    qualidade, não é um FAIL bloqueante tipo `checkpoint:scan`) e listar o que foi corrigido no
-   checkpoint da tarefa.
+   checkpoint da tarefa. Se a correcção implicar mover o ficheiro de pasta, seguir o fluxo de
+   namespace/imports de `02-shared/estrutura-subpastas-features.md`.
 
 ---
 
