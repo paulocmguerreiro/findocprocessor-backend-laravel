@@ -65,6 +65,19 @@ it('reconcilia e transiciona para Processado, autenticado como o responsável, e
     ]);
 });
 
+it('restaura o utilizador previamente autenticado após concluir (não faz logout)', function (): void {
+    $anterior = criarAdmin();
+    $this->actingAs($anterior);
+
+    Entidade::factory()->empresaAplicacao()->create();
+    $documento = documentoParaConcluir(); // id_responsavel é outro admin distinto
+    $tipo = TipoDocumento::factory()->create(['posicao_empresa_mae' => PosicaoEmpresaMae::Cliente, 'espera_fornecedor' => true]);
+
+    app(ConcluirExtracaoDocumentoAction::class)->handle($documento, resultadoIaCompleto($tipo));
+
+    expect(auth()->id())->toBe($anterior->id);
+});
+
 it('vai a Erro quando a empresa mãe não está configurada (RN-06)', function (): void {
     $documento = documentoParaConcluir();
     $tipo = TipoDocumento::factory()->create(['posicao_empresa_mae' => PosicaoEmpresaMae::Cliente, 'espera_fornecedor' => true]);
