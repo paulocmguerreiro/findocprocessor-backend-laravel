@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\Transicao\RegraTransicaoEstado;
+use App\Features\Documento\Operacoes\Transicao\RegraTransicaoEstado;
 use App\Shared\Enums\EstadoDocumento;
 use App\Shared\Exceptions\TransicaoInvalidaException;
 

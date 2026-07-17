@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\Transicao\RegraMoverFicheiro;
+use App\Features\Documento\Operacoes\Transicao\RegraMoverFicheiro;
 use App\Shared\Enums\EstadoDocumento;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Storage;

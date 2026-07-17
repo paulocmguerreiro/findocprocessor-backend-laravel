@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\Transicao\RegraNomearProcessado;
+use App\Features\Documento\Operacoes\Transicao\RegraNomearProcessado;
 use Illuminate\Support\Carbon;
 
 it('gera o nome canónico com data, slugs e extensão', function (): void {

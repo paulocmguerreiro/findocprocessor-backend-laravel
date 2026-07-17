@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\RegistarEtapaExtracao\RegistarEtapaExtracaoDto;
+use App\Features\Documento\Processamento\RegistarEtapaExtracao\RegistarEtapaExtracaoDto;
 use App\Shared\Enums\ResultadoEtapa;
 
 it('constrói com Sucesso sem motivo', function (): void {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\TransicionarProcessado\TransicionarProcessadoDocumentoDto;
+use App\Features\Documento\Operacoes\TransicionarProcessado\TransicionarProcessadoDocumentoDto;
 use Illuminate\Support\Carbon;
 
 function dtoProcessado(array $sobrepor = []): TransicionarProcessadoDocumentoDto

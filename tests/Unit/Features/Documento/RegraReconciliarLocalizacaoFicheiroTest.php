@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\Transicao\RegraReconciliarLocalizacaoFicheiro;
+use App\Features\Documento\Operacoes\Transicao\RegraReconciliarLocalizacaoFicheiro;
 use App\Models\Documento;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;

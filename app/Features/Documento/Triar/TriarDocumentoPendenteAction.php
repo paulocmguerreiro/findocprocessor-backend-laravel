@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Features\Documento\Triar;
 
-use App\Features\Documento\MarcarAnaliseMalware\MarcarAnaliseMalwareDocumentoAction;
-use App\Features\Documento\MarcarAnaliseTexto\MarcarAnaliseTextoDocumentoAction;
 use App\Features\Documento\MarcarErro\MarcarErroDocumentoAction;
 use App\Features\Documento\MarcarErro\MarcarErroDocumentoDto;
 use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoAction;
 use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoDto;
+use App\Features\Documento\Processamento\MarcarAnaliseMalware\MarcarAnaliseMalwareDocumentoAction;
+use App\Features\Documento\Processamento\MarcarAnaliseTexto\MarcarAnaliseTextoDocumentoAction;
 use App\Infrastructure\Malware\ContratoAnalisadorMalware;
 use App\Infrastructure\Malware\FalhaAnaliseMalwareException;
 use App\Models\Documento;

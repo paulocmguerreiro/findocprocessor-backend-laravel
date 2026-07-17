@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Events;
 
-use App\Features\Documento\Reprocessar\ModoReprocessamento;
+use App\Features\Documento\Operacoes\Reprocessar\ModoReprocessamento;
 use App\Models\Documento;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Features\Documento\Corrigir;
 
-use App\Features\Documento\Transicao\ExecutorTransicaoDocumento;
-use App\Features\Documento\Transicao\RegraNomearProcessado;
+use App\Features\Documento\Operacoes\Transicao\ExecutorTransicaoDocumento;
+use App\Features\Documento\Operacoes\Transicao\RegraNomearProcessado;
 use App\Models\CategoriaDocumento;
 use App\Models\Documento;
 use App\Models\Entidade;

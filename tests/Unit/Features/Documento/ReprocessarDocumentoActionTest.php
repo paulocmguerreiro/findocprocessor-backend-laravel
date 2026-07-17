@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use App\Events\DocumentoReprocessadoEvent;
-use App\Features\Documento\Reprocessar\ModoReprocessamento;
-use App\Features\Documento\Reprocessar\ReprocessarDocumentoAction;
-use App\Features\Documento\Reprocessar\ReprocessarDocumentoDto;
+use App\Features\Documento\Operacoes\Reprocessar\ModoReprocessamento;
+use App\Features\Documento\Operacoes\Reprocessar\ReprocessarDocumentoAction;
+use App\Features\Documento\Operacoes\Reprocessar\ReprocessarDocumentoDto;
 use App\Models\Documento;
 use App\Models\ExtracaoDocumento;
 use App\Shared\Enums\EstadoDocumento;

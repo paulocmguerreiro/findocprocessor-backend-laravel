@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\Transicao\ResultadoReconciliacaoFicheiro;
+use App\Features\Documento\Operacoes\Transicao\ResultadoReconciliacaoFicheiro;
 
 it('constrói um resultado coerente com disco e nome preenchidos', function (): void {
     $resultado = new ResultadoReconciliacaoFicheiro(coerente: true, encontrado: true, disco: 'entrada', nome: 'ficheiro.pdf');

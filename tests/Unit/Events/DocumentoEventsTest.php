@@ -6,7 +6,7 @@ use App\Events\DocumentoMarcadoErroEvent;
 use App\Events\DocumentoMarcadoPerigosoEvent;
 use App\Events\DocumentoProcessadoEvent;
 use App\Events\DocumentoReprocessadoEvent;
-use App\Features\Documento\Reprocessar\ModoReprocessamento;
+use App\Features\Documento\Operacoes\Reprocessar\ModoReprocessamento;
 use App\Models\Documento;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 

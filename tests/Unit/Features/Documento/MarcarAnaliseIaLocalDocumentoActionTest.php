@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\MarcarAnaliseIaLocal\MarcarAnaliseIaLocalDocumentoAction;
+use App\Features\Documento\Processamento\MarcarAnaliseIaLocal\MarcarAnaliseIaLocalDocumentoAction;
 use App\Models\Documento;
 use App\Shared\Enums\EstadoDocumento;
 use App\Shared\Exceptions\TransicaoInvalidaException;

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Features\Documento\MarcarPerigoso;
 
 use App\Events\DocumentoMarcadoPerigosoEvent;
-use App\Features\Documento\Transicao\ExecutorTransicaoDocumento;
+use App\Features\Documento\Operacoes\Transicao\ExecutorTransicaoDocumento;
 use App\Models\Documento;
 use App\Shared\Enums\EstadoDocumento;
 

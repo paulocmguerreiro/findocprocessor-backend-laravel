@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\Transicao\RegraEliminarExtracaoTerminal;
+use App\Features\Documento\Operacoes\Transicao\RegraEliminarExtracaoTerminal;
 use App\Models\Documento;
 use App\Models\ExtracaoDocumento;
 use App\Shared\Enums\EstadoDocumento;

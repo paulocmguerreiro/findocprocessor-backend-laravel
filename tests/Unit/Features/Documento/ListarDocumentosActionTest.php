@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\Listar\CampoOrdenacaoDocumentos;
-use App\Features\Documento\Listar\ListarDocumentosAction;
+use App\Features\Documento\Pesquisa\Listar\CampoOrdenacaoDocumentos;
+use App\Features\Documento\Pesquisa\Listar\ListarDocumentosAction;
 use App\Models\Documento;
 use App\Models\User;
 use App\Shared\Cache\CacheServico;

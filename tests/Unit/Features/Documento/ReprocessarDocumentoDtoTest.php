@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\Reprocessar\ModoReprocessamento;
-use App\Features\Documento\Reprocessar\ReprocessarDocumentoDto;
+use App\Features\Documento\Operacoes\Reprocessar\ModoReprocessamento;
+use App\Features\Documento\Operacoes\Reprocessar\ReprocessarDocumentoDto;
 
 it('transporta o modo de reprocessamento', function (ModoReprocessamento $modo): void {
     expect((new ReprocessarDocumentoDto($modo))->modo)->toBe($modo);

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\Descarregar\DescarregarDocumentoAction;
-use App\Features\Documento\Descarregar\FicheiroDocumentoDto;
+use App\Features\Documento\Pesquisa\Descarregar\DescarregarDocumentoAction;
+use App\Features\Documento\Pesquisa\Descarregar\FicheiroDocumentoDto;
 use App\Models\Documento;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;

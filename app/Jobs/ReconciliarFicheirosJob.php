@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
-use App\Features\Documento\Transicao\RegraReconciliarLocalizacaoFicheiro;
+use App\Features\Documento\Operacoes\Transicao\RegraReconciliarLocalizacaoFicheiro;
 use App\Models\Documento;
 use App\Shared\Enums\EstadoDocumento;
 use Illuminate\Contracts\Queue\ShouldQueue;

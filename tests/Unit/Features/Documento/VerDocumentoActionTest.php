@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\Ver\VerDocumentoAction;
+use App\Features\Documento\Pesquisa\Ver\VerDocumentoAction;
 use App\Models\Documento;
 use App\Models\EtapaDocumento;
 use App\Models\User;
