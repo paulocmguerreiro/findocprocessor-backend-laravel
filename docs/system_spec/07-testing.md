@@ -63,6 +63,19 @@ it('faz rollback se falhar a meio', function (): void {
 | `DELETE /api/.../{id}` (eliminar) | 204, 404 | utilizador sem permissão → 403; guest → 401 |
 | Endpoints especiais | happy path + 404 | conforme a ability exigida |
 
+**Campos populados via `whenLoaded()`:** todo o campo de um Resource que usa
+`whenLoaded('relacao')` tem de ter, no teste do(s) endpoint(s) onde é suposto
+aparecer, uma asserção do **conteúdo** do campo (não basta 200/estrutura genérica)
+— só isso prova que o Controller/Action fez o eager-load (`->with()`/`->load()`)
+necessário. `whenLoaded()` não lança excepção nem faz query quando a relação não
+está carregada: devolve `MissingValue` e a chave desaparece do JSON em silêncio,
+mesmo que o PHPDoc do Resource a declare como sempre presente.
+
+Nos endpoints onde o campo é **deliberadamente omitido** (ex.: listagens leves
+que não fazem eager-load de relações pesadas), o teste tem de assertar
+explicitamente a **ausência** da chave — para distinguir "omissão deliberada,
+coberta por teste" de "esquecimento não detectado".
+
 ---
 
 ## Estrutura de ficheiros por feature slice completa
