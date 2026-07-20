@@ -30,10 +30,14 @@ function payloadManual(array $sobrepor = []): array
 }
 
 it('regista um documento manual e devolve 201 em Processado', function (): void {
-    $this->post('/api/documentos', payloadManual())
+    $cliente = Entidade::factory()->create(['nome' => 'Cliente Lda']);
+
+    $this->post('/api/documentos', payloadManual(['id_cliente' => $cliente->id]))
         ->assertCreated()
         ->assertJsonPath('data.estado', EstadoDocumento::Processado->value)
         ->assertJsonPath('data.fornecedor.nome', 'Fornecedor Lda')
+        ->assertJsonPath('data.cliente.nome', 'Cliente Lda')
+        ->assertJsonPath('data.categoria.nome', 'Despesas')
         ->assertJsonPath('data.id_responsavel', $this->utilizador->id);
 
     Storage::disk('processado')->assertExists('2026-06-25-fornecedor-lda-despesas.pdf');

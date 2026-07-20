@@ -31,9 +31,11 @@ describe('autenticado', function (): void {
     });
 
     it('devolve lista de tipos de documento com estrutura correcta, incluindo categoria', function (): void {
-        TipoDocumento::factory()->count(3)->create();
+        $categoria = CategoriaDocumento::factory()->create(['nome' => 'Categoria Listagem']);
+        $tipoDocumento = TipoDocumento::factory()->for($categoria, 'categoria')->create();
+        TipoDocumento::factory()->count(2)->create();
 
-        $this->getJson('/api/tipos-documento')
+        $resposta = $this->getJson('/api/tipos-documento')
             ->assertOk()
             ->assertJsonCount(3, 'data')
             ->assertJsonStructure([
@@ -41,6 +43,12 @@ describe('autenticado', function (): void {
                 'links' => ['prev', 'next'],
                 'meta' => ['per_page', 'next_cursor', 'prev_cursor', 'path'],
             ]);
+
+        $item = collect($resposta->json('data'))->firstWhere('id', $tipoDocumento->id);
+        expect($item['categoria'])->toMatchArray([
+            'id' => $categoria->id,
+            'nome' => 'Categoria Listagem',
+        ]);
     });
 
     it('respeita o parâmetro per_page na paginação', function (): void {

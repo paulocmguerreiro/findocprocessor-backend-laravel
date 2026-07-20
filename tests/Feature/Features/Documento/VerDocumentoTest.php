@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Models\CategoriaDocumento;
 use App\Models\Documento;
+use App\Models\Entidade;
 use App\Models\EtapaDocumento;
 use App\Models\User;
 use App\Shared\Enums\ResultadoEtapa;
@@ -12,13 +14,23 @@ uses(RefreshDatabase::class);
 
 beforeEach(fn (): User => criarEAutenticarAdmin());
 
-it('mostra o documento com o histórico e devolve 200', function (): void {
-    $documento = Documento::factory()->processado()->create();
+it('mostra o documento com fornecedor, cliente, categoria e histórico e devolve 200', function (): void {
+    $fornecedor = Entidade::factory()->fornecedor()->create(['nome' => 'Fornecedor Ver']);
+    $cliente = Entidade::factory()->cliente()->create(['nome' => 'Cliente Ver']);
+    $categoria = CategoriaDocumento::factory()->create(['nome' => 'Categoria Ver']);
+    $documento = Documento::factory()->processado()->create([
+        'id_fornecedor' => $fornecedor->id,
+        'id_cliente' => $cliente->id,
+        'id_categoria' => $categoria->id,
+    ]);
     EtapaDocumento::factory()->processado()->for($documento, 'documento')->create();
 
     $this->getJson("/api/documentos/{$documento->id}")
         ->assertOk()
         ->assertJsonPath('data.id', $documento->id)
+        ->assertJsonPath('data.fornecedor.nome', 'Fornecedor Ver')
+        ->assertJsonPath('data.cliente.nome', 'Cliente Ver')
+        ->assertJsonPath('data.categoria.nome', 'Categoria Ver')
         ->assertJsonCount(1, 'data.historico')
         ->assertJsonPath('data.historico.0.estado', 'PROCESSADO')
         ->assertJsonPath('data.historico.0.resultado', null);

@@ -22,16 +22,20 @@ it('corrige um documento Processado e devolve 200 com os campos actualizados', f
     Storage::disk('processado')->put('antigo.pdf', 'conteudo');
 
     $fornecedor = Entidade::factory()->create(['nome' => 'Novo Fornecedor']);
+    $cliente = Entidade::factory()->create(['nome' => 'Novo Cliente']);
+    $categoria = CategoriaDocumento::factory()->create(['nome' => 'Nova Categoria']);
 
     $this->patchJson("/api/documentos/{$documento->id}", [
         'id_fornecedor' => $fornecedor->id,
-        'id_cliente' => Entidade::factory()->create()->id,
-        'id_categoria' => CategoriaDocumento::factory()->create(['nome' => 'Nova Categoria'])->id,
+        'id_cliente' => $cliente->id,
+        'id_categoria' => $categoria->id,
         'valor' => 999,
         'data_documento' => '2026-06-25',
     ])
         ->assertOk()
-        ->assertJsonPath('data.fornecedor.nome', 'Novo Fornecedor');
+        ->assertJsonPath('data.fornecedor.nome', 'Novo Fornecedor')
+        ->assertJsonPath('data.cliente.nome', 'Novo Cliente')
+        ->assertJsonPath('data.categoria.nome', 'Nova Categoria');
 
     Storage::disk('processado')->assertExists('2026-06-25-novo-fornecedor-nova-categoria.pdf');
     $this->assertDatabaseHas('documentos', ['id' => $documento->id, 'id_fornecedor' => $fornecedor->id]);

@@ -33,7 +33,7 @@ describe('autenticado', function (): void {
     beforeEach(fn (): User => criarEAutenticarAdmin());
 
     it('actualiza todos os campos e devolve 200 com o recurso', function (): void {
-        $categoria = CategoriaDocumento::factory()->create();
+        $categoria = CategoriaDocumento::factory()->create(['nome' => 'Categoria Actualizada']);
         $tipoDocumento = TipoDocumento::factory()->for($categoria, 'categoria')->create(['nome' => 'Nome Original']);
         Activity::query()->delete();
 
@@ -43,7 +43,11 @@ describe('autenticado', function (): void {
                 ->has('data', fn (AssertableJson $data): AssertableJson => $data
                     ->where('id', $tipoDocumento->id)
                     ->where('nome', 'Nome Actualizado')
-                    ->has('categoria')
+                    ->has('categoria', fn (AssertableJson $categoriaJson): AssertableJson => $categoriaJson
+                        ->where('id', $categoria->id)
+                        ->where('nome', 'Categoria Actualizada')
+                        ->etc()
+                    )
                     ->etc()
                 )
             );

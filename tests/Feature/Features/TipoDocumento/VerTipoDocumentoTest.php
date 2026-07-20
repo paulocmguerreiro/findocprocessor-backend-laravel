@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\CategoriaDocumento;
 use App\Models\TipoDocumento;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -14,7 +15,8 @@ describe('autenticado', function (): void {
     beforeEach(fn (): User => criarEAutenticarAdmin());
 
     it('devolve tipo de documento existente com estrutura correcta', function (): void {
-        $tipoDocumento = TipoDocumento::factory()->create();
+        $categoria = CategoriaDocumento::factory()->create(['nome' => 'Categoria Ver']);
+        $tipoDocumento = TipoDocumento::factory()->for($categoria, 'categoria')->create();
 
         $this->getJson("/api/tipos-documento/{$tipoDocumento->id}")
             ->assertOk()
@@ -22,7 +24,11 @@ describe('autenticado', function (): void {
                 ->has('data', fn (AssertableJson $data): AssertableJson => $data
                     ->where('id', $tipoDocumento->id)
                     ->where('nome', $tipoDocumento->nome)
-                    ->has('categoria')
+                    ->has('categoria', fn (AssertableJson $categoriaJson): AssertableJson => $categoriaJson
+                        ->where('id', $categoria->id)
+                        ->where('nome', 'Categoria Ver')
+                        ->etc()
+                    )
                     ->etc()
                 )
             );
