@@ -8,7 +8,6 @@ use App\Features\Documento\MarcarErro\MarcarErroDocumentoAction;
 use App\Features\Documento\MarcarErro\MarcarErroDocumentoDto;
 use App\Features\Documento\Operacoes\TransicionarProcessado\TransicionarProcessadoDocumentoAction;
 use App\Features\Documento\Operacoes\TransicionarProcessado\TransicionarProcessadoDocumentoDto;
-use App\Features\Documento\Processamento\ReconciliarEntidades\RegraReconciliarEntidadesDocumento;
 use App\Infrastructure\AI\ResultadoExtracaoIA;
 use App\Models\Documento;
 use App\Models\User;

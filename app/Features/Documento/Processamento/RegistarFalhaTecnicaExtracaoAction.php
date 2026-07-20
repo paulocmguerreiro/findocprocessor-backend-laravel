@@ -6,8 +6,6 @@ namespace App\Features\Documento\Processamento;
 
 use App\Features\Documento\MarcarErro\MarcarErroDocumentoAction;
 use App\Features\Documento\MarcarErro\MarcarErroDocumentoDto;
-use App\Features\Documento\Processamento\RegistarEtapaExtracaoAction;
-use App\Features\Documento\Processamento\RegistarEtapaExtracaoDto;
 use App\Models\Documento;
 use App\Models\ExtracaoDocumento;
 use App\Shared\Enums\ResultadoEtapa;

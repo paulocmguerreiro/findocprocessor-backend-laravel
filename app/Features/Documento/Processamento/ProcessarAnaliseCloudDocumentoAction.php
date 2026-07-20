@@ -10,7 +10,6 @@ use App\Features\Documento\MarcarErro\MarcarErroDocumentoDto;
 use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoAction;
 use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoDto;
 use App\Features\Documento\Processamento\ConcluirExtracao\ConcluirExtracaoDocumentoAction;
-use App\Features\Documento\Processamento\RegistarFalhaTecnicaExtracaoAction;
 use App\Infrastructure\AI\CamadaIA;
 use App\Infrastructure\AI\ContratoClienteIA;
 use App\Models\Documento;

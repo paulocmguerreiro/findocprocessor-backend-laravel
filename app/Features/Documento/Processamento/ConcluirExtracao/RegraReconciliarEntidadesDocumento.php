@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Features\Documento\Processamento\ReconciliarEntidades;
+namespace App\Features\Documento\Processamento\ConcluirExtracao;
 
 use App\Infrastructure\AI\ResultadoExtracaoIA;
 use App\Models\Entidade;
