@@ -21,6 +21,17 @@ it('lista documentos paginados e devolve 200', function (): void {
         ->assertJsonCount(3, 'data');
 });
 
+it('omite deliberadamente fornecedor, cliente, categoria e histórico da listagem leve', function (): void {
+    Documento::factory()->processado()->create();
+
+    $this->getJson('/api/documentos')
+        ->assertOk()
+        ->assertJsonMissingPath('data.0.fornecedor')
+        ->assertJsonMissingPath('data.0.cliente')
+        ->assertJsonMissingPath('data.0.categoria')
+        ->assertJsonMissingPath('data.0.historico');
+});
+
 it('filtra a listagem por estado', function (): void {
     Documento::factory()->count(2)->pendente()->create();
     Documento::factory()->count(3)->processado()->create();
