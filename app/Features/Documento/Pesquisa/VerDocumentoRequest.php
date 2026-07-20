@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Features\Documento\Pesquisa\Ver;
+namespace App\Features\Documento\Pesquisa;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;

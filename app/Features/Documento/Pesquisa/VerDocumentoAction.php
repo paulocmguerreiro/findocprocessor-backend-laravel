@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Features\Documento\Pesquisa\Ver;
+namespace App\Features\Documento\Pesquisa;
 
 use App\Models\Documento;
 use App\Shared\Cache\CacheServico;
