@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Features\Documento\Processamento\ProcessarAnaliseCloud;
+namespace App\Features\Documento\Processamento;
 
 use App\Features\Documento\Atribuicao\ReivindicarDocumentoEmEtapaAction;
 use App\Features\Documento\MarcarErro\MarcarErroDocumentoAction;
@@ -10,7 +10,7 @@ use App\Features\Documento\MarcarErro\MarcarErroDocumentoDto;
 use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoAction;
 use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoDto;
 use App\Features\Documento\Processamento\ConcluirExtracao\ConcluirExtracaoDocumentoAction;
-use App\Features\Documento\Processamento\RegistarFalhaTecnicaExtracao\RegistarFalhaTecnicaExtracaoAction;
+use App\Features\Documento\Processamento\RegistarFalhaTecnicaExtracaoAction;
 use App\Infrastructure\AI\CamadaIA;
 use App\Infrastructure\AI\ContratoClienteIA;
 use App\Models\Documento;

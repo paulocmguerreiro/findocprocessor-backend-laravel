@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Features\Documento\Processamento\ProcessarAnaliseOcr;
+namespace App\Features\Documento\Processamento;
 
 use App\Features\Documento\Atribuicao\ReivindicarDocumentoEmEtapaAction;
 use App\Features\Documento\Processamento\MarcarAnaliseIaLocal\MarcarAnaliseIaLocalDocumentoAction;
-use App\Features\Documento\Processamento\RegistarEtapaExtracao\RegistarEtapaExtracaoAction;
-use App\Features\Documento\Processamento\RegistarEtapaExtracao\RegistarEtapaExtracaoDto;
-use App\Features\Documento\Processamento\RegistarFalhaTecnicaExtracao\RegistarFalhaTecnicaExtracaoAction;
+use App\Features\Documento\Processamento\RegistarEtapaExtracaoAction;
+use App\Features\Documento\Processamento\RegistarEtapaExtracaoDto;
+use App\Features\Documento\Processamento\RegistarFalhaTecnicaExtracaoAction;
 use App\Infrastructure\Extracao\ExtractorOcr;
 use App\Infrastructure\Extracao\FalhaExtracaoTextoException;
 use App\Models\Documento;

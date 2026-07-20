@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Features\Documento\Processamento\RegistarFalhaTecnicaExtracao;
+namespace App\Features\Documento\Processamento;
 
 use App\Features\Documento\MarcarErro\MarcarErroDocumentoAction;
 use App\Features\Documento\MarcarErro\MarcarErroDocumentoDto;
-use App\Features\Documento\Processamento\RegistarEtapaExtracao\RegistarEtapaExtracaoAction;
-use App\Features\Documento\Processamento\RegistarEtapaExtracao\RegistarEtapaExtracaoDto;
+use App\Features\Documento\Processamento\RegistarEtapaExtracaoAction;
+use App\Features\Documento\Processamento\RegistarEtapaExtracaoDto;
 use App\Models\Documento;
 use App\Models\ExtracaoDocumento;
 use App\Shared\Enums\ResultadoEtapa;

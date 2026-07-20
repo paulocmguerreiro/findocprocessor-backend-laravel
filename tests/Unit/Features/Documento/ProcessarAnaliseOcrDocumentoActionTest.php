@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\Processamento\ProcessarAnaliseOcr\ProcessarAnaliseOcrDocumentoAction;
+use App\Features\Documento\Processamento\ProcessarAnaliseOcrDocumentoAction;
 use App\Models\Documento;
 use App\Models\ExtracaoDocumento;
 use App\Shared\Enums\EstadoDocumento;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands\Extracao;
 
-use App\Features\Documento\Processamento\ProcessarAnaliseOcr\ProcessarAnaliseOcrDocumentoAction;
+use App\Features\Documento\Processamento\ProcessarAnaliseOcrDocumentoAction;
 use App\Models\Documento;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;

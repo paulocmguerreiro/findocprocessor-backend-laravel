@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace App\Features\Documento\Processamento\ProcessarAnaliseIaLocal;
+namespace App\Features\Documento\Processamento;
 
 use App\Features\Documento\Atribuicao\ReivindicarDocumentoEmEtapaAction;
 use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoAction;
 use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoDto;
 use App\Features\Documento\Processamento\ConcluirExtracao\ConcluirExtracaoDocumentoAction;
 use App\Features\Documento\Processamento\MarcarAnaliseCloud\MarcarAnaliseCloudDocumentoAction;
-use App\Features\Documento\Processamento\RegistarEtapaExtracao\RegistarEtapaExtracaoAction;
-use App\Features\Documento\Processamento\RegistarEtapaExtracao\RegistarEtapaExtracaoDto;
-use App\Features\Documento\Processamento\RegistarFalhaTecnicaExtracao\RegistarFalhaTecnicaExtracaoAction;
+use App\Features\Documento\Processamento\RegistarEtapaExtracaoAction;
+use App\Features\Documento\Processamento\RegistarEtapaExtracaoDto;
+use App\Features\Documento\Processamento\RegistarFalhaTecnicaExtracaoAction;
 use App\Infrastructure\AI\CamadaIA;
 use App\Infrastructure\AI\ContratoClienteIA;
 use App\Models\Documento;
