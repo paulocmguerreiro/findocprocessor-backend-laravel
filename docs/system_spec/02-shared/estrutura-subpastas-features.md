@@ -77,47 +77,47 @@ Proibido nomear subpastas com termos técnicos/de padrão de desenho — não cr
 | Categoria | Propósito | Exemplos de Actions (nomenclatura do projecto) |
 |---|---|---|
 | `Ingestao/` | Receção de dados — upload, leitura de webhook, criação inicial do registo | `RecepcaoUploadDocumentoAction` |
-| `Processamento/` | Transformação — OCR, IA, parsing, chamadas a APIs externas | `MarcarAnaliseOcrAction`, `MarcarAnaliseTextoAction`, `MarcarAnaliseIaLocalAction`, `MarcarAnaliseCloudAction`, `MarcarAnaliseMalwareAction`, `RegistarEtapaExtracaoAction`, `ProcessarAnaliseTextoDocumentoAction`, `ProcessarAnaliseOcrDocumentoAction`, `ProcessarAnaliseIaLocalDocumentoAction`, `ProcessarAnaliseCloudDocumentoAction`, `ConcluirExtracaoDocumentoAction`, `RegistarFalhaTecnicaExtracaoAction` |
-| `Operacoes/` | Máquina de estados, transições, conversões de papel de registo | `TransicaoAction`, `TransicionarProcessadoDocumentoAction`, `ReprocessarDocumentoAction` |
-| `Atribuicao/` | Decisão humana — triagem manual, delegação, atribuição de responsável/permissão | `ReivindicarDocumentoPendenteAction`, `TriarDocumentoPendenteAction`, `ReivindicarDocumentoEmEtapaAction`, `AtribuirRoleAction` |
+| `Processamento/` | Transformação — OCR, IA, parsing, chamadas a APIs externas | `ProcessarAnaliseTextoDocumentoAction`, `ProcessarAnaliseOcrDocumentoAction`, `ProcessarAnaliseIaLocalDocumentoAction`, `ProcessarAnaliseCloudDocumentoAction`, `ProcessarAnaliseMalwareDocumentoAction`, `RegistarEtapaExtracaoAction`, `RegistarFalhaTecnicaExtracaoAction`, `ConcluirExtracaoDocumentoAction` |
+| `Operacoes/` | Máquina de estados, transições, conversões de papel de registo | `TransicaoAction` (motor), `ReprocessarDocumentoAction`, e a subpasta aninhada `TransicoesEstado/` com os atalhos de transição (`MarcarAnalise*DocumentoAction`, `MarcarErroDocumentoAction`, `MarcarPerigosoDocumentoAction`, `TransicionarProcessadoDocumentoAction`) |
+| `Atribuicao/` | Decisão humana — triagem manual, delegação, atribuição de responsável/permissão | `ReivindicarDocumentoPendenteAction`, `ReivindicarDocumentoEmEtapaAction`, `AtribuirRoleAction` |
 | `Pesquisa/` | Leitura e saída — listagens, filtros, exportação/download | `ListarDocumentosAction`, `DescarregarDocumentoAction`, `VerDocumentoAction` |
 
 Esta tabela é o vocabulário de referência — não inventar sinónimo novo sem consultar a regra de
 consistência abaixo.
 
-> **`Anomalias/` não é categoria de topo:** desvios de fluxo do pipeline (erros de sistema, marcas de
-> alerta/perigo — `MarcarErroDocumentoAction`, `MarcarPerigosoDocumentoAction`) são semanticamente parte
-> do mesmo conceito de pipeline que `Processamento/`, não um propósito de negócio à parte. Vivem como
-> subpasta **interna**: `Processamento/Anomalias/`. Decisão registada em WRN-037 (2026-07-20) — a
-> aplicação ao código existente (mover `MarcarErro/`/`MarcarPerigoso/`, hoje na raiz de
-> `app/Features/Documento/`) fica pendente de issue dedicada de refactor da feature `Documento`, não é
-> aplicada por este ajuste de convenção.
+> **`TransicoesEstado/` — atalhos de transição de estado (subpasta aninhada de `Operacoes/`):** as
+> Actions finas que só transicionam o estado do `Documento` (as 5 `MarcarAnalise*`, `MarcarErroDocumentoAction`,
+> `MarcarPerigosoDocumentoAction`, `TransicionarProcessadoDocumentoAction`) agrupam-se em
+> `Operacoes/TransicoesEstado/` — pertencem à máquina de estados, não à transformação (`Processamento/`)
+> nem à decisão humana (`Atribuicao/`). O nome descreve a **intenção** (transição de estado/etapa), não
+> o mecanismo ("marcar"), e distingue-se de `Operacoes/Transicao/` (o motor `Executor` + `Regra*`).
+> `MarcarErro`/`MarcarPerigoso` entram aqui por serem transições como as outras — não uma categoria
+> "Anomalias" à parte.
 
 ### Exemplo real validado (app/Features/Documento, 26 Actions)
 
 Aplicação do limiar de 3 ao estado actual do repositório, incluída aqui como caso de estudo de como a
-trava funciona (categorias abaixo do limiar ficam na raiz, mesmo fazendo sentido semântico). `Atribuicao/`
-é o caso documentado de travessia do limiar: ficou 2 (na raiz) até a introdução de
-`ReivindicarDocumentoEmEtapaAction` — a 3ª Action obrigou o agrupamento, incl. mover as duas já
-existentes (`Reivindicar`, `Triar`) para dentro da subpasta nova, num commit de refactor isolado.
+trava funciona nos dois níveis (categoria de topo e Action individual). `Atribuicao/` ilustra a
+assimetria de dissolução: cruzou o limiar em tempos (2→3 com `ReivindicarDocumentoEmEtapaAction`) e
+voltou a 2 quando a Action de triagem de malware migrou para `Processamento/` (renomeada
+`ProcessarAnaliseMalwareDocumentoAction`); **mantém-se como subpasta com as 2 `Reivindicar*` por decisão
+explícita** — dissolver abaixo do limiar nunca é automático.
 
 | Categoria | Actions que qualificam | Atinge limiar? |
 |---|---|---|
-| `Processamento/` | MarcarAnaliseCloud, MarcarAnaliseIaLocal, MarcarAnaliseMalware, MarcarAnaliseOcr, MarcarAnaliseTexto, RegistarEtapaExtracao, ProcessarAnaliseTexto, ProcessarAnaliseOcr, ProcessarAnaliseIaLocal, ProcessarAnaliseCloud, ConcluirExtracao, RegistarFalhaTecnicaExtracao | ✅ 12 — agrupar |
-| `Operacoes/` | Transicao, TransicionarProcessado, Reprocessar | ✅ 3 — agrupar |
-| `Pesquisa/` | Listar, Descarregar, Ver | ✅ 3 — agrupar |
-| `Atribuicao/` | Reivindicar, Triar, ReivindicarDocumentoEmEtapa | ✅ 3 — agrupar (ver nota acima) |
+| `Processamento/` | ProcessarAnaliseTexto, ProcessarAnaliseOcr, ProcessarAnaliseIaLocal, ProcessarAnaliseCloud, ProcessarAnaliseMalware, RegistarEtapaExtracao, RegistarFalhaTecnicaExtracao, ConcluirExtracao | ✅ 8 — agrupar (todas ficheiro solto excepto `ConcluirExtracao/`, que mantém pasta própria com 3 ficheiros) |
+| `Operacoes/` | Transicao (motor), Reprocessar + subpasta aninhada `TransicoesEstado/` (8 atalhos de transição soltos) | ✅ agrupar |
+| `Pesquisa/` | Listar, Descarregar, Ver (solto) | ✅ 3 — agrupar |
+| `Atribuicao/` | Reivindicar, ReivindicarDocumentoEmEtapa (ambas soltas) | ⚠️ 2 — abaixo do limiar, **mantida por decisão** (não dissolvida) |
 | `Ingestao/` | RecepcaoUpload | ❌ 1 — fica na raiz |
 
 Corrigir, Criar e Eliminar são CRUD simples e ficam sempre na raiz (não têm categoria de negócio
 própria), sujeitos à excepção CRUD da secção "Granularidade" acima.
 
-> **Estado-alvo (ainda não aplicado ao código):** `MarcarErro` e `MarcarPerigoso`, hoje na raiz da
-> Feature, mudam para `Processamento/Anomalias/` (ver nota acima). Dentro de `Processamento/`, as
-> Actions de artefacto único (`ConcluirExtracao`, `RegistarFalhaTecnicaExtracao`, e as 5
-> `MarcarAnalise*`) passam a ficheiro solto pela regra de "Granularidade" acima, em vez de pasta
-> própria — `RegistarEtapaExtracao` (2 artefactos) mantém-se ficheiro solto pela mesma regra.
-> Refactor a tratar em issue dedicada, não neste ajuste de convenção.
+Aplicação da granularidade Action-a-Action: dentro de `Processamento/` e `Operacoes/TransicoesEstado/`,
+as Actions de <3 artefactos próprios ficam **ficheiro solto** (a maioria); só `ConcluirExtracao/` (3
+ficheiros: Action + `RegraReconciliarEntidadesDocumento` + `ResultadoReconciliacaoEntidades`) mantém
+pasta própria.
 
 ---
 
@@ -134,7 +134,7 @@ Se o propósito da subpasta nova for um sinónimo próximo de uma subpasta já u
 o termo já existente** em vez de introduzir um segundo nome para o mesmo conceito. Exemplos de decisão:
 
 - Ia criar `Entidades/` mas já existe `Parceiros/` → usar `Parceiros/`.
-- Ia criar `Excecoes/` mas já existe `Anomalias/` → usar `Anomalias/`.
+- Ia criar `Consultas/` mas já existe `Pesquisa/` → usar `Pesquisa/`.
 - Ia criar `Custodia/` mas já existe `Atribuicao/` → usar `Atribuicao/`.
 
 Quando a decisão implicar adoptar um nome existente em vez do proposto inicialmente, registar a

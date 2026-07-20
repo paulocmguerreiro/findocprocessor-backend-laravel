@@ -105,7 +105,7 @@ Base (`definition()`) = scratch space vazio: `extracao_tentativas: 0`, lease e d
 
 ## Recorder — `RegistarEtapaExtracaoAction`
 
-**Ficheiro:** `app/Features/Documento/Processamento/RegistarEtapaExtracao/RegistarEtapaExtracaoAction.php`
+**Ficheiro:** `app/Features/Documento/Processamento/RegistarEtapaExtracaoAction.php`
 
 Único ponto de **escrita** (upsert) em `extracoes_documento`. As **eliminações** ocorrem em
 `RegraEliminarExtracaoTerminal` (ao entrar num estado terminal) e no `delete()` defensivo de

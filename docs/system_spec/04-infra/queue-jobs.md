@@ -80,11 +80,11 @@ não têm endpoint HTTP — são invocadas pelos 4 orquestradores de etapa (`Pro
 `ConcluirExtracaoDocumentoAction`, único ponto do pipeline que precisa de um utilizador autenticado
 (`Gate::authorize('update')`). Ver `03-models/etapa-documento.md` para detalhe de `id_utilizador`.
 
-`TriarDocumentoPendenteAction` corre o scan de malware e decide a transição, invocada por
+`ProcessarAnaliseMalwareDocumentoAction` corre o scan de malware e decide a transição, invocada por
 `ReivindicarDocumentoPendenteAction` (mesma transacção/lock) — por sua vez chamada pelo
 `ExecutarScanExtracaoCommand` (`extracao:run-scan`).
 
-`RegistarEtapaExtracaoAction` (`app/Features/Documento/Processamento/RegistarEtapaExtracao/`) é
+`RegistarEtapaExtracaoAction` (`app/Features/Documento/Processamento/`) é
 invocada por cada um dos 4 orquestradores de etapa e por `RegistarFalhaTecnicaExtracaoAction` — regista
 cada passo de IA/parser/OCR sobre um `Documento` (upsert em `extracoes_documento` + `EtapaDocumento`
 com `resultado`; o passo é o `estado` actual). Ver `01-features/documento-reconciliacao.md`

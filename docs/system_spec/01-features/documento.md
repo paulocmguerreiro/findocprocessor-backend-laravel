@@ -99,14 +99,14 @@ faz `streamDownload`. Lança `NotFoundHttpException` se o ficheiro não existir 
 |---|---|---|
 | `RegistarDocumentoManualDto` | `Criar/` | campos de domínio + `ficheiro: UploadedFile` |
 | `ReceberUploadDocumentoDto` | `RecepcaoUpload/` | `ficheiro: UploadedFile` |
-| `TransicionarProcessadoDocumentoDto` | `TransicionarProcessado/` | `idFornecedor`, `idCliente`, `idCategoria`, `valor:float`, `dataDocumento:DateTimeInterface` |
-| `MarcarErroDocumentoDto` | `MarcarErro/` | `mensagemErro: string` (não-vazio) |
-| `MarcarPerigosoDocumentoDto` | `MarcarPerigoso/` | `motivo: string` (não-vazio) |
+| `TransicionarProcessadoDocumentoDto` | `TransicoesEstado/` | `idFornecedor`, `idCliente`, `idCategoria`, `valor:float`, `dataDocumento:DateTimeInterface` |
+| `MarcarErroDocumentoDto` | `TransicoesEstado/` | `mensagemErro: string` (não-vazio) |
+| `MarcarPerigosoDocumentoDto` | `TransicoesEstado/` | `motivo: string` (não-vazio) |
 | `ReprocessarDocumentoDto` | `Reprocessar/` | `modo: ModoReprocessamento` |
 | `CorrigirDocumentoDto` | `Corrigir/` | campos de domínio (sem campos de storage) |
 | `FicheiroDocumentoDto` | `Descarregar/` | `disco: string`, `nome: string` (VO de vista, sem `fromRequest`) |
 | `ResultadoReconciliacaoFicheiro` | `Transicao/` | `coerente: bool`, `encontrado: bool`, `disco: ?string`, `nome: ?string` (VO interno, sem `fromRequest`) |
-| `RegistarEtapaExtracaoDto` | `RegistarEtapaExtracao/` | `resultado: ResultadoEtapa`, `motivo: ?string`, `textoExtraido: ?string`, `dadosJson: ?array`, `reclamar: bool`, `incrementarTentativas: bool` (VO interno, sem `fromRequest`; o passo é o `estado` actual do `Documento`, não redundado no DTO) |
+| `RegistarEtapaExtracaoDto` | `Processamento/` | `resultado: ResultadoEtapa`, `motivo: ?string`, `textoExtraido: ?string`, `dadosJson: ?array`, `reclamar: bool`, `incrementarTentativas: bool` (VO interno, sem `fromRequest`; o passo é o `estado` actual do `Documento`, não redundado no DTO) |
 
 Todos `final readonly`. Todos com `fromRequest()` excepto `FicheiroDocumentoDto`,
 `ResultadoReconciliacaoFicheiro` e `RegistarEtapaExtracaoDto` (VOs internos/de vista, nunca
@@ -174,7 +174,7 @@ As Actions **com login** mapeiam abilities do `DocumentoPolicy` para permissões
 | `update` | `documentos.actualizar` | `CorrigirDocumentoAction`, `ReprocessarDocumentoAction`, `TransicionarProcessadoDocumentoAction` |
 | `delete` | `documentos.eliminar` | `EliminarDocumentoAction` |
 
-As transições de pipeline sem Gate (`Marcar*`, `Reivindicar*`, `Triar*`, `RegistarEtapaExtracaoAction`)
+As transições de pipeline sem Gate (`Marcar*`, `Reivindicar*`, `Processar*`, `RegistarEtapaExtracaoAction`)
 estão documentadas em `01-features/documento-pipeline.md` ("Transições de sistema (sem Gate)").
 
 ---

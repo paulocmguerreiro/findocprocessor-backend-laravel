@@ -12,7 +12,7 @@
 | Entidade           | `01-features/entidade.md`            | 8 (5 CRUD + Restaurar + ConverterEmEmpresaMae + Remover) | 5 REST + 2 especiais |
 | Role               | `01-features/role.md`                | 5 CRUD                                         | 5 REST              |
 | Utilizador         | `01-features/utilizador.md`          | 8 (5 CRUD + AtribuirRole + Restaurar + Anonimizar) | 5 REST + 3 especiais |
-| Documento          | `01-features/documento.md` (HTTP) + `01-features/documento-pipeline.md` (background) + `01-features/documento-reconciliacao.md` (scratch space + atomicidade) | 26 (8 expostas via endpoint + 18 sem HTTP, só programáticas — 8 de transição + 3 reivindicação/triagem + recorder + 6 pipeline automático de extracção) | 8 REST |
+| Documento          | `01-features/documento.md` (HTTP) + `01-features/documento-pipeline.md` (background) + `01-features/documento-reconciliacao.md` (scratch space + atomicidade) | 26 (8 expostas via endpoint + 18 sem HTTP, só programáticas — 8 de transição + 2 reivindicação + recorder + 7 pipeline automático de extracção, inc. análise de malware) | 8 REST |
 | TipoDocumento      | `01-features/tipo-documento.md`      | 5 CRUD (sem SoftDelete)                        | 5 REST              |
 
 ## Features planeadas
