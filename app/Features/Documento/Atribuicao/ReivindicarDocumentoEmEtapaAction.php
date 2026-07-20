@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\DB;
  * exclui o documento — cada worker reclama um documento distinto.
  *
  * Acção de sistema/pipeline — sem `Gate::authorize()`, tal como
- * `ReivindicarDocumentoPendenteAction`/`TriarDocumentoPendenteAction`.
+ * `ReivindicarDocumentoPendenteAction`/`ProcessarAnaliseMalwareDocumentoAction`.
  */
 final readonly class ReivindicarDocumentoEmEtapaAction
 {
