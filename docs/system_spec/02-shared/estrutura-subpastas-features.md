@@ -45,6 +45,30 @@ estado — só há nova pergunta se a contagem dessa categoria mudar outra vez.
 
 ---
 
+## Granularidade dentro da subpasta: pasta-por-Action vs ficheiro solto
+
+O limiar de 3 acima decide quando um *grupo de Actions* ganha subpasta. Esta secção decide, um nível
+abaixo, quando uma *Action individual* ganha pasta própria dentro dessa subpasta (ou da raiz da
+Feature, se não houver subpasta).
+
+- **Ficheiro solto por omissão:** uma Action com menos de 3 artefactos próprios fica como ficheiro
+  solto — `<Name>Action.php` conta como o 1.º artefacto; `Request`, `Resource`, `Dto` e excepções
+  específicas somam-se a partir daí. Pasta com 1 ficheiro só não acrescenta valor de navegação.
+- **Pasta própria ao atingir o 3.º artefacto:** reaproveita o mesmo limiar de 3 da regra acima,
+  aplicado um nível abaixo. Ao ganhar o 3.º artefacto próprio, a Action move-se para
+  `<Action>/<Name>Action.php` — seguir o "Fluxo ao mover uma Action" já documentado abaixo.
+- **Assimetria de dissolução reaproveitada:** se uma Action já com pasta própria perde artefactos e
+  cai para 1-2, a pasta **não** se dissolve automaticamente para ficheiro solto — pergunta-se ao
+  utilizador, mesmo critério da secção "Dissolução da subpasta" acima. Só desaparece sozinha quando
+  fica vazia (a Action foi eliminada).
+- **Excepção CRUD tolerada, não permanente:** Actions CRUD simples (`Corrigir`, `Criar`, `Eliminar`)
+  mantêm pasta própria mesmo abaixo do limiar de 3 (ex.: `Eliminar/` com 2 artefactos), por serem
+  identidade de operação reconhecível por si. Não é isenção definitiva — se o crescimento da Feature
+  justificar reagrupá-las por categoria de negócio em vez de por operação CRUD, ficam sujeitas à mesma
+  reorganização que qualquer outra Action.
+
+---
+
 ## Vocabulário canónico (linguagem do negócio, não de infra)
 
 Proibido nomear subpastas com termos técnicos/de padrão de desenho — não criar `/Jobs`, `/Events`,
@@ -56,11 +80,18 @@ Proibido nomear subpastas com termos técnicos/de padrão de desenho — não cr
 | `Processamento/` | Transformação — OCR, IA, parsing, chamadas a APIs externas | `MarcarAnaliseOcrAction`, `MarcarAnaliseTextoAction`, `MarcarAnaliseIaLocalAction`, `MarcarAnaliseCloudAction`, `MarcarAnaliseMalwareAction`, `RegistarEtapaExtracaoAction`, `ProcessarAnaliseTextoDocumentoAction`, `ProcessarAnaliseOcrDocumentoAction`, `ProcessarAnaliseIaLocalDocumentoAction`, `ProcessarAnaliseCloudDocumentoAction`, `ConcluirExtracaoDocumentoAction`, `RegistarFalhaTecnicaExtracaoAction` |
 | `Operacoes/` | Máquina de estados, transições, conversões de papel de registo | `TransicaoAction`, `TransicionarProcessadoDocumentoAction`, `ReprocessarDocumentoAction` |
 | `Atribuicao/` | Decisão humana — triagem manual, delegação, atribuição de responsável/permissão | `ReivindicarDocumentoPendenteAction`, `TriarDocumentoPendenteAction`, `ReivindicarDocumentoEmEtapaAction`, `AtribuirRoleAction` |
-| `Anomalias/` | Desvios de fluxo — erros de sistema, marcas de alerta/perigo, recuperação | `MarcarErroDocumentoAction`, `MarcarPerigosoDocumentoAction` |
 | `Pesquisa/` | Leitura e saída — listagens, filtros, exportação/download | `ListarDocumentosAction`, `DescarregarDocumentoAction`, `VerDocumentoAction` |
 
 Esta tabela é o vocabulário de referência — não inventar sinónimo novo sem consultar a regra de
 consistência abaixo.
+
+> **`Anomalias/` não é categoria de topo:** desvios de fluxo do pipeline (erros de sistema, marcas de
+> alerta/perigo — `MarcarErroDocumentoAction`, `MarcarPerigosoDocumentoAction`) são semanticamente parte
+> do mesmo conceito de pipeline que `Processamento/`, não um propósito de negócio à parte. Vivem como
+> subpasta **interna**: `Processamento/Anomalias/`. Decisão registada em WRN-037 (2026-07-20) — a
+> aplicação ao código existente (mover `MarcarErro/`/`MarcarPerigoso/`, hoje na raiz de
+> `app/Features/Documento/`) fica pendente de issue dedicada de refactor da feature `Documento`, não é
+> aplicada por este ajuste de convenção.
 
 ### Exemplo real validado (app/Features/Documento, 26 Actions)
 
@@ -76,11 +107,17 @@ existentes (`Reivindicar`, `Triar`) para dentro da subpasta nova, num commit de 
 | `Operacoes/` | Transicao, TransicionarProcessado, Reprocessar | ✅ 3 — agrupar |
 | `Pesquisa/` | Listar, Descarregar, Ver | ✅ 3 — agrupar |
 | `Atribuicao/` | Reivindicar, Triar, ReivindicarDocumentoEmEtapa | ✅ 3 — agrupar (ver nota acima) |
-| `Anomalias/` | MarcarErro, MarcarPerigoso | ❌ 2 — fica na raiz |
 | `Ingestao/` | RecepcaoUpload | ❌ 1 — fica na raiz |
 
 Corrigir, Criar e Eliminar são CRUD simples e ficam sempre na raiz (não têm categoria de negócio
-própria).
+própria), sujeitos à excepção CRUD da secção "Granularidade" acima.
+
+> **Estado-alvo (ainda não aplicado ao código):** `MarcarErro` e `MarcarPerigoso`, hoje na raiz da
+> Feature, mudam para `Processamento/Anomalias/` (ver nota acima). Dentro de `Processamento/`, as
+> Actions de artefacto único (`ConcluirExtracao`, `RegistarFalhaTecnicaExtracao`, e as 5
+> `MarcarAnalise*`) passam a ficheiro solto pela regra de "Granularidade" acima, em vez de pasta
+> própria — `RegistarEtapaExtracao` (2 artefactos) mantém-se ficheiro solto pela mesma regra.
+> Refactor a tratar em issue dedicada, não neste ajuste de convenção.
 
 ---
 

@@ -24,6 +24,9 @@ app/Features/<Feature>/<Action>/
   <Name>Resource.php    (se aplicável)
 ```
 
+Acção com menos de 3 artefactos próprios fica como ficheiro solto, não pasta própria.
+> Detalhe: `docs/system_spec/02-shared/estrutura-subpastas-features.md`
+
 ### Padrões obrigatórios
 
 - Controllers sem lógica — só fazem dispatch para Actions
