@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Features\Documento\Processamento\ProcessarAnaliseCloud;
 
-use App\Features\Documento\Atribuicao\ReivindicarDocumentoEmEtapa\ReivindicarDocumentoEmEtapaAction;
+use App\Features\Documento\Atribuicao\ReivindicarDocumentoEmEtapaAction;
 use App\Features\Documento\MarcarErro\MarcarErroDocumentoAction;
 use App\Features\Documento\MarcarErro\MarcarErroDocumentoDto;
 use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoAction;

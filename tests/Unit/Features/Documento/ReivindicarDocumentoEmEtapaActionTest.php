@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\Atribuicao\ReivindicarDocumentoEmEtapa\ReivindicarDocumentoEmEtapaAction;
+use App\Features\Documento\Atribuicao\ReivindicarDocumentoEmEtapaAction;
 use App\Models\Documento;
 use App\Models\ExtracaoDocumento;
 use App\Shared\Enums\EstadoDocumento;

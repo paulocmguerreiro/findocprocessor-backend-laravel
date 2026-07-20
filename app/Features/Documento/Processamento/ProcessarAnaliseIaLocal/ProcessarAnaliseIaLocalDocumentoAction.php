@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Features\Documento\Processamento\ProcessarAnaliseIaLocal;
 
-use App\Features\Documento\Atribuicao\ReivindicarDocumentoEmEtapa\ReivindicarDocumentoEmEtapaAction;
+use App\Features\Documento\Atribuicao\ReivindicarDocumentoEmEtapaAction;
 use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoAction;
 use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoDto;
 use App\Features\Documento\Processamento\ConcluirExtracao\ConcluirExtracaoDocumentoAction;

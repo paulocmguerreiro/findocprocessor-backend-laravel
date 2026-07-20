@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Features\Documento\Atribuicao\Reivindicar;
+namespace App\Features\Documento\Atribuicao;
 
 use App\Features\Documento\Atribuicao\Triar\TriarDocumentoPendenteAction;
 use App\Models\Documento;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Features\Documento\Processamento\ProcessarAnaliseTexto;
 
-use App\Features\Documento\Atribuicao\ReivindicarDocumentoEmEtapa\ReivindicarDocumentoEmEtapaAction;
+use App\Features\Documento\Atribuicao\ReivindicarDocumentoEmEtapaAction;
 use App\Features\Documento\Processamento\MarcarAnaliseIaLocal\MarcarAnaliseIaLocalDocumentoAction;
 use App\Features\Documento\Processamento\MarcarAnaliseOcr\MarcarAnaliseOcrDocumentoAction;
 use App\Features\Documento\Processamento\RegistarEtapaExtracao\RegistarEtapaExtracaoAction;

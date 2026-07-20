@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Features\Documento\Atribuicao\ReivindicarDocumentoEmEtapa;
+namespace App\Features\Documento\Atribuicao;
 
 use App\Models\Documento;
 use App\Shared\Enums\EstadoDocumento;
