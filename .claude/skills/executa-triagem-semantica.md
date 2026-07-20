@@ -73,6 +73,10 @@ antes de prosseguir — não inventar regra sem fonte.
    foram lidos no passo `alvo=tarefa-planeada` desta mesma tarefa, não é necessário reler.
 3. Reler os ficheiros alterados **linha a linha** (não é grep mecânico) contra as regras normativas
    ("obrigatório"/"sempre"/"nunca") de cada spec carregado, aplicáveis ao tipo do ficheiro.
+   Aplica-se também a identificadores **pré-existentes** no ficheiro tocado (regra do escuteiro) —
+   ex.: `$dados`→`$dadosProcessamento`, `$executor`→`$executorTransicao` — mesmo que não tenham sido
+   escritos nesta tarefa. Âmbito estritamente local ao ficheiro editado: não propagar a outros
+   ficheiros da mesma Feature só por consistência — isso é refactor dedicado, issue própria.
 4. Se a tarefa criou uma Action nova: confirmar que a pasta onde nasceu respeita
    `02-shared/estrutura-subpastas-features.md` — categoria correcta, limiar de 3 respeitado (nem
    subpasta prematura com <3, nem Action a mais deixada na raiz quando a Feature já atingiu o limiar

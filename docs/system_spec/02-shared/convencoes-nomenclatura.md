@@ -105,6 +105,11 @@ a palavra ser inglesa, foi não dizer nada sobre o conteúdo. `$dados` → `$dad
 `$resultado` → nome que descreva o que contém (`$categoria`, `$paginaDocumentos`, etc.), consoante o
 contexto (achado no varrimento pós-WRN-023: WRN-027, WRN-030, WRN-031).
 
+**Regra do escuteiro:** ao editar um ficheiro por qualquer motivo, corrigir também os identificadores
+pré-existentes desse ficheiro que violem esta convenção — âmbito local (o ficheiro tocado), sem
+obrigação de propagar a outros ficheiros da mesma Feature. Renomear uma slice inteira só por
+consistência é refactor dedicado, não se faz incidentalmente numa tarefa.
+
 Isto **não** se aplica a nomes impostos pelo framework — `$table`, `$fillable`, `$casts` (ou os
 atributos equivalentes `#[Table]`/`#[Fillable]`) ficam em inglês porque é o Eloquent que os reconhece
 pelo nome, tal como a tabela "Fica em inglês" acima já estabelece para métodos.
