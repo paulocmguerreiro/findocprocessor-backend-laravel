@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Features\Documento\Processamento;
 
 use App\Features\Documento\Atribuicao\ReivindicarDocumentoEmEtapaAction;
-use App\Features\Documento\Processamento\MarcarAnaliseIaLocal\MarcarAnaliseIaLocalDocumentoAction;
-use App\Features\Documento\Processamento\MarcarAnaliseOcr\MarcarAnaliseOcrDocumentoAction;
+use App\Features\Documento\Operacoes\TransicoesEstado\MarcarAnaliseIaLocalDocumentoAction;
+use App\Features\Documento\Operacoes\TransicoesEstado\MarcarAnaliseOcrDocumentoAction;
 use App\Infrastructure\Extracao\ExtractorTextoNativo;
 use App\Infrastructure\Extracao\FalhaExtracaoTextoException;
 use App\Models\Documento;

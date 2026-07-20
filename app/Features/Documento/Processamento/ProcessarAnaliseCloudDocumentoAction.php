@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Features\Documento\Processamento;
 
 use App\Features\Documento\Atribuicao\ReivindicarDocumentoEmEtapaAction;
-use App\Features\Documento\MarcarErro\MarcarErroDocumentoAction;
-use App\Features\Documento\MarcarErro\MarcarErroDocumentoDto;
-use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoAction;
-use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoDto;
+use App\Features\Documento\Operacoes\TransicoesEstado\MarcarErroDocumentoAction;
+use App\Features\Documento\Operacoes\TransicoesEstado\MarcarErroDocumentoDto;
+use App\Features\Documento\Operacoes\TransicoesEstado\MarcarPerigosoDocumentoAction;
+use App\Features\Documento\Operacoes\TransicoesEstado\MarcarPerigosoDocumentoDto;
 use App\Features\Documento\Processamento\ConcluirExtracao\ConcluirExtracaoDocumentoAction;
 use App\Infrastructure\AI\CamadaIA;
 use App\Infrastructure\AI\ContratoClienteIA;

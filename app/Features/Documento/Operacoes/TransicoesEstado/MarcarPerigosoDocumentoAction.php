@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Features\Documento\MarcarPerigoso;
+namespace App\Features\Documento\Operacoes\TransicoesEstado;
 
 use App\Events\DocumentoMarcadoPerigosoEvent;
 use App\Features\Documento\Operacoes\Transicao\ExecutorTransicaoDocumento;

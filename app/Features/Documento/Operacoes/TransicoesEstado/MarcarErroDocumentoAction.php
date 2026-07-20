@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Features\Documento\MarcarErro;
+namespace App\Features\Documento\Operacoes\TransicoesEstado;
 
 use App\Events\DocumentoMarcadoErroEvent;
 use App\Features\Documento\Operacoes\Transicao\ExecutorTransicaoDocumento;

@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use App\Events\DocumentoProcessadoEvent;
-use App\Features\Documento\Operacoes\TransicionarProcessado\TransicionarProcessadoDocumentoAction;
-use App\Features\Documento\Operacoes\TransicionarProcessado\TransicionarProcessadoDocumentoDto;
+use App\Features\Documento\Operacoes\TransicoesEstado\TransicionarProcessadoDocumentoAction;
+use App\Features\Documento\Operacoes\TransicoesEstado\TransicionarProcessadoDocumentoDto;
 use App\Models\CategoriaDocumento;
 use App\Models\Documento;
 use App\Models\Entidade;

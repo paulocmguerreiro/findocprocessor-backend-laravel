@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Features\Documento\Processamento;
 
 use App\Features\Documento\Atribuicao\ReivindicarDocumentoEmEtapaAction;
-use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoAction;
-use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoDto;
+use App\Features\Documento\Operacoes\TransicoesEstado\MarcarAnaliseCloudDocumentoAction;
+use App\Features\Documento\Operacoes\TransicoesEstado\MarcarPerigosoDocumentoAction;
+use App\Features\Documento\Operacoes\TransicoesEstado\MarcarPerigosoDocumentoDto;
 use App\Features\Documento\Processamento\ConcluirExtracao\ConcluirExtracaoDocumentoAction;
-use App\Features\Documento\Processamento\MarcarAnaliseCloud\MarcarAnaliseCloudDocumentoAction;
 use App\Infrastructure\AI\CamadaIA;
 use App\Infrastructure\AI\ContratoClienteIA;
 use App\Models\Documento;

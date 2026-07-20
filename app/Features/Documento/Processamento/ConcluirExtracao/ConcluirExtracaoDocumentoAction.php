@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Features\Documento\Processamento\ConcluirExtracao;
 
-use App\Features\Documento\MarcarErro\MarcarErroDocumentoAction;
-use App\Features\Documento\MarcarErro\MarcarErroDocumentoDto;
-use App\Features\Documento\Operacoes\TransicionarProcessado\TransicionarProcessadoDocumentoAction;
-use App\Features\Documento\Operacoes\TransicionarProcessado\TransicionarProcessadoDocumentoDto;
+use App\Features\Documento\Operacoes\TransicoesEstado\MarcarErroDocumentoAction;
+use App\Features\Documento\Operacoes\TransicoesEstado\MarcarErroDocumentoDto;
+use App\Features\Documento\Operacoes\TransicoesEstado\TransicionarProcessadoDocumentoAction;
+use App\Features\Documento\Operacoes\TransicoesEstado\TransicionarProcessadoDocumentoDto;
 use App\Infrastructure\AI\ResultadoExtracaoIA;
 use App\Models\Documento;
 use App\Models\User;

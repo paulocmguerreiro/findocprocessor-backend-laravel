@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use App\Events\DocumentoMarcadoPerigosoEvent;
-use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoAction;
-use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoDto;
+use App\Features\Documento\Operacoes\TransicoesEstado\MarcarPerigosoDocumentoAction;
+use App\Features\Documento\Operacoes\TransicoesEstado\MarcarPerigosoDocumentoDto;
 use App\Models\Documento;
 use App\Models\ExtracaoDocumento;
 use App\Shared\Enums\EstadoDocumento;

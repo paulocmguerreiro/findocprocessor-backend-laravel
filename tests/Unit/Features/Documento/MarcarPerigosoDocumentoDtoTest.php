@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\MarcarPerigoso\MarcarPerigosoDocumentoDto;
+use App\Features\Documento\Operacoes\TransicoesEstado\MarcarPerigosoDocumentoDto;
 
 it('constrói com um motivo', function (): void {
     expect((new MarcarPerigosoDocumentoDto('injecção detectada'))->motivo)

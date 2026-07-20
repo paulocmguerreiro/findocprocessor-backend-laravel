@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Features\Documento\Processamento;
 
-use App\Features\Documento\MarcarErro\MarcarErroDocumentoAction;
-use App\Features\Documento\MarcarErro\MarcarErroDocumentoDto;
+use App\Features\Documento\Operacoes\TransicoesEstado\MarcarErroDocumentoAction;
+use App\Features\Documento\Operacoes\TransicoesEstado\MarcarErroDocumentoDto;
 use App\Models\Documento;
 use App\Models\ExtracaoDocumento;
 use App\Shared\Enums\ResultadoEtapa;

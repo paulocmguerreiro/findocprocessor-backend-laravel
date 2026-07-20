@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Features\Documento\MarcarPerigoso;
+namespace App\Features\Documento\Operacoes\TransicoesEstado;
 
 use InvalidArgumentException;
 

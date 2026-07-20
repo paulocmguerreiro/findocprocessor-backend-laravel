@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Features\Documento\Processamento\MarcarAnaliseTexto;
+namespace App\Features\Documento\Operacoes\TransicoesEstado;
 
 use App\Features\Documento\Operacoes\Transicao\ExecutorTransicaoDocumento;
 use App\Models\Documento;

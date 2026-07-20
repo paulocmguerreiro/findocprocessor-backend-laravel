@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Features\Documento\Operacoes\TransicionarProcessado;
+namespace App\Features\Documento\Operacoes\TransicoesEstado;
 
 use DateTimeInterface;
 use InvalidArgumentException;
