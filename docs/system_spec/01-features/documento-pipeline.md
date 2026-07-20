@@ -11,7 +11,7 @@
 
 18 Actions sem endpoint HTTP: 8 de transição simples (5 `MarcarAnalise*` + `MarcarErro` +
 `MarcarPerigoso` + `TransicionarProcessadoDocumentoAction`), 3 de reivindicação/triagem
-(`ReivindicarDocumentoPendenteAction`, `TriarDocumentoPendenteAction`,
+(`ReivindicarDocumentoPendenteAction`, `ProcessarAnaliseMalwareDocumentoAction`,
 `ReivindicarDocumentoEmEtapaAction` — `app/Features/Documento/Atribuicao/`),
 `RegistarEtapaExtracaoAction` (recorder de extracção) e **6 Actions do pipeline automático de
 extracção** (`app/Features/Documento/Processamento/`, ver secção dedicada abaixo): os 4
@@ -70,18 +70,18 @@ Emite `DocumentoMarcadoPerigosoEvent`.
 
 | Action | Ability | De | Para | Move ficheiro |
 |---|---|---|---|---|
-| `ReivindicarDocumentoPendenteAction` | — (sem Gate, sistema) | `Pendente` | `AnaliseTexto`/`Perigoso`/`Erro` (via `TriarDocumentoPendenteAction`) | Não/origem → `perigoso`/`erro` |
-| `TriarDocumentoPendenteAction` | — (sem Gate, sistema) | `Pendente` | `AnaliseMalware` → `AnaliseTexto`/`Perigoso`/`Erro` | conforme a Action delegada |
+| `ReivindicarDocumentoPendenteAction` | — (sem Gate, sistema) | `Pendente` | `AnaliseTexto`/`Perigoso`/`Erro` (via `ProcessarAnaliseMalwareDocumentoAction`) | Não/origem → `perigoso`/`erro` |
+| `ProcessarAnaliseMalwareDocumentoAction` | — (sem Gate, sistema) | `Pendente` | `AnaliseMalware` → `AnaliseTexto`/`Perigoso`/`Erro` | conforme a Action delegada |
 
-`ReivindicarDocumentoPendenteAction` (`app/Features/Documento/Atribuicao/Reivindicar/`) — reutilizada
+`ReivindicarDocumentoPendenteAction` (`app/Features/Documento/Atribuicao/`) — reutilizada
 por `ExecutarScanExtracaoCommand` (`extracao:run-scan`, `04-infra/queue-jobs.md`): abre
 `DB::transaction()` (ponto de entrada, sem Action chamante), bloqueia (`lockForUpdate()`) o próximo
-`Documento` `Pendente` (scope `wherePendente()`) e delega em `TriarDocumentoPendenteAction` (transação
+`Documento` `Pendente` (scope `wherePendente()`) e delega em `ProcessarAnaliseMalwareDocumentoAction` (transação
 aninhada via `SAVEPOINT`).
 Evita que dois workers concorrentes reivindiquem o mesmo documento — ver `04-infra/transactions.md`
 para o padrão completo e `07-testing.md` para o teste de concorrência real (duas conexões MySQL).
 
-`TriarDocumentoPendenteAction` (`app/Features/Documento/Atribuicao/Triar/`) — admite primeiro o `Documento` a
+`ProcessarAnaliseMalwareDocumentoAction` (`app/Features/Documento/Processamento/`) — admite primeiro o `Documento` a
 `AnaliseMalware` (`Pendente → AnaliseMalware`, via `MarcarAnaliseMalwareDocumentoAction`), depois corre
 o `AnalisadorMalware` sobre o ficheiro (disco `entrada`), **dentro da mesma transacção/lock** que o
 reivindica (não abre transacção própria), e ramifica a partir de `AnaliseMalware`: infectado →
@@ -98,7 +98,7 @@ motivo = razão da falha. Ver `04-infra/malware.md` para o contrato `AnalisadorM
 |---|---|---|---|
 | `RegistarEtapaExtracaoAction` | — (sem Gate, sistema) | `extracoes_documento` (upsert) + `EtapaDocumento` (`resultado`) | Não |
 
-**`RegistarEtapaExtracaoAction`** (`app/Features/Documento/Processamento/RegistarEtapaExtracao/`) — recorder do
+**`RegistarEtapaExtracaoAction`** (`app/Features/Documento/Processamento/`) — recorder do
 pipeline: dado um `Documento` e um `RegistarEtapaExtracaoDto`, faz upsert (por `id_documento`, chave
 única) da linha em `extracoes_documento` (scratch space: `texto_extraido`/`dados_json`/lease/tentativas)
 e grava uma `EtapaDocumento` com `estado` igual ao estado actual do documento — que **é** já o passo
@@ -117,7 +117,7 @@ com `id_utilizador = null`. Ver `03-models/extracao-documento.md`.
 |---|---|---|---|
 | `ReivindicarDocumentoEmEtapaAction` | — (sem Gate, sistema) | `extracoes_documento.extracao_reclamada_em` (upsert) | `Documento\|null` |
 
-**`ReivindicarDocumentoEmEtapaAction`** (`app/Features/Documento/Atribuicao/ReivindicarDocumentoEmEtapa/`)
+**`ReivindicarDocumentoEmEtapaAction`** (`app/Features/Documento/Atribuicao/`)
 — ao contrário de `ReivindicarDocumentoPendenteAction` (a mudança de estado `Pendente → AnaliseMalware`
 já garante exclusão mútua), as 4 etapas de análise (`AnaliseTexto`/`AnaliseOcr`/`AnaliseIaLocal`/
 `AnaliseCloud`) **não mudam de estado** ao serem reclamadas — a exclusão entre workers assenta num
@@ -162,7 +162,7 @@ o pipeline corre sem sessão HTTP, a transição executa **autenticada como o re
 (`Documento.id_responsavel`, o autor do upload — ver `project_jobs_correm_como_primeiro_utilizador`),
 com restauro explícito (`Auth::login`/`Auth::logout`) do utilizador anterior no `finally`.
 
-**`RegistarFalhaTecnicaExtracaoAction`** (`app/Features/Documento/Processamento/RegistarFalhaTecnicaExtracao/`)
+**`RegistarFalhaTecnicaExtracaoAction`** (`app/Features/Documento/Processamento/`)
 — tecto de tentativas técnicas (RF-12), partilhado pelos 4 orquestradores: regista a falha via
 `RegistarEtapaExtracaoAction` (preservando `texto_extraido`/`dados_json` já existentes — contrato de
 substituição total do recorder) e incrementa `extracao_tentativas`; ao atingir
@@ -172,7 +172,7 @@ aqui — saltos semânticos (threshold, veredicto, camada inactiva) nunca increm
 
 ### Reconciliação de entidades por lado
 
-**`RegraReconciliarEntidadesDocumento`** (`app/Features/Documento/Processamento/ReconciliarEntidades/`,
+**`RegraReconciliarEntidadesDocumento`** (`app/Features/Documento/Processamento/ConcluirExtracao/`,
 invocada por `ConcluirExtracaoDocumentoAction`) — dado um `ResultadoExtracaoIA` completo e o
 `TipoDocumento` resolvido, resolve `id_fornecedor`/`id_cliente` **por lado**, independentemente:
 
@@ -243,10 +243,10 @@ O mapa central é validado por `RegraTransicaoEstado` (ver `02-shared/regras-tra
 
 | De               | Para             | Action                                  | Via                  |
 | ---------------- | ---------------- | --------------------------------------- | -------------------- |
-| `Pendente`       | `AnaliseMalware` | `MarcarAnaliseMalwareDocumentoAction` (via `TriarDocumentoPendenteAction`) | pipeline |
-| `AnaliseMalware` | `AnaliseTexto`   | `MarcarAnaliseTextoDocumentoAction` (via `TriarDocumentoPendenteAction`)   | pipeline (scan limpo) |
-| `AnaliseMalware` | `Perigoso`       | `MarcarPerigosoDocumentoAction` (via `TriarDocumentoPendenteAction`)       | pipeline (infectado) |
-| `AnaliseMalware` | `Erro`           | `MarcarErroDocumentoAction` (via `TriarDocumentoPendenteAction`)           | pipeline (falha do scan) |
+| `Pendente`       | `AnaliseMalware` | `MarcarAnaliseMalwareDocumentoAction` (via `ProcessarAnaliseMalwareDocumentoAction`) | pipeline |
+| `AnaliseMalware` | `AnaliseTexto`   | `MarcarAnaliseTextoDocumentoAction` (via `ProcessarAnaliseMalwareDocumentoAction`)   | pipeline (scan limpo) |
+| `AnaliseMalware` | `Perigoso`       | `MarcarPerigosoDocumentoAction` (via `ProcessarAnaliseMalwareDocumentoAction`)       | pipeline (infectado) |
+| `AnaliseMalware` | `Erro`           | `MarcarErroDocumentoAction` (via `ProcessarAnaliseMalwareDocumentoAction`)           | pipeline (falha do scan) |
 | `AnaliseTexto`   | `AnaliseOcr`     | `MarcarAnaliseOcrDocumentoAction`       | pipeline (texto insuficiente) |
 | `AnaliseTexto`   | `AnaliseIaLocal` | `MarcarAnaliseIaLocalDocumentoAction`   | pipeline             |
 | `AnaliseTexto`   | `Erro`           | `MarcarErroDocumentoAction`             | pipeline             |
@@ -280,7 +280,7 @@ as 5 `MarcarAnalise*` (`MarcarAnaliseMalwareDocumentoAction`, `MarcarAnaliseText
 `MarcarAnaliseOcrDocumentoAction`, `MarcarAnaliseIaLocalDocumentoAction`,
 `MarcarAnaliseCloudDocumentoAction`), `MarcarErroDocumentoAction` e `MarcarPerigosoDocumentoAction`. A
 `EtapaDocumento` que gravam fica como **passo de sistema** (`id_utilizador = null`).
-`ReivindicarDocumentoPendenteAction`, `ReivindicarDocumentoEmEtapaAction`, `TriarDocumentoPendenteAction`,
+`ReivindicarDocumentoPendenteAction`, `ReivindicarDocumentoEmEtapaAction`, `ProcessarAnaliseMalwareDocumentoAction`,
 `RegistarEtapaExtracaoAction`, os 4 orquestradores de etapa (`ProcessarAnalise*`) e
 `RegistarFalhaTecnicaExtracaoAction` seguem o mesmo padrão — sem Gate.
 

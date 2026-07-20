@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\Processamento\MarcarAnaliseCloud\MarcarAnaliseCloudDocumentoAction;
+use App\Features\Documento\Operacoes\TransicoesEstado\MarcarAnaliseCloudDocumentoAction;
 use App\Models\Documento;
 use App\Shared\Enums\EstadoDocumento;
 use App\Shared\Exceptions\TransicaoInvalidaException;

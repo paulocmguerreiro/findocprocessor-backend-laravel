@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\Processamento\ReconciliarEntidades\RegraReconciliarEntidadesDocumento;
-use App\Features\Documento\Processamento\ReconciliarEntidades\ResultadoReconciliacaoEntidades;
+use App\Features\Documento\Processamento\ConcluirExtracao\RegraReconciliarEntidadesDocumento;
+use App\Features\Documento\Processamento\ConcluirExtracao\ResultadoReconciliacaoEntidades;
 use App\Infrastructure\AI\ResultadoExtracaoIA;
 use App\Models\Entidade;
 use App\Models\TipoDocumento;

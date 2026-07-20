@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\Processamento\ProcessarAnaliseCloud\ProcessarAnaliseCloudDocumentoAction;
+use App\Features\Documento\Processamento\ProcessarAnaliseCloudDocumentoAction;
 use App\Infrastructure\AI\CamadaIA;
 use App\Infrastructure\AI\ContratoClienteIA;
 use App\Infrastructure\AI\ResultadoExtracaoIA;

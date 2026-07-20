@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use App\Events\DocumentoMarcadoErroEvent;
-use App\Features\Documento\MarcarErro\MarcarErroDocumentoAction;
-use App\Features\Documento\MarcarErro\MarcarErroDocumentoDto;
+use App\Features\Documento\Operacoes\TransicoesEstado\MarcarErroDocumentoAction;
+use App\Features\Documento\Operacoes\TransicoesEstado\MarcarErroDocumentoDto;
 use App\Models\Documento;
 use App\Models\ExtracaoDocumento;
 use App\Shared\Enums\EstadoDocumento;

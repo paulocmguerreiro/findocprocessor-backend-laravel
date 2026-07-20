@@ -1,0 +1,24 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Features\Documento\Operacoes\TransicoesEstado;
+
+use InvalidArgumentException;
+
+/**
+ * Motivo da marcação como `Perigoso` (scan em `AnaliseMalware` ou guardrail de
+ * conteúdo em `AnaliseIaLocal`/`AnaliseCloud`). Construído pelo pipeline.
+ */
+final readonly class MarcarPerigosoDocumentoDto
+{
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function __construct(public string $motivo)
+    {
+        if (trim($this->motivo) === '') {
+            throw new InvalidArgumentException('motivo não pode ser vazio.');
+        }
+    }
+}

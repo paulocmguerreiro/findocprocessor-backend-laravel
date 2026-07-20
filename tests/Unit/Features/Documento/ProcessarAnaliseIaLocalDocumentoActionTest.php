@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\Processamento\ProcessarAnaliseIaLocal\ProcessarAnaliseIaLocalDocumentoAction;
+use App\Features\Documento\Processamento\ProcessarAnaliseIaLocalDocumentoAction;
 use App\Infrastructure\AI\CamadaIA;
 use App\Infrastructure\AI\ContratoClienteIA;
 use App\Infrastructure\AI\ResultadoExtracaoIA;

@@ -83,7 +83,7 @@ ArchTest garante esta interface em todo `Job` de `app/Jobs/` (RN-01/CA-02).
 ## Padrão de reivindicação com `lockForUpdate()`
 
 Componente reutilizável para varrer candidatos ao pipeline sem duplo processamento entre workers
-concorrentes (`ReivindicarDocumentoPendenteAction`, `app/Features/Documento/Atribuicao/Reivindicar/`):
+concorrentes (`ReivindicarDocumentoPendenteAction`, `app/Features/Documento/Atribuicao/`):
 
 ```php
 /**
@@ -98,7 +98,7 @@ public function handle(): ?Documento
             return null;
         }
 
-        return $this->triar->handle($documento);   // triagem de malware + transição (savepoint)
+        return $this->processarAnaliseMalware->handle($documento);   // triagem de malware + transição (savepoint)
     });
 }
 ```
@@ -107,7 +107,7 @@ public function handle(): ?Documento
   `lockForUpdate()` só faz sentido dentro de uma transacção já aberta, mantendo o lock até ao commit.
 - `wherePendente()` é o scope existente do Model — sem Repository (ver `04-infra/repositories.md`
   para o critério de quando um se justifica).
-- A `TriarDocumentoPendenteAction` chamada de seguida admite o documento a `AnaliseMalware`, corre o
+- A `ProcessarAnaliseMalwareDocumentoAction` chamada de seguida admite o documento a `AnaliseMalware`, corre o
   scan e transiciona — cada `Marcar*` interna abre a sua própria `DB::transaction()` (via
   `ExecutorTransicaoDocumento`), que Laravel resolve como `SAVEPOINT` (transação aninhada), sem romper
   o lock da linha mantido pela transação exterior.

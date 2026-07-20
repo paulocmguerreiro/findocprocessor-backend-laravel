@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\Processamento\RegistarEtapaExtracao\RegistarEtapaExtracaoAction;
-use App\Features\Documento\Processamento\RegistarEtapaExtracao\RegistarEtapaExtracaoDto;
+use App\Features\Documento\Processamento\RegistarEtapaExtracaoAction;
+use App\Features\Documento\Processamento\RegistarEtapaExtracaoDto;
 use App\Models\Documento;
 use App\Models\EtapaDocumento;
 use App\Models\ExtracaoDocumento;

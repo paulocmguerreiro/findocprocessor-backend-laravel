@@ -1,0 +1,37 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Features\Documento\Operacoes\TransicoesEstado;
+
+use App\Events\DocumentoMarcadoPerigosoEvent;
+use App\Features\Documento\Operacoes\Transicao\ExecutorTransicaoDocumento;
+use App\Models\Documento;
+use App\Shared\Enums\EstadoDocumento;
+
+/**
+ * Transição para `Perigoso` (pipeline) — alcançável de `AnaliseMalware` (scan de
+ * malware) e dos estados de IA `AnaliseIaLocal`/`AnaliseCloud` (guardrail de
+ * conteúdo). Move o ficheiro para o disco `perigoso`, regista o motivo e emite
+ * `DocumentoMarcadoPerigosoEvent`.
+ *
+ * Transição de sistema: corre sempre em background (Jobs de extracção), sem
+ * utilizador autenticado — não tem `Gate::authorize` (ver `02-shared/padroes-acoes.md`).
+ */
+final readonly class MarcarPerigosoDocumentoAction
+{
+    public function __construct(private ExecutorTransicaoDocumento $executor) {}
+
+    /**
+     * @throws \Throwable
+     */
+    public function handle(Documento $documento, MarcarPerigosoDocumentoDto $dados): Documento
+    {
+        return $this->executor->executar(
+            $documento,
+            EstadoDocumento::Perigoso,
+            $dados->motivo,
+            evento: fn (Documento $documentoPerigoso): DocumentoMarcadoPerigosoEvent => new DocumentoMarcadoPerigosoEvent($documentoPerigoso, $dados->motivo),
+        );
+    }
+}

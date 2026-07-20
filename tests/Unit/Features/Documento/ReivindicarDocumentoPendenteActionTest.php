@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Features\Documento\Atribuicao\Reivindicar\ReivindicarDocumentoPendenteAction;
+use App\Features\Documento\Atribuicao\ReivindicarDocumentoPendenteAction;
 use App\Models\Documento;
 use App\Shared\Enums\EstadoDocumento;
 use Illuminate\Foundation\Testing\RefreshDatabase;
