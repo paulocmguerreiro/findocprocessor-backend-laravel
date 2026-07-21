@@ -7,7 +7,7 @@ namespace App\Shared\States;
 use App\Models\Documento;
 use App\Shared\Enums\EstadoDocumento;
 
-final readonly class DocumentoErro implements ContratoEstadoDocumento
+final readonly class DocumentoErro implements EstadoDocumentoInterface
 {
     public function __construct(
         private string $id,

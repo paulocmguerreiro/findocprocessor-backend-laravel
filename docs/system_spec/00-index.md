@@ -29,7 +29,7 @@
 | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
 | Enums partilhados — apenas `app/Shared/Enums/` (`TipoMovimento`, `DirecaoOrdenacao`, `EstadoDocumento`, `FiltroEstadoRegisto`, `PosicaoEmpresaMae`, `ResultadoEtapa`); enums feature-local vivem no respectivo `01-features/<slug>.md` | `02-shared/enums.md`   |
 | HTTP (`ApiResponse`, Exception Handler, cursor pagination, `TransicaoInvalidaException`)                                      | `02-shared/http.md`    |
-| Estados de documento (9, máquina unificada) + Interface `ContratoEstadoDocumento` + 9 state objects (mapa de transições em `01-features/documento-pipeline.md`) | `02-shared/estados.md` |
+| Estados de documento (9, máquina unificada) + Interface `EstadoDocumentoInterface` + 9 state objects (mapa de transições em `01-features/documento-pipeline.md`) | `02-shared/estados.md` |
 
 ## Padrões e convenções (Shared)
 

@@ -142,8 +142,8 @@ de motor, sem `Gate::authorize()` (acção de sistema). Invocadas sincronamente 
 |---|---|---|
 | `ProcessarAnaliseTextoDocumentoAction` | `ExtractorTextoNativo` (só PDF) | não-PDF → `AnaliseOcr` sem chamar o parser; PDF acima do threshold → `AnaliseIaLocal`; abaixo → `AnaliseOcr`; falha técnica → `RegistarFalhaTecnicaExtracaoAction` |
 | `ProcessarAnaliseOcrDocumentoAction` | `ExtractorOcr` (Tesseract) | sucesso → `AnaliseIaLocal`; falha técnica → `RegistarFalhaTecnicaExtracaoAction` |
-| `ProcessarAnaliseIaLocalDocumentoAction` | `ContratoClienteIA` (`CamadaIA::Local`) | camada inactiva (`extracao.local.activa`) → `AnaliseCloud` **sem** contar tentativa; veredicto completo → `ConcluirExtracaoDocumentoAction`; perigoso → `Perigoso`; desconhecido/incompleto → `AnaliseCloud`; falha técnica → `RegistarFalhaTecnicaExtracaoAction` |
-| `ProcessarAnaliseCloudDocumentoAction` | `ContratoClienteIA` (`CamadaIA::Cloud`) | camada inactiva (`extracao.cloud.activa`) → `Erro` directo (`sem LLM cloud disponível`), sem contar tentativa; veredicto completo → `ConcluirExtracaoDocumentoAction`; perigoso → `Perigoso`; desconhecido/incompleto → `Erro` (última camada, sem escalar); falha técnica → `RegistarFalhaTecnicaExtracaoAction` |
+| `ProcessarAnaliseIaLocalDocumentoAction` | `ClienteIAInterface` (`CamadaIA::Local`) | camada inactiva (`extracao.local.activa`) → `AnaliseCloud` **sem** contar tentativa; veredicto completo → `ConcluirExtracaoDocumentoAction`; perigoso → `Perigoso`; desconhecido/incompleto → `AnaliseCloud`; falha técnica → `RegistarFalhaTecnicaExtracaoAction` |
+| `ProcessarAnaliseCloudDocumentoAction` | `ClienteIAInterface` (`CamadaIA::Cloud`) | camada inactiva (`extracao.cloud.activa`) → `Erro` directo (`sem LLM cloud disponível`), sem contar tentativa; veredicto completo → `ConcluirExtracaoDocumentoAction`; perigoso → `Perigoso`; desconhecido/incompleto → `Erro` (última camada, sem escalar); falha técnica → `RegistarFalhaTecnicaExtracaoAction` |
 
 `ProcessarAnaliseTextoDocumentoAction` detecta imagem vs. PDF pela extensão de
 `nome_ficheiro_storage` (`pathinfo(...)['extension']`, preservada pelo `hashName()` do upload) — não

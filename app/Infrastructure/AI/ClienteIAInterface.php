@@ -11,7 +11,7 @@ namespace App\Infrastructure\AI;
  * são sempre capturadas e devolvidas como `ResultadoExtracaoIA::falhaTecnica()`
  * — nunca propagadas (RF-07.4 da Spec).
  */
-interface ContratoClienteIA
+interface ClienteIAInterface
 {
     public function extrair(string $textoExtraido, CamadaIA $camada): ResultadoExtracaoIA;
 }

@@ -7,7 +7,6 @@ namespace App\Models;
 use App\Models\Concerns\RegistaActividade;
 use App\Policies\DocumentoPolicy;
 use App\Shared\Enums\EstadoDocumento;
-use App\Shared\States\ContratoEstadoDocumento;
 use App\Shared\States\DocumentoAnaliseCloud;
 use App\Shared\States\DocumentoAnaliseIaLocal;
 use App\Shared\States\DocumentoAnaliseMalware;
@@ -17,6 +16,7 @@ use App\Shared\States\DocumentoErro;
 use App\Shared\States\DocumentoPendente;
 use App\Shared\States\DocumentoPerigoso;
 use App\Shared\States\DocumentoProcessado;
+use App\Shared\States\EstadoDocumentoInterface;
 use Database\Factories\DocumentoFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -91,7 +91,7 @@ class Documento extends Model
         return ['hash_sha256', 'disco_storage', 'nome_ficheiro_storage'];
     }
 
-    public function estado(): ContratoEstadoDocumento
+    public function estado(): EstadoDocumentoInterface
     {
         return match ($this->estado) {
             EstadoDocumento::Pendente => DocumentoPendente::deDocumento($this),

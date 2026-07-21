@@ -12,7 +12,7 @@ Construção do system prompt implementada (`PromptBuilder`, ver `04-infra/promp
 |---|---|---|
 | `PromptBuilder` — construção do system prompt | `04-infra/prompt-builder.md` | implementado |
 | `config/prism.php` — providers Prism (Ollama local + OpenAI-compatible cloud) | `config/prism.php` | implementado |
-| `ContratoClienteIA`/`ClienteExtracaoIAPrism` — cliente do pipeline de extração | `app/Infrastructure/AI/` | implementado |
+| `ClienteIAInterface`/`ClienteExtracaoIAPrism` — cliente do pipeline de extração | `app/Infrastructure/AI/` | implementado |
 
 ## Prism — camadas LLM opcionais
 
@@ -34,15 +34,15 @@ Prism (`Provider` backed enum) — um provider fora dessa lista exige `PrismMana
 
 ## `ClienteExtracaoIAPrism` — cliente do pipeline de extração
 
-Implementação de `ContratoClienteIA` (`app/Infrastructure/AI/ContratoClienteIA.php`): contrato
+Implementação de `ClienteIAInterface` (`app/Infrastructure/AI/ClienteIAInterface.php`): contrato
 `extrair(string $textoExtraido, CamadaIA $camada): ResultadoExtracaoIA`. Nunca propaga excepções —
 qualquer falha ao montar o pedido, invocar o Prism ou resolver o veredicto é convertida em
 `ResultadoExtracaoIA::falhaTecnica()`. Bind em `AppServiceProvider`:
-`$this->app->bind(ContratoClienteIA::class, ClienteExtracaoIAPrism::class)`.
+`$this->app->bind(ClienteIAInterface::class, ClienteExtracaoIAPrism::class)`.
 
 | Componente | Ficheiro | Papel |
 |---|---|---|
-| `ContratoClienteIA` (interface) | `ContratoClienteIA.php` | Contrato único, sem `@throws` — excepções sempre capturadas |
+| `ClienteIAInterface` (interface) | `ClienteIAInterface.php` | Contrato único, sem `@throws` — excepções sempre capturadas |
 | `ClienteExtracaoIAPrism` (implementação) | `ClienteExtracaoIAPrism.php` | Chamada Prism (`structured()`), resolução de veredicto |
 | `CamadaIA` (enum) | `CamadaIA.php` | `Local`/`Cloud` — identifica a sub-árvore de `config('extracao.*')` a usar; decisão de qual camada invocar é sempre do chamador |
 | `ResultadoExtracaoIA` (Value Object) | `ResultadoExtracaoIA.php` | Construtor privado + 5 named constructors (`completo`/`desconhecido`/`perigoso`/`incompleto`/`falhaTecnica`); propriedades `public readonly`, sem getters (sem lógica associada à leitura) |

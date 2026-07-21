@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Infrastructure\Malware\ContratoAnalisadorMalware;
+use App\Infrastructure\Malware\AnalisadorMalwareInterface;
 use App\Infrastructure\Malware\ResultadoAnaliseMalware;
 use App\Models\Documento;
 use App\Models\ExtracaoDocumento;
@@ -24,7 +24,7 @@ beforeEach(function (): void {
 it('extracao:run-scan tria em lote os documentos Pendente', function (): void {
     $documentos = Documento::factory()->pendente()->count(2)->create();
     $documentos->each(fn (Documento $doc) => Storage::disk('entrada')->put($doc->nome_ficheiro_storage, 'conteudo'));
-    app()->instance(ContratoAnalisadorMalware::class, Mockery::mock(ContratoAnalisadorMalware::class, function ($mock): void {
+    app()->instance(AnalisadorMalwareInterface::class, Mockery::mock(AnalisadorMalwareInterface::class, function ($mock): void {
         $mock->shouldReceive('analisar')->andReturn(ResultadoAnaliseMalware::limpo());
     }));
 

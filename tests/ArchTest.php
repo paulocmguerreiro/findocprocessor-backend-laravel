@@ -19,9 +19,9 @@ use App\Features\Utilizador\Criar\CriarUtilizadorRequest;
 use App\Features\Utilizador\Listar\CampoOrdenacaoUtilizadores;
 use App\Http\Controllers\Controller;
 use App\Infrastructure\AI\CamadaIA;
-use App\Infrastructure\AI\ContratoClienteIA;
+use App\Infrastructure\AI\ClienteIAInterface;
 use App\Infrastructure\AI\VeredictoExtracaoIA;
-use App\Infrastructure\Malware\ContratoAnalisadorMalware;
+use App\Infrastructure\Malware\AnalisadorMalwareInterface;
 use App\Infrastructure\Malware\EstadoAnaliseMalware;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 
@@ -68,7 +68,7 @@ arch('actions are final')
 arch('infrastructure classes are final')
     ->expect('App\Infrastructure')
     ->toBeFinal()
-    ->ignoring([ContratoAnalisadorMalware::class, EstadoAnaliseMalware::class, CamadaIA::class, VeredictoExtracaoIA::class, ContratoClienteIA::class]);
+    ->ignoring([AnalisadorMalwareInterface::class, EstadoAnaliseMalware::class, CamadaIA::class, VeredictoExtracaoIA::class, ClienteIAInterface::class]);
 
 // RN-01/CA-02 (#90): todo Job de pipeline disparado a partir de uma Action de
 // escrita implementa ShouldQueueAfterCommit — nunca ShouldDispatchAfterCommit

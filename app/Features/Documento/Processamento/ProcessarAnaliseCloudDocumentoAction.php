@@ -11,7 +11,7 @@ use App\Features\Documento\Operacoes\TransicoesEstado\MarcarPerigosoDocumentoAct
 use App\Features\Documento\Operacoes\TransicoesEstado\MarcarPerigosoDocumentoDto;
 use App\Features\Documento\Processamento\ConcluirExtracao\ConcluirExtracaoDocumentoAction;
 use App\Infrastructure\AI\CamadaIA;
-use App\Infrastructure\AI\ContratoClienteIA;
+use App\Infrastructure\AI\ClienteIAInterface;
 use App\Models\Documento;
 use App\Models\ExtracaoDocumento;
 use App\Shared\Enums\EstadoDocumento;
@@ -19,7 +19,7 @@ use App\Shared\Enums\EstadoDocumento;
 /**
  * Orquestrador da etapa `AnaliseCloud` (RF-07/RF-09) — a **última** camada de
  * análise: reclama o próximo documento nesse estado e, se a camada cloud estiver
- * activa, invoca o modelo cloud (`ContratoClienteIA::extrair(..., CamadaIA::Cloud)`);
+ * activa, invoca o modelo cloud (`ClienteIAInterface::extrair(..., CamadaIA::Cloud)`);
  * encaminha o veredicto:
  *
  * - **completo** → reconcilia entidades → `Processado`;
@@ -35,7 +35,7 @@ final readonly class ProcessarAnaliseCloudDocumentoAction
 {
     public function __construct(
         private ReivindicarDocumentoEmEtapaAction $reivindicar,
-        private ContratoClienteIA $clienteIA,
+        private ClienteIAInterface $clienteIA,
         private RegistarFalhaTecnicaExtracaoAction $registarFalhaTecnica,
         private ConcluirExtracaoDocumentoAction $concluirExtracao,
         private MarcarPerigosoDocumentoAction $marcarPerigoso,

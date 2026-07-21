@@ -10,7 +10,7 @@ use App\Features\Documento\Operacoes\TransicoesEstado\MarcarPerigosoDocumentoAct
 use App\Features\Documento\Operacoes\TransicoesEstado\MarcarPerigosoDocumentoDto;
 use App\Features\Documento\Processamento\ConcluirExtracao\ConcluirExtracaoDocumentoAction;
 use App\Infrastructure\AI\CamadaIA;
-use App\Infrastructure\AI\ContratoClienteIA;
+use App\Infrastructure\AI\ClienteIAInterface;
 use App\Models\Documento;
 use App\Models\ExtracaoDocumento;
 use App\Shared\Enums\EstadoDocumento;
@@ -19,7 +19,7 @@ use App\Shared\Enums\ResultadoEtapa;
 /**
  * Orquestrador da etapa `AnaliseIaLocal` (RF-07/RF-09/RF-10/RF-11/RF-12): reclama
  * o próximo documento nesse estado e, se a camada local estiver activa, invoca o
- * modelo local (`ContratoClienteIA::extrair(..., CamadaIA::Local)`); encaminha o
+ * modelo local (`ClienteIAInterface::extrair(..., CamadaIA::Local)`); encaminha o
  * veredicto:
  *
  * - **completo** → reconcilia entidades (RF-10) → `Processado` (RF-11);
@@ -35,7 +35,7 @@ final readonly class ProcessarAnaliseIaLocalDocumentoAction
 {
     public function __construct(
         private ReivindicarDocumentoEmEtapaAction $reivindicar,
-        private ContratoClienteIA $clienteIA,
+        private ClienteIAInterface $clienteIA,
         private RegistarEtapaExtracaoAction $registarEtapa,
         private RegistarFalhaTecnicaExtracaoAction $registarFalhaTecnica,
         private ConcluirExtracaoDocumentoAction $concluirExtracao,

@@ -98,7 +98,7 @@ protected function atributosExcluidosDaActividade(): array
 ### Método `estado()`
 
 ```php
-public function estado(): ContratoEstadoDocumento
+public function estado(): EstadoDocumentoInterface
 {
     return match ($this->estado) {
         EstadoDocumento::Pendente       => DocumentoPendente::deDocumento($this),

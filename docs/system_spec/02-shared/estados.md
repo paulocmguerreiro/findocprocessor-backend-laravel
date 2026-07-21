@@ -1,6 +1,6 @@
 # System Spec — Shared: Estados e Contratos
 
-> `app/Shared/States/` — o contrato partilhado (`ContratoEstadoDocumento`) e os 9 state objects.
+> `app/Shared/States/` — o contrato partilhado (`EstadoDocumentoInterface`) e os 9 state objects.
 > O mapa de transições, o recorder de extracção e o contrato de atomicidade ficheiro↔BD vivem em
 > `01-features/documento-pipeline.md` (componentes de `app/Features/Documento/`, não de `app/Shared/`).
 
@@ -66,12 +66,12 @@ existem (ou que não fazem sentido) numa dada fase — em vez de as espalhar por
 
 ---
 
-## Interface — `ContratoEstadoDocumento`
+## Interface — `EstadoDocumentoInterface`
 
-**Ficheiro:** `app/Shared/States/ContratoEstadoDocumento.php`
+**Ficheiro:** `app/Shared/States/EstadoDocumentoInterface.php`
 
 ```php
-interface ContratoEstadoDocumento
+interface EstadoDocumentoInterface
 {
     public function obterEstado(): EstadoDocumento;
     public function obterId(): string;
@@ -91,7 +91,7 @@ do próprio objecto `estado()` → `obterEstado()`).
 
 ## State objects — `app/Shared/States/Documento*.php`
 
-9 classes `final readonly`, cada uma implementando `ContratoEstadoDocumento`. Construídas via `static deDocumento(Documento $documento): self` — nunca instanciadas directamente pelo consumidor.
+9 classes `final readonly`, cada uma implementando `EstadoDocumentoInterface`. Construídas via `static deDocumento(Documento $documento): self` — nunca instanciadas directamente pelo consumidor.
 
 **Regra:** a mudança de estado é feita por Actions de transição (`01-features/documento-pipeline.md`). Aqui os state objects são **read-only** — sem método `correct()`.
 
@@ -106,7 +106,7 @@ do próprio objecto `estado()` → `obterEstado()`).
 ### Padrão de implementação (exemplo `DocumentoPendente`)
 
 ```php
-final readonly class DocumentoPendente implements ContratoEstadoDocumento
+final readonly class DocumentoPendente implements EstadoDocumentoInterface
 {
     public function __construct(
         private string $id,
@@ -139,7 +139,7 @@ final readonly class DocumentoPendente implements ContratoEstadoDocumento
 ### Invocação no Model
 
 ```php
-$documento->estado(); // → ContratoEstadoDocumento (match exaustivo, sem default)
+$documento->estado(); // → EstadoDocumentoInterface (match exaustivo, sem default)
 ```
 
 O `match` em `Documento::estado()` cobre os 9 casos sem `default` — Larastan 9 valida a exaustividade.

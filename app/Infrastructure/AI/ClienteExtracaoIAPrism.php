@@ -15,7 +15,7 @@ use Prism\Prism\Schema\StringSchema;
 use Throwable;
 
 /**
- * Implementação de `ContratoClienteIA` via `Prism\Prism\Facades\Prism` (structured
+ * Implementação de `ClienteIAInterface` via `Prism\Prism\Facades\Prism` (structured
  * output). O provider/modelo/ligação por camada vêm de
  * `config('extracao.local'|'cloud')` (nunca `env()` directo — ver RF-03 da
  * Spec) — trocar de provider (ex.: Anthropic → OpenRouter) é só `.env`.
@@ -23,7 +23,7 @@ use Throwable;
  * invocar o Prism, ou ao resolver o veredicto, é convertida em
  * `ResultadoExtracaoIA::falhaTecnica()`.
  */
-final class ClienteExtracaoIAPrism implements ContratoClienteIA
+final class ClienteExtracaoIAPrism implements ClienteIAInterface
 {
     public function extrair(string $textoExtraido, CamadaIA $camada): ResultadoExtracaoIA
     {

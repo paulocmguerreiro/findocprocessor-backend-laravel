@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Features\Documento\Processamento\ProcessarAnaliseCloudDocumentoAction;
 use App\Infrastructure\AI\CamadaIA;
-use App\Infrastructure\AI\ContratoClienteIA;
+use App\Infrastructure\AI\ClienteIAInterface;
 use App\Infrastructure\AI\ResultadoExtracaoIA;
 use App\Models\Documento;
 use App\Models\Entidade;
@@ -24,7 +24,7 @@ beforeEach(function (): void {
     Storage::fake('perigoso');
     Storage::fake('erro');
     config(['extracao.cloud.activa' => true]);
-    app()->instance(ContratoClienteIA::class, Mockery::mock(ContratoClienteIA::class));
+    app()->instance(ClienteIAInterface::class, Mockery::mock(ClienteIAInterface::class));
 });
 
 function documentoAnaliseCloud(string $texto = 'texto do parser'): Documento
@@ -41,7 +41,7 @@ function documentoAnaliseCloud(string $texto = 'texto do parser'): Documento
 
 function fingirClienteIaCloud(ResultadoExtracaoIA $resultado): void
 {
-    app()->instance(ContratoClienteIA::class, Mockery::mock(ContratoClienteIA::class, function ($mock) use ($resultado): void {
+    app()->instance(ClienteIAInterface::class, Mockery::mock(ClienteIAInterface::class, function ($mock) use ($resultado): void {
         $mock->shouldReceive('extrair')->once()->with(Mockery::type('string'), CamadaIA::Cloud)->andReturn($resultado);
     }));
 }

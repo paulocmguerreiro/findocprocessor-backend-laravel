@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Infrastructure\AI\ClienteExtracaoIAPrism;
-use App\Infrastructure\AI\ContratoClienteIA;
+use App\Infrastructure\AI\ClienteIAInterface;
+use App\Infrastructure\Malware\AnalisadorMalwareInterface;
 use App\Infrastructure\Malware\ClamAvAnalisadorMalware;
-use App\Infrastructure\Malware\ContratoAnalisadorMalware;
 use App\Observers\RoleObserver;
 use App\Policies\RolePolicy;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -26,13 +26,13 @@ class AppServiceProvider extends ServiceProvider
     #[\Override]
     public function register(): void
     {
-        $this->app->bind(ContratoAnalisadorMalware::class, fn (): ClamAvAnalisadorMalware => new ClamAvAnalisadorMalware(
+        $this->app->bind(AnalisadorMalwareInterface::class, fn (): ClamAvAnalisadorMalware => new ClamAvAnalisadorMalware(
             host: config()->string('pipeline.malware.host'),
             port: config()->integer('pipeline.malware.port'),
             timeoutSegundos: config()->integer('pipeline.malware.timeout_segundos'),
         ));
 
-        $this->app->bind(ContratoClienteIA::class, ClienteExtracaoIAPrism::class);
+        $this->app->bind(ClienteIAInterface::class, ClienteExtracaoIAPrism::class);
     }
 
     public function boot(): void

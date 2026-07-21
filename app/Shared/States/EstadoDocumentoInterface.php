@@ -6,7 +6,7 @@ namespace App\Shared\States;
 
 use App\Shared\Enums\EstadoDocumento;
 
-interface ContratoEstadoDocumento
+interface EstadoDocumentoInterface
 {
     public function obterEstado(): EstadoDocumento;
 

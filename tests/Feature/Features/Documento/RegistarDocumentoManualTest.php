@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Infrastructure\Malware\ContratoAnalisadorMalware;
+use App\Infrastructure\Malware\AnalisadorMalwareInterface;
 use App\Infrastructure\Malware\ResultadoAnaliseMalware;
 use App\Models\CategoriaDocumento;
 use App\Models\Entidade;
@@ -48,7 +48,7 @@ it('regista um documento manual e devolve 201 em Processado', function (): void 
 it('regista um documento infectado em Perigoso (disco perigoso), sempre persistido', function (): void {
     Storage::fake('perigoso');
 
-    app()->instance(ContratoAnalisadorMalware::class, Mockery::mock(ContratoAnalisadorMalware::class, function ($mock): void {
+    app()->instance(AnalisadorMalwareInterface::class, Mockery::mock(AnalisadorMalwareInterface::class, function ($mock): void {
         $mock->shouldReceive('analisar')->once()->andReturn(ResultadoAnaliseMalware::infectado('Eicar-Signature'));
     }));
 
