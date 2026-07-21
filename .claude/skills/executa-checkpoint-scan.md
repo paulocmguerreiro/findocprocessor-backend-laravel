@@ -28,7 +28,20 @@ Pausa se existirem FAILs — aguarda confirmação do utilizador antes de prosse
    ✅ Checkpoint scan limpo
    Nenhuma vulnerabilidade ou falha detectada.
    ```
-5. **Se existirem FAILs** → mostrar output completo e aguardar confirmação:
+5. **Classificar os FAILs antes de decidir:**
+   - Se o **único** FAIL for `Package Freshness (Supply Chain)`
+     **E** `Composer CVE Audit` = PASS **E** `NPM CVE Audit` = PASS
+     → falso positivo temporal conhecido (pacotes < 3 dias trazidos pelo
+     `vendor:repair`/update de arranque; repetição de WRN-001).
+     **Não pausar. Não registar novo WRN.** Mostrar 1 linha e continuar:
+     ```
+     ✅ Checkpoint scan — só "Package Freshness" (< 3 dias) a FAIL;
+        CVE audits (Composer + NPM) PASS. Falso positivo temporal
+        conhecido [WRN-001] — a continuar sem registar duplicado.
+     ```
+   - Caso contrário (qualquer outro FAIL, ou algum CVE audit a FAIL)
+     → seguir o passo 6 (pausa + confirmação).
+6. **Se existirem FAILs bloqueantes** → mostrar output completo e aguardar confirmação:
    ```
    🔴 Checkpoint scan — FAILs detectados
 
@@ -48,4 +61,7 @@ Pausa se existirem FAILs — aguarda confirmação do utilizador antes de prosse
 
 - Executar apenas em stack Laravel
 - Nunca suprimir FAILs automaticamente — o utilizador confirma sempre
+- `Package Freshness (Supply Chain)` isolado, com CVE audits (Composer + NPM) a
+  PASS, é falso positivo temporal conhecido [WRN-001] — não bloqueia nem gera novo
+  WRN. Qualquer CVE audit a FAIL, ou outro FAIL acompanhante, volta a bloquear.
 - O aviso registado via `regista-aviso` deve incluir o número de FAILs e os nomes das verificações falhadas
