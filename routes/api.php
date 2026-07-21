@@ -27,6 +27,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::patch('entidades/{entidade}/restaurar', [EntidadeController::class, 'restaurar'])
         ->withTrashed();
     Route::patch('entidades/{entidade}/empresa-mae', [EntidadeController::class, 'converterEmEmpresaMae']);
+    Route::post('entidades/{principal}/agrupar-com/{secundaria}', [EntidadeController::class, 'agruparCom']);
 
     Route::apiResource('roles', RoleController::class);
 

@@ -7,6 +7,8 @@ namespace App\Features\Entidade;
 use App\Features\Entidade\Actualizar\ActualizarEntidadeAction;
 use App\Features\Entidade\Actualizar\ActualizarEntidadeDto;
 use App\Features\Entidade\Actualizar\ActualizarEntidadeRequest;
+use App\Features\Entidade\Agrupar\AgruparEntidadeAction;
+use App\Features\Entidade\Agrupar\AgruparEntidadeRequest;
 use App\Features\Entidade\Criar\CriarEntidadeAction;
 use App\Features\Entidade\Criar\CriarEntidadeDto;
 use App\Features\Entidade\Criar\CriarEntidadeRequest;
@@ -81,5 +83,10 @@ final class EntidadeController extends Controller
         $entidade = $accao->handle($entidade);
 
         return ApiResponse::devolverSucesso(new EntidadeResource($entidade));
+    }
+
+    public function agruparCom(AgruparEntidadeRequest $pedido, Entidade $principal, Entidade $secundaria, AgruparEntidadeAction $accao): JsonResponse
+    {
+        return ApiResponse::devolverSucesso(new EntidadeResource($accao->handle($principal, $secundaria)));
     }
 }
