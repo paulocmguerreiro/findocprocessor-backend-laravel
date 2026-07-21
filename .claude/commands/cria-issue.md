@@ -25,7 +25,7 @@ Cria uma Issue no GitHub com análise de impacto, invariantes de arquitectura e 
     - `docs/system_spec/*.md` afectados?
     - Novas entidades, estados, endpoints ou ajustes no OpenAPI?
     - Dependências de outras issues?
-4. Verificar invariantes de arquitectura por stack (ver skill `escreve-spec` — secção stack)
+4. Verificar invariantes de arquitectura (ver skill `escreve-spec` — secção "Verificação de arquitectura")
 5. Verificar contrato OpenAPI se a issue afecta endpoints ou schemas
 6. Verificar RGPD/NIS2 (dados pessoais, nova superfície de ataque, ficheiros, logs)
 7. Gerar body da issue e propor ao utilizador:

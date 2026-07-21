@@ -22,7 +22,7 @@ Actualiza os ficheiros `docs/system_spec/` com base no Debrief e no `SYSTEM_SPEC
 ## Fonte da verdade — sem cópia do mapa aqui
 
 O mapa "tipo de alteração → ficheiro a actualizar" vive **exclusivamente** em `SYSTEM_SPEC_MAP` no
-`CLAUDE.md` do repo activo (cada stack — dotnet/laravel/angular — define o seu próprio). Ler sempre
+`CLAUDE.md` deste repo. Ler sempre
 essa tabela antes de decidir o ficheiro a actualizar. Manter uma segunda cópia do mapa aqui foi a
 causa de, no passado, um enum feature-specific (`CampoOrdenacaoDocumentos`) ter ficado em
 `02-shared/enums.md` em vez de `01-features/documento.md` — a cópia da skill não foi actualizada com

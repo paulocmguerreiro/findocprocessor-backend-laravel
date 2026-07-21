@@ -1,6 +1,6 @@
 # Skill: escreve-spec
 
-Traduz o Brief em requisitos técnicos verificáveis, alinhados com a arquitectura do stack activo.
+Traduz o Brief em requisitos técnicos verificáveis, alinhados com a arquitectura do projecto.
 
 > **Categoria:** escreve  
 > **Usado em:** `/planeia-issue` (passo 7)  
@@ -76,29 +76,16 @@ Traduz o Brief em requisitos técnicos verificáveis, alinhados com a arquitectu
 
 ---
 
-## Verificação de arquitectura por stack
+## Verificação de arquitectura
 
 Antes de gerar a Spec, verificar invariantes da secção `ARQUITECTURA` do `CLAUDE.md` e confirmar com `search-docs` qualquer API ou comportamento que não seja trivial — em particular quando o Brief identificou questões em aberto ou riscos técnicos com base em documentação.
 
-**dotnet (Clean Architecture)**
-- Lógica de negócio em `Core`? (nunca em Endpoint ou Worker)
-- Novos `DocumentState` implementam a interface base?
-- Endpoints usam Minimal API? (nunca `ControllerBase`)
-- DTOs mapeados manualmente? (nunca AutoMapper)
-- Campos sensíveis excluídos de logs e DTOs?
-
-**laravel (Vertical Slice)**
+**Conformidade arquitectural (Vertical Slice)**
 Antes de finalizar a Spec, verificar conformidade com:
 - `docs/system_spec/02-shared/contratos-por-camada.md` — checklist por camada
 - `docs/system_spec/02-shared/convencoes-nomenclatura.md` — nomenclatura PT/EN
 
-**angular (Standalone)**
-- Todos os componentes com `standalone: true` e `OnPush`?
-- Estado com Signals nativos? (nunca NgRx ou BehaviorSubject)
-- SSE consumido apenas via `SseStore`?
-- Nenhum tipo `any` no TypeScript?
-
-**OpenAPI (qualquer stack se afectar API)**
+**OpenAPI (se afectar API)**
 - O contrato vive em `./openapi.yaml` (raiz deste repo) — não no repo de workflow
 - Novo endpoint / alteração de schema → a Spec **declara** o delta do contrato (que rotas/schemas mudam); a escrita efectiva em `./openapi.yaml` é feita na Fase 3a (`/documenta-implementacao`)
 - Breaking change → documentar e criar issues linked nos outros repos

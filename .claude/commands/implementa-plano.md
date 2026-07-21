@@ -11,7 +11,6 @@ effort: high
 ## Argumentos
 
 - `$ARGUMENTS`: número da issue (ex: `#5`) — opcional; se omitido, lê de `workflow-state.md`
-- `--stack`: `dotnet` | `laravel` | `angular` — opcional; se omitido, usa o repo activo
 
 ## Pré-condições
 
@@ -49,7 +48,7 @@ Implementar apenas o código desta tarefa. Não antecipar tarefas seguintes.
 
 ### Lint + Refactor (antes de commitar)
 
-Para stack Laravel, executar antes de cada checkpoint:
+Antes de cada checkpoint, executar:
 
 ```bash
 composer lint      # Pint — formatação
@@ -97,7 +96,7 @@ Skill `propoe-commit` — proposta formatada, aguarda confirmação antes de exe
 ## Após todas as tarefas
 
 1. Skill `executa-testes` — auto-retry até 3x; se persistir → skill `regista-aviso`
-2. Se stack = `laravel`: skill `executa-checkpoint-scan` — scan de segurança/qualidade; pausa se FAIL
+2. Skill `executa-checkpoint-scan` — scan de segurança/qualidade; pausa se FAIL
 3. Skill `pausa-checkpoint` tipo=② — resumo de implementação + confirmação antes de avançar
 4. Actualizar `docs/workflow-state.md`:
     ```yaml
