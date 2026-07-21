@@ -75,12 +75,14 @@ Eliminar `mixed` anotando `@var` array shape em `validated()`; declarar `@throws
 ### Ciclo de estados
 
 ```
-PENDENTE → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → PROCESSADO
-                                                       ↘ ERRO
-                                                       ↘ PERIGOSO
+PENDENTE → ANALISE_MALWARE → ANALISE_TEXTO → ANALISE_IA_LOCAL → PROCESSADO
+                                    ↘ ANALISE_OCR ↗   ↘ ANALISE_CLOUD ↗
+             (qualquer etapa de análise) ↘ ERRO ↘ PERIGOSO
 ```
 
-> Mapa completo de transições (incl. `Erro → AguardaEnvio`, `Pendente → Perigoso`, self-loop `Processado → Processado`) e Action de cada uma: `docs/system_spec/02-shared/estados.md`
+Ramos opcionais: `AnaliseTexto → AnaliseOcr` (quando falta texto nativo) e `AnaliseIaLocal → AnaliseCloud` (escala para a cloud). `Erro → Pendente` reabre o pipeline (reprocessamento), `Processado → Processado` é o self-loop de correcção e `Perigoso` é terminal.
+
+> Mapa completo de transições e Action de cada uma: `docs/system_spec/02-shared/estados.md`
 
 ### Segurança e conformidade
 

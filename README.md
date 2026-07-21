@@ -34,7 +34,7 @@
 - **Eloquent ORM** — MySQL (dev via Docker + testes)
 - **Redis + predis** — cache com invalidação por tags (`CacheServico`, `TagCache`, `TtlCache`)
 - **Prism** (`prism-php/prism`) — acesso unificado a LLM local (Ollama) e cloud, provider-agnóstico; camadas opcionais/desligáveis por presença das vars `LLM_LOCAL_*`/`LLM_CLOUD_*`
-- **smalot/pdfparser + Tesseract/imagick/Ghostscript** — extracção de texto nativo e OCR de PDF (pipeline de extracção por IA, em construção)
+- **smalot/pdfparser + Tesseract/imagick/Ghostscript** — extracção de texto nativo e OCR de PDF
 - **ClamAV self-hosted** — scan de malware dos uploads (protocolo `clamd`/`INSTREAM` via socket, sem dependência Composer, sem partilha de ficheiros com terceiros); camada opcional/desligável por presença das vars `CLAMAV_HOST`/`CLAMAV_PORT`
 - **Pest 4 + Mockery** — padrão de testes dual (unit + HTTP)
 - **Larastan nível 9 + Rector + Laravel Pint** — qualidade e tipagem estática
@@ -57,7 +57,7 @@ Padrões aplicados: Actions `final readonly`, autorização dupla camada (`Gate:
 
 ## Como correr
 
-### Opção A — Docker (MySQL + Redis, recomendado)
+### Docker (MySQL + Redis)
 
 Stack completo a partir de um clone limpo, sem PHP/Composer instalados localmente:
 
@@ -140,7 +140,7 @@ Todas as rotas exigem Bearer token. Lista completa de endpoints e parâmetros: [
 
 | Feature | Endpoints | Notas |
 | --- | --- | --- |
-| Categorias de documento ([spec](docs/system_spec/05-routes/categorias-documento.md)) | 5 (CRUD) | Soft delete + `PATCH .../restaurar` |
+| Categorias de documento ([spec](docs/system_spec/05-routes/categorias-documento.md)) | 6 (CRUD + restaurar) | Soft delete + `PATCH .../restaurar` |
 | Entidades ([spec](docs/system_spec/05-routes/entidades.md)) | 8 (CRUD + restaurar + empresa-mãe + agrupar) | Soft delete; `?estado=todos|somente_ativos|somente_inativos`; `POST .../agrupar-com/{secundaria}` funde duplicados (repontar FKs + hard-delete) |
 | Tipos de documento ([spec](docs/system_spec/05-routes/tipos-documento.md)) | 5 (CRUD) | Sem soft delete — `DELETE` é definitivo |
 | Documentos ([spec](docs/system_spec/05-routes/documento.md)) | 8 (CRUD + upload + ficheiro + reprocessar) | Sem soft delete; máquina de estados unificada `Pendente → AnaliseMalware → AnaliseTexto → AnaliseIaLocal → Processado` (ramos opcionais `AnaliseOcr`/`AnaliseCloud`; ramos `Erro`/`Perigoso`), transições validadas por `RegraTransicaoEstado` (`422` se inválida); `?estado=` filtra pela fase do ciclo de vida |
