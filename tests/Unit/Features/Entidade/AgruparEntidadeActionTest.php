@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Features\Entidade\Agrupar\AgrupamentoInvalidoException;
 use App\Features\Entidade\Agrupar\AgruparEntidadeAction;
+use App\Features\Entidade\Agrupar\InventarioReferenciasEntidadeInterface;
 use App\Models\Documento;
 use App\Models\Entidade;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -86,6 +87,29 @@ describe('como admin', function (): void {
             ->toThrow(AgrupamentoInvalidoException::class);
 
         $this->assertDatabaseHas('entidades', ['id' => $secundaria->id]);
+    });
+
+    it('falha e faz rollback quando o inventário detecta uma FK não tratada', function (): void {
+        // Substitui a introspecção por uma que reporta uma coluna fora da allow-list (CA-08),
+        // sem manipular o esquema real — compatível com testes em paralelo sobre BD partilhada.
+        $this->app->bind(InventarioReferenciasEntidadeInterface::class, fn (): InventarioReferenciasEntidadeInterface => new class implements InventarioReferenciasEntidadeInterface
+        {
+            public function detectarColunasQueReferenciamEntidades(): array
+            {
+                return ['documentos.id_fornecedor', 'documentos.id_cliente', 'faturas.id_entidade'];
+            }
+        });
+
+        $principal = Entidade::factory()->create();
+        $secundaria = Entidade::factory()->create();
+        Documento::factory()->create(['id_fornecedor' => $secundaria->id]);
+
+        expect(fn (): Entidade => app(AgruparEntidadeAction::class)->handle($principal, $secundaria))
+            ->toThrow(AgrupamentoInvalidoException::class);
+
+        // Rollback total: a secundária não é removida e o documento continua a apontar-lhe.
+        $this->assertDatabaseHas('entidades', ['id' => $secundaria->id]);
+        $this->assertDatabaseHas('documentos', ['id_fornecedor' => $secundaria->id]);
     });
 });
 

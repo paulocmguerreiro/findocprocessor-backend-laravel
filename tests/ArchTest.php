@@ -8,6 +8,7 @@ use App\Features\CategoriaDocumento\Listar\CampoOrdenacaoCategorias;
 use App\Features\Documento\Operacoes\Reprocessar\ModoReprocessamento;
 use App\Features\Documento\Pesquisa\Listar\CampoOrdenacaoDocumentos;
 use App\Features\Entidade\Actualizar\ActualizarEntidadeRequest;
+use App\Features\Entidade\Agrupar\InventarioReferenciasEntidadeInterface;
 use App\Features\Entidade\ComFlagsEfectivosEmpresaMae;
 use App\Features\Entidade\Criar\CriarEntidadeRequest;
 use App\Features\Entidade\Listar\CampoOrdenacaoEntidades;
@@ -53,6 +54,8 @@ arch('actions are final')
         CriarEntidadeRequest::class,
         ActualizarEntidadeRequest::class,
         CampoOrdenacaoEntidades::class,
+        // Interface (não é classe final) — introspecção substituível em testes.
+        InventarioReferenciasEntidadeInterface::class,
         ComFlagsEfectivosEmpresaMae::class,
         CampoOrdenacaoRoles::class,
         CampoOrdenacaoDocumentos::class,

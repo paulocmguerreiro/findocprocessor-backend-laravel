@@ -31,7 +31,7 @@ final readonly class AgruparEntidadeAction
     private const array COLUNAS_TRATADAS = ['documentos.id_fornecedor', 'documentos.id_cliente'];
 
     public function __construct(
-        private InventarioReferenciasEntidade $inventarioReferencias,
+        private InventarioReferenciasEntidadeInterface $inventarioReferencias,
         private CacheServico $cache,
     ) {}
 

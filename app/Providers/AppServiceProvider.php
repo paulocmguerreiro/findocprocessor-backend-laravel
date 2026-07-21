@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Features\Entidade\Agrupar\InventarioReferenciasEntidade;
+use App\Features\Entidade\Agrupar\InventarioReferenciasEntidadeInterface;
 use App\Infrastructure\AI\ClienteExtracaoIAPrism;
 use App\Infrastructure\AI\ClienteIAInterface;
 use App\Infrastructure\Malware\AnalisadorMalwareInterface;
@@ -33,6 +35,8 @@ class AppServiceProvider extends ServiceProvider
         ));
 
         $this->app->bind(ClienteIAInterface::class, ClienteExtracaoIAPrism::class);
+
+        $this->app->bind(InventarioReferenciasEntidadeInterface::class, InventarioReferenciasEntidade::class);
     }
 
     public function boot(): void

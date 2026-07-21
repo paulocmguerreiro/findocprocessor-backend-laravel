@@ -12,9 +12,10 @@ use Illuminate\Support\Facades\Schema;
  * entidades — se surgir uma FK nova que a allow-list de repontagem não trate, a
  * operação falha em vez de deixar referências pendentes.
  *
- * Sem interface: introspecção do esquema real, sem substituição prevista.
+ * Implementa {@see InventarioReferenciasEntidadeInterface} — a interface existe para
+ * permitir substituição em testes (a introspecção real não é substituível em produção).
  */
-final readonly class InventarioReferenciasEntidade
+final readonly class InventarioReferenciasEntidade implements InventarioReferenciasEntidadeInterface
 {
     private const string TABELA_REFERENCIADA = 'entidades';
 
