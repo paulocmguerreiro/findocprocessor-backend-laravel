@@ -98,10 +98,8 @@ consistência abaixo.
 
 Aplicação do limiar de 3 ao estado actual do repositório, incluída aqui como caso de estudo de como a
 trava funciona nos dois níveis (categoria de topo e Action individual). `Atribuicao/` ilustra a
-assimetria de dissolução: cruzou o limiar em tempos (2→3 com `ReivindicarDocumentoEmEtapaAction`) e
-voltou a 2 quando a Action de triagem de malware migrou para `Processamento/` (renomeada
-`ProcessarAnaliseMalwareDocumentoAction`); **mantém-se como subpasta com as 2 `Reivindicar*` por decisão
-explícita** — dissolver abaixo do limiar nunca é automático.
+assimetria de dissolução: mesmo com só 2 `Reivindicar*` (abaixo do limiar de 3), **mantém-se como
+subpasta por decisão explícita** — dissolver abaixo do limiar nunca é automático.
 
 | Categoria | Actions que qualificam | Atinge limiar? |
 |---|---|---|

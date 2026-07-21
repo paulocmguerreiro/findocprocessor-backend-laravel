@@ -56,8 +56,21 @@ public function handle(Xxx $xxx, ActualizarXxxDto $dados): Xxx
 | `ActualizarEntidadeAction` | `Entidade/Actualizar` |
 | `EliminarEntidadeAction` | `Entidade/Eliminar` |
 | `ConverterEmEmpresaMaeAction` | `Entidade/EmpresaMae` |
+| `RegistarDocumentoManualAction` | `Documento/Criar` |
+| `EliminarDocumentoAction` | `Documento/Eliminar` |
+| `ReceberUploadDocumentoAction` | `Documento/RecepcaoUpload` |
+| `RegistarEtapaExtracaoAction` | `Documento/Processamento` |
+| `ReivindicarDocumentoPendenteAction` | `Documento/Atribuicao` |
+| `ReivindicarDocumentoEmEtapaAction` | `Documento/Atribuicao` |
 
 Todas as Actions de escrita futuras seguem este padrão obrigatoriamente.
+
+As 8 Actions de transição de estado do `Documento` (`Marcar*DocumentoAction`,
+`TransicionarProcessadoDocumentoAction`, em `Documento/Operacoes/TransicoesEstado/`) e as Actions que
+as chamam (`CorrigirDocumentoAction`, `ConcluirExtracaoDocumentoAction`,
+`RegistarFalhaTecnicaExtracaoAction`, `ReprocessarDocumentoAction`, `Processar*DocumentoAction`) **não
+abrem `DB::transaction()` directamente** — delegam em `ExecutorTransicaoDocumento`, que centraliza a
+transação (ver "Padrão de reivindicação com `lockForUpdate()`" abaixo).
 
 ---
 

@@ -13,7 +13,7 @@
 | `estado` | `string(50)` | Não | simples | Cast → `EstadoDocumento`; a etapa atingida (na máquina unificada, é também o passo de análise em curso) |
 | `resultado` | `string(20)` | Sim | — | Cast → `ResultadoEtapa`; `null` = linha de transição de negócio, preenchido = linha de tentativa de IA |
 | `motivo` | `text` | Sim | — | Motivo/resposta/nota; pode conter detalhe sensível |
-| `id_utilizador` | `bigint unsigned` FK | Sim | FK | → `users.id`; `restrictOnDelete()` (era `nullOnDelete`) + `cascadeOnUpdate()`; `null` = passo automático (sistema) |
+| `id_utilizador` | `bigint unsigned` FK | Sim | FK | → `users.id`; `restrictOnDelete()` + `cascadeOnUpdate()`; `null` = passo automático (sistema) |
 | `created_at` | `timestamp` | Sim | — | Data+hora da etapa; **sem `updated_at`** (append-only) |
 
 **Notas:**
@@ -21,13 +21,12 @@
 - `id_utilizador` é `bigint` (não UUID) porque `users.id` é `bigint auto_increment` (sem `HasUuids`). Desvio documentado no Brief/Debrief.
 - `cascadeOnDelete()` em `id_documento` — histórico não existe sem o documento.
 - `restrictOnDelete()` em `id_utilizador` — um utilizador que registou etapas não pode ser hard-deleted; `EliminarUtilizadorAction` cai no soft delete, preservando a autoria da etapa.
-- `cascadeOnUpdate()` em ambas as FKs (migration `add_cascade_on_update_to_domain_fks`, 2026-07-14) — sem esta cascade, um `UPDATE` à PK do documento ou do utilizador falharia por violação de FK; prepara para uma futura reconciliação/agregação de bases de dados que precise de remapear UUIDs.
+- `cascadeOnUpdate()` em ambas as FKs — sem esta cascade, um `UPDATE` à PK do documento ou do utilizador falharia por violação de FK; prepara para uma futura reconciliação/agregação de bases de dados que precise de remapear UUIDs.
 - **`resultado`** — coluna nullable: `null` numa linha de transição de negócio (gravada por
   `ExecutorTransicaoDocumento`); preenchido numa linha de tentativa de IA (gravada por
   `RegistarEtapaExtracaoAction`, ver `01-features/documento-pipeline.md`), cujo `estado` é igual ao
-  estado actual do `Documento` — que na máquina de estados unificada (#110) **é** o passo de análise
-  em curso. A coluna `passo` (antiga dimensão `EtapaExtracao`) foi removida por migration
-  (`remove_passo_from_etapas_documento_table`).
+  estado actual do `Documento` — que na máquina de estados unificada **é** o passo de análise
+  em curso.
 
 ---
 

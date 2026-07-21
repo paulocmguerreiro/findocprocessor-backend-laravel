@@ -26,7 +26,7 @@
 
 **`id_responsavel`** — FK `bigint` para `users.id` (o PK de `users` é incremental, não UUID). É o autor da entrada: definido pela `RegistarDocumentoManualAction` e pela `ReceberUploadDocumentoAction` a partir de `Auth::id()` — **nunca vem do cliente** (campo derivado server-side, como o `hash_sha256`); está sempre preenchido à criação. A FK é `restrictOnDelete()`: um utilizador responsável por documentos não pode ser hard-deleted — `EliminarUtilizadorAction` cai no soft delete, preservando a autoria. As transições de pipeline (`Marcar*`) **não** alteram o responsável.
 
-**`cascadeOnUpdate()` em todas as FKs de domínio** — adicionado numa migration posterior (`add_cascade_on_update_to_domain_fks`, 2026-07-14). Mantém o `onDelete` já definido em cada FK; sem esta cascade, um `UPDATE` à PK de um registo pai (`entidades`, `categorias_documento`, `users`) falharia por violação de FK. Prepara para uma futura reconciliação/agregação de bases de dados que precise de remapear UUIDs.
+**`cascadeOnUpdate()` em todas as FKs de domínio** — mantém o `onDelete` já definido em cada FK; sem esta cascade, um `UPDATE` à PK de um registo pai (`entidades`, `categorias_documento`, `users`) falharia por violação de FK. Prepara para uma futura reconciliação/agregação de bases de dados que precise de remapear UUIDs.
 
 ---
 
@@ -177,7 +177,7 @@ Base (`definition()`) = estado `Processado` com todos os campos preenchidos. 9 s
 ---
 
 > Policy `DocumentoPolicy`, DTOs e Resource `DocumentoResource` estão documentados em
-> `03-models/documento-policy-resource.md` (extraído por limiar de tamanho, WRN-033).
+> `03-models/documento-policy-resource.md`.
 
 ---
 

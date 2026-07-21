@@ -1,8 +1,7 @@
 # System Spec — Model: Documento (Policy, DTOs, Resource)
 
-> `app/Policies/DocumentoPolicy.php` + `app/Features/Documento/DocumentoResource.php`. Extraído de
-> `03-models/documento.md` (WRN-033) por limiar de tamanho (~200 linhas) — migration/Model/Factory/
-> relações/scopes continuam nesse ficheiro.
+> `app/Policies/DocumentoPolicy.php` + `app/Features/Documento/DocumentoResource.php`. Migration/Model/
+> Factory/relações/scopes ficam em `03-models/documento.md`.
 
 ---
 
@@ -57,5 +56,5 @@ Os DTOs do Documento pertencem à camada de lógica e estão documentados — em
 - `valor` → conversão explícita `(float)` (cast `decimal:2` devolve `string`)
 - Relações via `whenLoaded()` + `EntidadeResource` / `CategoriaDocumentoResource`
 - **Não expõe** `disco_storage` nem `nome_ficheiro_storage` (detalhes internos / PII indirecta)
-- **Sem `etapa_extracao`** — a coluna deixou de existir (#110); nunca expôs, nem expõe,
+- **Sem `etapa_extracao`** — a coluna deixou de existir; nunca expôs, nem expõe,
   `texto_extraido`/`dados_json` (PII).

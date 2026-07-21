@@ -26,7 +26,7 @@ Migrada **antes** dos seeds de roles (timestamps `2026_06_22_14500x`) — ver "O
 | `batch_uuid` | `uuid` nullable | agrupamento de eventos |
 | `created_at` / `updated_at` | `timestamp` | — |
 
-> **Desvio à migration publicada:** o stub do pacote cria `subject_id` como `bigint` (`nullableMorphs`). Como os sujeitos são mistos (UUID + bigint), foi trocado por `nullableUuidMorphs('subject')` → `char(36)`. `causer` mantém `nullableMorphs` (User usa bigint). As 3 migrations foram modernizadas para as convenções do projecto (`strict_types`, classe anónima, return types).
+> **Desvio à migration publicada do pacote:** o stub cria `subject_id` como `bigint` (`nullableMorphs`). Como os sujeitos são mistos (UUID + bigint), usa-se `nullableUuidMorphs('subject')` → `char(36)`. `causer` mantém `nullableMorphs` (User usa bigint).
 
 ### Ordem de migração
 
@@ -111,16 +111,15 @@ O `causer` é associado automaticamente ao `Auth::user()` pelo `ActivitylogServi
 | `Entidade` | `nif` | Dado fiscal — RGPD |
 | `User` | `password`, `remember_token` | Credenciais — nunca em audit |
 
-> **Actualização:** o `User` passou a ser **sujeito** de auditoria (além de
-> causer). O CRUD normal audita `name`/`email` (rastreio de alterações administrativas);
-> as credenciais são excluídas. A anonimização usa o evento custom `rgpd.anonimizacao`
-> sem PII (ver acima).
+> O `User` é **sujeito** de auditoria (além de causer). O CRUD normal audita `name`/`email`
+> (rastreio de alterações administrativas); as credenciais são excluídas. A anonimização usa
+> o evento custom `rgpd.anonimizacao` sem PII (ver acima).
 
 ---
 
 ## Retenção (pendente)
 
-NIS2 Art. 21 sugere retenção mínima de 12 meses. Não implementado nesta issue — candidato a issue separada (purga agendada de `activity_log`).
+NIS2 Art. 21 sugere retenção mínima de 12 meses. Não implementado — sem purga agendada de `activity_log`.
 
 ---
 
@@ -129,4 +128,4 @@ NIS2 Art. 21 sugere retenção mínima de 12 meses. Não implementado nesta issu
 - **Unit** (`tests/Unit/Features/AuditTrail/`): `created`/`updated`/`deleted`, no-op (logOnlyDirty), rollback, e exclusão de `nif` (Entidade).
 - **Feature**: assertions `Activity::count()` adicionadas aos testes HTTP de escrita existentes de CategoriaDocumento, Entidade e Role (incl. causer não-null e 403 → 0).
 - Cada ficheiro limpa `activity_log` no `beforeEach` (os seeds deixam registos persistentes fora da transação do teste).
-- Como o `User` passou a auditar, criar o utilizador autenticado gera um evento `created`. Os testes de `Criar{Entidade,Categoria,Role}` que contam `Activity` limpam o `activity_log` **após** a autenticação, isolando a contagem à actividade do próprio pedido.
+- Como o `User` é sujeito de auditoria, criar o utilizador autenticado gera um evento `created`. Os testes de `Criar{Entidade,Categoria,Role}` que contam `Activity` limpam o `activity_log` **após** a autenticação, isolando a contagem à actividade do próprio pedido.

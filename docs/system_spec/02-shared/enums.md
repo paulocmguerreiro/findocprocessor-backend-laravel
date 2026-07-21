@@ -112,7 +112,7 @@ enum PosicaoEmpresaMae: string
 
 - Valores na BD: `'fornecedor'`, `'cliente'` (lowercase)
 - Usado em: `TipoDocumento::$posicao_empresa_mae` (cast Eloquent)
-- Regra de leitura pela issue futura de extracção (IA/OCR) — sem lógica de validação na camada de modelo (RN-04, `03-models/tipo-documento.md`)
+- Regra de leitura pelo pipeline de extracção (`RegraReconciliarEntidadesDocumento`) — sem lógica de validação na camada de modelo (RN-04, `03-models/tipo-documento.md`)
 
 ---
 

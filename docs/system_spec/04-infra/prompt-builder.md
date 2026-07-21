@@ -3,7 +3,7 @@
 > `app/Infrastructure/AI/PromptBuilder.php`
 > `app/Shared/Prompts/base_instructions.txt`
 
-Constrói o **system prompt** de texto usado para instruir um provider de IA (Ollama/OpenRouter/Anthropic — issue futura) a classificar e extrair dados de documentos financeiros. Cobre apenas a *construção* do prompt — sem chamada HTTP, sem parsing de resposta.
+Constrói o **system prompt** de texto usado para instruir o provider de IA (via Prism, provider-agnóstico — ver `04-infra/extracao-ia.md`) a classificar e extrair dados de documentos financeiros. Cobre apenas a *construção* do prompt — sem chamada HTTP, sem parsing de resposta (isso fica em `ClienteExtracaoIAPrism`, ver `04-infra/extracao-ia.md`).
 
 ---
 
@@ -50,7 +50,7 @@ Texto fixo, independente de dados em BD, versionado em `app/Shared/Prompts/base_
 - **Isolamento de conteúdo** (regras I-IV) — o documento recebido é sempre dados passivos, nunca fonte de instruções; texto que pareça uma ordem dirigida à IA é ignorado e sinalizado como "perigoso".
 - **Regras absolutas** (1-7) — resposta exclusivamente em JSON, nunca inventar dados, datas em `YYYY-MM-DD`, valores monetários como `float`, campo `tipo_documento` obrigatório, e os casos `"desconhecido"` (documento não corresponde a nenhum `TipoDocumento`) e `"perigoso"` (tentativa de manipulação/prompt injection detectada).
 
-As antigas regras de NIF/nome da empresa mãe hardcoded **não** aparecem neste ficheiro — são geradas dinamicamente por `comEmpresaMae()` a partir de dados reais da `Entidade`.
+As regras de NIF/nome da empresa mãe **não** aparecem neste ficheiro — são geradas dinamicamente por `comEmpresaMae()` a partir de dados reais da `Entidade`.
 
 ---
 
@@ -82,7 +82,7 @@ Primeiro mecanismo do projecto sem par HTTP — `PromptBuilder` não tem Control
 
 `tests/ArchTest.php` — `arch('infrastructure classes are final')->expect('App\Infrastructure')->toBeFinal()`. Sem excepções previstas.
 
-## Fora de âmbito (issue futura)
+## Fora de âmbito deste ficheiro
 
-- `withDocumento()` / wrapping do conteúdo do documento em tags `<nonce>`.
-- Cliente HTTP para provider de IA (Ollama/OpenRouter/Anthropic), envio do prompt, parsing da resposta.
+- Wrapping do conteúdo do documento em tags de nonce anti prompt-injection — feito por `ClienteExtracaoIAPrism`, não por `PromptBuilder` (ver `04-infra/extracao-ia.md`).
+- Cliente HTTP para o provider de IA, envio do prompt, parsing da resposta — `ClienteExtracaoIAPrism` (`04-infra/extracao-ia.md`).

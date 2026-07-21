@@ -20,15 +20,15 @@ estados é a peça central do pipeline — cada transição passa obrigatoriamen
 
 ### Actions de criação
 
-| Action | Ability | Estado destino | Exposta HTTP |
-|---|---|---|---|
-| `RegistarDocumentoManualAction` | `create` | `Processado` (directo) | ✅ `POST /documentos` |
-| `ReceberUploadDocumentoAction` | `create` | `Pendente` | ✅ `POST /documentos/upload` |
+| Action                          | Ability  | Estado destino         | Exposta HTTP                 |
+| ------------------------------- | -------- | ---------------------- | ---------------------------- |
+| `RegistarDocumentoManualAction` | `create` | `Processado` (directo) | ✅ `POST /documentos`        |
+| `ReceberUploadDocumentoAction`  | `create` | `Pendente`             | ✅ `POST /documentos/upload` |
 
 **`RegistarDocumentoManualAction`** — Cria um `Documento` já correndo o scan de malware
 (`AnalisadorMalware`) sobre o ficheiro antes de gravar. Calcula `hash_sha256`, gera o nome
 canónico via `RegraNomearProcessado`, escreve no disco decidido pelo scan: limpo/não configurado →
-`Processado`/disco `processado` (comportamento original, emite `DocumentoProcessadoEvent`); infectado →
+`Processado`/disco `processado` (emite `DocumentoProcessadoEvent`); infectado →
 `Perigoso`/disco `perigoso` (motivo = assinatura, emite `DocumentoMarcadoPerigosoEvent`); falha do scan →
 `Erro`/disco `erro` (motivo = razão da falha, emite `DocumentoMarcadoErroEvent`). O `Documento` **é
 sempre criado** — nunca rejeitado sem registo. Não usa `RegraTransicaoEstado` (criação, não
@@ -42,11 +42,11 @@ colisão de hash com `DocumentoDuplicadoException` (→ 422).
 
 ### Actions HTTP retidas (transições accionadas pelo utilizador)
 
-| Action | Ability | De | Para | Exposta HTTP |
-|---|---|---|---|---|
-| `ReprocessarDocumentoAction` | `update` | `Erro` | `Pendente` | ✅ `POST /documentos/{documento}/reprocessar` |
-| `CorrigirDocumentoAction` | `update` | `Processado` | `Processado` (loop) | ✅ `PATCH /documentos/{documento}` |
-| `EliminarDocumentoAction` | `delete` | qualquer | — (eliminado) | ✅ `DELETE /documentos/{documento}` |
+| Action                       | Ability  | De           | Para                | Exposta HTTP                                  |
+| ---------------------------- | -------- | ------------ | ------------------- | --------------------------------------------- |
+| `ReprocessarDocumentoAction` | `update` | `Erro`       | `Pendente`          | ✅ `POST /documentos/{documento}/reprocessar` |
+| `CorrigirDocumentoAction`    | `update` | `Processado` | `Processado` (loop) | ✅ `PATCH /documentos/{documento}`            |
+| `EliminarDocumentoAction`    | `delete` | qualquer     | — (eliminado)       | ✅ `DELETE /documentos/{documento}`           |
 
 `ReprocessarDocumentoAction` — DTO `ReprocessarDocumentoDto` (enum `ModoReprocessamento`); reabre o
 pipeline (`Erro → Pendente`); move `erro → entrada`; grava `EtapaDocumento (Pendente, modo->value, id)`;
@@ -66,11 +66,11 @@ por `cascadeOnDelete`.
 
 ### Actions de leitura
 
-| Action | Ability | Exposta HTTP |
-|---|---|---|
-| `ListarDocumentosAction` | `viewAny` | ✅ `GET /documentos` |
-| `VerDocumentoAction` | `view` | ✅ `GET /documentos/{documento}` |
-| `DescarregarDocumentoAction` | `view` | ✅ `GET /documentos/{documento}/ficheiro` |
+| Action                       | Ability   | Exposta HTTP                              |
+| ---------------------------- | --------- | ----------------------------------------- |
+| `ListarDocumentosAction`     | `viewAny` | ✅ `GET /documentos`                      |
+| `VerDocumentoAction`         | `view`    | ✅ `GET /documentos/{documento}`          |
+| `DescarregarDocumentoAction` | `view`    | ✅ `GET /documentos/{documento}/ficheiro` |
 
 `ListarDocumentosAction` — `cursorPaginate` com `CampoOrdenacaoDocumentos` + `DirecaoOrdenacao`;
 filtro opcional por estado via `whereEstado(EstadoDocumento)`; cache `TagCache::Documentos` TTL
@@ -86,27 +86,27 @@ faz `streamDownload`. Lança `NotFoundHttpException` se o ficheiro não existir 
 
 ## Enums da feature
 
-| Classe | Namespace | Cases | Descrição |
-|---|---|---|---|
-| `CampoOrdenacaoDocumentos` | `App\Features\Documento\Pesquisa\Listar` | `DataDocumento = 'data_documento'`, `CriadoEm = 'created_at'` | Campo de ordenação da listagem de documentos |
-| `ModoReprocessamento` | `App\Features\Documento\Operacoes\Reprocessar` | `Modelo = 'MODELO'`, `Ferramenta = 'FERRAMENTA'` | Modo de reprocessamento de um documento em `Erro`; registado como `motivo` na `EtapaDocumento`. Semântica de fallback entre modelos/ferramentas diferida para a issue de extracção |
+| Classe                     | Namespace                                      | Cases                                                         | Descrição                                                                                                                                                                          |
+| -------------------------- | ---------------------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CampoOrdenacaoDocumentos` | `App\Features\Documento\Pesquisa\Listar`       | `DataDocumento = 'data_documento'`, `CriadoEm = 'created_at'` | Campo de ordenação da listagem de documentos                                                                                                                                       |
+| `ModoReprocessamento`      | `App\Features\Documento\Operacoes\Reprocessar` | `Modelo = 'MODELO'`, `Ferramenta = 'FERRAMENTA'`              | Modo de reprocessamento de um documento em `Erro`; registado como `motivo` na `EtapaDocumento`. Sem lógica de selecção de modelo/ferramenta associada — só regista a intenção |
 
 ---
 
 ## DTOs
 
-| DTO | Ficheiro | Campos principais |
-|---|---|---|
-| `RegistarDocumentoManualDto` | `Criar/` | campos de domínio + `ficheiro: UploadedFile` |
-| `ReceberUploadDocumentoDto` | `RecepcaoUpload/` | `ficheiro: UploadedFile` |
-| `TransicionarProcessadoDocumentoDto` | `TransicoesEstado/` | `idFornecedor`, `idCliente`, `idCategoria`, `valor:float`, `dataDocumento:DateTimeInterface` |
-| `MarcarErroDocumentoDto` | `TransicoesEstado/` | `mensagemErro: string` (não-vazio) |
-| `MarcarPerigosoDocumentoDto` | `TransicoesEstado/` | `motivo: string` (não-vazio) |
-| `ReprocessarDocumentoDto` | `Reprocessar/` | `modo: ModoReprocessamento` |
-| `CorrigirDocumentoDto` | `Corrigir/` | campos de domínio (sem campos de storage) |
-| `FicheiroDocumentoDto` | `Descarregar/` | `disco: string`, `nome: string` (VO de vista, sem `fromRequest`) |
-| `ResultadoReconciliacaoFicheiro` | `Transicao/` | `coerente: bool`, `encontrado: bool`, `disco: ?string`, `nome: ?string` (VO interno, sem `fromRequest`) |
-| `RegistarEtapaExtracaoDto` | `Processamento/` | `resultado: ResultadoEtapa`, `motivo: ?string`, `textoExtraido: ?string`, `dadosJson: ?array`, `reclamar: bool`, `incrementarTentativas: bool` (VO interno, sem `fromRequest`; o passo é o `estado` actual do `Documento`, não redundado no DTO) |
+| DTO                                  | Ficheiro            | Campos principais                                                                                                                                                                                                                                |
+| ------------------------------------ | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `RegistarDocumentoManualDto`         | `Criar/`            | campos de domínio + `ficheiro: UploadedFile`                                                                                                                                                                                                     |
+| `ReceberUploadDocumentoDto`          | `RecepcaoUpload/`   | `ficheiro: UploadedFile`                                                                                                                                                                                                                         |
+| `TransicionarProcessadoDocumentoDto` | `TransicoesEstado/` | `idFornecedor`, `idCliente`, `idCategoria`, `valor:float`, `dataDocumento:DateTimeInterface`                                                                                                                                                     |
+| `MarcarErroDocumentoDto`             | `TransicoesEstado/` | `mensagemErro: string` (não-vazio)                                                                                                                                                                                                               |
+| `MarcarPerigosoDocumentoDto`         | `TransicoesEstado/` | `motivo: string` (não-vazio)                                                                                                                                                                                                                     |
+| `ReprocessarDocumentoDto`            | `Reprocessar/`      | `modo: ModoReprocessamento`                                                                                                                                                                                                                      |
+| `CorrigirDocumentoDto`               | `Corrigir/`         | campos de domínio (sem campos de storage)                                                                                                                                                                                                        |
+| `FicheiroDocumentoDto`               | `Descarregar/`      | `disco: string`, `nome: string` (VO de vista, sem `fromRequest`)                                                                                                                                                                                 |
+| `ResultadoReconciliacaoFicheiro`     | `Transicao/`        | `coerente: bool`, `encontrado: bool`, `disco: ?string`, `nome: ?string` (VO interno, sem `fromRequest`)                                                                                                                                          |
+| `RegistarEtapaExtracaoDto`           | `Processamento/`    | `resultado: ResultadoEtapa`, `motivo: ?string`, `textoExtraido: ?string`, `dadosJson: ?array`, `reclamar: bool`, `incrementarTentativas: bool` (VO interno, sem `fromRequest`; o passo é o `estado` actual do `Documento`, não redundado no DTO) |
 
 Todos `final readonly`. Todos com `fromRequest()` excepto `FicheiroDocumentoDto`,
 `ResultadoReconciliacaoFicheiro` e `RegistarEtapaExtracaoDto` (VOs internos/de vista, nunca
@@ -120,12 +120,12 @@ são derivados pela Action.
 
 Todos `final`, `implements ShouldDispatchAfterCommit`, `use Dispatchable, SerializesModels`. Sem Listeners.
 
-| Event | Emitido por | Payload extra |
-|---|---|---|
-| `DocumentoProcessadoEvent` | `RegistarDocumentoManualAction` (limpo/não configurado), `TransicionarProcessadoDocumentoAction` | — |
-| `DocumentoMarcadoErroEvent` | `MarcarErroDocumentoAction`, `RegistarDocumentoManualAction` (falha do scan) | `mensagemErro: string` |
-| `DocumentoMarcadoPerigosoEvent` | `MarcarPerigosoDocumentoAction`, `RegistarDocumentoManualAction` (infectado) | `motivo: string` |
-| `DocumentoReprocessadoEvent` | `ReprocessarDocumentoAction` | `modo: ModoReprocessamento` |
+| Event                           | Emitido por                                                                                      | Payload extra               |
+| ------------------------------- | ------------------------------------------------------------------------------------------------ | --------------------------- |
+| `DocumentoProcessadoEvent`      | `RegistarDocumentoManualAction` (limpo/não configurado), `TransicionarProcessadoDocumentoAction` | —                           |
+| `DocumentoMarcadoErroEvent`     | `MarcarErroDocumentoAction`, `RegistarDocumentoManualAction` (falha do scan)                     | `mensagemErro: string`      |
+| `DocumentoMarcadoPerigosoEvent` | `MarcarPerigosoDocumentoAction`, `RegistarDocumentoManualAction` (infectado)                     | `motivo: string`            |
+| `DocumentoReprocessadoEvent`    | `ReprocessarDocumentoAction`                                                                     | `modo: ModoReprocessamento` |
 
 Transições intermédias (`AnaliseMalware`, `AnaliseTexto`, `AnaliseOcr`, `AnaliseIaLocal`, `AnaliseCloud`) não emitem Event.
 
@@ -139,26 +139,26 @@ Transições intermédias (`AnaliseMalware`, `AnaliseTexto`, `AnaliseOcr`, `Anal
 
 ### FormRequests
 
-| FormRequest | Método | Autorização |
-|---|---|---|
-| `ListarDocumentosRequest` | `viewAny` | `Gate::authorize('viewAny', Documento::class)` |
-| `CriarDocumentoManualRequest` | `create` | `Gate::authorize('create', Documento::class)` |
-| `ReceberUploadDocumentoRequest` | `create` | idem; valida `multipart/form-data`, tipo (`pdf`/`jpeg`/`png`/`tiff`/`bmp`/`webp`) e dimensão (≤ 50 MB) |
-| `VerDocumentoRequest` | `view` | `Gate::authorize('view', $documento)` |
-| `CorrigirDocumentoRequest` | `update` | `Gate::authorize('update', $documento)` |
-| `ReprocessarDocumentoRequest` | `update` | idem |
-| `EliminarDocumentoRequest` | `delete` | `Gate::authorize('delete', $documento)` |
-| `DescarregarDocumentoRequest` | `view` | `Gate::authorize('view', $documento)` |
+| FormRequest                     | Método    | Autorização                                                                                            |
+| ------------------------------- | --------- | ------------------------------------------------------------------------------------------------------ |
+| `ListarDocumentosRequest`       | `viewAny` | `Gate::authorize('viewAny', Documento::class)`                                                         |
+| `CriarDocumentoManualRequest`   | `create`  | `Gate::authorize('create', Documento::class)`                                                          |
+| `ReceberUploadDocumentoRequest` | `create`  | idem; valida `multipart/form-data`, tipo (`pdf`/`jpeg`/`png`/`tiff`/`bmp`/`webp`) e dimensão (≤ 50 MB) |
+| `VerDocumentoRequest`           | `view`    | `Gate::authorize('view', $documento)`                                                                  |
+| `CorrigirDocumentoRequest`      | `update`  | `Gate::authorize('update', $documento)`                                                                |
+| `ReprocessarDocumentoRequest`   | `update`  | idem                                                                                                   |
+| `EliminarDocumentoRequest`      | `delete`  | `Gate::authorize('delete', $documento)`                                                                |
+| `DescarregarDocumentoRequest`   | `view`    | `Gate::authorize('view', $documento)`                                                                  |
 
 Todos com `messages()` em PT.
 
 ### Resources
 
 `DocumentoResource` — serializa campos do `Documento`; histórico via `whenLoaded('historico')` →
-`EtapaDocumentoResource`. Sem `etapa_extracao` (coluna removida, #110); o progresso de extracção lê-se
+`EtapaDocumentoResource`. Sem `etapa_extracao`; o progresso de extracção lê-se
 de `estado`. **Nunca** expõe `texto_extraido`/`dados_json` (PII).
 
-`EtapaDocumentoResource` — campos: `estado`, `resultado` (`null` numa linha de transição de negócio), `motivo`, `id_utilizador`, `criado_em`. Sem `passo` (coluna removida, #110).
+`EtapaDocumentoResource` — campos: `estado`, `resultado` (`null` numa linha de transição de negócio), `motivo`, `id_utilizador`, `criado_em`.
 
 ---
 
@@ -166,13 +166,13 @@ de `estado`. **Nunca** expõe `texto_extraido`/`dados_json` (PII).
 
 As Actions **com login** mapeiam abilities do `DocumentoPolicy` para permissões granulares (`hasPermissionTo`) — `documentos.ver` (`viewAny`/`view`), `documentos.criar` (`create`), `documentos.actualizar` (`update`), `documentos.eliminar` (`delete`). Matriz role→permission em `04-infra/autorizacao.md` (admin todas; utilizador só `documentos.ver`).
 
-| Ability | Permissão | Actions (com `Gate::authorize`) |
-|---|---|---|
-| `viewAny` | `documentos.ver` | `ListarDocumentosAction` |
-| `view` | `documentos.ver` | `VerDocumentoAction`, `DescarregarDocumentoAction` |
-| `create` | `documentos.criar` | `RegistarDocumentoManualAction`, `ReceberUploadDocumentoAction` |
-| `update` | `documentos.actualizar` | `CorrigirDocumentoAction`, `ReprocessarDocumentoAction`, `TransicionarProcessadoDocumentoAction` |
-| `delete` | `documentos.eliminar` | `EliminarDocumentoAction` |
+| Ability   | Permissão               | Actions (com `Gate::authorize`)                                                                  |
+| --------- | ----------------------- | ------------------------------------------------------------------------------------------------ |
+| `viewAny` | `documentos.ver`        | `ListarDocumentosAction`                                                                         |
+| `view`    | `documentos.ver`        | `VerDocumentoAction`, `DescarregarDocumentoAction`                                               |
+| `create`  | `documentos.criar`      | `RegistarDocumentoManualAction`, `ReceberUploadDocumentoAction`                                  |
+| `update`  | `documentos.actualizar` | `CorrigirDocumentoAction`, `ReprocessarDocumentoAction`, `TransicionarProcessadoDocumentoAction` |
+| `delete`  | `documentos.eliminar`   | `EliminarDocumentoAction`                                                                        |
 
 As transições de pipeline sem Gate (`Marcar*`, `Reivindicar*`, `Processar*`, `RegistarEtapaExtracaoAction`)
 estão documentadas em `01-features/documento-pipeline.md` ("Transições de sistema (sem Gate)").

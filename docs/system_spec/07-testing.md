@@ -200,20 +200,18 @@ processo.
 `setUpProcess()` fica registado mas nunca executa nesta stack. `setUpTestCase()` é invocado
 directamente por `InteractsWithTestCaseLifecycle` em cada teste, independente do runner usado.
 
-**`APP_ENV=testing` tem de ser forçado na invocação do Pest, não só no `phpunit.xml` (WRN-034):**
+**`APP_ENV=testing` tem de ser forçado na invocação do Pest, não só no `phpunit.xml`:**
 o container `app` do `compose.yaml` define `APP_ENV: local` como variável de ambiente real do
 processo (conveniência para `docker compose up` local). Essa variável popula `$_SERVER['APP_ENV']`
 no arranque do PHP-CLI, e a leitura de ambiente do Laravel (`Illuminate\Support\Env`, via
 `checkForSpecificEnvironmentFile()`/`detectEnvironment()`) lê `$_SERVER` — que o `<env>` do
 `phpunit.xml` **não** consegue sobrepor, mesmo com `force="true"` (`force` só afecta `getenv()`/`$_ENV`,
 nunca `$_SERVER`, que já está populado a partir do ambiente real do container antes do PHP arrancar).
-Resultado: `config('app.env')` ficava `'local'` durante toda a suite, `runningUnitTests()` era sempre
-`false`, e o `if` que regista `isolarCacheParalelo()` nunca entrava — a isolação de cache entre
-workers nunca disparou, para nenhum teste, desde que foi introduzida (WRN-025). Diagnosticado com
-canários de instrumentação temporária (removida) que confirmaram 0 invocações em 1069 testes.
-**Correcção:** os scripts `test:arch`, `test:type-coverage` e `test:coverage` do `composer.json`
-prefixam agora `APP_ENV=testing` directamente na linha de comando (variável de shell real, que
-sobrepõe a do container) — não basta o `<env>` do `phpunit.xml`. Qualquer novo script que corra
+Sem este prefixo, `config('app.env')` fica `'local'` durante toda a suite, `runningUnitTests()` fica
+sempre `false`, e o `if` que regista `isolarCacheParalelo()` nunca entra — a isolação de cache entre
+workers nunca dispara. Por isso os scripts `test:arch`, `test:type-coverage` e `test:coverage` do
+`composer.json` prefixam `APP_ENV=testing` directamente na linha de comando (variável de shell real,
+que sobrepõe a do container) — não basta o `<env>` do `phpunit.xml`. Qualquer novo script que corra
 Pest fora destes três deve seguir o mesmo padrão, ou correr através de `composer test`/`composer
 test:coverage`.
 

@@ -67,7 +67,7 @@ Events dispatched pelas Actions de transição do `Documento`. Todos implementam
 | `DocumentoMarcadoPerigosoEvent` | `app/Events/DocumentoMarcadoPerigosoEvent.php` | `MarcarPerigosoDocumentoAction`, `RegistarDocumentoManualAction` (infectado)                 | `Documento $documento`, `string $motivo`            |
 | `DocumentoReprocessadoEvent`    | `app/Events/DocumentoReprocessadoEvent.php`    | `ReprocessarDocumentoAction`                                             | `Documento $documento`, `ModoReprocessamento $modo` |
 
-Sem Listeners nesta issue. Os Listeners serão adicionados quando a issue de extracção (IA/OCR) for implementada.
+Sem Listeners registados.
 
 ### Invocação programática das Actions de pipeline
 

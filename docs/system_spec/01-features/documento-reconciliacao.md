@@ -1,17 +1,16 @@
 # System Spec — Feature: Documento (reconciliação ficheiro↔BD)
 
 > `app/Features/Documento/Operacoes/Transicao/` (`RegraReconciliarLocalizacaoFicheiro`) +
-> `app/Jobs/ReconciliarFicheirosJob.php`. Extraído de `01-features/documento-pipeline.md` (WRN-033)
-> por limiar de tamanho (~200 linhas). Actions de transição/triagem/recorder + mapa De→Para
-> continuam em `documento-pipeline.md`; Job/Schedule em `04-infra/queue-jobs.md`.
+> `app/Jobs/ReconciliarFicheirosJob.php`. Actions de transição/triagem/recorder + mapa De→Para
+> ficam em `documento-pipeline.md`; Job/Schedule em `04-infra/queue-jobs.md`.
 
 ---
 
 ## Dimensão de extracção — `ExtracaoDocumento` como scratch space
 
-Com a máquina de estados **unificada**, o passo de análise **é** o `Documento.estado` — deixou de
-existir a coluna `EtapaExtracao`/dimensão paralela. `ExtracaoDocumento` reduz-se a **scratch space**
-1-1 com o `Documento`: `texto_extraido`/`dados_json` (produtos intermédios da extracção, PII),
+Na máquina de estados **unificada**, o passo de análise **é** o `Documento.estado`.
+`ExtracaoDocumento` reduz-se a **scratch space** 1-1 com o `Documento`: `texto_extraido`/`dados_json`
+(produtos intermédios da extracção, PII),
 `extracao_reclamada_em` (lease) e `extracao_tentativas` (contador). Nenhuma coluna de estado — o
 progresso lê-se de `Documento.estado`.
 

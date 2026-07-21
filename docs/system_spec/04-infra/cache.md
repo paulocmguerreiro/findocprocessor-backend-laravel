@@ -133,7 +133,7 @@ paralelo (`--parallel`), cada processo isola-se via prefixo de chave salgado com
 (`AppServiceProvider::prefixoCacheParalelo()`, aplicado por `AppServiceProvider::isolarCacheParalelo()`,
 registado em `ParallelTesting::setUpTestCase()`) — requer `APP_ENV=testing` forçado na linha de
 comando do Pest (`composer test:coverage`/`test:arch`/`test:type-coverage`), não só no `phpunit.xml`
-— ver detalhe (WRN-034) em `07-testing.md`.
+— ver detalhe em `07-testing.md`.
 
 ---
 

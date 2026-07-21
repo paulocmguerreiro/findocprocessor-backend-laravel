@@ -43,21 +43,17 @@
 
 - `POST /documentos/upload` — `multipart/form-data`; campo `ficheiro` (UploadedFile); validação por **MIME real** (`mimetypes:application/pdf,image/jpeg,image/png`) e dimensão (`max:10240` = 10 MB) no `ReceberUploadDocumentoRequest`. Rate limit dedicado `throttle:upload` (20/min — ver `02-shared/http.md`).
 - `GET /documentos/{documento}/ficheiro` — o Controller faz `streamDownload` do ficheiro do disco actual do documento; o `Content-Type` é inferido do MIME do ficheiro.
-- As transições de pipeline (`MarcarAnaliseMalware`, `MarcarAnaliseTexto`, `MarcarAnaliseOcr`, `MarcarAnaliseIaLocal`, `MarcarAnaliseCloud`, `TransicionarProcessado`, `MarcarErro`, `MarcarPerigoso`) **não têm endpoint** — são invocadas programaticamente pelos Jobs da extracção (issue futura).
+- As transições de pipeline (`MarcarAnaliseMalware`, `MarcarAnaliseTexto`, `MarcarAnaliseOcr`, `MarcarAnaliseIaLocal`, `MarcarAnaliseCloud`, `TransicionarProcessado`, `MarcarErro`, `MarcarPerigoso`) **não têm endpoint** — são invocadas programaticamente pelos Commands `extracao:*` do pipeline (ver `01-features/documento-pipeline.md`).
 
 ---
 
 ## Definição em `routes/api.php`
 
 ```php
-Route::get('documentos', [DocumentoController::class, 'index']);
-Route::post('documentos', [DocumentoController::class, 'store']);
 Route::post('documentos/upload', [DocumentoController::class, 'upload'])->middleware('throttle:upload');
-Route::get('documentos/{documento}', [DocumentoController::class, 'show']);
+Route::apiResource('documentos', DocumentoController::class);
 Route::get('documentos/{documento}/ficheiro', [DocumentoController::class, 'descarregar']);
-Route::patch('documentos/{documento}', [DocumentoController::class, 'update']);
 Route::post('documentos/{documento}/reprocessar', [DocumentoController::class, 'reprocessar']);
-Route::delete('documentos/{documento}', [DocumentoController::class, 'destroy']);
 ```
 
-> O `PATCH` mapeia o método `update` do Controller (resource idiomático), que delega na `CorrigirDocumentoAction`.
+> `apiResource` gera `index`/`store`/`show`/`update`/`destroy`; o `PATCH` mapeia o método `update` do Controller, que delega na `CorrigirDocumentoAction`.

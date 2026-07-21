@@ -7,15 +7,15 @@
 ## Língua — PT vs EN
 
 - **Português de Portugal** em todo o código de domínio — classes, métodos, variáveis, enums, propriedades, constantes.
-- **Inglês** apenas quando o framework/linguagem impõe o nome. Critério: *"o framework vai chamar isto pelo nome?"*
+- **Inglês** apenas quando o framework/linguagem impõe o nome. Critério: _"o framework vai chamar isto pelo nome?"_
 
-| Fica em inglês (framework impõe) | Exemplo |
-|---|---|
-| Métodos de ciclo de vida | `handle()`, `boot()`, `register()`, `store()`, `update()`, `destroy()`, `index()`, `rules()`, `messages()`, `authorize()`, `toArray()`, `definition()` |
-| Sufixos de padrão estrutural | `Builder`, `Interface`, `Controller`, `Factory`, `Provider`, `Job` |
-| Métodos Eloquent / Query Builder | `->where()`, `->create()`, `->find()`, `->get()` |
-| Atributos PHP nativos | `#[Override]`, `#[Fillable]`, `#[Hidden]` |
-| Propriedades/atributos de Model reconhecidos pelo Eloquent | `#[Table]`, `#[Fillable]`, `#[Casts]` (ou `$table`/`$fillable`/`$casts` sem o atributo PHP 8) |
+| Fica em inglês (framework impõe)                           | Exemplo                                                                                                                                                |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Métodos de ciclo de vida                                   | `handle()`, `boot()`, `register()`, `store()`, `update()`, `destroy()`, `index()`, `rules()`, `messages()`, `authorize()`, `toArray()`, `definition()` |
+| Sufixos de padrão estrutural                               | `Builder`, `Interface`, `Controller`, `Factory`, `Provider`, `Job`                                                                                     |
+| Métodos Eloquent / Query Builder                           | `->where()`, `->create()`, `->find()`, `->get()`                                                                                                       |
+| Atributos PHP nativos                                      | `#[Override]`, `#[Fillable]`, `#[Hidden]`                                                                                                              |
+| Propriedades/atributos de Model reconhecidos pelo Eloquent | `#[Table]`, `#[Fillable]`, `#[Casts]` (ou `$table`/`$fillable`/`$casts` sem o atributo PHP 8)                                                          |
 
 ---
 
@@ -42,17 +42,13 @@ Métodos que devolvem `bool` usam sempre prefixo `e`, `esta` ou `validar` — nu
 Substantivo+Adjectivo (`nifValido()`, `dataValida()`). Substantivo+Adjectivo é ambíguo: não fica claro,
 só pelo nome, se o método é booleano ou se devolve o próprio valor interpretado/validado.
 
-> Nota: uma versão anterior deste documento usava `eh` em vez de `e` — foi um erro de escrita do
-> próprio spec (o código de domínio já usava `e` de forma consistente: `eCliente`, `eFornecedor`,
-> `eEmpresaAplicacao`). `e` é o prefixo canónico, não `eh`.
-
 Critério de escolha entre os três prefixos, pelo tipo de pergunta que o método responde:
 
-| Prefixo | Quando usar | Exemplo |
-|---|---|---|
-| `e` | Classificação/natureza da entidade — "é isto?" | `eCliente()`, `eFornecedorEfectivo()` |
-| `esta` | Estado/condição transitória — "está assim agora?" | `estaConfigurado()`, `estaLimpo()`, `estaEmFalhaTecnica()` |
-| `validar` | Acção de validação activa | `validarNif()` |
+| Prefixo   | Quando usar                                       | Exemplo                                                    |
+| --------- | ------------------------------------------------- | ---------------------------------------------------------- |
+| `e`       | Classificação/natureza da entidade — "é isto?"    | `eCliente()`, `eFornecedorEfectivo()`                      |
+| `esta`    | Estado/condição transitória — "está assim agora?" | `estaConfigurado()`, `estaLimpo()`, `estaEmFalhaTecnica()` |
+| `validar` | Acção de validação activa                         | `validarNif()`                                             |
 
 ```php
 // correcto
@@ -60,10 +56,8 @@ public function validarNif(string $nif): bool {}
 public function eDocumentoValido(Documento $documento): bool {}
 public function estaConfigurado(): bool {}
 
-// incorrecto — encontrado em ClienteExtracaoIAPrism (WRN-021, #97): parecia boolean pelo nome
 public function nifValido(string $nif): bool {}
 
-// incorrecto — prefixo no passado, fora do conjunto prescrito (WRN-028, varrimento pós-#97)
 public function foiConfigurado(): bool {}     // correcto: estaConfigurado()
 public function falhouTecnicamente(): bool {} // correcto: estaEmFalhaTecnica()
 ```
@@ -76,7 +70,6 @@ intenção), mesmo quando o resultado parece uma validação.
 // correcto — interpreta e devolve DateTimeImmutable, o nome não sugere boolean
 public function interpretarDataDocumento(string $dataDocumentoTexto): ?DateTimeImmutable {}
 
-// incorrecto — encontrado em ClienteExtracaoIAPrism (WRN-021, #97): nome de boolean, devolvia ?DateTimeImmutable
 public function dataDocumentoValida(string $data): ?DateTimeImmutable {}
 ```
 
@@ -103,7 +96,7 @@ Nomes genéricos como `$data`, `$result`, `$validated`, `$campos`, `$response` s
 violação: `$dados` e `$resultado` são tão genéricos quanto `$data` e `$result` — o problema nunca foi
 a palavra ser inglesa, foi não dizer nada sobre o conteúdo. `$dados` → `$dadosValidados`,
 `$resultado` → nome que descreva o que contém (`$categoria`, `$paginaDocumentos`, etc.), consoante o
-contexto (achado no varrimento pós-WRN-023: WRN-027, WRN-030, WRN-031).
+contexto.
 
 **Regra do escuteiro:** ao editar um ficheiro por qualquer motivo, corrigir também os identificadores
 pré-existentes desse ficheiro que violem esta convenção — âmbito local (o ficheiro tocado), sem
@@ -134,11 +127,10 @@ Cases em TitleCase PT; values backed conforme o que vai para BD / query string.
 ## Interfaces — sufixo `<Nome>Interface` sempre
 
 Toda a interface do domínio leva o sufixo `<Nome>Interface` — sem excepção e sem depender de haver
-ou não colisão de nome com a implementação concreta. Critério (decidido via `/ajusta-workflow`,
-2026-07-21 — substitui a convenção de prefixo `Contrato<Nome>` de WRN-020/Issue #97): consistência
-com os restantes sufixos de padrão estrutural que já ficam em inglês (`Builder`, `Controller`,
-`Factory`, `Provider`, `Job` — ver tabela "Fica em inglês" acima); um sufixo só evita ter uma
-categoria de classes (interfaces) a usar prefixo enquanto todas as outras usam sufixo.
+ou não colisão de nome com a implementação concreta. Critério: consistência com os restantes sufixos
+de padrão estrutural que já ficam em inglês (`Builder`, `Controller`, `Factory`, `Provider`, `Job` —
+ver tabela "Fica em inglês" acima); um sufixo só evita ter uma categoria de classes (interfaces) a
+usar prefixo enquanto todas as outras usam sufixo.
 
 ```php
 // correcto
@@ -215,11 +207,11 @@ um Event (ex.: `DocumentoProcessado` como state object vs `DocumentoProcessadoEv
 
 ## snake_case vs camelCase
 
-| Contexto | Convenção |
-|---|---|
-| Propriedades / variáveis / métodos PHP | camelCase PT (`$tipoMovimento`, `criarCategoria()`) |
-| Colunas de base de dados | snake_case (`tipo_movimento`) — convenção Laravel/Eloquent |
-| Chaves de `fill()` / array de criação | snake_case (correspondem a colunas) |
-| Parâmetros de route model binding | snake_case — impostos pela rota (não renomear) |
+| Contexto                               | Convenção                                                  |
+| -------------------------------------- | ---------------------------------------------------------- |
+| Propriedades / variáveis / métodos PHP | camelCase PT (`$tipoMovimento`, `criarCategoria()`)        |
+| Colunas de base de dados               | snake_case (`tipo_movimento`) — convenção Laravel/Eloquent |
+| Chaves de `fill()` / array de criação  | snake_case (correspondem a colunas)                        |
+| Parâmetros de route model binding      | snake_case — impostos pela rota (não renomear)             |
 
 Uma propriedade de DTO é `$tipoMovimento` mesmo que a chave do `fill()` seja `'tipo_movimento'`.

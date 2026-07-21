@@ -12,8 +12,4 @@
 
 ## Middleware global
 
-Todas as rotas da API excepto `/auth/login` estão dentro do grupo `Route::middleware('auth:sanctum')`. Pedidos sem token recebem 401 (`AuthenticationException` → handler em `bootstrap/app.php`).
-
-## Breaking change
-
-A partir desta issue, todas as rotas existentes (`/categorias-documento`, `/entidades`) passaram a exigir `Authorization: Bearer <token>`. Pedidos sem token recebem 401 em vez de 200/403.
+Todas as rotas da API excepto `/auth/login` estão dentro do grupo `Route::middleware('auth:sanctum')` — incluindo `/categorias-documento` e `/entidades`. Pedidos sem token recebem 401 (`AuthenticationException` → handler em `bootstrap/app.php`).

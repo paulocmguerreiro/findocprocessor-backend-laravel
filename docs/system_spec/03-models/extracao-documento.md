@@ -19,7 +19,7 @@
 Índice simples `(extracao_reclamada_em)` — consumido por `ReivindicarDocumentoEmEtapaAction`
 (`01-features/documento-pipeline.md`) para seleccionar o próximo documento elegível por etapa (lease
 nulo ou expirado). (A coluna de estado da extracção deixou de existir: o progresso lê-se de
-`Documento.estado` na máquina de estados unificada — issue #110.)
+`Documento.estado` na máquina de estados unificada.)
 
 **Scratch space 1-1 com `Documento`** — sem coluna de estado; só produtos intermédios da extracção
 (`texto_extraido`/`dados_json`), lease e contador de tentativas. `id_documento` é `unique()`; nunca

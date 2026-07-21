@@ -1,8 +1,7 @@
 # System Spec — Shared: Regras de Transição do Documento
 
 > Regras `Regra*` específicas da máquina de estados do `Documento` — padrão geral e distinção
-> face a Action em `02-shared/regras-negocio.md`. Extraído desse ficheiro (WRN-033) por limiar de
-> tamanho (~200 linhas) após a unificação da máquina de estados (#110).
+> face a Action em `02-shared/regras-negocio.md`.
 
 ---
 

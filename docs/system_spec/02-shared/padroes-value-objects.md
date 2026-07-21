@@ -86,6 +86,5 @@ final readonly class ResultadoAlgo
 | `ResultadoExtracao` | `app/Infrastructure/Extracao/ResultadoExtracao.php` | `public readonly` |
 | `ResultadoExtracaoIA` | `app/Infrastructure/AI/ResultadoExtracaoIA.php` | `public readonly` |
 
-Não existem hoje no repo VOs deste tipo em `private` + getters — as 3 classes acima foram
-alinhadas ao padrão `public readonly` (nível 1) numa revisão de consistência (2026-07-15,
-`WRN-019`).
+Não existem hoje no repo VOs deste tipo em `private` + getters — as 3 classes acima seguem o padrão
+`public readonly` (nível 1).

@@ -186,8 +186,8 @@ Devolve `ResultadoReconciliacaoEntidades` (VO: `idFornecedor`, `idCliente`, `idC
 `TipoDocumento.id_categoria` —, `nomeFornecedorParaNome` — o nome extraído, ou o nome da empresa mãe
 se o extraído vier vazio, usado como fallback de `RegraNomearProcessado`). Sem empresa mãe configurada,
 `firstOrFail()` lança `ModelNotFoundException`, apanhada por `ConcluirExtracaoDocumentoAction`. A
-duplicação de `Entidade` por NIF/nome imperfeitos entre chamadas da IA é risco aceite (mitigado pela
-futura #99, agrupar entidades duplicadas) — aqui a idempotência é estrita por `nif` exacto.
+duplicação de `Entidade` por NIF/nome imperfeitos entre chamadas da IA é risco aceite (mitigado por
+uma futura funcionalidade de agrupar entidades duplicadas) — aqui a idempotência é estrita por `nif` exacto.
 
 ---
 
