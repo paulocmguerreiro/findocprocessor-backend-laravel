@@ -131,28 +131,58 @@ Cases em TitleCase PT; values backed conforme o que vai para BD / query string.
 
 ---
 
-## Interfaces — prefixo `Contrato<Nome>` sempre
+## Interfaces — sufixo `<Nome>Interface` sempre
 
-Toda a interface do domínio leva o prefixo `Contrato<Nome>` — sem excepção e sem depender de haver
-ou não colisão de nome com a implementação concreta. Critério (decidido via WRN-020, Issue #97):
-uniformidade acima de poupança de um prefixo — evita ter de decidir caso a caso e ter classes de
-interface com convenções diferentes por historial de quando foram criadas.
+Toda a interface do domínio leva o sufixo `<Nome>Interface` — sem excepção e sem depender de haver
+ou não colisão de nome com a implementação concreta. Critério (decidido via `/ajusta-workflow`,
+2026-07-21 — substitui a convenção de prefixo `Contrato<Nome>` de WRN-020/Issue #97): consistência
+com os restantes sufixos de padrão estrutural que já ficam em inglês (`Builder`, `Controller`,
+`Factory`, `Provider`, `Job` — ver tabela "Fica em inglês" acima); um sufixo só evita ter uma
+categoria de classes (interfaces) a usar prefixo enquanto todas as outras usam sufixo.
 
 ```php
 // correcto
-interface ContratoClienteIA { /* ... */ }
-final class ClienteExtracaoIAPrism implements ContratoClienteIA { /* ... */ }
+interface ClienteIAInterface { /* ... */ }
+final class ClienteExtracaoIAPrism implements ClienteIAInterface { /* ... */ }
 
-interface ContratoAnalisadorMalware { /* ... */ }
-final readonly class ClamAvAnalisadorMalware implements ContratoAnalisadorMalware { /* ... */ }
+interface AnalisadorMalwareInterface { /* ... */ }
+final readonly class ClamAvAnalisadorMalware implements AnalisadorMalwareInterface { /* ... */ }
 
-// incorrecto — sem prefixo, mesmo que a implementação já tenha nome distinto
+// incorrecto — sem sufixo, mesmo que a implementação já tenha nome distinto
 interface ClienteIA { /* ... */ }
+
+// incorrecto — convenção anterior (prefixo Contrato), substituída nesta revisão
+interface ContratoClienteIA { /* ... */ }
 ```
 
-Aplica-se a qualquer interface de domínio: Repository (`Contrato<Nome>` — já documentado em
-`04-infra/repositories.md`), contratos de estado partilhado (`ContratoEstadoDocumento`) e
-interfaces de serviços de infra (`ContratoClienteIA`, `ContratoAnalisadorMalware`).
+Aplica-se a qualquer interface de domínio: Repository (`<Nome>Interface` — já documentado em
+`04-infra/repositories.md`), contratos de estado partilhado (`EstadoDocumentoInterface`) e
+interfaces de serviços de infra (`ClienteIAInterface`, `AnalisadorMalwareInterface`).
+
+> **Nota de transição:** as três interfaces existentes no código (`ContratoEstadoDocumento`,
+> `ContratoAnalisadorMalware`, `ContratoClienteIA`) ainda seguem a convenção anterior — renomeá-las é
+> um refactor transversal (bindings em `AppServiceProvider` + todos os consumidores), não uma
+> correcção incidental de "regra do escuteiro". Fazer via issue dedicada, não incidentalmente.
+
+---
+
+## Classes abstractas — sufixo `<Nome>Abstract` sempre
+
+Toda a classe abstracta de domínio leva o sufixo `<Nome>Abstract` — mesmo critério e mesma
+uniformidade da convenção de interfaces acima. Não se aplica a classes base impostas pelo framework
+cujo nome o Laravel já reconhece (ex: `Illuminate\Routing\Controller`, coberto pela tabela "Fica em
+inglês" acima).
+
+```php
+// correcto
+abstract class EtapaExtracaoCommandAbstract extends Command { /* ... */ }
+
+// incorrecto — sem sufixo
+abstract class EtapaExtracaoCommand extends Command { /* ... */ }
+```
+
+> **Nota de transição:** `app/Console/Commands/Extracao/EtapaExtracaoCommand.php` ainda não segue
+> esta convenção — mesma recomendação de issue dedicada da nota acima.
 
 ---
 

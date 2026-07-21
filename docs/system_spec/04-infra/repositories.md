@@ -28,8 +28,8 @@ Actions, o scope no Model já cobre a maioria dos casos de filtro reutilizável 
 ## Padrão de implementação
 
 - A Action injecta sempre a **interface** do repositório, nunca a implementação concreta.
-- Nomenclatura: interface `Contrato<Nome>`; implementação `<Nome>` (sem prefixo `Eloquent` — não há outra
-  implementação prevista, o prefixo não acrescenta informação).
+- Nomenclatura: interface `<Nome>Interface`; implementação `<Nome>` (sem prefixo `Eloquent` — não há
+  outra implementação prevista, o prefixo não acrescenta informação).
 - A implementação é `final class` — **não** `readonly` (o Eloquent não é imutável).
 - A implementação injecta o Model via construtor — nunca acede ao Facade nem instancia com `new Model()`.
 - Interface tipada com tipos nativos PHP 8.5 — sem `mixed`, sem `array` não tipado.

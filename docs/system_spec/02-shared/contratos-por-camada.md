@@ -26,7 +26,7 @@ As features são construídas em três camadas implementadas em issues separadas
 `interface + repository + services + service provider + testes`
 
 1. Interface do repositório declara todos os métodos com tipos completos (sem `mixed`, sem `array` não tipado).
-2. Implementação (`Contrato<Nome>` / `<Nome>`, sem prefixo `Eloquent`) é `final class` (não `readonly`) e satisfaz a interface (Larastan nível 9).
+2. Implementação (`<Nome>Interface` / `<Nome>`, sem prefixo `Eloquent`) é `final class` (não `readonly`) e satisfaz a interface (Larastan nível 9).
 3. Implementação injecta o Model via construtor — nunca Facade nem `new Model()`.
 4. Paginação usa `cursorPaginate()` — nunca `paginate()` com OFFSET.
 5. Binding `interface → implementação` registado em `AppServiceProvider`.
