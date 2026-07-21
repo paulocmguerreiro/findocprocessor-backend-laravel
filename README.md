@@ -141,7 +141,7 @@ Todas as rotas exigem Bearer token. Lista completa de endpoints e parâmetros: [
 | Feature | Endpoints | Notas |
 | --- | --- | --- |
 | Categorias de documento ([spec](docs/system_spec/05-routes/categorias-documento.md)) | 5 (CRUD) | Soft delete + `PATCH .../restaurar` |
-| Entidades ([spec](docs/system_spec/05-routes/entidades.md)) | 7 (CRUD + restaurar + empresa-mãe) | Soft delete; `?estado=todos|somente_ativos|somente_inativos` |
+| Entidades ([spec](docs/system_spec/05-routes/entidades.md)) | 8 (CRUD + restaurar + empresa-mãe + agrupar) | Soft delete; `?estado=todos|somente_ativos|somente_inativos`; `POST .../agrupar-com/{secundaria}` funde duplicados (repontar FKs + hard-delete) |
 | Tipos de documento ([spec](docs/system_spec/05-routes/tipos-documento.md)) | 5 (CRUD) | Sem soft delete — `DELETE` é definitivo |
 | Documentos ([spec](docs/system_spec/05-routes/documento.md)) | 8 (CRUD + upload + ficheiro + reprocessar) | Sem soft delete; máquina de estados unificada `Pendente → AnaliseMalware → AnaliseTexto → AnaliseIaLocal → Processado` (ramos opcionais `AnaliseOcr`/`AnaliseCloud`; ramos `Erro`/`Perigoso`), transições validadas por `RegraTransicaoEstado` (`422` se inválida); `?estado=` filtra pela fase do ciclo de vida |
 | Roles & Utilizadores ([spec](docs/system_spec/05-routes/role.md)) | 5 + 8 | Role `admin`; utilizadores com soft delete, restauro e anonimização RGPD (Art. 17.º) |
@@ -160,7 +160,6 @@ Todas as rotas exigem Bearer token. Lista completa de endpoints e parâmetros: [
 Próximos passos, geridos como issues no repositório:
 
 - **Gestão financeira** _(próximo)_ — movimentos (débito/crédito) associados a documentos e entidades.
-- **Agrupar entidades duplicadas** — mitigar duplicação de `Entidade` criada por NIF/nome ligeiramente diferentes entre extrações da IA.
 
 ## Relacionado (roadmap)
 

@@ -7,6 +7,11 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
+- **Issue #99** — Entidade: endpoint `POST /entidades/{principal}/agrupar-com/{secundaria}` para fundir duplicados (repontar FKs + hard-delete)
+  - `AgruparEntidadeAction` reponta o UUID da `secundaria` para o da `principal` em todas as FKs conhecidas (`documentos.id_fornecedor`, `documentos.id_cliente`), une `e_cliente`/`e_fornecedor` por OR (`e_empresa_aplicacao` intocado) e remove a secundária permanentemente (`forceDelete()`, sem fallback para soft-delete) — tudo numa única transação
+  - `InventarioReferenciasEntidadeInterface`/`InventarioReferenciasEntidade` — guarda de futuro por introspecção do esquema real (`Schema::getForeignKeys()`) antes do hard-delete: qualquer FK nova para `entidades` fora da allow-list falha com `422` em vez de deixar referências pendentes, cobrindo também `nullOnDelete`/`cascadeOnDelete` que o `restrictOnDelete` da BD não bloquearia
+  - Nova permissão `entidades.agrupar` (só `admin`) e `EntidadePolicy::agrupar()` — autorização dupla camada
+  - Testes 100% cobertura + type coverage, Larastan 9 — verde em MySQL
 - **Issue #111** — Extração: orquestradores `Schedule` (`extracao:*`) sobre a máquina de estados unificada — fecha o pipeline `Pendente → … → Processado|Erro|Perigoso` end-to-end, ligando os motores puros (#96/#97/#90) às Actions de transição (#94/#110)
   - 4 orquestradores de etapa (`ProcessarAnaliseTexto`/`ProcessarAnaliseOcr`/`ProcessarAnaliseIaLocal`/`ProcessarAnaliseCloud`) + 2 Actions partilhadas (`ConcluirExtracaoDocumentoAction`, `RegistarFalhaTecnicaExtracaoAction`) — reclamam por lease, chamam o motor puro da etapa, interpretam o resultado e transicionam; detecção de imagem (não-PDF) salta directo para OCR
   - `ReivindicarDocumentoEmEtapaAction` — reivindicação por lease (`extracao_reclamada_em`, TTL `EXTRACAO_TTL_LEASE`) com `lockForUpdate`, primeiro consumidor real do índice/coluna existentes desde #94; `Reivindicar`/`Triar`/nova agrupadas em `app/Features/Documento/Atribuicao/` (limiar de 3 Actions atingido)

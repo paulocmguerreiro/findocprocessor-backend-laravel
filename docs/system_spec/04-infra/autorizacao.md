@@ -29,6 +29,7 @@ Configuração publicada em `config/permission.php`. Guard: `web` (único guard 
 | `entidades.criar` | Criar entidade | `seed_roles_and_permissions` |
 | `entidades.actualizar` | Actualizar entidade | `seed_roles_and_permissions` |
 | `entidades.eliminar` | Eliminar entidade | `seed_roles_and_permissions` |
+| `entidades.agrupar` | Fundir duas entidades duplicadas (repontar FKs + hard-delete) | `seed_entidades_agrupar_permission` |
 | `categorias-documento.ver` | Listar e ver categorias de documento | `seed_roles_and_permissions` |
 | `categorias-documento.criar` | Criar categoria de documento | `seed_roles_and_permissions` |
 | `categorias-documento.actualizar` | Actualizar categoria de documento | `seed_roles_and_permissions` |
@@ -56,6 +57,7 @@ Configuração publicada em `config/permission.php`. Guard: `web` (único guard 
 | `entidades.criar` | ✅ | ❌ |
 | `entidades.actualizar` | ✅ | ❌ |
 | `entidades.eliminar` | ✅ | ❌ |
+| `entidades.agrupar` | ✅ | ❌ |
 | `categorias-documento.ver` | ✅ | ✅ |
 | `categorias-documento.criar` | ✅ | ❌ |
 | `categorias-documento.actualizar` | ✅ | ❌ |

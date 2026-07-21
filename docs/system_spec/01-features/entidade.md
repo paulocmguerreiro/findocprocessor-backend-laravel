@@ -27,6 +27,7 @@ HTTP Request → FormRequest (autoriza + valida) → Controller (constrói DTO o
 | `RestaurarEntidadeAction` | `App\Features\Entidade\Restaurar` | `handle(Entidade\|string): Entidade` | Reactiva entidade soft-deleted; resolve com `withTrashed()->findOrFail`; `restore()` + invalida cache dentro da transação; `Gate::authorize('restore')` fora |
 | `ConverterEmEmpresaMaeAction` | `App\Features\Entidade\EmpresaMae` | `handle(Entidade\|string): Entidade` | Remove marcação anterior + força os 3 flags (`e_empresa_aplicacao`, `e_cliente`, `e_fornecedor`) |
 | `RemoverMarcacaoEmpresaMaeAction` | `App\Features\Entidade\EmpresaMae` | `handle(): void` | Action interna — `UPDATE entidades SET e_empresa_aplicacao = false WHERE e_empresa_aplicacao = true`; sem autorização própria; sempre chamada dentro da transação do caller |
+| `AgruparEntidadeAction` | `App\Features\Entidade\Agrupar` | `handle(Entidade\|string $principal, Entidade\|string $secundaria): Entidade` | Funde `secundaria` em `principal`: reponta FKs conhecidas (`documentos.id_fornecedor`, `documentos.id_cliente`), une `e_cliente`/`e_fornecedor` por OR (`e_empresa_aplicacao` intocado), hard-delete (`forceDelete()`) da secundária sem fallback. Tudo em `DB::transaction()`; guarda de futuro por introspecção do esquema (ver `InventarioReferenciasEntidadeInterface`) antes do delete. `final readonly`, injecta `InventarioReferenciasEntidadeInterface` + `CacheServico` |
 
 ---
 
@@ -35,6 +36,20 @@ HTTP Request → FormRequest (autoriza + valida) → Controller (constrói DTO o
 | Classe | Namespace | Descrição |
 |---|---|---|
 | `RegraUnicidadeEmpresaMae` | `App\Features\Entidade\EmpresaMae` | Encapsula a regra: se `eEmpresaAplicacao = true`, invoca `RemoverMarcacaoEmpresaMaeAction`. Injectada por construtor nas 3 Actions de escrita. |
+
+---
+
+## Fusão de entidades (Agrupar)
+
+`AgruparEntidadeAction` funde duas entidades duplicadas: assume-se a `principal` como correcta, reponta-se o UUID da `secundaria` para o da `principal` em todas as FKs conhecidas, e a `secundaria` é removida permanentemente. Não há fusão campo-a-campo — correcções à `principal` fazem-se pelo `update` normal.
+
+| Classe | Namespace | Descrição |
+|---|---|---|
+| `InventarioReferenciasEntidadeInterface` | `App\Features\Entidade\Agrupar` | Contrato: `detectarColunasQueReferenciamEntidades(): list<string>`. Existe como interface (não classe concreta directa) para permitir substituição em testes — simula uma FK nova não tratada sem manipular o esquema real, incompatível com testes em paralelo sobre BD partilhada. Bind em `AppServiceProvider` → `InventarioReferenciasEntidade`. Excepção explícita na regra ArchTest "actions are final" (`tests/ArchTest.php`) por não ser `final`. |
+| `InventarioReferenciasEntidade` | `App\Features\Entidade\Agrupar` | Implementação real: percorre `Schema::getTables()` + `Schema::getForeignKeys($tabela)`, devolve as colunas (`"tabela.coluna"`) cuja `foreign_table === 'entidades'`, ordenadas e sem duplicados. Guarda de futuro — se aparecer uma FK fora da allow-list `AgruparEntidadeAction::COLUNAS_TRATADAS`, a fusão falha em vez de deixar órfãos (cobre também `nullOnDelete`/`cascadeOnDelete`, que o `restrictOnDelete` da BD não bloquearia). |
+| `AgrupamentoInvalidoException` | `App\Features\Entidade\Agrupar` | `final class extends DomainException` → `422` via handler existente. Factories: `paraEntidadesIguais()`, `paraEmpresaAplicacao()`, `paraReferenciasNaoTratadas(list<string> $colunas)`. |
+
+**Allow-list de FKs tratadas** (`AgruparEntidadeAction::COLUNAS_TRATADAS`): `documentos.id_fornecedor`, `documentos.id_cliente`. Repontagem via `DB::table($tabela)->where($coluna, $secundaria->id)->update([$coluna => $principal->id])` (mass update — não dispara eventos Eloquent nem audit trail por documento; decisão consciente, auditoria fica ao nível da `Entidade`).
 
 ---
 
@@ -79,6 +94,7 @@ Todos `final readonly` com `fromRequest()` (array shape `@var`, Larastan nível 
 | `update` | `entidades.actualizar` |
 | `delete` | `entidades.eliminar` |
 | `restore` | `entidades.eliminar` (reutiliza — quem inactiva reactiva) |
+| `agrupar` | `entidades.agrupar` (ability dedicada, não reutiliza `eliminar`/`actualizar`) |
 
 ---
 
@@ -93,6 +109,7 @@ Todos `final readonly` com `fromRequest()` (array shape `@var`, Larastan nível 
 | `EliminarEntidadeRequest` | `Eliminar` | `Gate::authorize('delete', $this->route('entidade'))` | `[]` |
 | `RestaurarEntidadeRequest` | `Restaurar` | `Gate::authorize('restore', $this->route('entidade'))` (modelo já ligado via RMB `withTrashed`) | `[]` |
 | `ConverterEmEmpresaMaeRequest` | `EmpresaMae` | `Gate::authorize('update', $this->route('entidade'))` | `[]` |
+| `AgruparEntidadeRequest` | `Agrupar` | `Gate::authorize('agrupar', Entidade::class)` | `[]` (corpo vazio — `principal`/`secundaria` vêm da rota) |
 
 `CriarEntidadeRequest` e `ActualizarEntidadeRequest` não são `final` (mockáveis em testes unitários de DTO).
 
@@ -111,6 +128,7 @@ Todos `final readonly` com `fromRequest()` (array shape `@var`, Larastan nível 
 | `destroy` | `EliminarEntidadeRequest` | `EliminarEntidadeAction::handle($entidade)` |
 | `restaurar` | `RestaurarEntidadeRequest` | `RestaurarEntidadeAction::handle($entidade)` — `Entidade` via RMB `withTrashed` |
 | `converterEmEmpresaMae` | `ConverterEmEmpresaMaeRequest` | `ConverterEmEmpresaMaeAction::handle($entidade)` |
+| `agruparCom` | `AgruparEntidadeRequest` | `AgruparEntidadeAction::handle($principal, $secundaria)` — `Entidade $principal`, `Entidade $secundaria` via RMB nomeado (sem `withTrashed`) |
 
 ---
 

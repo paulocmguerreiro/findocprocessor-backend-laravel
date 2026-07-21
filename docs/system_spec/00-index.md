@@ -9,7 +9,7 @@
 | ------------------ | ------------------------------------ | ---------------------------------------------- | ------------------- |
 | Auth               | `01-features/auth.md`                | 3 (Login, Logout, CriarToken)                  | 3 REST              |
 | CategoriaDocumento | `01-features/categoria-documento.md` | 7 (5 CRUD + Restaurar + ListarComEstado)        | 5 REST + 1 especial |
-| Entidade           | `01-features/entidade.md`            | 8 (5 CRUD + Restaurar + ConverterEmEmpresaMae + Remover) | 5 REST + 2 especiais |
+| Entidade           | `01-features/entidade.md`            | 9 (5 CRUD + Restaurar + ConverterEmEmpresaMae + Remover + Agrupar) | 5 REST + 3 especiais |
 | Role               | `01-features/role.md`                | 5 CRUD                                         | 5 REST              |
 | Utilizador         | `01-features/utilizador.md`          | 8 (5 CRUD + AtribuirRole + Restaurar + Anonimizar) | 5 REST + 3 especiais |
 | Documento          | `01-features/documento.md` (HTTP) + `01-features/documento-pipeline.md` (background) + `01-features/documento-reconciliacao.md` (scratch space + atomicidade) | 26 (8 expostas via endpoint + 18 sem HTTP, só programáticas — 8 de transição + 2 reivindicação + recorder + 7 pipeline automático de extracção, inc. análise de malware) | 8 REST |
