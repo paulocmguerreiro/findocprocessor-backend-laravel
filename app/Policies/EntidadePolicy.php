@@ -38,4 +38,9 @@ final class EntidadePolicy
     {
         return $utilizador->hasPermissionTo('entidades.eliminar');
     }
+
+    public function agrupar(User $utilizador): bool
+    {
+        return $utilizador->hasPermissionTo('entidades.agrupar');
+    }
 }

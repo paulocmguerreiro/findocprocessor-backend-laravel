@@ -977,6 +977,48 @@ paths:
         '404':
           $ref: '#/components/schemas/ErrorNaoEncontrado'
 
+  /entidades/{principal}/agrupar-com/{secundaria}:
+    post:
+      summary: Fundir entidade secundária na principal (repontar FKs + hard-delete)
+      description: >-
+        Reponta o UUID da entidade secundária para o da principal em todas as FKs conhecidas
+        (documentos.id_fornecedor, documentos.id_cliente), une os papéis e_cliente/e_fornecedor
+        por OR (e_empresa_aplicacao da principal fica intocado) e remove a secundária
+        permanentemente (hard-delete, sem soft-delete). Operação atómica — falha faz rollback
+        total. Não há fusão campo-a-campo de dados.
+      tags: [Entidade]
+      parameters:
+        - in: path
+          name: principal
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: secundaria
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Entidades fundidas — devolve a principal actualizada (papéis unidos)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Entidade'
+        '401':
+          $ref: '#/components/schemas/ErrorNaoAutenticado'
+        '403':
+          $ref: '#/components/schemas/ErrorSemPermissao'
+        '404':
+          $ref: '#/components/schemas/ErrorNaoEncontrado'
+        '422':
+          $ref: '#/components/schemas/ErrorValidacao'
+
   /roles:
     get:
       summary: Listar roles (cursor pagination)
