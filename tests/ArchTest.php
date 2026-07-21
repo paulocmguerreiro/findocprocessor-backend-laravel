@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use App\Console\Commands\Extracao\EtapaExtracaoCommand;
 use App\Features\CategoriaDocumento\Actualizar\ActualizarCategoriaRequest;
 use App\Features\CategoriaDocumento\Criar\CriarCategoriaRequest;
 use App\Features\CategoriaDocumento\Listar\CampoOrdenacaoCategorias;
@@ -76,3 +77,19 @@ arch('infrastructure classes are final')
 arch('jobs implementam ShouldQueueAfterCommit')
     ->expect('App\Jobs')
     ->toImplement(ShouldQueueAfterCommit::class);
+
+// Convenção decidida via /ajusta-workflow (2026-07-21, ver 02-shared/convencoes-nomenclatura.md):
+// substitui o prefixo Contrato<Nome> por sufixo <Nome>Interface.
+arch('interfaces têm sufixo Interface')
+    ->expect('App')
+    ->interfaces()
+    ->toHaveSuffix('Interface');
+
+// Isenção: App\Http\Controllers e App\Console\Commands já são obrigados pelo preset Laravel a
+// terminar em Controller/Command respectivamente (toda a hierarquia, incl. bases abstractas) —
+// acrescentar Abstract violaria essa regra (ver nota em convencoes-nomenclatura.md).
+arch('classes abstractas têm sufixo Abstract')
+    ->expect('App')
+    ->abstractClasses()
+    ->toHaveSuffix('Abstract')
+    ->ignoring([Controller::class, EtapaExtracaoCommand::class]);
