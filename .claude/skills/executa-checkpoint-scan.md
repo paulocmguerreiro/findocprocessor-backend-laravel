@@ -4,12 +4,12 @@ Executa o scan de segurança e qualidade do pacote Checkpoint e apresenta os res
 Pausa se existirem FAILs — aguarda confirmação do utilizador antes de prosseguir.
 
 > **Categoria:** executa  
-> **Usado em:** `/implementa-plano` (após `executa-testes`, stack Laravel apenas)  
+> **Usado em:** `/implementa-plano` (após `executa-testes`)  
 > **Produz:** relatório de scan — verde ✅ ou alerta 🔴 com pausa para confirmação
 
 ## Contrato
 
-**Input:** stack activo (deve ser `laravel`)
+**Input:** nenhum — corre `php artisan checkpoint:scan`
 
 **Output:** resultado do scan — limpo ou alerta com pausa interactiva
 
@@ -59,7 +59,6 @@ Pausa se existirem FAILs — aguarda confirmação do utilizador antes de prosse
 
 ## Regras
 
-- Executar apenas em stack Laravel
 - Nunca suprimir FAILs automaticamente — o utilizador confirma sempre
 - `Package Freshness (Supply Chain)` isolado, com CVE audits (Composer + NPM) a
   PASS, é falso positivo temporal conhecido [WRN-001] — não bloqueia nem gera novo

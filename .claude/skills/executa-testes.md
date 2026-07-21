@@ -1,6 +1,6 @@
 # Skill: executa-testes
 
-Executa os testes do stack activo e reporta o resultado. Auto-retry até 3x em caso de falha.
+Executa a suite de testes do projecto e reporta o resultado. Auto-retry até 3x em caso de falha.
 
 > **Categoria:** executa  
 > **Usado em:** `/implementa-plano` (após todas as tarefas)  
@@ -8,7 +8,7 @@ Executa os testes do stack activo e reporta o resultado. Auto-retry até 3x em c
 
 ## Contrato
 
-**Input:** stack activo (lido de `STACK_CONFIG` no `CLAUDE.md`)
+**Input:** `TEST_RUNNER` do `CLAUDE.md` (`composer test`)
 
 **Output:** resultado dos testes (verde / vermelho com detalhe)
 
@@ -16,35 +16,19 @@ Executa os testes do stack activo e reporta o resultado. Auto-retry até 3x em c
 
 ---
 
-## Comandos por stack
+## Comando
 
-| Stack   | Comando                          | Padrão de ficheiros  |
-| ------- | -------------------------------- | -------------------- |
-| dotnet  | `dotnet test`                    | `**/*.Tests.csproj`  |
-| laravel | `composer test`                  | `**/*.php`           |
-| angular | `ng test --watch=false` (Vitest)  | `**/*.spec.ts`       |
+`composer test` (definido em `TEST_RUNNER` no `CLAUDE.md`; padrão de ficheiros `**/*.php`).
 
-> **laravel:** `composer test` é a pipeline completa — inclui Rector (dry-run), Pint, testes arquitecturais, type-coverage (Pest, 100%), PHPStan nível 9 e testes com cobertura de 100%. Equivale a `test:lint → test:arch → test:type-coverage → test:types → test:coverage`.
+> `composer test` é a pipeline completa — inclui Rector (dry-run), Pint, testes arquitecturais, type-coverage (Pest, 100%), PHPStan nível 9 e testes com cobertura de 100%. Equivale a `test:lint → test:arch → test:type-coverage → test:types → test:coverage`.
 
 ---
 
-## O que testar por stack
+## O que testar
 
-### dotnet
-- **Unit:** `DocumentState` transitions (sem mock de infra)
-- **Unit:** UseCases com interfaces mockadas (Moq)
-- **Integration:** Repository com TestContainers (SQLite in-memory em dev)
-- **Integration:** Endpoints com `WebApplicationFactory`
-
-### laravel
 - **Unit:** Actions com interfaces mockadas (Mockery)
 - **Unit:** State transitions
 - **Feature:** Endpoints com `RefreshDatabase`
-
-### angular
-- **Unit:** Stores (signals) com input sintético
-- **Unit:** Pipes e directives
-- **Component:** com `TestBed` mínimo
 
 ---
 

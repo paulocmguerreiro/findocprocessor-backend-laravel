@@ -3,6 +3,10 @@
 > Como este repositório é trabalhado com Claude Code: comandos, skills e agentes, e a
 > sequência das fases de uma issue. Para o detalhe de cada comando, abrir o ficheiro
 > correspondente em `.claude/commands/`.
+>
+> Leitura sequencial: as **3 camadas** e as **skills** dão a base; `/mostra-workflow` orienta
+> (onde estou / por onde começar); o **ciclo de uma issue** (comandos por fase → grafo →
+> checkpoints) é o trabalho em si; `/ajusta-workflow` fecha, corrigindo o próprio processo.
 
 ## As 3 camadas
 
@@ -35,7 +39,7 @@ Skills de workflow (invocadas internamente pelos commands, não pelo utilizador)
 | `escreve-brief` | Expande a Issue num Brief estruturado |
 | `escreve-spec` | Traduz o Brief em requisitos técnicos verificáveis |
 | `escreve-plan` | Decompõe a Spec em tarefas concretas e commitáveis |
-| `executa-testes` | Executa os testes do stack activo, com auto-retry até 3x |
+| `executa-testes` | Executa a suite de testes (`composer test`), com auto-retry até 3x |
 | `executa-checkpoint-scan` | Executa o scan de segurança/qualidade do Checkpoint |
 | `executa-triagem-semantica` | Revisão semântica — nomenclatura, legibilidade, duplicação |
 | `pausa-checkpoint` | Pausa o fluxo e aguarda resposta com conteúdo do utilizador |
@@ -51,7 +55,35 @@ Skills de workflow (invocadas internamente pelos commands, não pelo utilizador)
 > conhecimento de domínio — auto-activadas pelo Claude Code ao escrever código Laravel/Pest, fora
 > do fluxo Commands → Skills → Agents acima.
 
+## Consultar o estado — `/mostra-workflow`
+
+Antes de começar, ou ao retomar após uma pausa, `/mostra-workflow` diz em que ponto está o
+trabalho: a fase actual, a issue em curso, os artefactos já produzidos e os avisos de processo
+activos. É **transversal** — invocável em qualquer momento, sem consumir nem avançar uma fase.
+Sem sessão em curso, aponta o próximo passo (`/cria-issue`).
+
+```
+> /mostra-workflow
+
+⚠️ Sessão em curso detectada
+
+Issue:    #118 — extractor-texto-ocr
+Branch:   feat/extractor-texto-ocr
+Fase:     implementa
+Próximo:  implementar tarefa 4 de 5 — /implementa-plano
+
+Artefactos produzidos:
+  Brief:   docs/briefs/2026-07-20-extractor-texto-ocr.md   ✅ existe
+  Spec:    docs/specs/2026-07-20-extractor-texto-ocr.md     ✅ existe
+  Plano:   docs/plans/2026-07-20-extractor-texto-ocr.md     ✅ existe
+
+⚠️ Avisos de processo activos:
+  - WRN-040 (PENDENTE): triagem semântica lê 07-testing.md antes de escrever testes
+```
+
 ## Comandos por fase
+
+O ciclo de uma issue percorre estes comandos, do primeiro ao último:
 
 | Command                                    | Fase    | Produz                                               |
 | ------------------------------------------ | ------- | ---------------------------------------------------- |
@@ -60,11 +92,9 @@ Skills de workflow (invocadas internamente pelos commands, não pelo utilizador)
 | `/cria-issue-persistencia [entidade]`      | —       | Issue para interface + repositório + DTOs + testes   |
 | `/cria-issue-logica [entidade]`            | —       | Issue para Actions + Controller + Events + testes    |
 | `/planeia-issue [#N]`                      | Fase 1  | Brief + Branch + Spec + Plano                        |
-| `/implementa-plano [#N] [--stack laravel]` | Fase 2  | Código + Commits                                     |
+| `/implementa-plano [#N]`                   | Fase 2  | Código + Commits                                     |
 | `/documenta-implementacao [#N]`            | Fase 3a | Debrief + system_spec + Changelog + README           |
 | `/publica-implementacao [#N]`              | Fase 3b | PR no GitHub                                         |
-| `/mostra-workflow`                         | —       | Estado actual do workflow                            |
-| `/ajusta-workflow [descrição]`             | —       | Corrige/classifica ajuste de processo no local certo |
 
 ## Sequência de uma issue
 
@@ -110,11 +140,6 @@ flowchart TB
 > Detalhe de cada checkpoint na tabela "Checkpoints humanos" abaixo; estado persiste em
 > `workflow-state.md` por fase e é removido por `/publica-implementacao` no fecho.
 
-Em qualquer fase, `/mostra-workflow` mostra o estado actual (útil para retomar após pausa), e
-`/ajusta-workflow` corrige desvios de processo — nunca despejando o ajuste directamente em
-`CLAUDE.md` ou memória, mas classificando-o para `docs/system_spec/`, `.claude/commands/` ou
-`.claude/skills/` conforme a natureza da mudança.
-
 ## Checkpoints humanos
 
 Nenhuma fase avança sem uma pausa explícita para decisão/validação do utilizador — a skill `pausa-checkpoint`
@@ -126,7 +151,7 @@ conteúdo que demonstre compreensão real da decisão.
 | **A**      | Após o Brief (`/planeia-issue`)                      | O que muda no domínio, que risco existe, que camada é mais afectada — nas palavras do utilizador. Bloqueia avanço para a Spec enquanto houver questões em aberto sem resposta. |
 | **B**      | Após a Spec (`/planeia-issue`)                       | Spec verificada contra a secção Arquitectura do `CLAUDE.md` — desvios e violações de "O que NÃO fazer" listados explicitamente antes de confirmar.                             |
 | **task**   | Após cada tarefa (`/implementa-plano`)               | Ficheiros alterados lidos pelo utilizador; só depois disso o commit é proposto (`propoe-commit`) e executado — nunca automático, nunca `--no-verify`.                          |
-| **scan**   | Fecho da Fase 2 (`/implementa-plano`, stack Laravel) | `php artisan checkpoint:scan` — se houver FAILs, pausa e aguarda `[ok]` (regista aviso e prossegue) ou `[stop]` (utilizador corrige antes de continuar).                       |
+| **scan**   | Fecho da Fase 2 (`/implementa-plano`)                | `php artisan checkpoint:scan` — se houver FAILs, pausa e aguarda `[ok]` (regista aviso e prossegue) ou `[stop]` (utilizador corrige antes de continuar).                       |
 | **②**      | Após todas as tarefas (`/implementa-plano`)          | Resumo por ficheiro + testes + scan, antes de avançar para a documentação.                                                                                                     |
 | **D**      | Após o Debrief (`/documenta-implementacao`)          | O porquê de cada decisão tomada na issue — em especial as não óbvias — antes de propagar para o `system_spec`.                                                                 |
 | **E**      | Antes do PR (`/publica-implementacao`)               | Capacidade de defender cada decisão do PR body perante um revisor.                                                                                                             |
@@ -134,3 +159,32 @@ conteúdo que demonstre compreensão real da decisão.
 Este é o mecanismo concreto de supervisão sobre trabalho gerado por IA neste repositório:
 nenhum commit, alteração ao `system_spec` ou PR acontece sem uma decisão explícita e justificada
 num destes pontos — não uma aprovação genérica.
+
+## Ajustar o processo — `/ajusta-workflow`
+
+Quando algo no workflow falhou, foi esquecido, ou uma convenção melhorou, `/ajusta-workflow`
+**classifica** a natureza da mudança e aplica-a no local certo — nunca a despeja em `CLAUDE.md`
+ou na memória. Como `/mostra-workflow`, é **transversal** (invocável em qualquer momento) e
+fecha frequentemente um aviso pendente (`WRN-NNN`) de `docs/process-warnings.md`.
+
+O comando classifica cada ajuste num destes tipos e daí deriva o destino:
+
+| Tipo  | Natureza da mudança                                                                                              | Destino                                    |
+| ----- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| **A** | Instrução de agente / comportamento de workflow — como o agente age, checkpoints, sequência, quando perguntar/parar | `.claude/commands/` ou `.claude/skills/`   |
+| **B** | Conhecimento estrutural da aplicação — padrões arquitecturais, contratos, ciclos de estado, como o sistema funciona | `docs/system_spec/` (secção relevante)     |
+| **C** | Convenção de codificação — naming, tipagem, estrutura de ficheiros que todo o código de domínio segue           | `docs/system_spec/02-shared/`              |
+| **D** | Misto — componentes em múltiplos locais                                                                          | combinação dos acima                       |
+
+> `CLAUDE.md` é destino de **último recurso** — só para comportamento do agente que não caiba em
+> commands/skills.
+
+**Exemplo:**
+
+```
+> /ajusta-workflow o checkpoint:scan não deve bloquear quando o único FAIL é Package Freshness
+
+→ Tipo A: comportamento de workflow → skill executa-checkpoint-scan
+→ Aplicado em .claude/skills/executa-checkpoint-scan.md
+→ WRN-038 marcado STATUS: RESOLVIDO em docs/process-warnings.md
+```

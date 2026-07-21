@@ -50,26 +50,22 @@ Formata e propõe uma mensagem de commit em conventional commits com emoji, em p
 
 ---
 
-## Scopes por stack
+## Scopes
 
-| Stack   | Scopes disponíveis                                                 |
-| ------- | ------------------------------------------------------------------ |
-| dotnet  | `domain`, `states`, `usecases`, `infra`, `api`, `workers`, `tests` |
-| laravel | `features`, `shared`, `models`, `infra`, `routes`, `jobs`, `tests` |
-| angular | `core`, `state`, `features`, `shared`, `models`, `routes`          |
+`features`, `shared`, `models`, `infra`, `routes`, `jobs`, `tests`
 
 ---
 
 ## Exemplos
 
 ```
-feat(domain): adicionar entidade Document com estado inicial
+feat(features): adicionar Action de upload de Documento
 
-fix(api): corrigir serialização do campo data_documento
+fix(routes): corrigir serialização do campo data_documento
 
-refactor(states): extrair lógica de transição para PendingState
+refactor(shared): extrair transição de estado para ExecutorTransicaoDocumento
 
-test(domain): adicionar testes para InvalidStateTransitionException
+test(features): adicionar teste de transição de estado inválida
 
 docs: actualizar system_spec após #12
 
@@ -83,7 +79,7 @@ docs: actualizar system_spec após #12
 ```
 Commit proposto:
 
-  feat(domain): adicionar estado PendingState
+  feat(shared): adicionar transição para o estado Perigoso
 
   (Resolve tarefa 1 — #5)
 
