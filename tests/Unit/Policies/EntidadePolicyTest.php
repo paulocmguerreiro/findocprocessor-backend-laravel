@@ -51,6 +51,10 @@ describe('Role admin', function (): void {
 
         expect(Gate::forUser($this->utilizador)->allows('restore', $entidade))->toBeTrue();
     });
+
+    it('pode agrupar', function (): void {
+        expect(Gate::forUser($this->utilizador)->allows('agrupar', Entidade::class))->toBeTrue();
+    });
 });
 
 describe('Role utilizador', function (): void {
@@ -89,5 +93,9 @@ describe('Role utilizador', function (): void {
         $entidade = Entidade::factory()->inativa()->create();
 
         expect(Gate::forUser($this->utilizador)->allows('restore', $entidade))->toBeFalse();
+    });
+
+    it('não pode agrupar', function (): void {
+        expect(Gate::forUser($this->utilizador)->allows('agrupar', Entidade::class))->toBeFalse();
     });
 });
