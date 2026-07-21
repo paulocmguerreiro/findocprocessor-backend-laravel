@@ -78,6 +78,20 @@ arch('jobs implementam ShouldQueueAfterCommit')
     ->expect('App\Jobs')
     ->toImplement(ShouldQueueAfterCommit::class);
 
+// O preset Laravel valida ShouldQueue + handle() em App\Jobs, mas não o sufixo — reforça
+// convencoes-nomenclatura.md (tabela "Fica em inglês": Job é sufixo de padrão estrutural).
+arch('jobs têm sufixo Job')
+    ->expect('App\Jobs')
+    ->classes()
+    ->toHaveSuffix('Job');
+
+// O preset Laravel não cobre App\Events — reforça convencoes-nomenclatura.md ("Events — sufixo
+// Event obrigatório, nome no passado").
+arch('events têm sufixo Event')
+    ->expect('App\Events')
+    ->classes()
+    ->toHaveSuffix('Event');
+
 // Convenção decidida via /ajusta-workflow (2026-07-21, ver 02-shared/convencoes-nomenclatura.md):
 // substitui o prefixo Contrato<Nome> por sufixo <Nome>Interface.
 arch('interfaces têm sufixo Interface')
