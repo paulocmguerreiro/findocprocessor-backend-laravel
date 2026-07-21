@@ -33,6 +33,7 @@ ganha uma regra nova.
 | Job (`app/Jobs/*.php`) | `04-infra/queue-jobs.md` |
 | Event (`app/Events/*.php`) | `02-shared/convencoes-nomenclatura.md` (sufixo `Event` + nome no passado) + `04-infra/queue-jobs.md` (catálogo) |
 | Migration (`database/migrations/*.php`) | `03-models/00-convencoes-models.md` |
+| Teste (`tests/**/*.php`) | `07-testing.md` (+ o spec do tipo de ficheiro sob teste) |
 | *(qualquer ficheiro PHP)* | `02-shared/convencoes-nomenclatura.md` + `02-shared/padroes-tipagem.md` — **sempre**, nomenclatura e tipagem são transversais |
 
 Se um tipo de ficheiro não constar da tabela (categoria nova no repositório), acrescentar uma linha
@@ -94,12 +95,18 @@ antes de prosseguir — não inventar regra sem fonte.
    qualidade, não é um FAIL bloqueante tipo `checkpoint:scan`) e listar o que foi corrigido no
    checkpoint da tarefa. Se a correcção implicar mover o ficheiro de pasta, seguir o fluxo de
    namespace/imports/`docs/system_spec` de `02-shared/estrutura-subpastas-features.md`.
+8. Em qualquer dos casos, expor no checkpoint da tarefa a linha `Specs lidos nesta tarefa: <lista>`
+   com os ficheiros de `docs/system_spec/` efectivamente lidos — um salto de triagem (spec do tipo
+   de ficheiro não lido) fica visível na hora.
 
 ---
 
 ## Regras
 
 - Fonte da verdade é sempre o conteúdo actual do `.md` de spec — nunca assumir a regra de memória/treino.
+- Afirmar factos do repo (convenções, setup de testes, esquema) só depois de ler a fonte em
+  `docs/system_spec/`; não inferir convenções apenas de ficheiros-irmãos. Perguntar só em ambiguidade
+  genuína — não "perguntar sempre".
 - Carregamento condicional: só ler os specs dos tipos de ficheiro efectivamente presentes na tarefa/Plano.
 - Nunca substitui a leitura humana no checkpoint — é um passo adicional, não um atalho.
 - `alvo=tarefa-planeada` e `alvo=plano` nunca corrigem automaticamente — só `alvo=codigo` corrige.

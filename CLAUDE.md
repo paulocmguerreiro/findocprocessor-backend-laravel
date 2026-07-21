@@ -116,6 +116,7 @@ PENDENTE → AGUARDA_ENVIO → ENVIADO → AGUARDA_RESPOSTA → PROCESSADO
 | Alteração de contrato / rota API (OpenAPI)     | `./openapi.yaml` (raiz) — escrito na Fase 3a (`/documenta-implementacao`) |
 | Nova configuração ou .env var                  | `06-config.md`                                                |
 | Nova classe `Regra*` (invariante de domínio)   | `02-shared/regras-negocio.md`                                 |
+| Novo/alterado teste ou convenção de teste      | `07-testing.md`                                               |
 
 ---
 

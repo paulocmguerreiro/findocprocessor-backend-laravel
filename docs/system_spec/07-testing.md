@@ -11,6 +11,20 @@ tests/Feature/Features/<Feature>/<Operação>Test.php  ← HTTP/externo
 
 ---
 
+## BD partilhada — proibido reconstruir a meio de um teste
+
+Todos os workers Pest em paralelo partilham a **mesma** BD MySQL (`findocprocessor_testing`); o
+isolamento entre testes é o wrapper transaccional do `RefreshDatabase` (rollback no fim de cada teste),
+**não** uma BD por worker.
+
+**Nunca** usar o trait `DatabaseMigrations`, `RefreshDatabase` com `migrate:fresh`, nem chamar
+`Artisan::call('migrate:fresh'|'migrate:refresh')` dentro de um teste ou do seu setup: largar/recriar
+tabelas na BD partilhada parte os testes concorrentes de outros workers (flake não-determinístico).
+Estado de esquema/dados incompatível com o wrapper transaccional isola-se por **interface + fake**
+(substituir a dependência), nunca reconstruindo a BD.
+
+---
+
 ## `tests/Unit/Features/<Feature>/` — programático (sem HTTP)
 
 **O que testa:** a Action directamente, fora do contexto HTTP — porque as Actions são invocadas em Jobs, Events, Artisan e testes de integração, não só via HTTP.

@@ -82,6 +82,8 @@ Skill `pausa-checkpoint` tipo=task — mostrar ficheiros alterados e aguardar re
 Ficheiros alterados:
 - <lista>
 
+Specs lidos nesta tarefa: <lista de docs/system_spec/ lidos na triagem>
+
 Leste o código? Responde:
   [s]       → commit e avançar
   [explica] → explicar decisões antes de commitar
