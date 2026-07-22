@@ -16,7 +16,7 @@ return [
     'local' => [
         'provider' => env('LLM_LOCAL_PROVIDER', 'ollama'),
         'modelo' => env('LLM_LOCAL_MODEL'),
-        'url' => env('LLM_LOCAL_URL', 'http://localhost:11434/v1'),
+        'url' => env('LLM_LOCAL_URL', 'http://localhost:11434'),
         'activa' => filled(env('LLM_LOCAL_URL')) && filled(env('LLM_LOCAL_MODEL')),
     ],
     'cloud' => [

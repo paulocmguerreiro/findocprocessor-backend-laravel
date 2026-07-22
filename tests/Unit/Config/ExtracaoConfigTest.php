@@ -112,7 +112,7 @@ it('permite substituir o provider cloud via LLM_CLOUD_PROVIDER', function (): vo
 it('expõe a url local com omissão para o Ollama por defeito', function (): void {
     $config = require config_path('extracao.php');
 
-    expect($config['local']['url'])->toBe('http://localhost:11434/v1');
+    expect($config['local']['url'])->toBe('http://localhost:11434');
 });
 
 it('expõe a url local a partir de LLM_LOCAL_URL', function (): void {
