@@ -27,6 +27,15 @@ REDIS_CACHE_DB=1
 
 QUEUE_CONNECTION=redis
 
+# CORS — origens permitidas para o frontend (lista separada por vírgulas).
+# Validado por `verificar:producao` (sem `*`/localhost/lista vazia). Ver config/cors.php.
+CORS_ALLOWED_ORIGINS=http://localhost:4200
+
+# Administrador inicial (seed). Em produção, ADMIN_INITIAL_PASSWORD é obrigatória:
+# sem ela o seed do admin é ignorado (não cria credencial fraca conhecida). Ver config/app.php.
+ADMIN_EMAIL=admin@findocprocessor.test
+ADMIN_INITIAL_PASSWORD=
+
 # Expiração de tokens Sanctum em minutos (default 480 = 8h). Ver 01-features/auth.md.
 SANCTUM_TOKEN_EXPIRATION=480
 
@@ -62,14 +71,13 @@ PIPELINE_RECONCILIACAO_LIMIAR_MINUTOS=15
 CLAMAV_HOST=
 CLAMAV_PORT=
 CLAMAV_TIMEOUT_SEGUNDOS=5
-
-FILESYSTEM_INBOX_PATH=inbox/
-FILESYSTEM_PROCESSED_PATH=processed/
-FILESYSTEM_TEMP_PATH=temp/
-# Limite implementado no upload: 50 MB (max:51200 KB no ReceberUploadDocumentoRequest).
-FILESYSTEM_MAX_FILE_SIZE=52428800
-FILESYSTEM_ALLOWED_EXTENSIONS=.pdf,.png,.jpg,.jpeg,.tif,.tiff,.bmp,.webp
 ```
+
+> **Limite e extensões de upload não são env vars.** O tecto de 50 MB (`max:51200`) e as
+> extensões aceites estão codificados directamente em `ReceberUploadDocumentoRequest`
+> (regra `mimetypes:`); não há `FILESYSTEM_MAX_FILE_SIZE`/`FILESYSTEM_ALLOWED_EXTENSIONS`
+> nem paths (`FILESYSTEM_*_PATH`) — os discos de ciclo de vida definem-se em
+> `config/filesystems.php` (ver secção Storage abaixo).
 
 _Valores definitivos pendentes de implementação._
 
@@ -176,7 +184,7 @@ demora — consumido por `ReconciliarFicheirosJob` (`04-infra/queue-jobs.md`).
 `config()->string()`/`config()->integer()`). `host` vazio ou `port` `0` são a sentinela de "camada
 desligada" — evita `?string`/`?int` (accessores tipados do Laravel exigem `string`/`int`, não
 `null`). `StreamMaxLength` do `clamd` (default 25 MB na imagem oficial) tem de ser ≥ ao limite de
-upload actual (`FILESYSTEM_MAX_FILE_SIZE` = 50 MB) — por isso `docker/clamav/clamd.conf`
+upload actual (50 MB, `max:51200` em `ReceberUploadDocumentoRequest`) — por isso `docker/clamav/clamd.conf`
 (montado no serviço `clamav`) sobe os limites para 64M/100M/64M; se excedido, o INSTREAM falha e
 conta como falha do scan (`FalhaAnaliseMalwareException`), nunca como "não configurado". Ver
 `04-infra/malware.md` para o contrato `AnalisadorMalware` e o detalhe do `clamd.conf`.
