@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Infrastructure\Extracao\ExtractorOcr;
 use App\Infrastructure\Extracao\FalhaExtracaoTextoException;
+use App\Infrastructure\Extracao\HocrSimplificador;
 use App\Infrastructure\Extracao\ResultadoExtracao;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
@@ -30,7 +31,7 @@ it('reconhece o texto de cada página de um pdf-imagem via ocr', function (): vo
     gera_pdf_imagem($caminho, ['PALAVRACHAVEUM primeira pagina', 'PALAVRACHAVEDOIS segunda pagina']);
 
     try {
-        $resultado = (new ExtractorOcr)->extrair($caminho);
+        $resultado = new ExtractorOcr(new HocrSimplificador)->extrair($caminho);
 
         expect($resultado->texto)->toContain('PALAVRACHAVEUM')
             ->and($resultado->texto)->toContain('PALAVRACHAVEDOIS')
@@ -45,7 +46,7 @@ it('não deixa temporários em storage/app/temp/ após sucesso', function (): vo
     gera_pdf_imagem($caminho, ['PALAVRACHAVETRES pagina unica']);
 
     try {
-        (new ExtractorOcr)->extrair($caminho);
+        new ExtractorOcr(new HocrSimplificador)->extrair($caminho);
 
         expect(listarTemporariosOcr())->toBeEmpty();
     } finally {
@@ -54,14 +55,14 @@ it('não deixa temporários em storage/app/temp/ após sucesso', function (): vo
 });
 
 it('não deixa temporários em storage/app/temp/ após falha', function (): void {
-    expect(fn (): ResultadoExtracao => (new ExtractorOcr)->extrair(base_path('tests/Fixtures/Extracao/pdf-corrompido.pdf')))
+    expect(fn (): ResultadoExtracao => new ExtractorOcr(new HocrSimplificador)->extrair(base_path('tests/Fixtures/Extracao/pdf-corrompido.pdf')))
         ->toThrow(FalhaExtracaoTextoException::class);
 
     expect(listarTemporariosOcr())->toBeEmpty();
 });
 
 it('lança FalhaExtracaoTextoException quando o ficheiro está corrompido', function (): void {
-    expect(fn (): ResultadoExtracao => (new ExtractorOcr)->extrair(base_path('tests/Fixtures/Extracao/pdf-corrompido.pdf')))
+    expect(fn (): ResultadoExtracao => new ExtractorOcr(new HocrSimplificador)->extrair(base_path('tests/Fixtures/Extracao/pdf-corrompido.pdf')))
         ->toThrow(FalhaExtracaoTextoException::class);
 });
 
@@ -76,7 +77,7 @@ it('remove no finally temporários órfãos com o mesmo id de execução', funct
     gera_pdf_imagem($caminho, ['PALAVRACHAVEQUATRO pagina unica']);
 
     try {
-        (new ExtractorOcr)->extrair($caminho);
+        new ExtractorOcr(new HocrSimplificador)->extrair($caminho);
 
         expect(file_exists($orfao))->toBeFalse();
     } finally {
