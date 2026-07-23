@@ -98,7 +98,12 @@ _fail-safe_: vazio/ausente **desliga** a camada respectiva):
 | `EXTRACAO_TTL_LEASE` | `300` | TTL (s) do _lease_ de reivindicação das etapas de análise: recupera documentos de _workers_ mortos e espaça os _retries_. |
 | `CLAMAV_HOST` / `CLAMAV_PORT` / `CLAMAV_TIMEOUT_SEGUNDOS` | — / — / `5` | Scan de malware (`clamd`/`INSTREAM`). Sem `HOST`+`PORT` o scan é saltado (documento admitido). |
 | `PIPELINE_RECONCILIACAO_LIMIAR_MINUTOS` | `15` | Idade (min) a partir da qual um documento preso num estado transitório é reconciliado ficheiro↔BD. |
-| `FILESYSTEM_MAX_FILE_SIZE` / `FILESYSTEM_ALLOWED_EXTENSIONS` | `52428800` / `.pdf,.png,…` | Limite (50 MB) e extensões aceites no upload — documentais; a imposição é a validação de `ReceberUploadDocumentoRequest`. |
+
+Além destas, dois valores **têm de ser definidos para um deploy funcional** (não têm _fail-safe_):
+`CORS_ALLOWED_ORIGINS` (origens do frontend — validado por `verificar:producao`) e
+`ADMIN_INITIAL_PASSWORD` (**sem ela o seed do admin é ignorado em produção** e não há utilizador inicial).
+O limite de upload (50 MB) e as extensões aceites **não são env vars** — estão codificados em
+`ReceberUploadDocumentoRequest`.
 
 > **Nota:** `config:cache` (produção) **congela** `local.activa`/`cloud.activa` (derivadas destas vars no
 > arranque). Mudar as vars de LLM em produção exige `php artisan config:clear`/rebuild da cache — reflectir
