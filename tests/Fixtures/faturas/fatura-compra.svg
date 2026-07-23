@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 794 1123">
+  <rect width="794" height="1123" fill="#ffffff"/>
+  <style>
+    text { font-family: 'Helvetica','Arial',sans-serif; fill:#1a1a1a; }
+    .nome { font-size:22px; font-weight:bold; fill:#0b3d66; }
+    .small { font-size:12px; fill:#444; }
+    .lbl { font-size:11px; fill:#888; letter-spacing:1px; }
+    .h { font-size:13px; font-weight:bold; fill:#ffffff; }
+    .cell { font-size:13px; }
+    .r { text-anchor:end; }
+    .tt { font-size:13px; font-weight:bold; }
+  </style>
+
+  <!-- Letterhead do emitente -->
+  <text x="60" y="80" class="nome">Papelaria Central, Lda.</text>
+  <text x="60" y="104" class="small">Rua das Flores, 123</text>
+  <text x="60" y="122" class="small">1000-001 Lisboa</text>
+  <text x="60" y="140" class="small">Contribuinte n.º 502777888</text>
+
+  <!-- Bloco do documento (direita) -->
+  <rect x="500" y="55" width="234" height="96" fill="#0b3d66"/>
+  <text x="617" y="92" text-anchor="middle" style="font-size:26px;font-weight:bold;fill:#ffffff;">FATURA</text>
+  <text x="617" y="118" text-anchor="middle" style="font-size:13px;fill:#cfe0ee;">N.º FT 2026/00042</text>
+  <text x="617" y="138" text-anchor="middle" style="font-size:12px;fill:#cfe0ee;">Data: 2026-07-15   Venc.: 2026-08-14</text>
+
+  <!-- Destinatário (sem rótulo de papel) -->
+  <text x="60" y="215" class="lbl">EXMO(S). SENHOR(ES)</text>
+  <text x="60" y="240" style="font-size:16px;font-weight:bold;">FinDoc Serviços, Lda.</text>
+  <text x="60" y="262" class="small">Avenida da Liberdade, 200</text>
+  <text x="60" y="280" class="small">1250-096 Lisboa</text>
+  <text x="60" y="298" class="small">Contribuinte n.º 501234567</text>
+
+  <!-- Tabela de linhas -->
+  <rect x="60" y="340" width="674" height="30" fill="#0b3d66"/>
+  <text x="72" y="360" class="h">Descrição</text>
+  <text x="512" y="360" class="h r">Qt.</text>
+  <text x="620" y="360" class="h r">Preço</text>
+  <text x="722" y="360" class="h r">Total</text>
+
+  <text x="72" y="396" class="cell">Resmas de papel A4 (caixa)</text>
+  <text x="512" y="396" class="cell r">5</text>
+  <text x="620" y="396" class="cell r">5,00</text>
+  <text x="722" y="396" class="cell r">25,00</text>
+  <line x1="60" y1="410" x2="734" y2="410" stroke="#dddddd"/>
+
+  <text x="72" y="432" class="cell">Toner para impressora laser</text>
+  <text x="512" y="432" class="cell r">2</text>
+  <text x="620" y="432" class="cell r">37,72</text>
+  <text x="722" y="432" class="cell r">75,45</text>
+  <line x1="60" y1="446" x2="734" y2="446" stroke="#dddddd"/>
+
+  <text x="72" y="468" class="cell">Material de escritório diverso</text>
+  <text x="512" y="468" class="cell r">1</text>
+  <text x="620" y="468" class="cell r">23,00</text>
+  <text x="722" y="468" class="cell r">23,00</text>
+  <line x1="60" y1="482" x2="734" y2="482" stroke="#dddddd"/>
+
+  <!-- Totais -->
+  <text x="620" y="522" class="cell r">Subtotal:</text>
+  <text x="722" y="522" class="cell r">123,45</text>
+  <text x="620" y="546" class="cell r">IVA (23%):</text>
+  <text x="722" y="546" class="cell r">28,39</text>
+  <rect x="512" y="560" width="222" height="34" fill="#eef3f8"/>
+  <text x="620" y="583" class="tt r">TOTAL:</text>
+  <text x="722" y="583" class="tt r">151,84</text>
+
+  <!-- Rodapé -->
+  <line x1="60" y1="1000" x2="734" y2="1000" stroke="#cccccc"/>
+  <text x="60" y="1024" class="small">Pagamento por transferência — IBAN PT50 0002 0123 1234 5678 9015 4</text>
+  <text x="60" y="1042" class="small">Documento processado por computador. Obrigado pela preferência.</text>
+</svg>
