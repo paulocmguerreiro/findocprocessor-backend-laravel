@@ -7,6 +7,9 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
+- **Extração — hOCR + agrupamento 2D**: `ExtractorOcr` passa a pedir reconhecimento em hOCR (bbox por palavra) e o novo `HocrSimplificador` reduz a saída a blocos `<block bbox=…>` reconstruídos por adjacência espacial 2D (union-find) — separa o cabeçalho de duas colunas (emissor vs metadados) que antes saía "encavalitado" (NIF do emissor cruzado com a data). Só texto, agora com coordenadas, segue para o LLM
+- **Suite E2E do pipeline** (`composer test:e2e`, opt-in, fora do `composer test`): `tests/E2E/PipelineE2ETest.php` exercita o pipeline ponta-a-ponta contra Tesseract + Ollama reais (skip automático se indisponíveis), com 3 fixtures A4 realistas (`tests/Fixtures/faturas/`) e `SimulacaoPipelineSeeder`. Default `qwen2.5:7b-instruct`
+- `LLM_TIMEOUT_SEGUNDOS` (default 120s) — timeout HTTP configurável da chamada ao LLM (o default do Prism ~30s é curto para modelos locais); `compose.yaml` ganha `extra_hosts` para os containers alcançarem o Ollama no host
 - **Issue #99** — Entidade: endpoint `POST /entidades/{principal}/agrupar-com/{secundaria}` para fundir duplicados (repontar FKs + hard-delete)
   - `AgruparEntidadeAction` reponta o UUID da `secundaria` para o da `principal` em todas as FKs conhecidas (`documentos.id_fornecedor`, `documentos.id_cliente`), une `e_cliente`/`e_fornecedor` por OR (`e_empresa_aplicacao` intocado) e remove a secundária permanentemente (`forceDelete()`, sem fallback para soft-delete) — tudo numa única transação
   - `InventarioReferenciasEntidadeInterface`/`InventarioReferenciasEntidade` — guarda de futuro por introspecção do esquema real (`Schema::getForeignKeys()`) antes do hard-delete: qualquer FK nova para `entidades` fora da allow-list falha com `422` em vez de deixar referências pendentes, cobrindo também `nullOnDelete`/`cascadeOnDelete` que o `restrictOnDelete` da BD não bloquearia
@@ -21,6 +24,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
   - 1146 testes, 100% cobertura + type coverage, Larastan 9 — verde em MySQL
 
 ### Changed
+- **Extração role-neutral com resolução de papéis por NIF**: o `PromptBuilder` deixa de sugerir a posição da empresa mãe por tipo (que enviesava o modelo e invertia os papéis nas vendas) — o modelo lê emissor/destinatário e a `RegraReconciliarEntidadesDocumento` situa a mãe por **correspondência de NIF**, corrigindo tipo/categoria pela direcção resolvida. O schema de extração passa a `emissor`/`destinatario` com **todos** os campos em `requiredFields` (nullable) — os modelos locais (Ollama/qwen) omitiam campos opcionais (tipicamente a data) mesmo quando presentes no documento. Default do modelo local passa a `qwen2.5:7b-instruct` (o 3b larga campos e escala à cloud)
 - **Issue #114** — Reorganiza a estrutura de pastas da feature `Documento` aplicando a regra de granularidade pasta-por-Action (`02-shared/estrutura-subpastas-features.md`, decidida em WRN-037); refactor estrutural puro, sem alteração de comportamento
   - `Pesquisa/Ver`, `Atribuicao/Reivindicar*`, 4× `Processamento/ProcessarAnalise*`, `RegistarEtapaExtracao`, `RegistarFalhaTecnicaExtracao` passam a ficheiro solto na subpasta-pai (Action com <3 artefactos próprios)
   - `Processamento/ReconciliarEntidades/` fundida em `Processamento/ConcluirExtracao/` (3 ficheiros); `TriarDocumentoPendenteAction` renomeada e movida para `Processamento/ProcessarAnaliseMalwareDocumentoAction` (alinha com as 4 `ProcessarAnalise*` do pipeline)

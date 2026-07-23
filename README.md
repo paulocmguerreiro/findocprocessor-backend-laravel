@@ -118,6 +118,7 @@ Padrão dual por feature slice: invocação directa (unit) **e** via HTTP (featu
 composer test          # pipeline completa (lint + arquitectura + tipos + cobertura)
 composer test:types    # Larastan nível 9 — zero erros
 composer test:coverage # Pest — cobertura 100%
+composer test:e2e      # Suite E2E opt-in do pipeline (Tesseract + Ollama reais; ver docs/system_spec/07-testing.md)
 ```
 
 ## API — estado actual

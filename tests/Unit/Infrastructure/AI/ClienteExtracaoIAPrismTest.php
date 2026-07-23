@@ -19,7 +19,7 @@ beforeEach(function (): void {
     Entidade::factory()->empresaAplicacao()->create();
 
     config([
-        'extracao.local' => ['provider' => 'ollama', 'modelo' => 'llama3', 'url' => 'http://localhost:11434/v1', 'activa' => true],
+        'extracao.local' => ['provider' => 'ollama', 'modelo' => 'llama3', 'url' => 'http://localhost:11434', 'activa' => true],
         'extracao.cloud' => ['provider' => 'anthropic', 'modelo' => 'claude-opus-4-8', 'url' => null, 'key' => null, 'activa' => false],
     ]);
 });
@@ -39,8 +39,8 @@ it('produz completo quando todos os espera_* estão presentes e válidos', funct
         StructuredResponseFake::make()->withStructured([
             'tipo_documento' => 'Fatura',
             'data_documento' => '2026-07-15',
-            'fornecedor' => ['nif' => '123456789', 'nome' => 'Fornecedor Lda'],
-            'cliente' => ['nif' => '987654321', 'nome' => 'Cliente Lda'],
+            'emissor' => ['nif' => '123456789', 'nome' => 'Fornecedor Lda'],
+            'destinatario' => ['nif' => '987654321', 'nome' => 'Cliente Lda'],
             'valor' => 123.45,
         ]),
     ]);
@@ -98,7 +98,7 @@ it('produz incompleto quando falta um campo esperado', function (): void {
         ->and($resultado->motivosFalta)->toBe(['valor em falta ou inválido.']);
 });
 
-it('produz incompleto quando o fornecedor esperado vem sem nome', function (): void {
+it('produz incompleto quando o emissor esperado vem sem nome', function (): void {
     TipoDocumento::factory()->create([
         'nome' => 'Fatura',
         'espera_data_documento' => false,
@@ -110,17 +110,17 @@ it('produz incompleto quando o fornecedor esperado vem sem nome', function (): v
     Prism::fake([
         StructuredResponseFake::make()->withStructured([
             'tipo_documento' => 'Fatura',
-            'fornecedor' => ['nif' => '123456789'],
+            'emissor' => ['nif' => '123456789'],
         ]),
     ]);
 
     $resultado = (new ClienteExtracaoIAPrism)->extrair('texto', CamadaIA::Local);
 
     expect($resultado->ehIncompleto())->toBeTrue()
-        ->and($resultado->motivosFalta)->toBe(['fornecedor (nif/nome) em falta ou inválido.']);
+        ->and($resultado->motivosFalta)->toBe(['emissor (nif/nome) em falta ou inválido.']);
 });
 
-it('produz incompleto quando o NIF do fornecedor está fora do intervalo válido', function (): void {
+it('produz incompleto quando o NIF do emissor está fora do intervalo válido', function (): void {
     TipoDocumento::factory()->create([
         'nome' => 'Fatura',
         'espera_data_documento' => false,
@@ -132,14 +132,14 @@ it('produz incompleto quando o NIF do fornecedor está fora do intervalo válido
     Prism::fake([
         StructuredResponseFake::make()->withStructured([
             'tipo_documento' => 'Fatura',
-            'fornecedor' => ['nif' => 'ab', 'nome' => 'Fornecedor Lda'],
+            'emissor' => ['nif' => 'ab', 'nome' => 'Fornecedor Lda'],
         ]),
     ]);
 
     $resultado = (new ClienteExtracaoIAPrism)->extrair('texto', CamadaIA::Local);
 
     expect($resultado->ehIncompleto())->toBeTrue()
-        ->and($resultado->motivosFalta)->toBe(['fornecedor (nif/nome) em falta ou inválido.']);
+        ->and($resultado->motivosFalta)->toBe(['emissor (nif/nome) em falta ou inválido.']);
 });
 
 it('produz desconhecido quando o tipo_documento não corresponde a nenhum TipoDocumento', function (): void {
@@ -201,7 +201,7 @@ it('envia o nonce concreto e o system prompt do PromptBuilder no pedido', functi
 
     (new ClienteExtracaoIAPrism)->extrair('texto sensível do documento', CamadaIA::Local);
 
-    $systemPromptEsperado = PromptBuilder::novo()->comInstrucoesBase()->comEmpresaMae()->comTiposDocumento()->construir();
+    $systemPromptEsperado = PromptBuilder::novo()->comInstrucoesBase()->comInstrucoesExtracao()->comTiposDocumento()->construir();
 
     $fake->assertRequest(function (array $pedidos) use ($systemPromptEsperado): void {
         expect($pedidos)->toHaveCount(1);

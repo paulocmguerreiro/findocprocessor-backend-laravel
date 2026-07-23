@@ -30,6 +30,7 @@ Estado de esquema/dados incompatível com o wrapper transaccional isola-se por *
 **O que testa:** a Action directamente, fora do contexto HTTP — porque as Actions são invocadas em Jobs, Events, Artisan e testes de integração, não só via HTTP.
 
 **Como instanciar:**
+
 ```php
 // Action sem dependências
 $resultado = (new VerEntidadeAction())->handle($entidade);
@@ -39,6 +40,7 @@ $resultado = app(CriarEntidadeAction::class)->handle($dto);
 ```
 
 **Cobertura obrigatória:**
+
 - Happy path — devolve o valor esperado.
 - Ambos os overloads quando a assinatura é `Model|string` (objecto **e** UUID string).
 - Rollback: model event (`creating`, `saved`, `deleting`) lança excepção dentro da transação e o teste verifica que o estado não foi alterado na BD.
@@ -47,6 +49,7 @@ $resultado = app(CriarEntidadeAction::class)->handle($dto);
 - Autorização (Actions com `Gate::authorize`): utilizador sem a permissão **e** guest → `AuthorizationException` (ver "Matriz de autorização obrigatória").
 
 **Exemplo de rollback:**
+
 ```php
 it('faz rollback se falhar a meio', function (): void {
     Entidade::creating(fn () => throw new \RuntimeException('falha simulada'));
@@ -68,14 +71,14 @@ it('faz rollback se falhar a meio', function (): void {
 
 **Cobertura obrigatória por endpoint:**
 
-| Endpoint | Cenários mínimos | Autorização (ver matriz) |
-|---|---|---|
-| `GET /api/...` (listar) | lista vazia, estrutura correcta, `per_page`, cursor sem duplicados, 422 `per_page>100`, 422 `sort` inválido | utilizador COM leitura → 200; utilizador SEM leitura → 403; guest → 401 |
-| `POST /api/...` (criar) | 201 com recurso, 422 campos obrigatórios em falta | utilizador sem permissão → 403; guest → 401 |
-| `GET /api/.../{id}` (ver) | 200 com recurso, 404 UUID inexistente | utilizador COM leitura → 200; utilizador SEM leitura → 403; guest → 401 |
-| `PUT/PATCH /api/.../{id}` (actualizar) | 200 actualizado, 404, 422 campos obrigatórios em falta | utilizador sem permissão → 403; guest → 401 |
-| `DELETE /api/.../{id}` (eliminar) | 204, 404 | utilizador sem permissão → 403; guest → 401 |
-| Endpoints especiais | happy path + 404 | conforme a ability exigida |
+| Endpoint                               | Cenários mínimos                                                                                            | Autorização (ver matriz)                                                |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `GET /api/...` (listar)                | lista vazia, estrutura correcta, `per_page`, cursor sem duplicados, 422 `per_page>100`, 422 `sort` inválido | utilizador COM leitura → 200; utilizador SEM leitura → 403; guest → 401 |
+| `POST /api/...` (criar)                | 201 com recurso, 422 campos obrigatórios em falta                                                           | utilizador sem permissão → 403; guest → 401                             |
+| `GET /api/.../{id}` (ver)              | 200 com recurso, 404 UUID inexistente                                                                       | utilizador COM leitura → 200; utilizador SEM leitura → 403; guest → 401 |
+| `PUT/PATCH /api/.../{id}` (actualizar) | 200 actualizado, 404, 422 campos obrigatórios em falta                                                      | utilizador sem permissão → 403; guest → 401                             |
+| `DELETE /api/.../{id}` (eliminar)      | 204, 404                                                                                                    | utilizador sem permissão → 403; guest → 401                             |
+| Endpoints especiais                    | happy path + 404                                                                                            | conforme a ability exigida                                              |
 
 **Campos populados via `whenLoaded()`:** todo o campo de um Resource que usa
 `whenLoaded('relacao')` tem de ter, no teste do(s) endpoint(s) onde é suposto
@@ -118,13 +121,13 @@ tests/
 
 Definidos em `tests/Pest.php`. Disponíveis em todos os ficheiros de teste (Unit e Feature).
 
-| Helper | O que faz | Quando usar |
-|---|---|---|
-| `criarAdmin(): User` | Cria utilizador com role `admin` | Unit tests — `$this->actingAs(criarAdmin())` |
-| `criarUtilizador(): User` | Cria utilizador com role `utilizador` | Unit tests — `$this->actingAs(criarUtilizador())` |
-| `criarEAutenticarAdmin(): User` | Cria admin + `Sanctum::actingAs($u, ['api'])` | Feature tests — `beforeEach(fn(): User => criarEAutenticarAdmin())` |
-| `criarEAutenticarUtilizador(): User` | Cria utilizador + `Sanctum::actingAs($u, ['api'])` | Feature tests — testes 403 fora do `describe` |
-| `criarEAutenticarSemRole(): User` | Cria utilizador **sem role** + `Sanctum::actingAs($u, ['api'])` | Feature tests — estado "SEM permissão → 403" nas **leituras** (`utilizador` tem `*.ver`, logo o 403 de leitura exige um actor sem role) |
+| Helper                               | O que faz                                                       | Quando usar                                                                                                                             |
+| ------------------------------------ | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `criarAdmin(): User`                 | Cria utilizador com role `admin`                                | Unit tests — `$this->actingAs(criarAdmin())`                                                                                            |
+| `criarUtilizador(): User`            | Cria utilizador com role `utilizador`                           | Unit tests — `$this->actingAs(criarUtilizador())`                                                                                       |
+| `criarEAutenticarAdmin(): User`      | Cria admin + `Sanctum::actingAs($u, ['api'])`                   | Feature tests — `beforeEach(fn(): User => criarEAutenticarAdmin())`                                                                     |
+| `criarEAutenticarUtilizador(): User` | Cria utilizador + `Sanctum::actingAs($u, ['api'])`              | Feature tests — testes 403 fora do `describe`                                                                                           |
+| `criarEAutenticarSemRole(): User`    | Cria utilizador **sem role** + `Sanctum::actingAs($u, ['api'])` | Feature tests — estado "SEM permissão → 403" nas **leituras** (`utilizador` tem `*.ver`, logo o 403 de leitura exige um actor sem role) |
 
 O `beforeEach` global em `Pest.php` invoca `forgetCachedPermissions()` antes de cada teste — não é necessário repeti-lo nos ficheiros individuais.
 
@@ -174,15 +177,15 @@ Para endpoints com acesso de leitura ao role `utilizador`, usar `criarEAutentica
 
 A autorização não tem "papéis" como actores. `admin` e `utilizador` são apenas **configurações de permissões** (conjuntos de abilities) e só existem como actor quando há login efectuado. O que distingue o resultado de uma operação são **três estados**, definidos pela relação entre o utilizador e a **permissão daquela operação**:
 
-| Estado | Como reproduzir | HTTP | Action (`Gate::authorize`) |
-|---|---|---|---|
-| **Sem autenticação** (guest) | sem token (HTTP) / `auth()->logout()` (Action) | **401** | `AuthorizationException` |
-| **Autenticado COM a permissão** | utilizador cuja config de permissões inclui a ability da operação | **2xx** (happy path) | executa |
-| **Autenticado SEM a permissão** | utilizador cuja config **não** inclui a ability da operação | **403** | `AuthorizationException` |
+| Estado                          | Como reproduzir                                                   | HTTP                 | Action (`Gate::authorize`) |
+| ------------------------------- | ----------------------------------------------------------------- | -------------------- | -------------------------- |
+| **Sem autenticação** (guest)    | sem token (HTTP) / `auth()->logout()` (Action)                    | **401**              | `AuthorizationException`   |
+| **Autenticado COM a permissão** | utilizador cuja config de permissões inclui a ability da operação | **2xx** (happy path) | executa                    |
+| **Autenticado SEM a permissão** | utilizador cuja config **não** inclui a ability da operação       | **403**              | `AuthorizationException`   |
 
 Pontos a reter:
 
-- **`admin` e `utilizador` não são actores distintos** — são configs de permissões. O *mesmo* `utilizador` está "COM a permissão" numa leitura (`documentos.ver`) → 200, e "SEM a permissão" numa escrita → 403. O estado depende da **operação**, não da identidade. Por isso o teste escolhe a config que produz cada estado: hoje `admin` materializa "COM" em tudo; `utilizador` materializa "COM" nas leituras e "SEM" nas escritas; um utilizador sem role nenhuma materializa "SEM" até nas leituras.
+- **`admin` e `utilizador` não são actores distintos** — são configs de permissões. O _mesmo_ `utilizador` está "COM a permissão" numa leitura (`documentos.ver`) → 200, e "SEM a permissão" numa escrita → 403. O estado depende da **operação**, não da identidade. Por isso o teste escolhe a config que produz cada estado: hoje `admin` materializa "COM" em tudo; `utilizador` materializa "COM" nas leituras e "SEM" nas escritas; um utilizador sem role nenhuma materializa "SEM" até nas leituras.
 - **Guest não acede a nada da API exceto `login`.** `POST /api/auth/login` é a única rota pública; todas as outras exigem token e devolvem **401** sem ele. O teste de guest confirma exactamente isso.
 - **As duas camadas (HTTP e Action)** cobrem-se independentemente — a dupla camada de autorização exige testar ambas. Na camada Action não existe "401" (não há HTTP): tanto o guest como o autenticado-sem-permissão resultam em `AuthorizationException`.
 - **Actions de sistema (background, sem `Gate`)** ficam **fora** desta matriz — não há autorização a testar. Correm sem utilizador autenticado; o teste verifica que executam sem login e que a `EtapaDocumento` fica como passo de sistema (`id_utilizador = null`). Ex.: as transições `Marcar*` do Documento (ver `02-shared/padroes-acoes.md`).
@@ -205,7 +208,7 @@ beforeEach(fn () => Cache::tags(['documentos'])->flush());
 `Cache::purge('redis')` logo a seguir. Cada processo Pest passa a escrever/ler chaves Redis sob um
 prefixo próprio — sem isto, `Cache::tags([...])->flush()` de um worker apaga chaves escritas por
 outro antes da asserção correr (condição de corrida intermitente em CI). O `flush()` do `beforeEach`
-acima continua necessário — isola entre testes do *mesmo* processo, papel distinto do prefixo por
+acima continua necessário — isola entre testes do _mesmo_ processo, papel distinto do prefixo por
 processo.
 
 **Nota sobre o hook usado:** o gancho é `ParallelTesting::setUpTestCase()`, não `setUpProcess()`
@@ -236,7 +239,7 @@ instrumentação directa). Por isso `isolarCacheParalelo()` foi extraído para u
 `public static` — chamado directamente por um teste (`AppServiceProviderCacheIsolamentoTest.php`) —
 em vez de viver dentro do closure inline. O registo em `setUpTestCase()` usa ainda um callable-array
 (`[self::class, 'isolarCacheParalelo']`), não uma closure, porque o `pcov` também falha a atribuir
-cobertura à *linha* de definição de uma closure passada como argumento quando invocada indirectamente
+cobertura à _linha_ de definição de uma closure passada como argumento quando invocada indirectamente
 via `Container::call()` (reflexão) — o callable-array evita esse problema por não ser um objecto
 `Closure` com bytecode próprio a rastrear.
 
@@ -302,3 +305,32 @@ tentar `lockForUpdate()` sobre a mesma linha que A já bloqueou (sem commit) —
 ## Pipeline de qualidade
 
 100% code coverage e 100% type coverage exigidos. Executar `composer test` (corre preflight + lint + arch + types + type-coverage + coverage em MySQL) antes de finalizar qualquer alteração. A suite corre exclusivamente em MySQL (`findocprocessor_testing`) — requer Docker a correr (`docker compose up -d`). Convenções de teste resumidas também em `CLAUDE.md`.
+
+## Suite E2E do pipeline — `tests/E2E/` (opt-in, serviços reais)
+
+`tests/E2E/PipelineE2ETest.php` exercita o pipeline de extração de **ponta a ponta contra os
+serviços reais** (Tesseract + Ollama + ClamAV quando disponível), a partir de fixtures A4 realistas
+em `tests/Fixtures/faturas/` (geradas por `gerar.sh` com `rsvg-convert`: PDF de texto nativo + PNG
+para OCR). Fluxo: upload HTTP → `extracao:run-scan|run-parser|run-tesseract|run-ia-local` → asserção
+do estado final (`Documento` em `PROCESSADO` com fornecedor/cliente/valor/data/categoria correctos).
+
+- **Fora do `composer test`.** Vive em `tests/E2E` (não em `tests/Unit|Feature`), pelo que não é
+  descoberta pela suite default nem entra na cobertura. Corre-se com **`composer test:e2e`**.
+- **Skip automático.** Faz `markTestSkipped()` se o Ollama ou o Tesseract não responderem; o ClamAV
+  é opcional (se estiver em baixo, a camada de malware é desligada por config no teste). Nunca parte
+  um CI sem esses serviços.
+- **Discos isolados** via `Storage::fake()` de todos os discos do ciclo de vida
+  (`entrada`/`enviado`/`processado`/`erro`/`perigoso`) — não toca no storage real. Após o upload
+  repõe o guard `web` (o pipeline corre em consola e faz `Auth::login()` do responsável).
+- **Modelo local** por env `E2E_LLM_MODEL` (default `qwen2.5:7b-instruct`), `E2E_LLM_URL`
+  (default `http://localhost:11434`), `E2E_LLM_TIMEOUT` (default 180s). Modelos mais pequenos
+  (`qwen2.5:3b`) tendem a omitir campos e escalam para a cloud — daí o default 7b.
+- **Três cenários** (dataset): *compra* (mãe=cliente), *serviços* (extrai ambos) e *venda*
+  (mãe=fornecedor/emitente). O *venda* valida a extração role-neutral + resolução por NIF: a mãe
+  fica no lado fornecedor e o tipo/categoria é corrigido para *Vendas* (ver `04-infra/extracao-ia.md`
+  e `04-infra/prompt-builder.md`).
+
+Para correr via container (`docker compose up`) com o Ollama no host: `LLM_LOCAL_URL=
+http://host.docker.internal:11434` e `LLM_LOCAL_MODEL=qwen2.5:7b-instruct`, com o Ollama a ouvir em
+`0.0.0.0` (`OLLAMA_HOST=0.0.0.0 ollama serve`). Os serviços `app`/`queue`/`scheduler` já têm o
+`extra_hosts` que mapeia `host.docker.internal` (ver `compose.yaml`).

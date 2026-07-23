@@ -24,7 +24,8 @@ reivindicação/lease e a contagem de tentativas ficam a cargo do orquestrador d
 | Componente | Ficheiro | Papel |
 |---|---|---|
 | `ExtractorTextoNativo` | `ExtractorTextoNativo.php` | `extrair(string $caminhoAbsoluto): ResultadoExtracao` — texto de PDF digital via `smalot/pdfparser`, aplica o threshold de `config('extracao.threshold_caracteres')` |
-| `ExtractorOcr` | `ExtractorOcr.php` | `extrair(string $caminhoAbsoluto): ResultadoExtracao` — rasteriza cada página via `imagick` a `config('extracao.ocr.dpi')` DPI e reconhece com `thiagoalessio/tesseract_ocr` (`config('extracao.ocr.linguas')`) |
+| `ExtractorOcr` | `ExtractorOcr.php` | `extrair(string $caminhoAbsoluto): ResultadoExtracao` — rasteriza cada página via `imagick` a `config('extracao.ocr.dpi')` DPI e reconhece com `thiagoalessio/tesseract_ocr` (`config('extracao.ocr.linguas')`) em **hOCR**, reduzido por `HocrSimplificador` a blocos com `bbox` |
+| `HocrSimplificador` | `HocrSimplificador.php` | `simplificar(string $hocr): string` — reduz a saída hOCR do Tesseract a blocos `<block bbox='x0 y0 x1 y1'>texto</block>`, agrupando as palavras (`ocrx_word`) em regiões 2D por adjacência espacial (union-find) |
 | `ResultadoExtracao` (Value Object) | `ResultadoExtracao.php` | `comVeredictoThreshold(string $texto, bool $ultrapassaThreshold)`/`semVeredicto(string $texto)` — construtor privado |
 | `FalhaExtracaoTextoException` | `FalhaExtracaoTextoException.php` | Única excepção de falha técnica, partilhada pelos dois extractores (ficheiro corrompido, falha do processo `tesseract`/Ghostscript/`imagick`) |
 
@@ -52,6 +53,25 @@ O threshold de 50 caracteres (`config('extracao.threshold_caracteres')`) só é 
 `ExtractorTextoNativo`. `ExtractorOcr` devolve sempre `ultrapassaThreshold: null` — o OCR é o
 "último recurso" textual; decidir se o resultado é suficiente ou se avança para as camadas LLM é
 responsabilidade do orquestrador do pipeline, não deste extractor.
+
+### hOCR + `HocrSimplificador` — preservar o layout para o LLM
+
+O `ExtractorOcr` pede o reconhecimento em **hOCR** (`->configFile('hocr')`), não texto simples: o
+hOCR traz a caixa (`bbox`) de cada palavra. O `HocrSimplificador` reduz esse HTML a uma lista
+compacta de blocos `<block bbox='x0 y0 x1 y1'>texto</block>` que segue para o LLM (só texto é
+enviado — ver `04-infra/extracao-ia.md`); as coordenadas dão-lhe a posição de cada bloco para
+reconstruir o layout (emissor/destinatário/totais).
+
+O agrupamento é **2D por adjacência espacial** (union-find), não por linha: une palavras
+horizontalmente na mesma frase (sem atravessar o *gutter* entre colunas) e verticalmente na mesma
+coluna. Isto resolve o cabeçalho de duas colunas — o bloco de área do Tesseract linearizava-o numa
+só linha, cruzando o NIF do emissor (esquerda) com a data (direita); o agrupamento 2D reconstrói-os
+separados. Os limiares são múltiplos da altura mediana da linha (`FACTOR_GUTTER`, `FACTOR_VERTICAL`),
+não pixéis absolutos, para escalarem com o DPI. Dentro de cada bloco o texto sai em ordem de leitura
+(por linha, depois por X). hOCR vazio ou sem `ocrx_word` → string vazia.
+
+Testado em `tests/Unit/Infrastructure/Extracao/HocrSimplificadorTest.php` (motor real, sem mock —
+constrói hOCR mínimo e verifica a separação de colunas, o agrupamento vertical e a ordem de leitura).
 
 ### `ExtractorOcr` — limpeza de recursos a dois níveis
 

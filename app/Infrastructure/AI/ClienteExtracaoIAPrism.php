@@ -55,7 +55,7 @@ final class ClienteExtracaoIAPrism implements ClienteIAInterface
 
         $systemPrompt = PromptBuilder::novo()
             ->comInstrucoesBase()
-            ->comEmpresaMae()
+            ->comInstrucoesExtracao()
             ->comTiposDocumento()
             ->construir();
 
@@ -66,11 +66,14 @@ final class ClienteExtracaoIAPrism implements ClienteIAInterface
             <{$nonce}>{$textoExtraido}</{$nonce}>
             TEXTO;
 
+        $timeout = config()->integer('extracao.timeout_segundos', 120);
+
         $resposta = Prism::structured()
             ->using($provider, (string) $config['modelo'], $providerConfig)
             ->withSchema($this->construirSchema())
             ->withSystemPrompt($systemPrompt)
             ->withPrompt($prompt)
+            ->withClientOptions(['timeout' => $timeout])
             ->asStructured();
 
         return $resposta->structured ?? [];
@@ -86,28 +89,34 @@ final class ClienteExtracaoIAPrism implements ClienteIAInterface
                 new StringSchema('motivo', 'Motivo da classificação "perigoso" (preenchido apenas nesse caso).', nullable: true),
                 new StringSchema('data_documento', 'Data do documento em formato YYYY-MM-DD.', nullable: true),
                 new ObjectSchema(
-                    name: 'fornecedor',
-                    description: 'Fornecedor identificado no documento.',
+                    name: 'emissor',
+                    description: 'Entidade que EMITE a fatura (o vendedor/prestador).',
                     properties: [
-                        new StringSchema('nif', 'NIF do fornecedor.'),
-                        new StringSchema('nome', 'Nome do fornecedor.'),
+                        new StringSchema('nif', 'NIF do emissor.'),
+                        new StringSchema('nome', 'Nome do emissor.'),
                     ],
                     requiredFields: ['nif', 'nome'],
                     nullable: true,
                 ),
                 new ObjectSchema(
-                    name: 'cliente',
-                    description: 'Cliente identificado no documento.',
+                    name: 'destinatario',
+                    description: 'Entidade DESTINATÁRIA da fatura (o comprador/adquirente).',
                     properties: [
-                        new StringSchema('nif', 'NIF do cliente.'),
-                        new StringSchema('nome', 'Nome do cliente.'),
+                        new StringSchema('nif', 'NIF do destinatário.'),
+                        new StringSchema('nome', 'Nome do destinatário.'),
                     ],
                     requiredFields: ['nif', 'nome'],
                     nullable: true,
                 ),
                 new NumberSchema('valor', 'Valor monetário total do documento.', nullable: true),
             ],
-            requiredFields: ['tipo_documento'],
+            // Todos os campos são obrigatórios na resposta (mas nullable): os modelos
+            // locais (Ollama/qwen) omitem campos opcionais de que estão menos "certos"
+            // — tipicamente a data — mesmo quando o valor está no documento. Forçar a
+            // presença da chave (com null permitido para o que realmente falta) torna a
+            // extracção fiável; a obrigatoriedade de negócio é decidida a jusante pelos
+            // flags `espera_*` do TipoDocumento.
+            requiredFields: ['tipo_documento', 'data_documento', 'emissor', 'destinatario', 'valor'],
         );
     }
 
@@ -136,22 +145,39 @@ final class ClienteExtracaoIAPrism implements ClienteIAInterface
         $motivosFalta = [];
 
         $dataDocumento = $this->resolverDataDocumento($dadosResposta, $tipoDocumento, $motivosFalta);
-        [$nifFornecedor, $nomeFornecedor] = $this->resolverEntidadeEsperada($dadosResposta, $tipoDocumento->espera_fornecedor, 'fornecedor', $motivosFalta);
-        [$nifCliente, $nomeCliente] = $this->resolverEntidadeEsperada($dadosResposta, $tipoDocumento->espera_cliente, 'cliente', $motivosFalta);
+
+        // Extração role-neutral: o modelo lê SEMPRE emissor e destinatário (sem saber
+        // qual é a empresa mãe); a resolução de papéis por NIF é feita a jusante, em
+        // RegraReconciliarEntidadesDocumento (emissor=fornecedor, destinatário=cliente).
+        // A obrigatoriedade de cada lado herda os flags do TipoDocumento: um tipo que
+        // não espera fornecedor/cliente (recibo, extrato) não é marcado incompleto por
+        // esse lado faltar.
+        [$nifEmissor, $nomeEmissor] = $this->extrairEntidade($dadosResposta, 'emissor');
+        [$nifDestinatario, $nomeDestinatario] = $this->extrairEntidade($dadosResposta, 'destinatario');
+
+        if ($tipoDocumento->espera_fornecedor && ($nifEmissor === null || $nomeEmissor === null)) {
+            $motivosFalta[] = 'emissor (nif/nome) em falta ou inválido.';
+        }
+
+        if ($tipoDocumento->espera_cliente && ($nifDestinatario === null || $nomeDestinatario === null)) {
+            $motivosFalta[] = 'destinatário (nif/nome) em falta ou inválido.';
+        }
+
         $valor = $this->resolverValor($dadosResposta, $tipoDocumento, $motivosFalta);
 
         if ($motivosFalta !== []) {
             return ResultadoExtracaoIA::incompleto($motivosFalta);
         }
 
+        // Invariante de uma fatura: o EMISSOR é o fornecedor; o DESTINATÁRIO é o cliente.
         return ResultadoExtracaoIA::completo(
             tipoDocumento: $tipoDocumento,
             idCategoria: $tipoDocumento->id_categoria,
             dataDocumento: $dataDocumento,
-            nifFornecedor: $nifFornecedor,
-            nomeFornecedor: $nomeFornecedor,
-            nifCliente: $nifCliente,
-            nomeCliente: $nomeCliente,
+            nifFornecedor: $nifEmissor,
+            nomeFornecedor: $nomeEmissor,
+            nifCliente: $nifDestinatario,
+            nomeCliente: $nomeDestinatario,
             valor: $valor,
         );
     }
@@ -175,29 +201,6 @@ final class ClienteExtracaoIAPrism implements ClienteIAInterface
         }
 
         return $dataDocumento;
-    }
-
-    /**
-     * @param  array<string, mixed>  $dadosResposta
-     * @param  list<string>  $motivosFalta
-     *
-     * @param-out  list<string>  $motivosFalta
-     *
-     * @return array{0: ?string, 1: ?string}
-     */
-    private function resolverEntidadeEsperada(array $dadosResposta, bool $esperada, string $chave, array &$motivosFalta): array
-    {
-        if (! $esperada) {
-            return [null, null];
-        }
-
-        [$nif, $nome] = $this->extrairEntidade($dadosResposta, $chave);
-
-        if ($nif === null || $nome === null) {
-            $motivosFalta[] = "{$chave} (nif/nome) em falta ou inválido.";
-        }
-
-        return [$nif, $nome];
     }
 
     /**

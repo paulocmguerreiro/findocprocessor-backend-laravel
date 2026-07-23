@@ -22,9 +22,17 @@ use Throwable;
  * do método (RF-04), e o directório de temporários
  * (`storage/app/temp/<uuid>-pagina-N.png`) é sempre limpo num bloco
  * `finally`, mesmo em falha a meio (RF-05).
+ *
+ * O reconhecimento é pedido em **hOCR** (não texto simples) e reduzido por
+ * `HocrSimplificador` a blocos com coordenadas `bbox`, para preservar a estrutura
+ * espacial (layout) que o LLM usa para reconstruir emissor/destinatário/totais.
  */
 final readonly class ExtractorOcr
 {
+    public function __construct(
+        private HocrSimplificador $hocrSimplificador,
+    ) {}
+
     /**
      * @throws FalhaExtracaoTextoException
      */
@@ -72,7 +80,8 @@ final readonly class ExtractorOcr
             $pagina->writeImage($caminhoImagem);
 
             try {
-                $textos[] = new TesseractOCR($caminhoImagem)->lang(...$linguas)->run();
+                $hocr = new TesseractOCR($caminhoImagem)->lang(...$linguas)->configFile('hocr')->run();
+                $textos[] = $this->hocrSimplificador->simplificar($hocr);
             } finally {
                 $pagina->clear();
                 $pagina->destroy();
