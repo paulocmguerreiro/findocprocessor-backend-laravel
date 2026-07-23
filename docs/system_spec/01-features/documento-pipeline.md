@@ -170,24 +170,36 @@ substituição total do recorder) e incrementa `extracao_tentativas`; ao atingir
 inalterado (retentado no próximo ciclo). Só falhas **técnicas** (excepção do motor/cliente) passam por
 aqui — saltos semânticos (threshold, veredicto, camada inactiva) nunca incrementam (RN-04).
 
-### Reconciliação de entidades por lado
+### Reconciliação de entidades por NIF
 
 **`RegraReconciliarEntidadesDocumento`** (`app/Features/Documento/Processamento/ConcluirExtracao/`,
-invocada por `ConcluirExtracaoDocumentoAction`) — dado um `ResultadoExtracaoIA` completo e o
-`TipoDocumento` resolvido, resolve `id_fornecedor`/`id_cliente` **por lado**, independentemente:
+invocada por `ConcluirExtracaoDocumentoAction`) — dado um `ResultadoExtracaoIA` completo (emissor=
+fornecedor, destinatário=cliente) e o `TipoDocumento` classificado, situa a empresa mãe por
+**correspondência de NIF** (não por posição sugerida ao modelo — a extração é role-neutral, ver
+`04-infra/prompt-builder.md`):
 
 | Condição do lado | Resolução | `id_<lado>` |
 |---|---|---|
-| lado == `TipoDocumento.posicao_empresa_mae` | `Entidade::whereEmpresaAplicacao()->firstOrFail()` (singleton) | preenchido |
-| `espera_<lado> = true` (e não é o lado da empresa mãe) | `firstOrCreate` por `nif` exacto (`nome` + `nif` + flag `e_fornecedor`/`e_cliente`) | preenchido |
-| `espera_<lado> = false` e não é o lado da empresa mãe | não cria `Entidade` | `null` |
+| NIF do lado == NIF da empresa mãe | `Entidade::whereEmpresaAplicacao()->firstOrFail()` (singleton) | preenchido |
+| lado com NIF (e não é a empresa mãe) | `firstOrCreate` por `nif` normalizado (`nome` + flag `e_fornecedor`/`e_cliente`) | preenchido |
+| lado sem NIF (e não é a empresa mãe) | não cria `Entidade` | `null` |
 
-Devolve `ResultadoReconciliacaoEntidades` (VO: `idFornecedor`, `idCliente`, `idCategoria` — de
-`TipoDocumento.id_categoria` —, `nomeFornecedorParaNome` — o nome extraído, ou o nome da empresa mãe
-se o extraído vier vazio, usado como fallback de `RegraNomearProcessado`). Sem empresa mãe configurada,
-`firstOrFail()` lança `ModelNotFoundException`, apanhada por `ConcluirExtracaoDocumentoAction`. A
-duplicação de `Entidade` por NIF/nome imperfeitos entre chamadas da IA é risco aceite (mitigado por
-uma futura funcionalidade de agrupar entidades duplicadas) — aqui a idempotência é estrita por `nif` exacto.
+O NIF é a chave (o nome pode abreviar/variar; o NIF ou está completo ou não serve). Se o NIF da mãe
+não coincidir com **nenhum** dos lados, o documento não a envolve → `ModelNotFoundException` (o
+orquestrador encaminha para `Erro`). Sem empresa mãe configurada, `firstOrFail()` lança a mesma
+excepção. Ambas são apanhadas por `ConcluirExtracaoDocumentoAction`.
+
+**Correcção de tipo/categoria pela direcção:** a direcção da empresa mãe (por NIF — fornecedor vs
+cliente) é a fonte de verdade da categoria. Se o `TipoDocumento` classificado pela IA tiver a
+`posicao_empresa_mae` contrária (ex.: uma venda de serviços emitida pela mãe classificada como um
+tipo de "cliente"), a regra re-selecciona o único tipo com a posição correcta — a IA classifica a
+**natureza**, o NIF decide o **sentido** (compra vs venda).
+
+Devolve `ResultadoReconciliacaoEntidades` (VO: `idFornecedor`, `idCliente`, `idCategoria` — do tipo
+resolvido pela direcção —, `nomeFornecedorParaNome` — o nome extraído, ou o nome da empresa mãe se o
+extraído vier vazio, usado como fallback de `RegraNomearProcessado`). A duplicação de `Entidade` por
+NIF imperfeito entre chamadas da IA é risco aceite (mitigado por uma futura funcionalidade de agrupar
+entidades duplicadas) — aqui a idempotência é estrita por `nif` normalizado.
 
 ---
 

@@ -5,12 +5,19 @@ declare(strict_types=1);
 namespace App\Infrastructure\AI;
 
 use App\Models\CategoriaDocumento;
-use App\Models\Entidade;
 use App\Models\TipoDocumento;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\File;
 
+/**
+ * Constrói o system prompt de extração. **Deliberadamente role-neutral**: nunca
+ * menciona a empresa mãe nem diz, por tipo, se ela é fornecedor ou cliente — isso
+ * enviesava o modelo (activava o prior "a nossa empresa é a compradora") antes de
+ * ele ler o documento. O modelo lê emissor/destinatário do documento; a
+ * correspondência com a empresa mãe (por NIF) e a resolução de papéis fazem-se em
+ * código (`ClienteExtracaoIAPrism`/`RegraReconciliarEntidadesDocumento`).
+ */
 final class PromptBuilder
 {
     private ?string $instrucoesBase = null;
@@ -40,22 +47,20 @@ final class PromptBuilder
     }
 
     /**
-     * @throws \RuntimeException
+     * Instruções neutras de leitura: define emissor/destinatário por papel (quem
+     * emite vs quem recebe), sem partir do princípio de posições fixas nem nomear
+     * qualquer entidade. Inclui a legenda hOCR (usada só quando o texto traz blocos
+     * com `bbox`) e a nota de formato numérico português.
      */
-    public function comEmpresaMae(): self
+    public function comInstrucoesExtracao(): self
     {
-        $empresaMae = Entidade::whereEmpresaAplicacao()->first();
+        $this->segmentosAdicionais[] = <<<'TEXTO'
+            COMO LER O DOCUMENTO (não uses conhecimento externo sobre as empresas — lê só o documento):
+            - Toda a fatura tem um EMISSOR (quem a emite/produz — o vendedor/prestador) e um DESTINATÁRIO (a quem se dirige — o comprador/adquirente). Identifica cada um pelo NIF e nome.
+            - Os dados de cada parte podem surgir em várias zonas (cabeçalho, à esquerda ou à direita, um abaixo do outro, por vezes no rodapé); reconhece o destinatário por marcadores como "Exmo(s). Senhor(es)", "Cliente", "Destinatário", "Adquirente" ou "Faturar a".
+            - Se o texto contiver blocos <block bbox='x0 y0 x1 y1'>...</block>, as coordenadas dão a posição de cada bloco (x0=esquerda, y0=topo, x1=direita, y1=base); usa-as para reconstruir o layout. Caso contrário, trata o texto como linear.
 
-        if ($empresaMae === null) {
-            throw new \RuntimeException('Nenhuma Entidade está marcada como empresa aplicação (e_empresa_aplicacao).');
-        }
-
-        $this->segmentosAdicionais[] = <<<TEXTO
-            EMPRESA MÃE:
-            Nome: {$empresaMae->nome}
-            NIF: {$empresaMae->nif}
-
-            Esta é a empresa mãe da aplicação. A posição em que este NIF surge em cada documento (como cliente ou como fornecedor) está indicada por tipo de documento na secção "Passo 1 — Classificação" ("empresa mãe: fornecedor" ou "empresa mãe: cliente") — não inventes nem assumas outro NIF como sendo o da empresa mãe.
+            FORMATO NUMÉRICO: os valores estão em formato português — "." separa os milhares e "," é o separador decimal (ex.: 2.091,00 → 2091.00).
             TEXTO;
 
         return $this;
@@ -77,29 +82,14 @@ final class PromptBuilder
 
         $classificacao = $tiposDocumento
             ->map(fn (TipoDocumento $tipo): string => sprintf(
-                '- "%s" → %s: %s (empresa mãe: %s)',
-                $tipo->categoria === null ? 'sem-categoria' : $tipo->categoria->slug,
+                '- %s (categoria: %s) — %s',
                 $tipo->nome,
+                $tipo->categoria === null ? 'sem-categoria' : $tipo->categoria->slug,
                 $tipo->descricao,
-                $tipo->posicao_empresa_mae->value,
             ))
             ->implode(PHP_EOL);
 
-        $camposPorTipo = $tiposDocumento
-            ->map(function (TipoDocumento $tipo): string {
-                $campos = array_filter([
-                    'data_documento' => $tipo->espera_data_documento,
-                    'fornecedor' => $tipo->espera_fornecedor,
-                    'cliente' => $tipo->espera_cliente,
-                    'valor' => $tipo->espera_valor,
-                ]);
-
-                return sprintf('- %s: %s', $tipo->nome, implode(', ', array_keys($campos)));
-            })
-            ->implode(PHP_EOL);
-
-        $this->segmentosAdicionais[] = "Passo 1 — Classificação:\n{$classificacao}";
-        $this->segmentosAdicionais[] = "Passo 2 — Campos a extrair por tipo:\n{$camposPorTipo}";
+        $this->segmentosAdicionais[] = "Passo 1 — Classificação. Em \"tipo_documento\" devolve EXACTAMENTE o nome de um dos tipos abaixo (o texto antes do parêntesis), classificando pela NATUREZA do documento; nunca a categoria:\n{$classificacao}";
 
         return $this;
     }

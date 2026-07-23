@@ -6,7 +6,6 @@ use App\Infrastructure\AI\PromptBuilder;
 use App\Models\CategoriaDocumento;
 use App\Models\Entidade;
 use App\Models\TipoDocumento;
-use App\Shared\Enums\PosicaoEmpresaMae;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
@@ -43,28 +42,31 @@ describe('construir()', function (): void {
     });
 });
 
-describe('comEmpresaMae()', function (): void {
-    it('injecta nome e NIF da empresa aplicação no output', function (): void {
+describe('comInstrucoesExtracao()', function (): void {
+    it('injecta instruções de leitura role-neutral (emissor/destinatário) sem nomear entidades', function (): void {
         $empresaMae = Entidade::factory()->empresaAplicacao()->create();
 
-        $prompt = PromptBuilder::novo()->comInstrucoesBase()->comEmpresaMae()->construir();
+        $prompt = PromptBuilder::novo()->comInstrucoesBase()->comInstrucoesExtracao()->construir();
 
-        expect($prompt)->toContain($empresaMae->nome)
-            ->toContain($empresaMae->nif);
+        expect($prompt)->toContain('EMISSOR')
+            ->toContain('DESTINATÁRIO')
+            ->toContain('bbox')
+            ->toContain('FORMATO NUMÉRICO')
+            ->not->toContain($empresaMae->nome)
+            ->not->toContain($empresaMae->nif);
     });
 
-    it('lança RuntimeException se não existir Entidade empresa aplicação', function (): void {
-        expect(fn (): PromptBuilder => PromptBuilder::novo()->comInstrucoesBase()->comEmpresaMae())
-            ->toThrow(RuntimeException::class, 'Nenhuma Entidade está marcada como empresa aplicação (e_empresa_aplicacao).');
+    it('não depende de existir empresa aplicação (extração role-neutral, não toca na BD)', function (): void {
+        $prompt = PromptBuilder::novo()->comInstrucoesBase()->comInstrucoesExtracao()->construir();
+
+        expect($prompt)->toContain('EMISSOR');
     });
 
     it('produz sempre instrucoesBase primeiro, independentemente da ordem de chamada', function (): void {
-        Entidade::factory()->empresaAplicacao()->create();
-
         $instrucoesBase = trim((string) file_get_contents(app_path('Shared/Prompts/base_instructions.txt')));
 
-        $promptOrdemNormal = PromptBuilder::novo()->comInstrucoesBase()->comEmpresaMae()->construir();
-        $promptOrdemInvertida = PromptBuilder::novo()->comEmpresaMae()->comInstrucoesBase()->construir();
+        $promptOrdemNormal = PromptBuilder::novo()->comInstrucoesBase()->comInstrucoesExtracao()->construir();
+        $promptOrdemInvertida = PromptBuilder::novo()->comInstrucoesExtracao()->comInstrucoesBase()->construir();
 
         expect(str_starts_with($promptOrdemNormal, $instrucoesBase))->toBeTrue()
             ->and($promptOrdemInvertida)->toBe($promptOrdemNormal);
@@ -72,26 +74,20 @@ describe('comEmpresaMae()', function (): void {
 });
 
 describe('comTiposDocumento()', function (): void {
-    it('sem filtro inclui todos os TipoDocumento (Passo 1 + Passo 2)', function (): void {
+    it('sem filtro inclui todos os TipoDocumento (Passo 1, formato "nome (categoria) — descrição", sem enviesar o papel)', function (): void {
         $categoria = CategoriaDocumento::factory()->create(['slug' => 'receitas']);
         $tipo = TipoDocumento::factory()->create([
             'nome' => 'Fatura Simples',
             'descricao' => 'Fatura emitida a um cliente',
             'id_categoria' => $categoria->id,
-            'posicao_empresa_mae' => PosicaoEmpresaMae::Fornecedor,
-            'espera_data_documento' => true,
-            'espera_fornecedor' => false,
-            'espera_cliente' => true,
-            'espera_valor' => true,
         ]);
 
         $prompt = PromptBuilder::novo()->comInstrucoesBase()->comTiposDocumento()->construir();
 
         expect($prompt)->toContain('Passo 1 — Classificação')
-            ->toContain('Passo 2 — Campos a extrair por tipo')
-            ->toContain('"receitas" → Fatura Simples: Fatura emitida a um cliente (empresa mãe: fornecedor)')
-            ->toContain('- Fatura Simples: data_documento, cliente, valor')
-            ->not->toContain('- Fatura Simples: data_documento, fornecedor, cliente, valor');
+            ->toContain('- Fatura Simples (categoria: receitas) — Fatura emitida a um cliente')
+            ->not->toContain('empresa mãe')
+            ->not->toContain('Passo 2');
 
         expect($prompt)->toContain($tipo->nome);
     });

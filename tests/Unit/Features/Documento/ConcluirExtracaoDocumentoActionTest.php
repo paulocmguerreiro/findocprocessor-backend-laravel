@@ -34,7 +34,7 @@ function documentoParaConcluir(): Documento
     return $documento;
 }
 
-function resultadoIaCompleto(TipoDocumento $tipo): ResultadoExtracaoIA
+function resultadoIaCompleto(TipoDocumento $tipo, ?string $nifCliente = null): ResultadoExtracaoIA
 {
     return ResultadoExtracaoIA::completo(
         tipoDocumento: $tipo,
@@ -42,18 +42,18 @@ function resultadoIaCompleto(TipoDocumento $tipo): ResultadoExtracaoIA
         dataDocumento: Carbon::parse('2026-06-25'),
         nifFornecedor: '509999999',
         nomeFornecedor: 'ACME Lda',
-        nifCliente: null,
-        nomeCliente: null,
+        nifCliente: $nifCliente,
+        nomeCliente: $nifCliente !== null ? 'Minha Empresa SA' : null,
         valor: 100.0,
     );
 }
 
 it('reconcilia e transiciona para Processado, autenticado como o responsável, e restaura a sessão', function (): void {
-    Entidade::factory()->empresaAplicacao()->create();
+    $empresaMae = Entidade::factory()->empresaAplicacao()->create();
     $documento = documentoParaConcluir();
     $tipo = TipoDocumento::factory()->create(['posicao_empresa_mae' => PosicaoEmpresaMae::Cliente, 'espera_fornecedor' => true]);
 
-    $resultado = app(ConcluirExtracaoDocumentoAction::class)->handle($documento, resultadoIaCompleto($tipo));
+    $resultado = app(ConcluirExtracaoDocumentoAction::class)->handle($documento, resultadoIaCompleto($tipo, $empresaMae->nif));
 
     expect($resultado->estado)->toBe(EstadoDocumento::Processado)
         ->and($resultado->id_fornecedor)->not->toBeNull()
@@ -69,11 +69,11 @@ it('restaura o utilizador previamente autenticado após concluir (não faz logou
     $anterior = criarAdmin();
     $this->actingAs($anterior);
 
-    Entidade::factory()->empresaAplicacao()->create();
+    $empresaMae = Entidade::factory()->empresaAplicacao()->create();
     $documento = documentoParaConcluir(); // id_responsavel é outro admin distinto
     $tipo = TipoDocumento::factory()->create(['posicao_empresa_mae' => PosicaoEmpresaMae::Cliente, 'espera_fornecedor' => true]);
 
-    app(ConcluirExtracaoDocumentoAction::class)->handle($documento, resultadoIaCompleto($tipo));
+    app(ConcluirExtracaoDocumentoAction::class)->handle($documento, resultadoIaCompleto($tipo, $empresaMae->nif));
 
     expect(auth()->id())->toBe($anterior->id);
 });

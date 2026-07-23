@@ -61,10 +61,10 @@ it('camada cloud inactiva → Erro (sem contar tentativa)', function (): void {
 });
 
 it('veredicto completo → reconcilia e vai a Processado', function (): void {
-    Entidade::factory()->empresaAplicacao()->create();
+    $empresaMae = Entidade::factory()->empresaAplicacao()->create();
     $documento = documentoAnaliseCloud();
     $tipo = TipoDocumento::factory()->create(['posicao_empresa_mae' => PosicaoEmpresaMae::Cliente, 'espera_fornecedor' => true]);
-    fingirClienteIaCloud(ResultadoExtracaoIA::completo($tipo, $tipo->id_categoria, Carbon::parse('2026-06-25'), '509999999', 'ACME Lda', null, null, 100.0));
+    fingirClienteIaCloud(ResultadoExtracaoIA::completo($tipo, $tipo->id_categoria, Carbon::parse('2026-06-25'), '509999999', 'ACME Lda', $empresaMae->nif, 'Minha Empresa SA', 100.0));
 
     $resultado = app(ProcessarAnaliseCloudDocumentoAction::class)->handle();
 

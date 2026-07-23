@@ -26,13 +26,24 @@ x-app-env: &app-env
   REDIS_CLIENT: predis
   REDIS_HOST: redis
   REDIS_PORT: "6379"
+  # LLM local no HOST (fora da rede findoc): os containers alcançam-no por
+  # host.docker.internal (ver extra_hosts nos serviços app/queue/scheduler).
+  # No host, o Ollama tem de ouvir em 0.0.0.0 — `OLLAMA_HOST=0.0.0.0 ollama serve`.
+  # Ex.: LLM_LOCAL_URL=http://host.docker.internal:11434 LLM_LOCAL_MODEL=qwen2.5:7b-instruct docker compose up
+  LLM_LOCAL_PROVIDER: ${LLM_LOCAL_PROVIDER:-ollama}
   LLM_LOCAL_URL: ${LLM_LOCAL_URL:-}
   LLM_LOCAL_MODEL: ${LLM_LOCAL_MODEL:-}
+  LLM_TIMEOUT_SEGUNDOS: ${LLM_TIMEOUT_SEGUNDOS:-180}
   LLM_CLOUD_URL: ${LLM_CLOUD_URL:-}
   LLM_CLOUD_MODEL: ${LLM_CLOUD_MODEL:-}
   LLM_CLOUD_KEY: ${LLM_CLOUD_KEY:-}
   CLAMAV_HOST: clamav
   CLAMAV_PORT: "3310"
+
+# Mapeia host.docker.internal -> host (necessário em Linux; no Docker Desktop já
+# resolve). Permite aos containers alcançar o Ollama a correr no host.
+x-extra-hosts: &extra-hosts
+  - "host.docker.internal:host-gateway"
 
 services:
   app:
@@ -44,6 +55,7 @@ services:
     environment:
       <<: *app-env
       RUN_MIGRATIONS: "true"
+    extra_hosts: *extra-hosts
     volumes:
       - .:/var/www/html
       - /var/www/html/vendor
@@ -79,6 +91,7 @@ services:
     command: php artisan queue:work --tries=3 --timeout=90
     environment:
       <<: *app-env
+    extra_hosts: *extra-hosts
     volumes:
       - .:/var/www/html
       - /var/www/html/vendor
@@ -107,6 +120,7 @@ services:
     command: php artisan schedule:work
     environment:
       <<: *app-env
+    extra_hosts: *extra-hosts
     volumes:
       - .:/var/www/html
       - /var/www/html/vendor

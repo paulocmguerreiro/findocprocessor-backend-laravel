@@ -44,6 +44,9 @@ LLM_CLOUD_PROVIDER=anthropic
 LLM_CLOUD_URL=
 LLM_CLOUD_MODEL=
 LLM_CLOUD_KEY=
+# Timeout (segundos) da chamada HTTP ao LLM — o default do cliente Prism (~30s) é
+# curto para modelos locais. Passado por ClienteExtracaoIAPrism via withClientOptions.
+LLM_TIMEOUT_SEGUNDOS=120
 
 # TTL (segundos) do lease de reivindicação das etapas de análise (AnaliseTexto/AnaliseOcr/
 # AnaliseIaLocal/AnaliseCloud): um documento reclamado há mais tempo que isto é
@@ -104,6 +107,7 @@ nunca chame `env()` fora de ficheiro de config:
 'threshold_caracteres' => 50,
 'ttl_lease' => (int) env('EXTRACAO_TTL_LEASE', 300), // segundos; cast — env() devolve string, config()->integer() exige int
 'max_tentativas' => 3,
+'timeout_segundos' => (int) env('LLM_TIMEOUT_SEGUNDOS', 120), // timeout HTTP do LLM (ClienteExtracaoIAPrism->withClientOptions)
 'local' => [
     'provider' => env('LLM_LOCAL_PROVIDER', 'ollama'),
     'modelo' => env('LLM_LOCAL_MODEL'),

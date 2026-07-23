@@ -6,6 +6,10 @@ return [
     'threshold_caracteres' => 50,
     'ttl_lease' => (int) env('EXTRACAO_TTL_LEASE', 300), // segundos — afinado na #98; cast: env() devolve string quando definido, e config()->integer() exige int
     'max_tentativas' => 3,
+    // Timeout (segundos) da chamada HTTP ao LLM. O default do cliente Prism (~30s)
+    // é curto para modelos locais (Ollama), que podem demorar dezenas de segundos —
+    // ClienteExtracaoIAPrism passa isto via withClientOptions(['timeout' => ...]).
+    'timeout_segundos' => (int) env('LLM_TIMEOUT_SEGUNDOS', 120),
     // Provider/modelo/ligação agrupados por camada — expostos aqui (em vez de
     // env() directo) para que ClienteExtracaoIAPrism nunca chame env() fora de
     // ficheiro de config. `provider` é o nome de Prism\Prism\Enums\Provider

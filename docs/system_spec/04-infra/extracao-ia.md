@@ -40,6 +40,11 @@ qualquer falha ao montar o pedido, invocar o Prism ou resolver o veredicto é co
 `ResultadoExtracaoIA::falhaTecnica()`. Bind em `AppServiceProvider`:
 `$this->app->bind(ClienteIAInterface::class, ClienteExtracaoIAPrism::class)`.
 
+**Timeout HTTP:** a chamada ao LLM passa `->withClientOptions(['timeout' => config('extracao.timeout_segundos')])`
+(default 120s via `LLM_TIMEOUT_SEGUNDOS`). O default do cliente Prism (~30s) é curto para modelos
+locais (Ollama), que podem demorar dezenas de segundos por documento — um timeout curto conta como
+falha técnica e, à `max_tentativas`, encaminha o documento para `Erro`.
+
 | Componente | Ficheiro | Papel |
 |---|---|---|
 | `ClienteIAInterface` (interface) | `ClienteIAInterface.php` | Contrato único, sem `@throws` — excepções sempre capturadas |
@@ -51,7 +56,7 @@ qualquer falha ao montar o pedido, invocar o Prism ou resolver o veredicto é co
 ### Prompt: system prompt + nonce anti prompt-injection
 
 `ClienteExtracaoIAPrism` monta o system prompt via `PromptBuilder::novo()->comInstrucoesBase()
-->comEmpresaMae()->comTiposDocumento()->construir()` e o prompt de utilizador com o
+->comInstrucoesExtracao()->comTiposDocumento()->construir()` (role-neutral — ver `04-infra/prompt-builder.md`) e o prompt de utilizador com o
 `$textoExtraido` envolto num nonce aleatório de 32 caracteres (`Str::random(32)`), gerado por
 chamada: `<{nonce}>...</{nonce}>`, com uma frase de reforço a explicitar que o conteúdo entre as
 tags é dado a extrair, nunca uma instrução — mesmo que pareça uma ordem dirigida ao modelo. O nonce
@@ -61,10 +66,15 @@ fecho previsível.
 ### Schema Prism — `ObjectSchema` raiz obrigatória
 
 `Prism::structured()->withSchema()` usa um `ObjectSchema` raiz (`classificacao_extracao`) com
-`tipo_documento` (obrigatório), `motivo`/`data_documento`/`valor` (nullable) e `fornecedor`/
-`cliente` (`ObjectSchema` aninhado `{nif, nome}`, nullable) — estrutura exigida pelo modo strict de
-alguns providers (ex. OpenAI). Todos os campos de domínio são nullable ao nível do schema — a
-validação de completude é feita depois, em `resolverVeredicto()`, não pelo schema.
+`tipo_documento`, `data_documento`, `valor` e `emissor`/`destinatario` (`ObjectSchema` aninhado
+`{nif, nome}`) — a extração é **role-neutral**: o modelo lê quem EMITE e quem RECEBE, não "fornecedor"
+e "cliente" (esses papéis resolvem-se por NIF a jusante). `motivo` fica opcional (só para `perigoso`).
+
+**`requiredFields` = todos os campos de domínio** (`tipo_documento`, `data_documento`, `emissor`,
+`destinatario`, `valor`), mas cada um **nullable**: os modelos locais (Ollama/qwen) omitem campos
+opcionais de que estão menos "certos" — tipicamente a `data_documento`, mesmo estando no documento.
+Forçar a presença da chave (com `null` permitido para o que realmente falta) torna a extração fiável;
+a validação de completude por negócio é feita depois, em `resolverVeredicto()`, não pelo schema.
 
 ### Resolução do veredicto — ordem exacta
 
@@ -72,23 +82,28 @@ validação de completude é feita depois, em `resolverVeredicto()`, não pelo s
    presente na resposta).
 2. `tipo_documento` não resolúvel via `TipoDocumento::where('nome', ...)->first()` →
    `desconhecido()`.
-3. Validação de completude por `espera_*` do `TipoDocumento` resolvido (`espera_data_documento`,
-   `espera_fornecedor`, `espera_cliente`, `espera_valor`) — qualquer campo esperado em falta ou
-   inválido acumula um motivo em `motivosFalta`; se não vazio → `incompleto($motivosFalta)`.
-4. Caso contrário → `completo(...)`, com `idCategoria` **sempre** derivado de
+3. Validação de completude por `espera_*` do `TipoDocumento` resolvido: `espera_data_documento`→
+   `data_documento`, `espera_valor`→`valor`, e — porque **emissor=fornecedor** e
+   **destinatário=cliente** — `espera_fornecedor`→`emissor`, `espera_cliente`→`destinatario`.
+   Qualquer campo esperado em falta ou inválido acumula um motivo em `motivosFalta`; se não vazio →
+   `incompleto($motivosFalta)`. Um tipo que não espera fornecedor/cliente (recibo, extrato) não é
+   marcado incompleto por esse lado faltar.
+4. Caso contrário → `completo(...)`, mapeando `nifFornecedor`/`nomeFornecedor` ← emissor e
+   `nifCliente`/`nomeCliente` ← destinatário, com `idCategoria` **sempre** derivado de
    `$tipoDocumento->id_categoria` — nunca lido de um eventual campo `categoria` na resposta do
    modelo (fonte de verdade na app, não em texto potencialmente manipulado).
 
-Validação de NIF (`fornecedor`/`cliente`) genérica e deliberadamente simples — comprimento 5–20
+Validação de NIF (`emissor`/`destinatario`) genérica e deliberadamente simples — comprimento 5–20
 caracteres (sem espaços) e `ctype_alnum()`, sem checksum por país; casos concretos por país ficam
 para análise futura.
 
 ### Testes sem rede real
 
 `ClienteExtracaoIAPrismTest` usa `Prism::fake()` + `StructuredResponseFake` — cobre os 5
-veredictos, o caso `espera_fornecedor=false` sem `fornecedor` (ainda `Completo`), e usa
-`$fake->assertRequest()` para confirmar o nonce concreto e o system prompt do `PromptBuilder` no
-pedido efectivamente montado. Sem chamada de rede em nenhum teste.
+veredictos, o caso `espera_fornecedor=false` sem `emissor` (ainda `Completo`), e usa
+`$fake->assertRequest()` para confirmar o nonce concreto e o system prompt do `PromptBuilder`
+(cadeia `comInstrucoesBase()->comInstrucoesExtracao()->comTiposDocumento()`) no pedido efectivamente
+montado. Sem chamada de rede em nenhum teste.
 
 ---
 
@@ -97,8 +112,9 @@ pedido efectivamente montado. Sem chamada de rede em nenhum teste.
 `ClienteExtracaoIAPrism` continua um serviço puro — não escreve em BD, não decide qual camada
 invocar, não monta `TransicionarProcessadoDocumentoDto` nem chama Actions de transição. Quem decide
 `CamadaIA::Local`/`Cloud` e encaminha o veredicto são `ProcessarAnaliseIaLocalDocumentoAction` e
-`ProcessarAnaliseCloudDocumentoAction`; a reconciliação NIF/Nome→`Entidade` (find-or-create) é
-`RegraReconciliarEntidadesDocumento`; a gravação do resultado é `ConcluirExtracaoDocumentoAction`
+`ProcessarAnaliseCloudDocumentoAction`; a resolução da empresa mãe por **NIF** e o find-or-create do
+outro lado são `RegraReconciliarEntidadesDocumento` (ver `02-shared/regras-negocio.md`); a gravação
+do resultado é `ConcluirExtracaoDocumentoAction`
 (veredicto completo) via `TransicionarProcessadoDocumentoAction`. Ver
 `01-features/documento-pipeline.md` ("Orquestradores de etapa") para o detalhe.
 
