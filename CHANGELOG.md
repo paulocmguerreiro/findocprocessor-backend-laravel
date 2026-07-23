@@ -24,6 +24,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
   - 1146 testes, 100% cobertura + type coverage, Larastan 9 — verde em MySQL
 
 ### Changed
+- **Documentação de configuração alinhada com o consumo real** (`README`, `.env.example`, `06-config.md`): acrescentadas ao spec as vars de segurança lidas mas antes não documentadas (`CORS_ALLOWED_ORIGINS`, `ADMIN_EMAIL`, `ADMIN_INITIAL_PASSWORD` — validadas por `verificar:producao`); README passa a assinalar as duas vars sem *fail-safe* que um deploy tem de definir. `.env.example` passa a `DB_CONNECTION=mysql` por default (migrações não 100% compatíveis com SQLite; paridade prod/Docker), `SESSION_DRIVER=redis` e ganha `LOG_DAILY_DAYS`
 - **Extração role-neutral com resolução de papéis por NIF**: o `PromptBuilder` deixa de sugerir a posição da empresa mãe por tipo (que enviesava o modelo e invertia os papéis nas vendas) — o modelo lê emissor/destinatário e a `RegraReconciliarEntidadesDocumento` situa a mãe por **correspondência de NIF**, corrigindo tipo/categoria pela direcção resolvida. O schema de extração passa a `emissor`/`destinatario` com **todos** os campos em `requiredFields` (nullable) — os modelos locais (Ollama/qwen) omitiam campos opcionais (tipicamente a data) mesmo quando presentes no documento. Default do modelo local passa a `qwen2.5:7b-instruct` (o 3b larga campos e escala à cloud)
 - **Issue #114** — Reorganiza a estrutura de pastas da feature `Documento` aplicando a regra de granularidade pasta-por-Action (`02-shared/estrutura-subpastas-features.md`, decidida em WRN-037); refactor estrutural puro, sem alteração de comportamento
   - `Pesquisa/Ver`, `Atribuicao/Reivindicar*`, 4× `Processamento/ProcessarAnalise*`, `RegistarEtapaExtracao`, `RegistarFalhaTecnicaExtracao` passam a ficheiro solto na subpasta-pai (Action com <3 artefactos próprios)
@@ -40,6 +41,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
   - 1068 testes, 100% cobertura + type coverage, Larastan 9 — verde em MySQL
 
 ### Removed
+- **Env vars-fantasma** `FILESYSTEM_INBOX_PATH`/`FILESYSTEM_PROCESSED_PATH`/`FILESYSTEM_TEMP_PATH`/`FILESYSTEM_MAX_FILE_SIZE`/`FILESYSTEM_ALLOWED_EXTENSIONS` retiradas de `.env.example` e `06-config.md` — não eram lidas por nenhum `config/`; o limite de upload (50 MB) e as extensões aceites vivem codificados em `ReceberUploadDocumentoRequest` (`max:51200` + `mimetypes:`)
 - **Issue #110** — Enum `EtapaExtracao` (`app/Shared/Enums`); coluna `etapa_extracao` de `extracoes_documento` e coluna `passo` de `etapas_documento` (via migrations); campos `etapa_extracao`/`passo` deixam de sair de `DocumentoResource`/`EtapaDocumentoResource` (o progresso lê-se de `estado`)
 
 ### Security
